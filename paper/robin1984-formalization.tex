@@ -2,7 +2,7 @@
 
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-\usepackage{microtype}
+\usepackage[nopatch=footnote]{microtype}
 \usepackage[margin=1.1in]{geometry}
 \usepackage{amsmath,amssymb,amsthm,mathtools}
 \usepackage{booktabs}
@@ -95,6 +95,15 @@ The cutoff is part of the theorem.  In particular, the result is not merely
 an eventual estimate.  It combines an analytic argument above an explicit
 height with a finite proof below that height.
 
+Robin's original article~\cite{Robin1984} is in French.  Although a scanned
+PDF is now available online, the paper remains comparatively difficult to
+discover through ordinary bibliographic channels.  One purpose of the present
+paper is therefore expository: to give an accessible English, proof-oriented
+account of the argument while preserving the attribution and source trail of
+the original.  Nicolas's related Euler-function criterion has a later English
+treatment~\cite{Nicolas2012}; the present paper concerns Robin's distinct
+sum-of-divisors argument.
+
 The second principal result makes Robin's extremal reduction explicit.  For
 $\eps>0$, put
 \begin{equation}\label{eq:ca-objective}
@@ -134,8 +143,8 @@ For $n>e^e$, set
 \begin{equation}\label{eq:margin}
   \M(n)=\log \A(n)-\euler-\log\log\log n.
 \end{equation}
-All quantities in \eqref{eq:margin} are then defined and positive where
-needed, and Robin's inequality is equivalent to $\M(n)<0$.
+All logarithms in \eqref{eq:margin} are then defined, and Robin's inequality
+is equivalent to $\M(n)<0$.
 
 Write $n=\prod_p p^{a_p}$.  For a prime $p$ and an integer $j\ge1$, define
 the marginal gain and threshold
@@ -529,7 +538,8 @@ $p\le H/2$, the benchmark contribution pays at least the minimum in
 expression minus $\Pcost(H)$.
 
 Partial summation writes the prime-reciprocal expression as
-$\log\log H$ plus Mertens's constant and a weighted $\vartheta$-error.
+$\log\log H$ plus the Meissel--Mertens constant and a weighted
+$\vartheta$-error.
 Replacing $\vartheta$ by $\psi$ separates the nonnegative prime-power tail.
 Lemma~\ref{lem:weighted-ef} and the Costa Pereira bounds show that the
 remaining weighted error is at most \eqref{eq:mertens-scalar}.  The Mertens
@@ -556,9 +566,9 @@ The exact identity becomes
   +(8+4c_0)(\log H)^{-2}
   +2H^{-1/6}+\log(2\pi)H^{-1/2}.
 \]
-At $H=100000$, rational enclosures for $c_0$, $\log H$, and the negative
-powers make this expression strictly smaller than $9/4$; monotonicity keeps
-the bound valid for larger $H$.
+Uniform rational bounds valid for every $H\ge100000$ control
+$(\log H)^{-1}$, $H^{-1/6}$, $H^{-1/2}$, $c_0$, and $\log(2\pi)$.
+Substitution reduces the assertion to an exact rational inequality.
 
 For the second inequality, take the complete prime-square block between
 $\sqrt{2H}$ and $H/2$.  Abel summation and the RH bounds for $\vartheta$ give
@@ -566,7 +576,7 @@ a lower bound whose normalization by $S(H)$ is
 \begin{align*}
   &2\sqrt2\frac{\log H}{\log H+\log2}
      \left(1-\frac1{\log H+\log2}\right)\\
-  &\quad-\frac94,2^{1/4}H^{-1/4}
+  &\quad-\frac94\,2^{1/4}H^{-1/4}
      \frac{\log H}{\log H+\log2}
   -\log(2\pi)H^{-1/2}
      \frac{\log H}{\log H+\log2}\\
@@ -625,7 +635,7 @@ For all sufficiently large $x$,
 \end{lemma}
 
 \begin{proof}
-Mertens's convergent summand series and partial summation give the exact
+Mertens' convergent summand series and partial summation give the exact
 decomposition of $\log F(x)$ into a summand remainder, a concave height
 remainder, and $K(x)$.  The first is at most $4/x$, and
 $\log y\le y-1$ makes the height remainder nonpositive.  Finally
@@ -787,8 +797,9 @@ to every integer above $5040$.  Theorem~\ref{thm:main} then gives $\RH$.
 
 \section{Formal verification and reproducibility}\label{sec:formalization}
 
-The preceding proof has been formalized in Lean~4.33.1 using Mathlib.  The two
-public declarations have the mathematical types
+The preceding proof has been formalized in Lean~4.33.1 using
+Mathlib~\cite{Lean4,Mathlib}.  The two public declarations have the
+mathematical types
 \begin{align*}
  &(\forall n\in\N,\ 5040<n\Rightarrow
    \sig(n)<e^{\euler}n\log\log n)
@@ -870,7 +881,7 @@ chosen statements, source fidelity, or attribution.
 \smallskip
 
 The central mathematical result is Guy Robin's.  The oscillation input and
-finite Mertens function are due to Jean-Louis Nicolas, and the positivity
+finite product $F$ are due to Jean-Louis Nicolas, and the positivity
 principle used in that argument is due to Edmund Landau.  The colossally
 abundant framework is due to Leonidas Alaoglu and Paul Erd\H{o}s.  Explicit
 prime-function estimates used in the reconstruction are credited to J.
@@ -925,13 +936,15 @@ J. Number Theory 17 (1983), no. 3, 375--388,
 \bibitem{Nicolas2012}
 J.-L. Nicolas,
 \emph{Small values of the Euler function and the Riemann hypothesis},
-Acta Arith. 155 (2012), no. 3, 311--321.
+Acta Arith. 155 (2012), no. 3, 311--321,
+\href{https://doi.org/10.4064/aa155-3-7}{doi:10.4064/aa155-3-7}.
 
 \bibitem{Robin1984}
 G. Robin,
 \emph{Grandes valeurs de la fonction somme des diviseurs et hypoth\`ese de
 Riemann},
-J. Math. Pures Appl. (9) 63 (1984), 187--213, MR0774171.
+J. Math. Pures Appl. (9) 63 (1984), no. 2, 187--213, MR0774171
+(in French).
 
 \bibitem{RosserSchoenfeld1962}
 J. B. Rosser and L. Schoenfeld,
