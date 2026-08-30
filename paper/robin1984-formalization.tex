@@ -1,0 +1,945 @@
+\documentclass[11pt]{amsart}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=1.1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\definecolor{linkblue}{HTML}{174A7E}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=linkblue,
+  citecolor=linkblue,
+  urlcolor=linkblue,
+  pdftitle={Robin's 1984 criterion for the Riemann hypothesis},
+  pdfauthor={Jonas Whidden}
+}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\numberwithin{equation}{section}
+
+\newcommand{\RH}{\mathrm{RH}}
+\newcommand{\CA}{\mathrm{CA}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\euler}{\gamma}
+\newcommand{\sig}{\sigma}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\M}{\mathcal{M}}
+\newcommand{\E}{\mathcal{E}}
+\newcommand{\Pcost}{\mathcal{C}}
+\newcommand{\Pprod}{\mathfrak{P}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\leanname}[1]{\texttt{#1}}
+
+\title[Robin's 1984 criterion]{Robin's 1984 criterion for the Riemann hypothesis:\\
+a formally verified proof}
+\author{Jonas Whidden}
+\date{August 2026}
+\subjclass[2020]{11M26, 11N37, 03B35}
+\keywords{Riemann hypothesis, sum of divisors, Robin's inequality,
+colossally abundant numbers, Nicolas criterion, formal verification, Lean}
+
+\begin{document}
+\begin{abstract}
+Guy Robin proved in 1984 that the Riemann hypothesis is equivalent to the
+strict inequality
+\[
+  \sig(n)<e^{\euler}n\log\log n \qquad(n>5040).
+\]
+We give a proof in a form that has been formally verified in Lean~4.  The
+argument includes the reduction to colossally abundant integers, the
+implication under the Riemann hypothesis, the Nicolas--Landau oscillation
+argument for the converse, and exact certificates for the bounded range.
+The analytic and arithmetic ingredients are those of Robin and of the
+authors he cites; the decomposition into explicit lemmas and the finite
+certificate system are part of the formal reconstruction.  The theorem is an
+equivalence criterion and does not prove the Riemann hypothesis.
+\end{abstract}
+\maketitle
+
+\section{Introduction}
+
+For a positive integer $n$, let
+\[
+  \sig(n)=\sum_{d\mid n}d,
+  \qquad
+  \A(n)=\frac{\sig(n)}{n},
+\]
+and let $\euler$ be the Euler--Mascheroni constant.  Robin's theorem is the
+following exact criterion.
+
+\begin{theorem}[Robin~\cite{Robin1984}]\label{thm:main}
+The Riemann hypothesis holds if and only if
+\begin{equation}\label{eq:robin}
+  \sig(n)<e^{\euler}n\log\log n
+\end{equation}
+for every integer $n>5040$.
+\end{theorem}
+
+The cutoff is part of the theorem.  In particular, the result is not merely
+an eventual estimate.  It combines an analytic argument above an explicit
+height with a finite proof below that height.
+
+The second principal result makes Robin's extremal reduction explicit.  For
+$\eps>0$, put
+\begin{equation}\label{eq:ca-objective}
+  Q_{\eps}(m)=\frac{\sig(m)}{m^{1+\eps}}
+             =\frac{\A(m)}{m^{\eps}}.
+\end{equation}
+We say that $N>1$ is colossally abundant with parameter $\eps$ if
+$Q_{\eps}(m)\le Q_{\eps}(N)$ for every $m>1$.
+
+\begin{theorem}\label{thm:ca-main}
+The Riemann hypothesis holds if and only if \eqref{eq:robin} holds for every
+$N>5040$ which is colossally abundant with some positive parameter.
+\end{theorem}
+
+Colossally abundant numbers were introduced by Alaoglu and
+Erd\H{o}s~\cite{AlaogluErdos1944}.  The criterion itself and its use of those
+extrema are due to Robin.  The converse uses the oscillation theorem of
+Nicolas~\cite{Nicolas1983} together with Landau's positive-transform
+principle~\cite{Landau1905}.  The explicit estimates for prime functions used
+below trace to Rosser and Schoenfeld~\cite{RosserSchoenfeld1962} and to Costa
+Pereira~\cite{CostaPereira1985,CostaPereira1987}.  Our purpose is not to claim
+new priority for those ingredients, but to give a complete proof whose exact
+logical and numerical dependencies have been checked.
+
+The proof has four parts.  Section~\ref{sec:extremal} develops the
+colossally abundant tangent reduction.  Section~\ref{sec:finite} closes the
+bounded range.  Section~\ref{sec:rh-forward} proves the inequality under
+$\RH$ from a strict explicit coefficient gap.  Sections~\ref{sec:oscillation}
+and~\ref{sec:lcm} prove the converse by transferring Nicolas's negative
+oscillations to least common multiples.  Only
+Section~\ref{sec:formalization} discusses the organization and checking of
+the Lean development itself.
+
+\section{Arithmetic preliminaries}
+
+For $n>e^e$, set
+\begin{equation}\label{eq:margin}
+  \M(n)=\log \A(n)-\euler-\log\log\log n.
+\end{equation}
+All quantities in \eqref{eq:margin} are then defined and positive where
+needed, and Robin's inequality is equivalent to $\M(n)<0$.
+
+Write $n=\prod_p p^{a_p}$.  For a prime $p$ and an integer $j\ge1$, define
+the marginal gain and threshold
+\begin{equation}\label{eq:event}
+  g_{p,j}
+  =\log\!\left(\frac{1-p^{-(j+1)}}{1-p^{-j}}\right),
+  \qquad
+  \tau_{p,j}=\frac{g_{p,j}}{\log p}.
+\end{equation}
+The event $(p,j)$ records the change from exponent $j-1$ to exponent $j$.
+
+\begin{lemma}[Prime-power event decomposition]\label{lem:event-decomp}
+For every positive integer $n$ and every $\eps>0$,
+\begin{align}
+  \log \A(n)
+    &=\sum_p\sum_{1\le j\le a_p}g_{p,j},\label{eq:event-abundancy}\\
+  \log Q_{\eps}(n)
+    &=\sum_p\sum_{1\le j\le a_p}
+       \bigl(g_{p,j}-\eps\log p\bigr).\label{eq:event-ca}
+\end{align}
+For fixed $p$, the sequences $g_{p,j}$ and $\tau_{p,j}$ are nonincreasing in
+$j$.
+\end{lemma}
+
+\begin{proof}
+The geometric-series identity gives
+\[
+  \frac{\sig(p^a)}{p^a}
+  =\frac{1-p^{-(a+1)}}{1-p^{-1}}
+  =\prod_{j=1}^{a}
+    \frac{1-p^{-(j+1)}}{1-p^{-j}}.
+\]
+Multiplicativity and logarithms give \eqref{eq:event-abundancy}; subtracting
+$\eps\log n$ gives \eqref{eq:event-ca}.  If $q=p^{-1}\in(0,1)$, direct
+cross-multiplication shows that
+$(1-q^{j+2})/(1-q^{j+1})\le(1-q^{j+1})/(1-q^j)$.
+Taking logarithms and then dividing by $\log p>0$ proves the monotonicity.
+\end{proof}
+
+The reduced weight of an event at parameter $\eps$ is
+\begin{equation}\label{eq:reduced-weight}
+  w_{\eps}(p,j)=g_{p,j}-\eps\log p
+               =(\tau_{p,j}-\eps)\log p.
+\end{equation}
+Thus events above the threshold have nonnegative reduced weight and events
+below it have nonpositive reduced weight.  This is the elementary
+complementary-slackness description of a colossally abundant factorization.
+
+\begin{lemma}[Existence of a maximizer]\label{lem:ca-exists}
+For every $\eps>0$ there exists an integer $N>1$ maximizing $Q_{\eps}$.
+\end{lemma}
+
+\begin{proof}
+The divisor bound
+\[
+  \A(n)=\sum_{d\mid n}\frac1d
+  \le \sum_{1\le d\le n}\frac1d
+  \le 1+\log n
+\]
+implies
+$Q_{\eps}(n)\le(1+\log n)n^{-\eps}\to0$.  Beyond a finite point the
+objective is below its value at $2$.  A maximum over the remaining finite
+set is therefore a global maximum.
+\end{proof}
+
+\section{The colossally abundant tangent reduction}\label{sec:extremal}
+
+Put $H_n=\log n$ and
+\begin{equation}\label{eq:lambda}
+  \lambda(n)=\frac1{H_n\log H_n}.
+\end{equation}
+This is the derivative at $H_n$ of the concave function
+$\phi(H)=\log\log H$.
+
+\begin{lemma}[Global tangent inequality]\label{lem:tangent}
+If $L,U>1$, then
+\begin{equation}\label{eq:tangent}
+  \log\log U-\log\log L
+  \le \frac{U-L}{L\log L}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Apply $\log y\le y-1$ first to
+$y=(\log U)/(\log L)$ and then to $y=U/L$.  Division by the positive
+quantities $L$ and $\log L$ gives \eqref{eq:tangent}.  This proof applies
+whether $U$ lies to the left or to the right of $L$.
+\end{proof}
+
+\begin{proposition}[Tangent transfer]\label{prop:tangent-transfer}
+Let $n,q>5040$.  Suppose that
+\begin{equation}\label{eq:tangent-objective}
+  \log Q_{\lambda(n)}(n)
+  \le \log Q_{\lambda(n)}(q).
+\end{equation}
+If Robin's inequality holds at $q$, then it holds at $n$.
+\end{proposition}
+
+\begin{proof}
+Writing $L=H_n$ and $U=H_q$, inequality
+\eqref{eq:tangent-objective} becomes
+\[
+  \log\A(n)-\lambda(n)L
+  \le \log\A(q)-\lambda(n)U.
+\]
+By Lemma~\ref{lem:tangent},
+$\phi(U)-\phi(L)\le\lambda(n)(U-L)$.  Adding the two inequalities yields
+\[
+  \log\A(n)-\phi(L)
+  \le \log\A(q)-\phi(U).
+\]
+After subtracting $\euler$, the left- and right-hand sides are precisely
+$\M(n)$ and $\M(q)$.  Hence $\M(q)<0$ implies $\M(n)<0$.
+\end{proof}
+
+The remaining point is to ensure that a maximizer at the tangent parameter
+is itself above the exceptional cutoff.  The exact startup transition is
+particularly useful.  Let
+\begin{equation}\label{eq:epsilon-zero}
+  \eps_0=\frac{\log(12/11)}{\log 11}.
+\end{equation}
+The event $(11,1)$ changes $5040$ into $55440=11\cdot5040$ and has threshold
+$\eps_0$.
+
+\begin{lemma}[The startup tie]\label{lem:startup-tie}
+Both $5040$ and $55440$ maximize $Q_{\eps_0}$.  Moreover
+\begin{equation}\label{eq:epsilon-enclosure}
+  \frac1{34}<\eps_0<\frac1{22}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+The factorization $5040=2^4 3^2 5\cdot7$ determines its included and first
+excluded events.  For the four included top events one checks
+$\tau_{p,a_p}>\eps_0$, and for the first excluded event at each of
+$p=2,3,5,7$ one checks $\tau_{p,a_p+1}<\eps_0$.  Every prime $p\ge11$ is
+bounded by its first event, with equality only for $(11,1)$; monotonicity in
+$j$ handles all higher events.  Equation \eqref{eq:reduced-weight} then shows
+that the event packet for $5040$ has at least as much reduced weight as every
+competitor.  The tied event $(11,1)$ has weight zero, so adjoining it gives
+the second maximizer $55440$.  The bounds in \eqref{eq:epsilon-enclosure}
+reduce, after exponentiation, to exact rational inequalities for powers of
+$12/11$.
+\end{proof}
+
+\begin{lemma}\label{lem:maximizer-above}
+If $n\ge720720$ and $q$ maximizes $Q_{\lambda(n)}$, then $q>5040$.
+\end{lemma}
+
+\begin{proof}
+The function $\lambda(n)$ is nonincreasing above $5040$.  Exact logarithmic
+bounds give
+\[
+  \lambda(720720)<\frac1{34}<\eps_0,
+\]
+and hence $\lambda(n)<\eps_0$.  If $q\le5040$, maximality of $5040$ at
+$\eps_0$ and maximality of $q$ at $\lambda(n)$ may be transported between
+the two parameters.  Because $5040$ and $55440$ tie at $\eps_0$, lowering
+the parameter strictly favors the larger logarithmic height $55440$ over
+$5040$, while no $q\le5040$ can gain that advantage.  This contradicts the
+maximality of $q$ at $\lambda(n)$.
+\end{proof}
+
+\begin{proposition}[Reduction to colossally abundant integers]
+\label{prop:ca-reduction}
+Assume Robin's inequality for $5040<n<720720$.  Then the following are
+equivalent:
+\begin{enumerate}[label=(\roman*)]
+  \item Robin's inequality holds for every $n>5040$;
+  \item it holds for every colossally abundant $N>5040$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Only (ii)$\Rightarrow$(i) needs proof.  Let $n\ge720720$.  By
+Lemma~\ref{lem:ca-exists}, choose a maximizer $q$ for
+$Q_{\lambda(n)}$.  Lemma~\ref{lem:maximizer-above} gives $q>5040$, so (ii)
+gives Robin's inequality at $q$.  Maximality gives
+\eqref{eq:tangent-objective}, and Proposition~\ref{prop:tangent-transfer}
+transfers the inequality to $n$.  The assumed finite interval handles the
+remaining integers.
+\end{proof}
+
+\section{The finite range}\label{sec:finite}
+
+The analytic argument in Section~\ref{sec:rh-forward} starts at
+$\log n=100000$.  The exact cutoff therefore requires a proof for all
+$5040<n$ below that logarithmic height.  We divide it into three pieces.
+
+\begin{proposition}\label{prop:small-factor}
+For $5041\le n<7560$,
+\begin{equation}\label{eq:127-35}
+  35\sig(n)\le127n.
+\end{equation}
+Consequently Robin's inequality holds throughout this interval.
+\end{proposition}
+
+\begin{proof}
+For each integer in the interval, an exact prime-power factorization is
+given.  Pairwise coprimality and the identity
+$\sig(p^a)=1+p+\cdots+p^a$ reduce \eqref{eq:127-35} to natural-number
+arithmetic.  To pass from \eqref{eq:127-35} to Robin's inequality, use the
+exact bounds
+\[
+  e^{\euler}>\frac{177}{100},
+  \qquad
+  \log\log n>\frac{103}{50},
+  \qquad
+  \frac{127}{35}<\frac{177}{100}\frac{103}{50}.
+\]
+\end{proof}
+
+\begin{proposition}\label{prop:startup-tangent}
+Robin's inequality holds for $7560\le n<720720$.
+\end{proposition}
+
+\begin{proof}
+The maximality of $5040$ at $\eps_0$ gives
+\[
+  \log\A(n)-\eps_0\log n
+  \le \log\A(5040)-\eps_0\log5040.
+\]
+As a function of $y=\log n$, the difference between the Robin bound and the
+right-hand tangent is concave.  A concave function on an interval is bounded
+below by the smaller endpoint value.  Exact rational estimates show that the
+gap is positive at both $y=\log7560$ and $y=\log720720$.  It is therefore
+positive throughout the interval.
+\end{proof}
+
+For the much larger interval above $720720$, a compact rational certificate
+replaces integer-by-integer factorization.  A certificate row consists of a
+log-height interval $[L,U]$, a rational slope $\lambda$, prime-layer cutoffs,
+an upper bound for the corresponding product, a lower height bound, and
+lower bounds for $\log L$ and $\log U$.  The layer inequalities certify which
+prime-power events can have positive reduced weight.  The product inequality
+bounds the maximum possible value of
+$\log\A(n)-\lambda\log n$.  Finally, concavity reduces the Robin comparison
+on $[L,U]$ to two endpoint inequalities.
+
+\begin{lemma}[Soundness of a finite row]\label{lem:row-sound}
+Suppose a row $[L,U]$ satisfies its layer-sign, product, height, and endpoint
+inequalities.  If $n>5040$ and $L\le\log n\le U$, then $\M(n)<0$.
+\end{lemma}
+
+\begin{proof}
+The sign checks and \eqref{eq:reduced-weight} bound the actual factorization
+packet by the finite threshold box.  The exact product bounds convert that
+box into an upper bound $B$ for
+$\log\A(n)-\lambda\log n$.  The two endpoint checks state
+\[
+  B<\euler+\log\log L-\lambda L,
+  \qquad
+  B<\euler+\log\log U-\lambda U.
+\]
+Concavity of $y\mapsto\log\log y-\lambda y$ gives the same strict inequality
+at $y=\log n$.  Rearrangement is $\M(n)<0$.
+\end{proof}
+
+\begin{proposition}[Certified finite cover]\label{prop:finite-cover}
+Robin's inequality holds whenever
+\begin{equation}\label{eq:finite-log-range}
+  720720\le n,
+  \qquad
+  \log n<100000.
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+Thirty-nine rational rows form a gap-free chain from $336/25$ to $100000$.
+Since $336/25<\log720720$, they cover \eqref{eq:finite-log-range}.  Every row
+satisfies the hypotheses of Lemma~\ref{lem:row-sound}.  In the final row the
+first-layer product includes every prime below $95673$; it is split into 132
+contiguous blocks, whose exact products concatenate to the required prefix.
+All comparisons are integer or rational inequalities.  Thus the list of rows
+and their checks constitute a finite proof of the proposition.
+\end{proof}
+
+Combining Propositions~\ref{prop:small-factor},
+\ref{prop:startup-tangent}, and~\ref{prop:finite-cover} gives the following.
+
+\begin{theorem}[Finite completion]\label{thm:finite}
+If $5040<n$ and $\log n<100000$, then Robin's inequality holds.
+\end{theorem}
+
+In particular, Proposition~\ref{prop:ca-reduction} is now unconditional.
+
+\section{The implication under the Riemann hypothesis}
+\label{sec:rh-forward}
+
+Let
+\[
+  \vartheta(x)=\sum_{p\le x}\log p,
+  \qquad
+  \psi(x)=\sum_{p^k\le x}\log p.
+\]
+The analytic estimate is most transparent after setting $H=\log n$ and
+\begin{equation}\label{eq:natural-scale}
+  S(H)=H^{-1/2}(\log H)^{-1}.
+\end{equation}
+
+We first record the weighted explicit-formula input.  For $m\ge1$, define
+\begin{equation}\label{eq:weight}
+  w_m(t)=t^{-m-1}\frac{m\log t+1}{(\log t)^2},
+  \qquad
+  I_m(x)=\int_x^{\infty}(\psi(t)-t)w_m(t)\,dt.
+\end{equation}
+For a nontrivial zero $\rho$ of $\zeta$, counted with multiplicity, put
+\[
+  K_m(\rho,x)=\int_x^{\infty}
+    t^{\rho-m-1}\frac{m\log t+1}{(\log t)^2}\,dt.
+\]
+
+\begin{lemma}[Robin's weighted explicit formula]\label{lem:weighted-ef}
+Assume $\RH$.  For $m\ge1$ and $x\ge2$,
+\begin{equation}\label{eq:weighted-ef}
+  I_m(x)=-\sum_{\rho}\frac{K_m(\rho,x)}{\rho}-T_m(x),
+\end{equation}
+where $T_m(x)$ is the correction from the pole, the gamma factor, and the
+trivial zeros.  If
+\[
+  c_0=\euler+2-\log(4\pi),
+\]
+then
+\begin{equation}\label{eq:weighted-bound}
+ -B_m(x)-\frac{\log(2\pi)x^{-m}}{\log x}
+ \le I_m(x)\le B_m(x),
+\end{equation}
+where
+\begin{equation}\label{eq:Bmx}
+ B_m(x)=c_0x^{1/2-m}(\log x)^{-1}
+ \left(m+(\log x)^{-1}
+ +\frac{4}{(2m-1)(\log x)^2}\right).
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Apply the explicit formula to the continuous cutoff whose Mellin transform
+is $K_m(s,x)/s$.  Absolute convergence justifies pairing the nontrivial
+zeros and interchanging their sum with the integral.  Under $\RH$ every
+nontrivial zero has real part $1/2$, and Hadamard factorization of the
+completed zeta function gives the exact multiplicity-counted identity
+\[
+  \sum_{\rho}|\rho|^{-2}=\euler+2-\log(4\pi)=c_0.
+\]
+Two integrations by parts bound the paired zero kernel by the scalar in
+\eqref{eq:Bmx}.  Direct evaluation of the gamma and trivial-zero terms gives
+the one-sided correction in \eqref{eq:weighted-bound}.  This is Robin's
+Lemma~2, including the endpoint $m=1$.
+\end{proof}
+
+Costa Pereira's estimates for $\psi-\vartheta$, with the corrected constants
+from~\cite{CostaPereira1987}, control the prime-power part separated from
+\eqref{eq:weighted-ef}.  Abel summation supplies the complementary lower
+bound for a complete block of prime squares.
+
+Define the complete prime cost
+\begin{equation}\label{eq:prime-cost}
+  \Pcost(H)=\sum_{p\le H/2}
+  \min\!\left\{\frac{\log p}{H\log H},\frac1{p^2}\right\}.
+\end{equation}
+Also define
+\begin{align}
+  \E(H)={}&(2+c_0)\frac{H^{-1/2}}{\log H}
+  +(c_0-2)\frac{H^{-1/2}}{(\log H)^2}\notag\\
+  &+(8+4c_0)\frac{H^{-1/2}}{(\log H)^3}
+  +2\frac{H^{-2/3}}{\log H}
+  +\log(2\pi)\frac{H^{-1}}{\log H}.
+  \label{eq:mertens-scalar}
+\end{align}
+
+\begin{proposition}[Complete exponent budget]\label{prop:budget}
+Assume $\RH$.  If $n\ne0$ and $H=\log n\ge20000$, then
+\begin{equation}\label{eq:budget}
+  \M(n)\le \E(H)-\Pcost(H).
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+For a prime $p$ occurring in $n$ with exponent $a$, the telescoping identity
+from Lemma~\ref{lem:event-decomp} and $\log y\le y-1$ give
+\begin{equation}\label{eq:prime-gain}
+ \log\frac{1-p^{-(a+1)}}{1-p^{-1}}
+ \le \frac1p-p^{-(a+1)}-m_p,
+ \qquad
+ m_p=\log(1-p^{-1})+p^{-1}\le0.
+\end{equation}
+Subtract $a\log p/(H\log H)$ from each prime contribution.  Completing the
+sum to all primes $p\le H$ does not lose the omitted primes: if $a=0$ and
+$p\le H/2$, the benchmark contribution pays at least the minimum in
+\eqref{eq:prime-cost}.  Summation therefore yields a prime-reciprocal
+expression minus $\Pcost(H)$.
+
+Partial summation writes the prime-reciprocal expression as
+$\log\log H$ plus Mertens's constant and a weighted $\vartheta$-error.
+Replacing $\vartheta$ by $\psi$ separates the nonnegative prime-power tail.
+Lemma~\ref{lem:weighted-ef} and the Costa Pereira bounds show that the
+remaining weighted error is at most \eqref{eq:mertens-scalar}.  The Mertens
+constants cancel with the sum of the $m_p$, giving exactly
+\eqref{eq:budget}.
+\end{proof}
+
+The numerical heart of the large-height proof is the following strict gap.
+
+\begin{proposition}[Explicit coefficient gap]\label{prop:coefficient-gap}
+Assume $\RH$.  For $H\ge100000$,
+\begin{equation}\label{eq:two-coefficients}
+  \E(H)<\frac94S(H),
+  \qquad
+  \Pcost(H)\ge\frac{113}{50}S(H).
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+For the first inequality, divide \eqref{eq:mertens-scalar} by $S(H)$.
+The exact identity becomes
+\[
+  2+c_0+(c_0-2)(\log H)^{-1}
+  +(8+4c_0)(\log H)^{-2}
+  +2H^{-1/6}+\log(2\pi)H^{-1/2}.
+\]
+At $H=100000$, rational enclosures for $c_0$, $\log H$, and the negative
+powers make this expression strictly smaller than $9/4$; monotonicity keeps
+the bound valid for larger $H$.
+
+For the second inequality, take the complete prime-square block between
+$\sqrt{2H}$ and $H/2$.  Abel summation and the RH bounds for $\vartheta$ give
+a lower bound whose normalization by $S(H)$ is
+\begin{align*}
+  &2\sqrt2\frac{\log H}{\log H+\log2}
+     \left(1-\frac1{\log H+\log2}\right)\\
+  &\quad-\frac94,2^{1/4}H^{-1/4}
+     \frac{\log H}{\log H+\log2}
+  -\log(2\pi)H^{-1/2}
+     \frac{\log H}{\log H+\log2}\\
+  &\quad-4\log4\,H^{-1/2}
+     \frac{\log H}{\log H-\log2}.
+\end{align*}
+Exact rational bounds for $\sqrt2$, $2^{1/4}$, and the logarithmic ratios
+show that this is at least $113/50$.
+\end{proof}
+
+\begin{theorem}[The RH implication]\label{thm:rh-forward}
+If $\RH$ holds, then Robin's inequality holds for every $n>5040$.
+\end{theorem}
+
+\begin{proof}
+If $\log n<100000$, use Theorem~\ref{thm:finite}.  Otherwise combine
+Propositions~\ref{prop:budget} and~\ref{prop:coefficient-gap}:
+\[
+  \M(n)
+  <\left(\frac94-\frac{113}{50}\right)S(\log n)
+  =-\frac1{100}S(\log n)<0.
+\]
+This is equivalent to Robin's inequality.
+\end{proof}
+
+\section{The Nicolas--Landau oscillation}\label{sec:oscillation}
+
+Define Nicolas's finite product and normalized function by
+\begin{equation}\label{eq:nicolas-function}
+  \Pprod(x)=\prod_{p\le x}\left(1-\frac1p\right),
+  \qquad
+  F(x)=e^{\euler}\log\vartheta(x)\,\Pprod(x).
+\end{equation}
+The signed quantity used below is $\log F(x)$.
+
+Let
+\[
+  k(t)=\frac{(\log t)^{-1}+(\log t)^{-2}}{t^2},
+\]
+and put
+\begin{equation}\label{eq:KJ}
+ K(x)=\int_x^{\infty}(\vartheta(t)-t)k(t)\,dt,
+ \qquad
+ J(x)=\int_x^{\infty}(\psi(t)-t)k(t)\,dt.
+\end{equation}
+
+For functions $g,h:\R\to\R$, write $g=\Omega_-(h)$ at infinity if there
+is $c>0$ such that, for every $X$, some $x\ge X$ satisfies
+$g(x)\le-c h(x)$.
+
+\begin{lemma}[Finite Nicolas comparison]\label{lem:nicolas-comparison}
+For all sufficiently large $x$,
+\begin{equation}\label{eq:nicolas-upper}
+  \log F(x)\le J(x)+\frac4x.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Mertens's convergent summand series and partial summation give the exact
+decomposition of $\log F(x)$ into a summand remainder, a concave height
+remainder, and $K(x)$.  The first is at most $4/x$, and
+$\log y\le y-1$ makes the height remainder nonpositive.  Finally
+$\psi-\vartheta\ge0$ and $k(t)\ge0$ imply $K(x)\le J(x)$.
+\end{proof}
+
+\begin{proposition}[Nicolas--Landau negative oscillation]
+\label{prop:nicolas-landau}
+If $\RH$ is false, then there is $b$ with
+\begin{equation}\label{eq:b-range}
+  0<b<\frac12
+\end{equation}
+such that
+\begin{equation}\label{eq:J-omega}
+  J(x)=\Omega_-(x^{-b}).
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+Failure of $\RH$, together with the functional equation and conjugation
+symmetry, gives a nontrivial zero $\rho$ of $\zeta$ with
+$1/2<\Re\rho<1$.  On its horizontal line choose a zero $\rho_*$ with
+maximal real part.  Choose
+\[
+  1-\Re\rho_*<b<\frac12.
+\]
+
+Suppose \eqref{eq:J-omega} fails.  Then, beyond some $X$,
+\begin{equation}\label{eq:positive-tail}
+  J(x)+x^{-b}>0.
+\end{equation}
+Regard $x^{-1}(J(x)+x^{-b})\,dx$ on $(X,\infty)$ as a positive measure and
+pass to the logarithmic coordinate.  Its Mellin transform becomes a
+moment-generating function.  Landau's principle says that if such a positive
+transform has analytic continuation at its abscissa of convergence, then
+the true convergence domain crosses strictly to the right.
+
+The Mellin transform of $J$ is computed from the logarithmic derivative of
+$\zeta$.  Removing the pole at $1$ gives an analytic numerator, and the added
+$x^{-b}$ contributes the elementary term $X^{s-b}/(b-s)$.  Compact and tail
+pieces provide analytic continuation up to the ray ending at
+$s=1-\rho_*$.  Maximality of $\Re\rho_*$ keeps the continuation regular
+along the open ray, while the zero at $\rho_*$ forces its norm to diverge at
+the endpoint.  On the other hand, \eqref{eq:positive-tail} and Landau's
+principle make the moment-generating function analytic there, hence locally
+bounded.  This contradiction proves \eqref{eq:J-omega}.
+\end{proof}
+
+The proof just given is the strict form of the oscillation argument used by
+Nicolas and Robin.  Its quantifiers are important: the excursions occur
+arbitrarily far out, rather than at one selected numerical frontier.
+
+\begin{corollary}\label{cor:finite-nicolas-omega}
+If $\RH$ is false, there exists $0<b<1/2$ such that
+\begin{equation}\label{eq:logF-omega}
+  \log F(x)=\Omega_-(x^{-b}).
+\end{equation}
+\end{corollary}
+
+\begin{proof}
+Use Lemma~\ref{lem:nicolas-comparison} and
+$x^{-1}=o(x^{-b})$, which holds because $b<1$.
+\end{proof}
+
+\section{Least common multiples and the converse}\label{sec:lcm}
+
+Let
+\[
+  L_P=\operatorname{lcm}(1,2,\dots,P).
+\]
+The classical identity $\log L_P=\psi(P)$ connects this finite integer with
+the analytic frontier.  Define the logarithmic height loss
+\begin{equation}\label{eq:height-loss}
+  D(P)=\log\log\psi(P)-\log\log\vartheta(P).
+\end{equation}
+The saturated Euler product differs from the actual abundancy of $L_P$ by
+the nonnegative prime-power reserve
+\begin{equation}\label{eq:tower-reserve}
+  T(P)=\sum_{p\le P}
+   -\log\!\left(1-p^{-a_p-1}\right),
+  \qquad
+  a_p=\max\{a:p^a\le P\}.
+\end{equation}
+
+\begin{lemma}[Exact LCM identity]\label{lem:lcm-identity}
+For all sufficiently large $P$,
+\begin{equation}\label{eq:lcm-identity}
+  \M(L_P)=-\log F(P)-D(P)-T(P).
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+The finite Euler product gives
+\[
+  \sum_{p\le P}-\log(1-p^{-1})
+   =-\log \Pprod(P),
+\]
+where $\Pprod(P)$ denotes the product in \eqref{eq:nicolas-function}.  The
+prime-power factorization of $L_P$ gives
+\[
+  -\log \Pprod(P)=\log\A(L_P)+T(P).
+\]
+Now expand $\log F(P)$ and use $\log L_P=\psi(P)$.  Rearrangement is exactly
+\eqref{eq:lcm-identity}.
+\end{proof}
+
+\begin{lemma}[The transfer losses]\label{lem:transfer-loss}
+For every $b<1/2$,
+\begin{equation}\label{eq:loss-little-o}
+  D(P)+T(P)=o(P^{-b}).
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+The elementary bound
+\[
+  0\le\psi(P)-\vartheta(P)
+  \le2\sqrt P\log P
+\]
+and a linear lower bound for $\vartheta(P)$ give
+\[
+  0\le D(P)\ll \frac{\log P}{\sqrt P}.
+\]
+Splitting the reserve at $\sqrt P$ and summing the geometric tails gives
+$T(P)\ll P^{-1/2}$.  Since
+$P^{-1/2}\log P=o(P^{-b})$ whenever $b<1/2$, the claim follows.
+\end{proof}
+
+\begin{theorem}[The converse implication]\label{thm:converse}
+If Robin's inequality holds for every $n>5040$, then $\RH$ holds.
+\end{theorem}
+
+\begin{proof}
+Suppose $\RH$ is false.  Choose $b$ as in
+Corollary~\ref{cor:finite-nicolas-omega}.  Negative excursions of
+$\log F(P)$ give positive excursions of $-\log F(P)$ of order $P^{-b}$.
+By Lemma~\ref{lem:transfer-loss}, subtracting $D(P)+T(P)$ preserves such
+excursions.  Lemma~\ref{lem:lcm-identity} therefore gives arbitrarily large
+$P$ with $\M(L_P)>0$.  Since $L_P\ge P$, these least common multiples
+eventually exceed $5040$, and $\M(L_P)>0$ is a literal failure of Robin's
+inequality.  This contradicts the hypothesis.
+\end{proof}
+
+\section{Proofs of the main theorems}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+The implication $\RH\Rightarrow$\eqref{eq:robin} is
+Theorem~\ref{thm:rh-forward}.  The reverse implication is
+Theorem~\ref{thm:converse}.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:ca-main}]
+If $\RH$ holds, Theorem~\ref{thm:main} gives Robin's inequality for every
+integer above $5040$, hence in particular for every colossally abundant one.
+Conversely, assume it for every colossally abundant integer above $5040$.
+The finite startup theorem and Proposition~\ref{prop:ca-reduction} extend it
+to every integer above $5040$.  Theorem~\ref{thm:main} then gives $\RH$.
+\end{proof}
+
+\section{Formal verification and reproducibility}\label{sec:formalization}
+
+The preceding proof has been formalized in Lean~4.33.1 using Mathlib.  The two
+public declarations have the mathematical types
+\begin{align*}
+ &(\forall n\in\N,\ 5040<n\Rightarrow
+   \sig(n)<e^{\euler}n\log\log n)
+   \ \Longleftrightarrow\ \RH,\\
+ &\RH\ \Longleftrightarrow\
+   (\forall n,\eps,\ 5040<n\Rightarrow
+   n\text{ is colossally abundant at }\eps\Rightarrow
+   \sig(n)<e^{\euler}n\log\log n).
+\end{align*}
+They are named
+\begin{center}
+\small
+\path{Robin1984.robin_inequality_iff_riemannHypothesis}\\
+\path{Robin1984.riemannHypothesis_iff_colossallyAbundant_robin}.
+\end{center}
+The small Palomar challenge file fixes these statements using Mathlib only;
+the solution file supplies the proof terms, so statement comparison is
+independent of the internal proof graph.
+
+The formal development separates arithmetic identities, colossally abundant
+extrema, the RH estimates, the Nicolas--Landau argument, finite certificates,
+and final assembly.  Reusable order, logarithm, Mellin-transform, and
+prime-power lemmas are exposed in their mathematical families.  Each owned
+Lean file carries a content-reviewed provenance label distinguishing direct
+source formalization, another published source, standard mathematics without
+a claimed individual originator, and primarily project-authored
+formalization work.  The complete reviewed ledger is distributed with the
+repository.
+
+The finite proof contains no floating-point oracle.  The startup
+factorizations and the 39 interval rows reduce to exact natural-number and
+rational inequalities.  The large final prime product is split into 132
+blocks only to keep individual kernel computations manageable.  The
+certificate checkers are proved sound once; each data row is then accepted by
+kernel reduction.
+
+The repository contains no project-local axiom declarations.  Outside the
+two deliberate statement holes in the Palomar challenge, project proof
+sources contain no \leanname{sorry}, \leanname{admit}, or
+\leanname{native\_decide}.  Diagnostic commands such as
+\leanname{\#print axioms} occur neither in repository-owned Lean sources nor
+in the timed external import closure.  A completed kernel audit of both
+advertised declarations returned exactly the standard principles
+\[
+  \leanname{propext},\qquad
+  \leanname{Classical.choice},\qquad
+  \leanname{Quot.sound}.
+\]
+
+The ordinary \leanname{lake build} command is the full formalization build.
+Its Lake-native default target reads a checked-in topological order of 252
+modules, schedules one module job at a time, bounds each Lean process to two
+internal task threads, and ends with \leanname{Solution}.  Thus the submitted
+project itself controls the memory-intensive finite-certificate order; no
+external runner or local patching step is part of the proof build.
+
+All dependencies are pinned.  The required Lean~4.33.1 changes to
+\leanname{PrimeNumberTheoremAnd} are published in the public fork
+\url{https://github.com/kimihiro64/PrimeNumberTheoremAnd} at
+\href{https://github.com/kimihiro64/PrimeNumberTheoremAnd/commit/f8f58c749d6cde8a641348fcd5e4702993651cd6}
+{commit \texttt{f8f58c7}}, based on
+\href{https://github.com/AlexKontorovich/PrimeNumberTheoremAnd/commit/47fa48680663df41146704d02a5b092d792bd5b9}
+{upstream commit \texttt{47fa486}}.  The full hashes are recorded in the Lake
+manifest.  Lake reconstructs this dependency directly from public Git
+history; no local patching step is required.  The added multiplicity-aware
+xi-divisor source retains Matteo Cipollina's authorship and Apache-2.0 notice.
+The upstream project is due to Alex Kontorovich, Terence Tao, and its
+contributors.
+
+The formalization was developed with human mathematical direction and
+AI-assisted proof engineering.  Lean's kernel checks the resulting proof
+terms; that mechanical guarantee does not replace mathematical review of the
+chosen statements, source fidelity, or attribution.
+
+\par\bigskip
+\begin{center}
+\scshape Acknowledgements and attribution
+\end{center}
+\smallskip
+
+The central mathematical result is Guy Robin's.  The oscillation input and
+finite Mertens function are due to Jean-Louis Nicolas, and the positivity
+principle used in that argument is due to Edmund Landau.  The colossally
+abundant framework is due to Leonidas Alaoglu and Paul Erd\H{o}s.  Explicit
+prime-function estimates used in the reconstruction are credited to J.
+Barkley Rosser, Lowell Schoenfeld, and N. Costa Pereira, including Pereira's
+corrigendum.  The formal reconstruction, certificate design, and exposition
+are the work of the Robin1984 project; credits for external Lean
+infrastructure are recorded above and in the repository metadata.
+
+\begin{thebibliography}{99}
+
+\bibitem{AlaogluErdos1944}
+L. Alaoglu and P. Erd\H{o}s,
+\emph{On highly composite and similar numbers},
+Trans. Amer. Math. Soc. 56 (1944), 448--469.
+
+\bibitem{CostaPereira1985}
+N. Costa Pereira,
+\emph{Estimates for the Chebyshev function $\psi(x)-\vartheta(x)$},
+Math. Comp. 44 (1985), no. 169, 211--221,
+\href{https://doi.org/10.2307/2007805}{doi:10.2307/2007805}.
+
+\bibitem{CostaPereira1987}
+N. Costa Pereira,
+\emph{Corrigendum to ``Estimates for the Chebyshev function
+$\psi(x)-\vartheta(x)$''},
+Math. Comp. 48 (1987), no. 177, 447.
+
+\bibitem{Landau1905}
+E. Landau,
+\emph{\"Uber einen Satz von Tschebyschef},
+Math. Ann. 61 (1905), 527--550,
+\url{https://eudml.org/doc/158244}.
+
+\bibitem{Lean4}
+L. de Moura and S. Ullrich,
+\emph{The Lean 4 theorem prover and programming language},
+in: Automated Deduction--CADE 28, Lecture Notes in Computer Science 12699,
+Springer, 2021, 625--635.
+
+\bibitem{Mathlib}
+The Mathlib Community,
+\emph{The Lean mathematical library},
+CPP 2020, 367--381.
+
+\bibitem{Nicolas1983}
+J.-L. Nicolas,
+\emph{Petites valeurs de la fonction d'Euler},
+J. Number Theory 17 (1983), no. 3, 375--388,
+\href{https://doi.org/10.1016/0022-314X(83)90055-0}
+{doi:10.1016/0022-314X(83)90055-0}.
+
+\bibitem{Nicolas2012}
+J.-L. Nicolas,
+\emph{Small values of the Euler function and the Riemann hypothesis},
+Acta Arith. 155 (2012), no. 3, 311--321.
+
+\bibitem{Robin1984}
+G. Robin,
+\emph{Grandes valeurs de la fonction somme des diviseurs et hypoth\`ese de
+Riemann},
+J. Math. Pures Appl. (9) 63 (1984), 187--213, MR0774171.
+
+\bibitem{RosserSchoenfeld1962}
+J. B. Rosser and L. Schoenfeld,
+\emph{Approximate formulas for some functions of prime numbers},
+Illinois J. Math. 6 (1962), 64--94,
+\href{https://doi.org/10.1215/ijm/1255631807}
+{doi:10.1215/ijm/1255631807}.
+
+\end{thebibliography}
+
+\end{document}

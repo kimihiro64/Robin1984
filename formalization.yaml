@@ -1,0 +1,191 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
+version: "v0.4"
+
+project:
+  name: "Robin1984"
+  description: >-
+    A Lean 4 formalization of Guy Robin's 1984 equivalence between the
+    Riemann hypothesis and the strict divisor-sum inequality
+    sigma(n) < exp(gamma) n log(log n) for every integer n > 5040.  The
+    development also proves the restriction to colossally abundant integers,
+    reconstructs the Nicolas--Landau oscillation argument used for the
+    converse implication, and checks the finite ranges with exact Lean
+    certificates.  This is a formalization of an equivalence criterion; it
+    does not prove the Riemann hypothesis.
+  authors:
+    - "Jonas Whidden"
+  license: "Apache-2.0"
+  responsible_maintainers:
+    - "Jonas Whidden"
+
+classification:
+  arxiv: ["math.NT"]
+  msc2020: ["11M26", "11N37", "03B35"]
+
+sources:
+  - title: "Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann"
+    authors:
+      - "Guy Robin"
+    id: "MR0774171"
+    type: "paper"
+    location: "Journal de Mathematiques Pures et Appliquees (9) 63 (1984), 187--213"
+    relationship: "formalizes"
+    note: >-
+      Primary source for the advertised equivalence, the reduction through
+      colossally abundant integers, the analytic implication under RH, and the
+      finite-exception boundary.
+  - title: "Petites valeurs de la fonction d'Euler"
+    authors:
+      - "Jean-Louis Nicolas"
+    id: "https://doi.org/10.1016/0022-314X(83)90055-0"
+    type: "paper"
+    location: "Journal of Number Theory 17 (1983), no. 3, 375--388"
+    relationship: "formalizes"
+    note: >-
+      Source of the Nicolas oscillation theorem used by Robin in the
+      contrapositive direction; the Lean development reconstructs the needed
+      Nicolas--Landau analytic argument.
+  - title: "Uber einen Satz von Tschebyschef"
+    authors:
+      - "Edmund Landau"
+    id: "https://eudml.org/doc/158244"
+    type: "paper"
+    location: "Mathematische Annalen 61 (1905), 527--550"
+    relationship: "formalizes"
+    note: >-
+      Source of the positive-transform singularity principle reconstructed in
+      the Lean proof of Nicolas's negative oscillation.
+  - title: "On highly composite and similar numbers"
+    authors:
+      - "Leonidas Alaoglu"
+      - "Paul Erdos"
+    type: "paper"
+    location: "Transactions of the American Mathematical Society 56 (1944), 448--469"
+    relationship: "background"
+    note: "Classical source for colossally abundant numbers and their extremal structure."
+  - title: "Approximate formulas for some functions of prime numbers"
+    authors:
+      - "J. Barkley Rosser"
+      - "Lowell Schoenfeld"
+    id: "https://doi.org/10.1215/ijm/1255631807"
+    type: "paper"
+    location: "Illinois Journal of Mathematics 6 (1962), 64--94"
+    relationship: "background"
+    note: "Source of explicit prime-function estimates used in Robin's argument."
+  - title: "Estimates for the Chebyshev Function psi(x) - theta(x)"
+    authors:
+      - "N. Costa Pereira"
+    id: "https://doi.org/10.2307/2007805"
+    type: "paper"
+    location: >-
+      Mathematics of Computation 44 (1985), no. 169, 211--221; corrigendum,
+      Mathematics of Computation 48 (1987), no. 177, 447
+    relationship: "formalizes"
+    note: >-
+      Source, including the corrigendum, for the explicit psi-minus-theta
+      inequalities used in the complete prime-power tail estimate.
+
+related_formalizations: []
+
+status:
+  scope: >-
+    The two advertised declarations prove Robin's full 1984 biconditional in
+    Mathlib's RiemannHypothesis formulation and the equivalent restriction to
+    colossally abundant integers above 5040.  The proof development excludes
+    the deliberate statement holes in Challenge.lean from its counts.  It
+    does not establish either side of the biconditional unconditionally and
+    therefore does not prove the Riemann hypothesis.
+  sorry_count: 0
+  sorry_in_definitions: 0
+  axioms: ["propext", "Quot.sound", "Classical.choice"]
+  main_results:
+    - declaration: "Robin1984.robin_inequality_iff_riemannHypothesis"
+      file: "Solution.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "Robin1984.riemannHypothesis_iff_colossallyAbundant_robin"
+      file: "Solution.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+
+automation:
+  methods:
+    - method: "manual"
+      models: []
+      framework: "Lean 4 and Mathlib"
+      tool_setup: "Human theorem design, source study, Lean editing, and review."
+      cost:
+        wall_time: "Developed over multiple research sessions; not tracked"
+        spend_usd: "not tracked"
+        hardware: "local workstation"
+      prompting_notes: "n/a"
+    - method: "agent"
+      models: ["OpenAI Codex (GPT-5 family)"]
+      framework: "Codex desktop"
+      tool_setup: >-
+        AI-assisted Lean proof development, dependency analysis, refactoring,
+        documentation, and mechanical verification under human direction.
+      cost:
+        wall_time: "Developed over multiple research sessions; not tracked"
+        spend_usd: "subscription-based; not tracked"
+        hardware: "local workstation and hosted model inference"
+      prompting_notes: >-
+        Iterative theorem-target prompts with explicit axiom, quantifier,
+        numerical-domain, dependency, and build checks. The maintainer selected
+        the mathematical goals and reviewed the resulting source.
+  spend_usd: "subscription-based; not tracked"
+  notes: >-
+    The formalization was developed collaboratively by the maintainer and AI
+    coding agents.  Lean's kernel, focused builds, full builds, source scans,
+    Comparator, and NanoDa are the mechanical correctness gates; automation is
+    not treated as mathematical review.
+
+fidelity:
+  divergences: >-
+    The advertised statements match Robin's criterion and its colossally
+    abundant restriction.  The Lean proof is a reconstruction rather than a
+    line-by-line translation: it factors analytic arguments into smaller
+    lemmas, uses Mathlib's definitions of the divisor sum, Euler's constant,
+    and the Riemann hypothesis, and replaces prose or tabular finite checks by
+    exact certificates.  Intermediate cutoffs and lemma organization may
+    differ from Robin's paper, but no extra hypothesis appears in either
+    advertised theorem.
+
+review:
+  status: "self-assessed"
+  reviewers: []
+  notes: >-
+    The maintainer has audited statement fidelity, import closure, absence of
+    project-local axioms and proof placeholders, exact dependency pins, and
+    finite-certificate coverage.  No independent expert mathematical review
+    is claimed.
+
+alignment:
+  namespace: "Robin1984"
+  statements:
+    - source: "Robin (1984), Theorem 1"
+      lean: "Robin1984.robin_inequality_iff_riemannHypothesis"
+      module: "Solution"
+      status: "proved"
+      note: >-
+        The Lean statement uses ArithmeticFunction.sigma, Mathlib's Euler
+        constant, and Mathlib's RiemannHypothesis predicate, with the same
+        strict cutoff n > 5040.
+    - source: "Robin (1984), reduction to colossally abundant integers"
+      lean: "Robin1984.riemannHypothesis_iff_colossallyAbundant_robin"
+      module: "Solution"
+      status: "proved"
+      note: >-
+        The parameterized definition states that n maximizes
+        sigma(k)/k^(1+eps) for eps > 0 and all integers k > 1.
+
+acknowledgements: >-
+  The project builds on Lean, Mathlib, PrimeNumberTheoremAnd, leancert,
+  Comparator, NanoDa, Landrun, and the PalomarTemplate repository. Matteo
+  Cipollina is credited in the xi-divisor interface source published in the
+  pinned public PrimeNumberTheoremAnd fork. All mathematical credit for cited
+  results remains with Robin, Nicolas, Landau, Alaoglu--Erdos,
+  Rosser--Schoenfeld, Costa Pereira, Mertens, and the other authors identified
+  in the per-file provenance index and research paper.

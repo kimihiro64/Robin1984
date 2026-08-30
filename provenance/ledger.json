@@ -1,0 +1,1392 @@
+{
+  "schema_version": 1,
+  "review_method": "File-by-file review of module documentation, direct imports, retained declaration statements, proof role, and exact path to the advertised theorems; classifications were explicitly assigned and not inferred from paths or keyword searches.",
+  "files": [
+    {
+      "path": "Challenge.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).",
+      "formalization_note": "The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include is, sigmaOneNat, robinInequality, caObjective, IsColossallyAbundantWith, robin_inequality_iff_riemannHypothesis, riemannHypothesis_iff_colossallyAbundant_robin.",
+      "dependency_status": "documented Palomar or convenience exception",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the complete file and its import/configuration role; it declares no theorem.",
+      "dependency_status": "documented Palomar or convenience exception",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Analytic/EulerLower.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_log_step_trapezoid, robinEulerLowerSeq, robinEulerLowerSeq_monotone, robinEulerLowerSeq_tendsto, robinEulerLowerSeq_le, robin_euler_constant_lower.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Analytic/FactorizationEulerReserve.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 analytic implication supplies the surrounding mathematical target.",
+      "formalization_note": "The exact coefficient normalization, explicit cutoff choices, and proof interfaces in this module are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include factorizationEulerSaturation, factorizationTowerReserve, factorizationEulerSaturation_eq_log_abundancy_add_reserve, primeTowerTopCorrection_nonneg, factorizationTowerReserve_nonneg.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Analytic/MertensExplicitCoefficient.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 analytic implication supplies the surrounding mathematical target.",
+      "formalization_note": "The exact coefficient normalization, explicit cutoff choices, and proof interfaces in this module are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinMertensWeightedScalar_normalized, robinMertensWeightedScalar_lt_nine_quarters.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Analytic/PrimeCostExplicitCoefficient.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 analytic implication supplies the surrounding mathematical target.",
+      "formalization_note": "The exact coefficient normalization, explicit cutoff choices, and proof interfaces in this module are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_large_log_ratios, robinPrimeCostNormalized, robinPrimeCostNormalized_ge, robin_prime_cost_root_geometry, robin_prime_cost_block_normalized, robin_minimum_prime_cost_ge_large_scalar.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Analytic/PrimeCostLowerBound.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 analytic implication supplies the surrounding mathematical target.",
+      "formalization_note": "The exact coefficient normalization, explicit cutoff choices, and proof interfaces in this module are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_prime_square_reference_sign, robin_minimum_prime_cost_ge_block.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Analytic/PrimePowerSecondWeightBounds.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 analytic implication supplies the surrounding mathematical target.",
+      "formalization_note": "The exact coefficient normalization, explicit cutoff choices, and proof interfaces in this module are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_log_ge_five, robin_root_error_upper_log_five, robin_root_error_two_normalized, robin_second_weight_root_ratios, robinZeroKernel_fifth_two_upper, robinPrimePowerWeightedTail_two_upper, robinPsiWeightedErrorScalar_two_upper, robin_second_theta_error_tail_lower.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Analytic/PrimeProductBlocks.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 analytic implication supplies the surrounding mathematical target.",
+      "formalization_note": "The exact coefficient normalization, explicit cutoff choices, and proof interfaces in this module are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include carries, robinPrimeBlockProduct, robinPrimeBlockProduct_add, robinPrimeBlockProduct_eq_primesLE, RobinPrimeProductBlock, RobinPrimeTrial, robinPrimeTrial_iff, robinPrimeBlockProductFast, and 10 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Analytic/PrimeReferenceSign.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_prime_reference_atom_sign.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Analytic/PrimeSquareAbelBound.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 analytic implication supplies the surrounding mathematical target.",
+      "formalization_note": "The exact coefficient normalization, explicit cutoff choices, and proof interfaces in this module are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinThetaWeightedTailTwo, integrableOn_robinThetaWeightedTailTwo, robinThetaWeightedTailTwo_eq_main_add_errors, robinZeroKernel_one_two_bounds, robinThetaWeightedTailTwo_upper, robinThetaWeightedTailTwo_lower, robinRealWeight_two_eq_primeSquareTailKernel, robin_complete_prime_square_block_eq, and 1 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Analytic/RiemannZetaRealNonzero.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include nicolasEulerSaw, nicolasEulerSaw_pos, nicolasEulerSaw_le_one, nicolasEulerSaw_eq_sub_nat_on_cell, iUnion_nicolasEulerCells, pairwise_disjoint_nicolasEulerCells, nicolasEulerRemainderIntegrand, nicolasEulerRemainder, and 37 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Arithmetic/Definitions.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).",
+      "formalization_note": "The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include sigmaOneNat, NativeRobinInequality, NativeRobinInequalityAll.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Arithmetic/RobinBounds.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include abundancy, robinBoundRatio, robinFrontierCutoff, robinBoundRatio_pos_of_cutoff, log_robinBoundRatio_eq_of_cutoff, robinFrontierCutoff_pos_of_cutoff, nativeRobinInequality_iff_abundancy_lt_bound, robinFrontierCutoff_antitone_above_cutoff, and 2 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/ColossallyAbundant/CAProfile.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Leonidas Alaoglu and Paul Erdos (1944), with Guy Robin's 1984 use of colossally abundant numbers.",
+      "formalization_note": "The CA objective and threshold characterization are published mathematics; the event representation and Lean interfaces are specific to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include eventReducedWeight, eventReducedWeight_eq_threshold_sub_mul, eventReducedWeight_nonneg_iff_threshold, eventReducedWeight_nonpos_iff_threshold, eventReducedWeight_eq_zero_of_threshold_eq, eventPacketReducedWeight, eventPacketReducedWeight_eq_eventGainSum_sub, eventGainRatio, and 59 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/ColossallyAbundant/CAReduction.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).",
+      "formalization_note": "The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include nativeRobinInequalityAll_iff_colossallyAbundant.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/ColossallyAbundant/EventGainFormula.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include event_gain_eq_caSimplifiedLayerGain.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/ColossallyAbundant/LCMPrimeTowerBounds.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include factorization_lcmUpto_le_one_iff_lt_sq, neg_log_one_sub_le_two_mul, primeTowerTopCorrection_le_two_inv_pow_succ, primeTowerTopCorrection_lcm_le_two_div_frontier.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/ColossallyAbundant/RobinLogMargin.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include actualExponentState_lyapunov_pos_iff_nativeRobinInequality.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Equivalence/AbundancyExponentBound.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).",
+      "formalization_note": "The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_mertens_summand_sum_lower, robin_prime_factor_gain_le, robin_log_abundancy_le_actual_proxy, robin_log_abundancy_le_complete_prime_cost.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Equivalence/Equivalence.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).",
+      "formalization_note": "The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include nativeRobinInequalityAll_of_riemannHypothesis, riemannHypothesis_iff_nativeRobinInequalityAll.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Equivalence/ExplicitLogBounds.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_log_two_upper, robin_log_ten_bounds, robin_log_hundred_thousand_bounds, robin_log_four_upper, robin_log_two_pi_upper.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Equivalence/ExponentProxyBound.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinExponentLogProxy, robin_absent_prime_cost, robin_exponent_proxy_plus_cost_le_benchmark, robin_complete_exponent_proxy_bound.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Equivalence/LargeHeightExplicitBounds.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_log_mul_rpow_neg_le, robin_hundred_thousand_power_sixth, robin_log_times_sixth_power_bound, robin_large_height_log_and_powers, robin_sqrt_two_lower, robin_fourth_root_two_upper.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Equivalence/LargeHeightRobin.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).",
+      "formalization_note": "The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_log_margin_lt_negative_scale_of_RH, nativeRobinInequality_of_RH_large_log.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Equivalence/OmegaScaleTransfer.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include AtTopOmegaPlus, AtTopOmegaMinus, AtTopOmegaPlus.add_isLittleO, AtTopOmegaMinus.add_isLittleO, rpow_neg_oneHalf_isLittleO_rpow_neg.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Equivalence/PrimePowerFirstWeightBounds.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).",
+      "formalization_note": "The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinZeroKernel_third_one_lower, robinZeroKernel_fifth_one_upper, robin_root_error_scalar_eq, robin_log_ge_nine, robin_rpow_neg_div_le_of_pow, robin_root_power_ratios, robin_root_error_one_upper, robin_scaled_rpow_log_le, and 2 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Equivalence/ReducedProductChecks.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include RobinReducedProductChecks, RobinFiniteProductChecks.of_first_layer_products, RobinFiniteProductChecks.of_first_layer_blocks.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Equivalence/RobinLemmaTwo.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).",
+      "formalization_note": "The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinPsiWeightedErrorIntegral_one_eq_zero_sum_correction, robinPsiWeightedErrorIntegral_eq_zero_sum_correction_all, robinPsiWeightedErrorIntegral_bounds_all.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Equivalence/RobinTangentCoverageEquivalence.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include RobinFiniteTangentCACoverage, nativeRobinInequalityAll_iff_finiteTangentCACoverage.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Equivalence/RobinTangentTransfer.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include nativeRobinInequality_of_tangentCAObjective_ge, nativeRobinInequality_of_tangent_colossallyAbundant, tangentCAMaximizer_above_5040_of_shared_5040_55440.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Equivalence/Theorem.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).",
+      "formalization_note": "The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include NativeRobinInequality, riemannHypothesis_iff_colossallyAbundantRobin.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Equivalence/WeightedKernelBounds.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).",
+      "formalization_note": "The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinCpowLogTail_ofReal_eq, robinCpowLogTail_ofReal_re_nonneg, robinCpowLogTail_ofReal_re_le, robinCpowLogTail_ofReal_recurrence, robinZeroKernel_ofReal_eq_main_add_signed_tail, robinZeroKernel_half_one_upper, robinZeroKernel_third_one_upper, robinZeroKernel_half_two_bounds, and 1 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Equivalence/WeightedTailReweight.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinTailTriangle, integral_robinTailTriangle_left, integral_norm_robinTailTriangle_left, integral_robinTailTriangle_right, robin_complete_tail_reweight.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/AllRows.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed the complete certificate aggregation, its imported row or block checks, and the exact coverage theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks00.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 000--007, covering 0--396, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks01.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 008--015, covering 396--2315, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks02.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 016--023, covering 2315--6144, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks03.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 024--031, covering 6144--11264, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks04.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 032--039, covering 11264--16384, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks05.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 040--047, covering 16384--22528, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks06.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 048--055, covering 22528--28672, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks07.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 056--063, covering 28672--35691, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks08.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 064--071, covering 35691--41984, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks09.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 072--079, covering 41984--49152, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks10.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 080--087, covering 49152--56320, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks11.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 088--095, covering 56320--63488, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks12.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 096--103, covering 63488--70656, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks13.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 104--111, covering 70656--77824, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks14.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 112--119, covering 77824--84992, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks15.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 8 explicit prime-product records, blocks 120--127, covering 84992--92160, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/PrimeBlocks16.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed 4 explicit prime-product records, blocks 128--131, covering 92160--95673, and each associated kernel decision theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row00.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 00, its rational interval (336 / 25) to (22117363 / 1000000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row01.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 01, its rational interval (22117363 / 1000000) to (35788699 / 1000000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row02.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 02, its rational interval (35788699 / 1000000) to (29149999 / 500000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row03.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 03, its rational interval (29149999 / 500000) to (47544747 / 500000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row04.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 04, its rational interval (47544747 / 500000) to (146801491 / 1000000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row05.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 05, its rational interval (146801491 / 1000000) to (111686563 / 500000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row06.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 06, its rational interval (111686563 / 500000) to (163594351 / 500000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row07.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 07, its rational interval (163594351 / 500000) to (464815043 / 1000000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row08.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 08, its rational interval (464815043 / 1000000) to (130165559 / 200000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row09.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 09, its rational interval (130165559 / 200000) to (893036263 / 1000000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row10.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 10, its rational interval (893036263 / 1000000) to (240770673 / 200000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row11.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 11, its rational interval (240770673 / 200000) to (63176719 / 40000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row12.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 12, its rational interval (63176719 / 40000) to (2035337871 / 1000000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row13.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 13, its rational interval (2035337871 / 1000000) to (518900301 / 200000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row14.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 14, its rational interval (518900301 / 200000) to (815385537 / 250000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row15.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 15, its rational interval (815385537 / 250000) to (406392661 / 100000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row16.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 16, its rational interval (406392661 / 100000) to (1248690297 / 250000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row17.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 17, its rational interval (1248690297 / 250000) to (3045165617 / 500000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row18.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 18, its rational interval (3045165617 / 500000) to (458996953 / 62500), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row19.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 19, its rational interval (458996953 / 62500) to (4387795691 / 500000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row20.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 20, its rational interval (4387795691 / 500000) to (10433152137 / 1000000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row21.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 21, its rational interval (10433152137 / 1000000) to (12279993269 / 1000000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row22.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 22, its rational interval (12279993269 / 1000000) to (179906601 / 12500), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row23.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 23, its rational interval (179906601 / 12500) to (16784073643 / 1000000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row24.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 24, its rational interval (16784073643 / 1000000) to (9718846411 / 500000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row25.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 25, its rational interval (9718846411 / 500000) to (22433188173 / 1000000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row26.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 26, its rational interval (22433188173 / 1000000) to (1287242339 / 50000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row27.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 27, its rational interval (1287242339 / 50000) to (7349340853 / 250000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row28.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 28, its rational interval (7349340853 / 250000) to (1338267981 / 40000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row29.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 29, its rational interval (1338267981 / 40000) to (9481137173 / 250000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row30.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 30, its rational interval (9481137173 / 250000) to (1070418171 / 25000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row31.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 31, its rational interval (1070418171 / 25000) to (48110318623 / 1000000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row32.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 32, its rational interval (48110318623 / 1000000) to (10789326747 / 200000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row33.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 33, its rational interval (10789326747 / 200000) to (30165067587 / 500000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row34.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 34, its rational interval (30165067587 / 500000) to (33566442549 / 500000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row35.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 35, its rational interval (33566442549 / 500000) to (37283397387 / 500000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row36.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 36, its rational interval (37283397387 / 500000) to (41321869833 / 500000), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row37.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 37, its rational interval (41321869833 / 500000) to (285455918 / 3125), cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row38.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed the complete certificate aggregation, its imported row or block checks, and the exact coverage theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/Certificates/Row38Layers.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
+      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
+      "content_basis": "Reviewed row 38, its rational interval (285455918 / 3125) to 100000, cut data, product references, and kernel decision theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/CutoffIndex.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include simplifiedLayerGain, pow_sub_one_pos_of_one_lt_of_pos_nat, simplifiedLayerGainDenomSum, simplifiedLayerGainDenomSum_eq, simplifiedLayerGainDenomSum_pos, real_natPow_mono_of_nonneg, simplifiedLayerGainDenomSum_mono, simplifiedLayerGain_fraction_le_of_base_le, and 1 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/FiniteComplete.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include nativeRobinInequality_finite_log.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/FiniteCover.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include RobinFiniteCover, robinFiniteCoverDecidable, RobinFiniteCover.exists_row, nativeRobinInequality_of_finite_cover.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/FiniteLayerChecks.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinLayerGainRatioRat, robinLayerGainRatioRat_ge_one, robinLayerGainRatioRat_cast, RobinLayerTopCheck, RobinLayerNextCheck, RobinLayerTopCheck.sound, RobinLayerNextCheck.sound, RobinLayerChecks, and 1 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/FiniteLogCertificate.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinLogLower, robinLogUpper, robinLogLower_le_log, log_le_robinLogUpper, robin_log_two_precise_bounds, robin_log_bounds_of_dyadic_bracket.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/FiniteLogScale.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinLogScaledLower, robinLogScaledUpper, robin_log_scaled_bounds.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/FinitePacketProducts.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinPacketNumerator, robinPacketDenominator, robinPacketBaseProduct, robinRawEventWeight_eq_log_products, robinPacketProducts_pos, robinRawEventWeight_sum_eq_integer_products, robinBoxProduct, robinLayerBox_prod, and 1 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/FiniteRowCertificate.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinRatLogScale, RobinFiniteRow, robinFiniteRowHeightLower, robinFiniteRowObjectiveUpper, RobinFiniteProductChecks, RobinFiniteEndpointCheck, RobinFiniteRowChecks, RobinFiniteProductChecks.sound, and 2 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/FiniteTangent.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_div_le_iff_pos, robin_le_div_iff_pos, robinRawEventWeight, robinLayerBox, robinLayerBox_mem, robinRawEventWeight_event, robinLayerBox_complete_signs, robin_objective_le_finite_box.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/LayerThresholdMonotonicity.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include simplifiedLayerGain_pos, simplifiedLayerThreshold_le_of_base_le.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/PrimeLogAbelSummation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include primeLogCoeff, sum_primeLogCoeff_Icc_eq_theta, primeLogCoeff_abel.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/PrimeSquareAbel.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include primeSquareKernel, primeSquareTailKernel, primeSquareKernel_mul_primeLogCoeff, sum_primeSquareKernel_mul_primeLogCoeff, differentiableAt_primeSquareKernel, deriv_primeSquareKernel, deriv_primeSquareKernel_eq_neg_tailKernel, continuousAt_primeSquareTailKernel, and 6 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/RobinFiniteStartupCATangent.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include concaveOn_log_log_sub_mul, min_logLogCATangentEndpoint_le, ca5040RobinLogTangentGapAtLog, log_abundancy_sub_commonStartupCutoff_log_le_5040, nativeRobinInequality_of_commonStartupTangentEndpoints.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/RobinFiniteStartupCATangent7560.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include exp_one_lt_27183_div_10000, exp_93_div_100_lt_507_div_200, exp_3917_div_5000_lt_2189_div_1000, exp_189_div_1000_lt_12081_div_10000, exp_2189_div_1000_lt_893_div_100, exp_893_div_100_lt_7560, exp_3_div_50_lt_531_div_500, exp_103_div_50_lt_eight, and 10 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/RobinFiniteStartupCATangentEndpoints.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include in, exp_one_lt_2719_div_1000, exp_12_div_25_lt_1617_div_1000, exp_3_div_5_lt_1823_div_1000, exp_191_div_200_lt_13_div_5, ca5040To55440Cutoff_lt_one_div_27, log_143_lt_five, ca5040To55440Cutoff_mul_log_143_lt_five_div_27, and 8 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/RobinFiniteStartupComplete.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include sigmaOneNat_startup_5041_to_7560_le_127_div_35, nativeRobinInequality_finite_startup.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/RobinFiniteStartupFactorCertificate5041To5077.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include startupFactorRows5041To5077, startupFactorRows5041To5077_valid.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/RobinFiniteStartupFactorCertificate5077To6101.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include startupFactorRows5077To6101, startupFactorRows5077To6101_valid.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/RobinFiniteStartupFactorCertificate6101To7125.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include startupFactorRows6101To7125, startupFactorRows6101To7125_valid.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/RobinFiniteStartupFactorCertificate7125To7560.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include startupFactorRows7125To7560, startupFactorRows7125To7560_valid.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/RobinFiniteStartupFactorCertificateCore.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include StartupPrimePower, startupFactorProduct, startupFactorSigma, StartupFactorsValid, sigmaOneNat_startupFactorProduct_eq_startupFactorSigma, StartupFactorRowsValid, sigmaOneNat_le_127_div_35_of_startupFactorRowsValid.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/RobinFiniteStartupFactorCertificateLengths.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include startupFactorRows5041To5077_length, startupFactorRows5077To6101_length, startupFactorRows6101To7125_length, startupFactorRows7125To7560_length.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/RobinTangentExplicitCutoff.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include rational_336_div_25_lt_log_720720, rational_129_div_50_lt_log_336_div_25, rational_129_div_50_lt_log_log_720720, thirty_four_lt_log_mul_log_log_720720, robinFrontierCutoff_720720_lt_one_div_34, robinFrontierCutoff_720720_lt_ca5040To55440Cutoff, robinFrontierCutoff_lt_ca5040To55440Cutoff_of_720720_le, nativeRobinInequalityAll_iff_tangentCoverage_720720.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/RobinTangentStartup.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include startup_mul_div_cancel_left_pos, startup_div_div_cancel_left_pos, ca5040To55440Cutoff, prime_dvd_5040_cases, one_div_nat_lt_event_threshold_of_prime_lt_gainRatio_pow, event_threshold_lt_one_div_nat_of_gainRatio_pow_lt_prime, prime_11, one_pos_nat, and 31 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Finite/RobinTangentStartupComplete.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Robin (1984) supplies the exceptional cutoff and finite proof obligation.",
+      "formalization_note": "The rational certificate formats, interval partition, tangent argument, and exact startup verification are primarily project-authored.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include CA5040EventsPackage, ca5040Events, ca5040Events_eq_actualExponentEvents, mem_ca5040Events_iff, eventReducedWeight_nonneg_of_actual_5040_top, eventReducedWeight_nonpos_of_not_actual_5040_firstMissing, eleven_le_prime_of_not_two_three_five_seven, actualExponentEvents_5040_complete_signs, and 3 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Helpers/Event.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include Event, gain, threshold, prime_pos, log_prime_pos, threshold_mul_log, gain_eq_firstLayerContinuousGain_of_j_eq_one, threshold_eq_firstLayer_of_j_eq_one.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Helpers/FirstLayerThreshold.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include firstLayerContinuousGain, firstLayerThreshold, hasDerivAt_firstLayerContinuousGain, firstLayerThreshold_derivativeNumerator_neg, hasDerivAt_firstLayerThreshold, firstLayerThreshold_derivative_neg, strictAntiOn_firstLayerThreshold, firstLayerThreshold_antitone_on_gt_one, and 2 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Helpers/LCMPrimeSupport.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include factorization_lcmUpto_support_eq_primesUpToSet.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Helpers/Lyapunov.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include CAState, zeroCAState, lyapunov, applyPacket, eventLogMass, primesUpToSet, layerEventOfPrime, eventGainSum.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/LandauMellinPrinciple.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jean-Louis Nicolas (1983), Landau's oscillation principle, and Guy Robin's use of that argument (1984).",
+      "formalization_note": "The retained mathematical step reconstructs the cited Nicolas--Landau argument; module boundaries and Lean proof engineering are original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include mem_integrableExpSet_add_of_summable_moments, mem_integrableExpSet_add_of_analyticContinuationOnBall, integrableExpSet_strict_crossing_of_analyticContinuationOnBall, exists_integrableExpSet_gt_of_analyticContinuationAt.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/LcmTransfer.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jean-Louis Nicolas (1983), Landau's oscillation principle, and Guy Robin's use of that argument (1984).",
+      "formalization_note": "The retained mathematical step reconstructs the cited Nicolas--Landau argument; module boundaries and Lean proof engineering are original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include factorizationTowerReserve_lcmUpto_le_natSqrt_split, factorizationTowerReserve_lcmUpto_le_eight_mul_rpow, factorizationTowerReserve_lcmUpto_isBigO_rpow_neg_oneHalf, eventually_log_two_div_two_mul_le_chebyshevTheta_nat, lcmHeightLoss, eventually_lcmHeightLoss_nonneg_and_le_log_mul_rpow, log_mul_rpow_neg_oneHalf_isLittleO_rpow_neg, lcmHeightLoss_isLittleO_rpow_neg, and 18 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/MertensWeightedBound.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jean-Louis Nicolas (1983), Landau's oscillation principle, and Guy Robin's use of that argument (1984).",
+      "formalization_note": "The retained mathematical step reconstructs the cited Nicolas--Landau argument; module boundaries and Lean proof engineering are original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_mertens_summand_nonpos, robin_theta_tail_eq_psi_sub_prime_power, robinMertensWeightedScalar, robin_prime_power_sub_psi_tail_le_scalar.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/NicolasFunction.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jean-Louis Nicolas (1983), Landau's oscillation principle, and Guy Robin's use of that argument (1984).",
+      "formalization_note": "The retained mathematical step reconstructs the cited Nicolas--Landau argument; module boundaries and Lean proof engineering are original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include nicolasMertensProduct, nicolasFunction, nicolasLogMertensOscillation, nicolasMertensProduct_natFloor, nicolasFunction_natFloor, nicolasLogMertensOscillation_natFloor.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/NicolasLandau.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jean-Louis Nicolas (1983), Landau's oscillation principle, and Guy Robin's use of that argument (1984).",
+      "formalization_note": "The retained mathematical step reconstructs the cited Nicolas--Landau argument; module boundaries and Lean proof engineering are original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include riemannZeta_one_sub_eq_zero_of_nontrivial_zero, exists_riemannZeta_zero_re_gt_half_of_not_riemannHypothesis, nicolasVonMangoldtPartialSums_isBigO, nicolasLogDeriv_eq_psiMellin, nicolasPsiMellin_integrable, nicolasLinearMellin_integrable, nicolasPsiErrorMellin_eq_logDeriv, nicolasPsiErrorMellin_integrable, and 39 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/NicolasLandauCompactBlock.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jean-Louis Nicolas (1983), Landau's oscillation principle, and Guy Robin's use of that argument (1984).",
+      "formalization_note": "The retained mathematical step reconstructs the cited Nicolas--Landau argument; module boundaries and Lean proof engineering are original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include nicolasFilledOneRadius, nicolasFilledOneRadius_pos, nicolasFilledOneRadius_analytic, nicolasCompactZRadius, nicolasCompactZRadius_pos, nicolasCompactZRadius_le_oneRadius_div_sixteen, nicolasCompactZRadius_le_one_sixty_four, nicolasPsiMellinTailContinuationFilled_analyticAt_compact_base, and 42 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/NicolasLandauComplexFrontier.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jean-Louis Nicolas (1983), Landau's oscillation principle, and Guy Robin's use of that argument (1984).",
+      "formalization_note": "The retained mathematical step reconstructs the cited Nicolas--Landau argument; module boundaries and Lean proof engineering are original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include nicolasLandauComplexMGF_analyticAt_of_positive, exists_nicolasLandauComplexMGF_analytic_halfPlane_of_not_omegaMinus, riemannZeta_zero_im_ne_zero_of_re_mem_Ioo, exists_rightmost_horizontal_riemannZeta_zero, nicolasJShiftedComplexContinuationFilledCompact_analyticAt_of_tube, exists_nicolasRightmostRayCompactTubeRadius, nicolasJShiftedComplexContinuationFilledCompact_analyticAt_rightmostRay, norm_nicolasJShiftNumeratorFilled_le_of_re_le_threeQuarter, and 11 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/NicolasLandauFrontier.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jean-Louis Nicolas (1983), Landau's oscillation principle, and Guy Robin's use of that argument (1984).",
+      "formalization_note": "The retained mathematical step reconstructs the cited Nicolas--Landau argument; module boundaries and Lean proof engineering are original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include mem_interior_integrableExpSet_of_two_sided, Iio_subset_interior_integrableExpSet_of_analyticContinuation.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/NicolasLandauPositiveStrip.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jean-Louis Nicolas (1983), Landau's oscillation principle, and Guy Robin's use of that argument (1984).",
+      "formalization_note": "The retained mathematical step reconstructs the cited Nicolas--Landau argument; module boundaries and Lean proof engineering are original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include nicolasPsiMellinTailContinuationFilled_analyticAt_of_ne_zero_of_factor_ne_zero, eventually_nicolasZetaPoleFactor_ne_zero_shift_pos_real, nicolasJMellinShiftIntegrandFilled_joint_continuousAt, nicolasJMellinShiftIntegrandFilled_analyticAt_of_ne_zero_of_factor_ne_zero, exists_nicolasPositiveCompactTubeRadius, exists_nicolasPositiveCompactKernelBound, nicolasJMellinShiftIntegrandFilled_continuousOn_u_of_compactTube, nicolasCompactStripDerivativeStep, and 15 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/NicolasLandauPositiveTail.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jean-Louis Nicolas (1983), Landau's oscillation principle, and Guy Robin's use of that argument (1984).",
+      "formalization_note": "The retained mathematical step reconstructs the cited Nicolas--Landau argument; module boundaries and Lean proof engineering are original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include nicolasLandauPositiveTail, nicolasLandauPositiveDensity, nicolasLandauPositiveMeasure, nicolasLandauPositiveMellin, nicolasLandauRpowMellinContinuation, nicolasJShiftedRealContinuation, nicolasJRealMellinStartup, nicolasLandauPositiveMellinContinuation, and 61 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/NicolasLandauRightmostRay.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jean-Louis Nicolas (1983), Landau's oscillation principle, and Guy Robin's use of that argument (1984).",
+      "formalization_note": "The retained mathematical step reconstructs the cited Nicolas--Landau argument; module boundaries and Lean proof engineering are original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include norm_intervalIntegral_inv_smul_sub_le_of_intervalIntegrable, nicolasLandauRpowComplexContinuation, nicolasLandauPositiveComplexContinuationFilled, nicolasLandauPositiveComplexMellin, complexMGF_log_nicolasLandauPositiveMeasure_eq_complexMellin, nicolasLandauRpowComplexTailMellin_eq_continuation, nicolasLandauRpowComplexContinuation_analyticAt, nicolasJ_complexMellin_integrableOn_Ioi_three, and 32 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/NicolasLandauRobinBridge.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jean-Louis Nicolas (1983), Landau's oscillation principle, and Guy Robin's use of that argument (1984).",
+      "formalization_note": "The retained mathematical step reconstructs the cited Nicolas--Landau argument; module boundaries and Lean proof engineering are original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include not_nativeRobinInequalityAll_of_not_riemannHypothesis, riemannHypothesis_of_nativeRobinInequalityAll.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/NicolasOscillation.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jean-Louis Nicolas (1983), Landau's oscillation principle, and Guy Robin's use of that argument (1984).",
+      "formalization_note": "The retained mathematical step reconstructs the cited Nicolas--Landau argument; module boundaries and Lean proof engineering are original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include nicolasThetaError, nicolasPsiError, nicolasTailKernel, nicolasK, nicolasJ, nicolasPrimePowerTail, nicolasPsiError_sub_thetaError, nicolasTailKernel_nonneg, and 26 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/RobinWeightedIntegral.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin (1984), especially the weighted explicit formula and Lemmas 1 and 2.",
+      "formalization_note": "The mathematical identity or bound is source-based; the multiplicity-aware indexing, interchange proofs, and Lean decomposition are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinZeroKernel, integrableOn_cpow_div_log_pow, robinCpowLogTail, robinZeroKernelRemainder, robinZeroKernelRemainder_div_rho, norm_le_norm_sub_nat_of_re_eq_half, norm_nat_div_sub_div_le_robinXiZeroWeight, robinCpowLogPrimitive, and 27 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/WeightedEndpoint.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin (1984), especially the weighted explicit formula and Lemmas 1 and 2.",
+      "formalization_note": "The mathematical identity or bound is source-based; the multiplicity-aware indexing, interchange proofs, and Lean decomposition are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinEndpointReweight, robinEndpointReweightDerivative, hasDerivAt_robinEndpointReweight, robinEndpointReweightDerivative_bounds, robinEndpointReweight_mul_weight_two, continuousOn_robinEndpointReweightDerivative, integral_robinEndpointReweightDerivative, robin_weighted_integral_reweight, and 4 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/WeightedEndpointArithmetic.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinRealWeight_one_eq_nicolasTailKernel, integrableOn_robinPsiWeightedError_one, complex_integral_mul_robinRealWeight, robinPsiWeightedErrorIntegral_one_reweight, robinTrivialZeroCorrection_one_reweight.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/WeightedEndpointZeros.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin (1984), especially the weighted explicit formula and Lemmas 1 and 2.",
+      "formalization_note": "The mathematical identity or bound is source-based; the multiplicity-aware indexing, interchange proofs, and Lean decomposition are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinEndpointZeroMajorant, integrableOn_robinEndpointZeroMajorant, norm_robinEndpointZeroAtom_le, integrableOn_robinEndpointZeroAtom, summable_integral_norm_robinEndpointZeroAtoms, robin_complete_zero_sum_one_reweight.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/WeightedExplicitFormula.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin (1984), especially the weighted explicit formula and Lemmas 1 and 2.",
+      "formalization_note": "The mathematical identity or bound is source-based; the multiplicity-aware indexing, interchange proofs, and Lean decomposition are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_weighted_explicit_constant, countable_robinXiDivisorZeroIndex, integrable_complete_xi_test, robinPrimePowerSum_eq_weighted_explicit_series.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/WeightedGammaPairing.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin (1984), especially the weighted explicit formula and Lemmas 1 and 2.",
+      "formalization_note": "The mathematical identity or bound is source-based; the multiplicity-aware indexing, interchange proofs, and Lean decomposition are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include half_digamma_eq_trivial_zero_series, norm_regularized_resolvent_mul_le, norm_gamma_atom_mul_le, integrable_gamma_atom, summable_integral_norm_gamma_atoms, integral_tsum_gamma_atoms, integrable_complex_series_of_integral_norm, robinCutoffMellin_gamma_atom_pairing, and 2 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/WeightedMellin.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin (1984), especially the weighted explicit formula and Lemmas 1 and 2.",
+      "formalization_note": "The mathematical identity or bound is source-based; the multiplicity-aware indexing, interchange proofs, and Lean decomposition are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinCutoffMellinTest, continuous_robinCutoffMellinTest, robinCutoffMellinIntegrand_eq_lower, robinCutoffMellinIntegrand_eq_upper, mellinConvergent_robinCutoffMellinTest, mellin_robinCutoffMellinTest_eq_zeroKernel_div, integrable_inverseSquare_verticalLine, norm_robinZeroKernelRemainder_bracket_le_re, and 13 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/WeightedPrimePowerTail.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "N. Costa Pereira, Estimates for the Chebyshev Function psi(x)-theta(x), Mathematics of Computation 44 (1985), 211--221, and the 1987 corrigendum.",
+      "formalization_note": "The prime-power inequalities are source-based; their weighted integral form and composition with Robin's kernels are formalization-specific.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinRealWeight_rpow_pullback, integral_root_mul_robinRealWeight, integrableOn_rpow_mul_robinRealWeight, integral_rpow_mul_robinRealWeight, inv_nat_lt_nat_of_two_le, integrableOn_psi_root_mul_robinRealWeight, integral_psi_root_mul_robinRealWeight_eq, robinPrimePowerWeightedTail, and 8 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/WeightedPsiError.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin (1984), especially the weighted explicit formula and Lemmas 1 and 2.",
+      "formalization_note": "The mathematical identity or bound is source-based; the multiplicity-aware indexing, interchange proofs, and Lean decomposition are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinPsiWeightedErrorIntegral, complex_t_mul_robinRealWeight_eq, robinZeroKernel_one_eq_integral_t_weight, integrableOn_complex_t_robinRealWeight, integrableOn_robinPsiWeightedError, robinPsiWeightedErrorIntegral_eq_zero_sum_correction, robinPsiWeightedErrorScalar.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/WeightedPsiIntegral.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin (1984), especially the weighted explicit formula and Lemmas 1 and 2.",
+      "formalization_note": "The mathematical identity or bound is source-based; the multiplicity-aware indexing, interchange proofs, and Lean decomposition are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include norm_robinCutoffMellinTest_le, summable_robinPrimePowerCutoff, robinPrimePowerIndicator, robinPrimePowerIndicator_nonneg, integrableOn_robinPrimePowerIndicator, complex_integral_robinRealWeight, integral_robinPrimePowerIndicator, summable_integral_norm_robinPrimePowerIndicators, and 3 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/WeightedTrivialCorrection.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin (1984), especially the weighted explicit formula and Lemmas 1 and 2.",
+      "formalization_note": "The mathematical identity or bound is source-based; the multiplicity-aware indexing, interchange proofs, and Lean decomposition are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinNegativeEvenAtom, robinNegativeEvenAtom_bounds, integrableOn_robinNegativeEvenAtom, summable_integral_norm_robinNegativeEvenAtoms, tsum_robinNegativeEvenAtoms, robinNegativeEvenAtom_eq_kernel_integrand, robinNegativeEvenKernel_eq_integral, tsum_robinNegativeEvenKernels_eq_log_integral, and 1 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/WeightedZeroInterchange.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin (1984), especially the weighted explicit formula and Lemmas 1 and 2.",
+      "formalization_note": "The mathematical identity or bound is source-based; the multiplicity-aware indexing, interchange proofs, and Lean decomposition are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include inv_rpow_three_halves_eq, inv_triple_product_le_three_halves, integrable_three_halves_verticalLine, exists_robinCutoffMellin_safeLine_majorant, norm_paired_hadamard_atom_mul_le, integrable_paired_xi_atom, summable_integral_norm_paired_xi_atoms, integral_tsum_paired_xi_atoms, and 1 further retained declarations.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/WeightedZeroPairing.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin (1984), especially the weighted explicit formula and Lemmas 1 and 2.",
+      "formalization_note": "The mathematical identity or bound is source-based; the multiplicity-aware indexing, interchange proofs, and Lean decomposition are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include integrableOn_robinCutoffMellinTest_power_tail, robinCutoffMellinTest_power_tail_eq, integrable_vertical_resolvent, robinCutoffMellin_paired_zero_atom.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/XiDivisorCriticalLine.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include completedRiemannZeta_eq_zero_of_riemannXi_eq_zero, riemannZeta_eq_zero_of_riemannXi_eq_zero, riemannXiDivisorZeroValue_re_eq_half_of_riemannHypothesis.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/XiLogDerivative.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "The Hadamard factorization and logarithmic derivative of Riemann's xi function.",
+      "formalization_note": "The published analytic expansion is imported through the pinned PrimeNumberTheoremAnd development; this module proves the exact identifications required by Robin's weighted formula.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include zetaPiFactor_eq_cpow_ascii, completedZetaFactor_eq_riemannXi_of_one_lt_re, logDeriv_completedZetaFactor_eq_riemannXi_of_one_lt_re, neg_riemannZeta_logDeriv_eq_xiDivisor_tsum.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/XiZeroConstant.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin (1984), especially the weighted explicit formula and Lemmas 1 and 2.",
+      "formalization_note": "The mathematical identity or bound is source-based; the multiplicity-aware indexing, interchange proofs, and Lean decomposition are formalization work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include riemannXi_one_eq_half, logDeriv_riemannXi_one_eq_neg_zero, riemannXiDivisor_symmetricTerm_eq_norm_inv_sq, summable_robinXiZeroWeight, riemannXi_hadamardPolynomialDerivative_eval_eq_logDeriv_zero, robinXiZeroConstant_eq_of_riemannHypothesis.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/NicolasLandau/ZeroConstantBound.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_log_two_lower, robin_log_four_pi_lower, robin_harmonic_256_upper, robin_zero_constant_le_one_twentieth.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Public.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinInequality.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Solution.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).",
+      "formalization_note": "The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_inequality_iff_riemannHypothesis, riemannHypothesis_iff_colossallyAbundant_robin.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "lakefile.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the complete file and its import/configuration role; it declares no theorem.",
+      "dependency_status": "documented Palomar or convenience exception",
+      "reviewed": true
+    }
+  ]
+}
