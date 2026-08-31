@@ -1,4 +1,5 @@
 import Mathlib.Analysis.PSeries
+import Mathlib.NumberTheory.Chebyshev
 import Robin1984.ColossallyAbundant.CAProfile
 
 /-!
