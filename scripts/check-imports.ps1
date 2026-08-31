@@ -206,7 +206,17 @@ Get-ChildItem -LiteralPath $ownedSourceRoot -Filter '*.lean' -File -Recurse |
 
 foreach ($file in $ownedFiles | Sort-Object FullName) {
   $relative = [IO.Path]::GetRelativePath($RepositoryRoot, $file.FullName)
+  $sourceText = [IO.File]::ReadAllText($file.FullName)
   $imports = @(Get-DirectImports -Path $file.FullName)
+
+  if ($relative -in @('Challenge.lean', 'Solution.lean') -and
+      $sourceText -notmatch '(?m)^set_option autoImplicit false\s*$') {
+    $failures.Add("${relative}: the Palomar theorem boundary must disable autoImplicit")
+  }
+  if ($relative -in @('Challenge.lean', 'Solution.lean') -and
+      'Mathlib.NumberTheory.LSeries.RiemannZeta' -notin $imports) {
+    $failures.Add("${relative}: the Palomar theorem boundary must directly import Mathlib.NumberTheory.LSeries.RiemannZeta")
+  }
 
   $seen = [System.Collections.Generic.HashSet[string]]::new(
     [System.StringComparer]::Ordinal

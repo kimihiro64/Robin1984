@@ -1,5 +1,8 @@
+import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Robin1984.Equivalence.Theorem
 import Robin1984.Public
+
+set_option autoImplicit false
 
 /-!
 ## Provenance
