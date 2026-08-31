@@ -85,6 +85,11 @@ GOBIN="$bin_dir" go install "github.com/zouuup/landrun/cmd/landrun@$landrun_comm
 cd "$repository_root"
 lake update
 lake exe cache get
+# Build through the repository's sequential default target before Comparator
+# requests Challenge and Solution directly. On CI this is normally an
+# up-to-date check against the restored build artifact; on a fresh verifier it
+# prevents the heavy certificate modules from elaborating concurrently.
+lake build
 PALOMAR_LANDRUN_BIN="$bin_dir/landrun" \
 COMPARATOR_LEAN4EXPORT="$lean4export_dir/.lake/build/bin/lean4export" \
 COMPARATOR_NANODA="$nanoda_dir/target/release/nanoda_bin" \

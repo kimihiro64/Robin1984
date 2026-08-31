@@ -173,6 +173,12 @@ run the pinned Comparator and NanoDa toolchain with:
 ./scripts/verify-comparator.sh
 ```
 
+The verifier first runs the repository's sequential default build, then checks
+the advertised Challenge/Solution interface and replays the exported proof in
+NanoDa. Linux CI passes the completed root `.lake/build` tree from its build job
+to the documentation and Comparator jobs, avoiding redundant concurrent cold
+builds while retaining the same checks on fresh standalone verifiers.
+
 API documentation is checked by the Linux CI job and can be built from the
 nested `docbuild` project on a host with a compatible native C toolchain:
 

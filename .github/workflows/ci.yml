@@ -104,9 +104,18 @@ jobs:
         run: ./scripts/check-provenance.ps1
       - name: Build the formalization
         run: lake build
+      - name: Upload the built formalization
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: robin1984-linux-build
+          path: .lake/build
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
 
   docs:
     name: Build API documentation
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -118,6 +127,15 @@ jobs:
           build: false
       - name: Fetch dependencies
         run: lake update
+      - name: Restore the built formalization
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: robin1984-linux-build
+          path: .lake/build
+      - name: Check the restored proof artifacts
+        run: |
+          test -s .lake/build/lib/lean/Challenge.olean
+          test -s .lake/build/lib/lean/Solution.olean
       - name: Build doc-gen4 output
         working-directory: docbuild
         env:
@@ -133,6 +151,7 @@ jobs:
 
   comparator:
     name: Check statement against solution
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 180
     steps:
@@ -144,6 +163,15 @@ jobs:
           build: false
       - name: Fetch dependencies
         run: lake update
+      - name: Restore the built formalization
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: robin1984-linux-build
+          path: .lake/build
+      - name: Check the restored proof artifacts
+        run: |
+          test -s .lake/build/lib/lean/Challenge.olean
+          test -s .lake/build/lib/lean/Solution.olean
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
         with:
           go-version: "1.24.0"
