@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this formalization, please cite the repository and the mathematical sources recorded in formalization.yaml."
+type: software
+title: "Robin1984: a Lean formalization of Robin's 1984 criterion for the Riemann hypothesis"
+authors:
+  - family-names: "Whidden"
+    given-names: "Jonas"
+abstract: >-
+  A Lean 4 formalization of Guy Robin's equivalence between the Riemann
+  hypothesis and the strict divisor-sum inequality above 5040, including the
+  reduction to colossally abundant integers, the Nicolas--Landau converse
+  argument, and exact finite certificates.
+license: Apache-2.0
+repository-code: "https://github.com/kimihiro64/Robin1984"
+url: "https://github.com/kimihiro64/Robin1984"
+keywords:
+  - "Lean 4"
+  - "formalized mathematics"
+  - "Riemann hypothesis"
+  - "Robin's inequality"
+  - "colossally abundant numbers"
+  - "number theory"

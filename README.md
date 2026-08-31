@@ -1,5 +1,7 @@
 # Robin1984
 
+[![CI](https://github.com/kimihiro64/Robin1984/actions/workflows/ci.yml/badge.svg)](https://github.com/kimihiro64/Robin1984/actions/workflows/ci.yml)
+
 Robin1984 is a Lean 4 formalization of Guy Robin's 1984 criterion for the
 Riemann hypothesis. It proves that
 
@@ -193,6 +195,10 @@ independent expert mathematical review. No such expert review is claimed.
 The repository snapshot is licensed under
 [Apache License 2.0](LICENSE). Mathematical papers and software dependencies
 retain their own copyrights and licences.
+
+Machine-readable citation information for this formalization is provided in
+[CITATION.cff](CITATION.cff). The canonical source repository is
+[kimihiro64/Robin1984](https://github.com/kimihiro64/Robin1984).
 
 Palomar reviews a fixed commit from a public GitHub repository, identified by
 its full 40-character SHA. See the current

@@ -18,6 +18,9 @@ project:
   responsible_maintainers:
     - "Jonas Whidden"
 
+repository:
+  role: "substantive-development"
+
 classification:
   arxiv: ["math.NT"]
   msc2020: ["11M26", "11N37", "03B35"]
