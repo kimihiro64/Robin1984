@@ -1,3 +1,4 @@
+import Mathlib.NumberTheory.Chebyshev
 import Robin1984.Analytic.FactorizationEulerReserve
 import Robin1984.ColossallyAbundant.LCMPrimeTowerBounds
 import Robin1984.Equivalence.OmegaScaleTransfer
@@ -559,8 +560,7 @@ theorem factorizationEulerSaturation_lcmUpto_eq_neg_log_nicolasMertensProduct
   apply congrArg (fun z : Real => -z)
   apply Finset.sum_congr rfl
   intro p hp
-  simp only [Nat.cast_zero, zero_add, Int.natCast_one, neg_neg,
-    zpow_neg, zpow_one, one_div]
+  simp only [Nat.cast_zero, zero_add, zpow_neg, zpow_one, one_div]
 
 /-- On the positive natural-frontier domain, Nicolas's logarithm expands into
 Euler's constant, the theta height, and the finite Mertens product exactly. -/

@@ -34,7 +34,7 @@ theorem nativeRobinInequality_finite_log {n : Nat} (hn : 5040 < n)
       Real.log (n : Real) < 74500 := hUpper
       _ < (37283397387 : Real) / 500000 := by norm_num
   apply nativeRobinInequality_of_finite_cover robinFiniteRows_cover robinFiniteRows_checks hn
-  . convert hLo using 1 <;> norm_num
+  . convert hLo using 1; norm_num
   . simpa using hHi
 
 end Robin1984
