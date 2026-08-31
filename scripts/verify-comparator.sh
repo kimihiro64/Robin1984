@@ -9,7 +9,8 @@ lean4export_dir="$cache_root/lean4export"
 nanoda_dir="$cache_root/nanoda"
 
 comparator_commit=68a064109f01c08f47c8edc9f51d6a2bbffaa188
-lean4export_commit=e2af49a7b7e5e1a9224008c1f15e7aa4f58a4015
+lean4export_repository=https://github.com/kimihiro64/lean4export.git
+lean4export_commit=816c66b0a963fee655c9dc36e5889e471b3ec7f6
 landrun_commit=811cfff51ceaf3d9843708aa6d22e9b84ccac8b4
 nanoda_commit=68d5ca9db226849b41a6fff59d796ff19d0a8840
 
@@ -54,7 +55,7 @@ checkout_exact() {
   git -C "$destination" checkout --detach "$commit"
 }
 
-checkout_exact https://github.com/leanprover/lean4export.git "$lean4export_dir" "$lean4export_commit"
+checkout_exact "$lean4export_repository" "$lean4export_dir" "$lean4export_commit"
 
 if [ ! -f "$lean4export_dir/lean-toolchain" ]; then
   echo "error: pinned lean4export revision $lean4export_commit has no lean-toolchain file" >&2

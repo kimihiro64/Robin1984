@@ -146,7 +146,7 @@ The bare `lake build` command is the complete submission build. Its Lake-native
 default target reads the checked-in 252-module topological order from
 [`scripts/build-order.txt`](scripts/build-order.txt), schedules one module job
 at a time, and finishes with `Solution`. Each Lean process is additionally
-bounded to two internal task threads (`-j2`). This avoids overlapping the
+bounded to one internal task thread (`-j1`). This avoids overlapping the
 largest finite-certificate elaborations without relying on an external build
 runner, bootstrap patch, or machine-local state.
 

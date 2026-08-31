@@ -23,8 +23,8 @@ from elaborating concurrently. `Challenge` states the Palomar challenge, and
 open Lake DSL
 
 package Robin1984 where
-  -- Bound Lean's internal task pool during certificate elaboration.
-  weakLeanArgs := #["-j2"]
+  -- Use one Lean worker during memory-intensive certificate elaboration.
+  weakLeanArgs := #["-j1"]
 
 require PrimeNumberTheoremAnd from git
   "https://github.com/kimihiro64/PrimeNumberTheoremAnd.git" @
