@@ -1,7 +1,4 @@
-import Robin1984.Arithmetic.Definitions
-import Robin1984.Arithmetic.RobinBounds
 import Robin1984.Equivalence.RobinTangentCoverageEquivalence
-import Robin1984.Finite.RobinTangentStartup
 /-!
 ## Provenance
 

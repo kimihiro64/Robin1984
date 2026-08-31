@@ -34,12 +34,7 @@ import Robin1984.Finite.Certificates.Row32
 import Robin1984.Finite.Certificates.Row33
 import Robin1984.Finite.Certificates.Row34
 import Robin1984.Finite.Certificates.Row35
-import Robin1984.Finite.Certificates.Row36
-import Robin1984.Finite.Certificates.Row37
-import Robin1984.Finite.Certificates.Row38
-import Robin1984.Finite.Certificates.Row38Layers
 import Robin1984.Finite.FiniteCover
-import Robin1984.Finite.FiniteRowCertificate
 /-!
 ## Provenance
 
@@ -52,10 +47,11 @@ import Robin1984.Finite.FiniteRowCertificate
 /-!
 # Complete finite log-height certificate cover
 
-`robinFiniteRows` collects the 39 rational row certificates in increasing
+`robinFiniteRows` collects the 36 rational row certificates in increasing
 order. `robinFiniteRows_checks` dispatches membership in this list to the
 corresponding row theorem, while `robinFiniteRows_cover` kernel-checks that
-their endpoints form a gap-free chain from `336 / 25` through `100000`.
+their endpoints form a gap-free chain from `336 / 25` through
+`37283397387 / 500000`, beyond the analytic cutoff `74500`.
 
 This is the aggregate certificate consumed by the finite-range proof of
 Robin's inequality.
@@ -99,16 +95,13 @@ def robinFiniteRows : List RobinFiniteRow := [
   robinFiniteRow32,
   robinFiniteRow33,
   robinFiniteRow34,
-  robinFiniteRow35,
-  robinFiniteRow36,
-  robinFiniteRow37,
-  robinFiniteRow38
+  robinFiniteRow35
 ]
 
 theorem robinFiniteRows_checks (r : RobinFiniteRow)
     (hr : Membership.mem robinFiniteRows r) : RobinFiniteRowChecks r := by
   simp only [robinFiniteRows, List.mem_cons, List.not_mem_nil, or_false] at hr
-  rcases hr with hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr
+  rcases hr with hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr | hr
   all_goals subst r
   . exact robinFiniteRow00_checks
   . exact robinFiniteRow01_checks
@@ -146,11 +139,9 @@ theorem robinFiniteRows_checks (r : RobinFiniteRow)
   . exact robinFiniteRow33_checks
   . exact robinFiniteRow34_checks
   . exact robinFiniteRow35_checks
-  . exact robinFiniteRow36_checks
-  . exact robinFiniteRow37_checks
-  . exact robinFiniteRow38_checks
 
-theorem robinFiniteRows_cover : RobinFiniteCover (336 / 25) 100000 robinFiniteRows := by
+theorem robinFiniteRows_cover :
+    RobinFiniteCover (336 / 25) (37283397387 / 500000) robinFiniteRows := by
   decide +kernel
 
 end Robin1984

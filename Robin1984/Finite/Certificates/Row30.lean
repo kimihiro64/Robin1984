@@ -1,4 +1,3 @@
-import Robin1984.Analytic.PrimeProductBlocks
 import Robin1984.Equivalence.ReducedProductChecks
 import Robin1984.Finite.Certificates.PrimeBlocks00
 import Robin1984.Finite.Certificates.PrimeBlocks01
@@ -9,7 +8,6 @@ import Robin1984.Finite.Certificates.PrimeBlocks05
 import Robin1984.Finite.Certificates.PrimeBlocks06
 import Robin1984.Finite.Certificates.PrimeBlocks07
 import Robin1984.Finite.Certificates.PrimeBlocks08
-import Robin1984.Finite.FiniteRowCertificate
 /-!
 ## Provenance
 

@@ -1,5 +1,5 @@
-import Robin1984.ColossallyAbundant.CAProfile
 import Mathlib.Analysis.PSeries
+import Robin1984.ColossallyAbundant.CAProfile
 
 /-!
 ## Provenance

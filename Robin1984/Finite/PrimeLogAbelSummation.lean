@@ -1,5 +1,4 @@
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
-import Mathlib.NumberTheory.AbelSummation
 import Mathlib.NumberTheory.Chebyshev
 
 /-!

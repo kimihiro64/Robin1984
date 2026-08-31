@@ -1,7 +1,5 @@
-import Robin1984.Arithmetic.Definitions
 import Robin1984.NicolasLandau.LcmTransfer
 import Robin1984.NicolasLandau.NicolasLandauRightmostRay
-import Robin1984.NicolasLandau.NicolasOscillation
 /-!
 ## Provenance
 

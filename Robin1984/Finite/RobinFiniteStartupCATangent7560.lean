@@ -1,8 +1,4 @@
-import Robin1984.Arithmetic.Definitions
-import Robin1984.Arithmetic.RobinBounds
-import Robin1984.Finite.RobinFiniteStartupCATangent
 import Robin1984.Finite.RobinFiniteStartupCATangentEndpoints
-import Robin1984.Finite.RobinTangentStartup
 /-!
 ## Provenance
 

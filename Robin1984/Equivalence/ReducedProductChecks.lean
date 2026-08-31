@@ -1,5 +1,4 @@
 import Robin1984.Analytic.PrimeProductBlocks
-import Robin1984.Finite.FinitePacketProducts
 import Robin1984.Finite.FiniteRowCertificate
 /-!
 ## Provenance

@@ -1,8 +1,5 @@
-import Robin1984.NicolasLandau.RobinWeightedIntegral
-import Robin1984.NicolasLandau.WeightedMellin
-import Robin1984.NicolasLandau.WeightedZeroInterchange
-import Robin1984.NicolasLandau.WeightedZeroPairing
 import PrimeNumberTheoremAnd.Mathlib.Analysis.SpecialFunctions.Gamma.DigammaSeries
+import Robin1984.NicolasLandau.WeightedZeroInterchange
 
 /-!
 ## Provenance

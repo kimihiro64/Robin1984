@@ -147,9 +147,6 @@ Robin1984.Finite.Certificates.PrimeBlocks10
 Robin1984.Finite.Certificates.PrimeBlocks11
 Robin1984.Finite.Certificates.PrimeBlocks12
 Robin1984.Finite.Certificates.PrimeBlocks13
-Robin1984.Finite.Certificates.PrimeBlocks14
-Robin1984.Finite.Certificates.PrimeBlocks15
-Robin1984.Finite.Certificates.PrimeBlocks16
 Robin1984.Finite.RobinTangentStartup
 Robin1984.Finite.RobinTangentStartupComplete
 Robin1984.Equivalence.RobinTangentCoverageEquivalence
@@ -192,10 +189,6 @@ Robin1984.Finite.Certificates.Row32
 Robin1984.Finite.Certificates.Row33
 Robin1984.Finite.Certificates.Row34
 Robin1984.Finite.Certificates.Row35
-Robin1984.Finite.Certificates.Row36
-Robin1984.Finite.Certificates.Row37
-Robin1984.Finite.Certificates.Row38Layers
-Robin1984.Finite.Certificates.Row38
 Robin1984.Finite.FiniteCover
 Robin1984.Finite.Certificates.AllRows
 Robin1984.Finite.RobinFiniteStartupCATangentEndpoints

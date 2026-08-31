@@ -1,9 +1,4 @@
-import Robin1984.NicolasLandau.RobinWeightedIntegral
 import Robin1984.NicolasLandau.WeightedGammaPairing
-import Robin1984.NicolasLandau.WeightedMellin
-import Robin1984.NicolasLandau.WeightedZeroInterchange
-import Robin1984.NicolasLandau.WeightedZeroPairing
-import Robin1984.NicolasLandau.XiDivisorCriticalLine
 import Robin1984.NicolasLandau.XiLogDerivative
 /-!
 ## Provenance

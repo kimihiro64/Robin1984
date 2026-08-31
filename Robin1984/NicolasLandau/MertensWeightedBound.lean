@@ -1,10 +1,4 @@
-import Robin1984.Equivalence.RobinLemmaTwo
-import Robin1984.Equivalence.WeightedKernelBounds
 import Robin1984.Equivalence.PrimePowerFirstWeightBounds
-import Robin1984.NicolasLandau.NicolasOscillation
-import Robin1984.NicolasLandau.WeightedEndpointArithmetic
-import Robin1984.NicolasLandau.WeightedPrimePowerTail
-import Robin1984.NicolasLandau.WeightedPsiError
 /-!
 ## Provenance
 

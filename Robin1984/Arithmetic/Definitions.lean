@@ -1,4 +1,5 @@
-import Mathlib
+import Mathlib.NumberTheory.ArithmeticFunction.Misc
+import Mathlib.NumberTheory.Harmonic.EulerMascheroni
 
 /-!
 ## Provenance

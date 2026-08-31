@@ -1,8 +1,5 @@
-import Mathlib.Data.Nat.Totient
-import Mathlib.Analysis.Complex.ExponentialBounds
 import Mathlib.NumberTheory.Chebyshev
 import Mathlib.NumberTheory.Harmonic.EulerMascheroni
-import Mathlib.NumberTheory.Primorial
 
 /-!
 ## Provenance

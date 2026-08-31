@@ -1,7 +1,5 @@
-import Robin1984.NicolasLandau.RobinWeightedIntegral
-import Robin1984.NicolasLandau.WeightedGammaPairing
-import Robin1984.NicolasLandau.WeightedMellin
 import Mathlib.NumberTheory.Chebyshev
+import Robin1984.NicolasLandau.WeightedGammaPairing
 
 /-!
 ## Provenance

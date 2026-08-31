@@ -1,7 +1,4 @@
-import Mathlib.Algebra.Field.GeomSum
-import Mathlib.Analysis.SpecialFunctions.Log.Deriv
 import Mathlib.Analysis.SpecialFunctions.Pow.Deriv
-import Mathlib.Analysis.Calculus.Deriv.MeanValue
 
 /-!
 ## Provenance

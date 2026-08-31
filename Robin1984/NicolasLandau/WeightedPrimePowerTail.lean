@@ -1,7 +1,4 @@
 import Robin1984.Equivalence.RobinLemmaTwo
-import Robin1984.NicolasLandau.RobinWeightedIntegral
-import Robin1984.NicolasLandau.WeightedEndpoint
-import Robin1984.NicolasLandau.WeightedPsiError
 /-!
 ## Provenance
 

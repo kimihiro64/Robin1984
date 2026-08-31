@@ -14,6 +14,11 @@ if (-not $?) {
   throw 'provenance validation failed'
 }
 
+& (Join-Path $PSScriptRoot 'check-imports.ps1') -RepositoryRoot $repositoryRoot
+if (-not $?) {
+  throw 'import lint failed'
+}
+
 Push-Location $repositoryRoot
 try {
   & $lakeCommand.Source build

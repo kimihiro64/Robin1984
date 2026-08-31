@@ -10,9 +10,9 @@ import Robin1984.Equivalence.PrimePowerFirstWeightBounds
 -/
 
 /-!
-# Uniform scalar data above logarithmic height 100000
+# Uniform scalar data above logarithmic height 74500
 
-For every real `H >= 100000`, these lemmas control the logarithmic factors and
+For every real `H >= 74500`, these lemmas control the logarithmic factors and
 fractional powers appearing in the analytic error terms. The module also
 records the rational square-root and fourth-root bounds needed to compare all
 coefficients on one common scale.
@@ -47,41 +47,39 @@ theorem robin_log_mul_rpow_neg_le
     _ <= (Real.log b * t) * x^(-r) := h
     _ = _ := by rw [mul_assoc, hEq]
 
-theorem robin_hundred_thousand_power_sixth :
-    (100000 : Real)^(-(1 / 6 : Real)) <= (147 / 1000 : Real) := by
-  have h := robin_rpow_neg_div_le_of_pow (x := (100000 : Real)) (a := 1) (d := 6)
-    (b := (147 / 1000 : Real)) (by norm_num) (by norm_num) (by omega) (by norm_num)
+theorem robin_74500_power_sixth :
+    (74500 : Real)^(-(1 / 6 : Real)) <= (1549 / 10000 : Real) := by
+  have h := robin_rpow_neg_div_le_of_pow (x := (74500 : Real)) (a := 1) (d := 6)
+    (b := (1549 / 10000 : Real)) (by norm_num) (by norm_num) (by omega) (by norm_num)
   norm_num at h
   exact h
 
-theorem robin_log_times_sixth_power_bound {H : Real} (hH : 100000 <= H) :
-    Real.log H * H^(-(1 / 6 : Real)) <= (17 / 10 : Real) := by
-  have hMono := robin_log_mul_rpow_neg_le (b := (100000 : Real)) (by norm_num) hH
+theorem robin_log_times_sixth_power_bound {H : Real} (hH : 74500 <= H) :
+    Real.log H * H^(-(1 / 6 : Real)) <= (87 / 50 : Real) := by
+  have hMono := robin_log_mul_rpow_neg_le (b := (74500 : Real)) (by norm_num) hH
     (r := (1 / 6 : Real)) (by norm_num)
-    (by nlinarith [robin_log_hundred_thousand_bounds.1])
-  have hLogPos : 0 <= Real.log (100000 : Real) := by positivity
-  have hPowerPos : 0 <= (100000 : Real)^(-(1 / 6 : Real)) := by positivity
-  have hProduct : Real.log (100000 : Real) * (100000 : Real)^(-(1 / 6 : Real)) <=
-      (288 / 25 : Real) * (147 / 1000 : Real) := by
-    gcongr
-    . exact robin_log_hundred_thousand_bounds.2
-    . exact robin_hundred_thousand_power_sixth
-  linarith
+    (by nlinarith [robin_log_74500_bounds.1])
+  have hProduct : Real.log (74500 : Real) * (74500 : Real)^(-(1 / 6 : Real)) <=
+      (1123 / 100 : Real) * (1549 / 10000 : Real) := by
+    exact mul_le_mul robin_log_74500_bounds.2 robin_74500_power_sixth
+      (Real.rpow_nonneg (by norm_num : (0 : Real) <= 74500) _)
+      (by norm_num : (0 : Real) <= 1123 / 100)
+  nlinarith
 
-theorem robin_large_height_log_and_powers {H : Real} (hH : 100000 <= H) :
-    And ((23 / 2 : Real) <= Real.log H)
-      (And (H^(-(1 / 4 : Real)) <= (563 / 10000 : Real))
-        (H^(-(1 / 2 : Real)) <= (1 / 316 : Real))) := by
+theorem robin_large_height_log_and_powers {H : Real} (hH : 74500 <= H) :
+    And ((56 / 5 : Real) <= Real.log H)
+      (And (H^(-(1 / 4 : Real)) <= (61 / 1000 : Real))
+        (H^(-(1 / 2 : Real)) <= (1 / 272 : Real))) := by
   have hHPos : 0 < H := by linarith
-  have hLog := Real.log_le_log (by norm_num : (0 : Real) < 100000) hH
-  have hQuarter := robin_rpow_neg_div_le_of_pow (a := 1) (d := 4) (b := (563 / 10000 : Real))
+  have hLog := Real.log_le_log (by norm_num : (0 : Real) < 74500) hH
+  have hQuarter := robin_rpow_neg_div_le_of_pow (a := 1) (d := 4) (b := (61 / 1000 : Real))
     hHPos (by norm_num) (by omega) (by norm_num; linarith)
-  have hHalf := robin_rpow_neg_div_le_of_pow (a := 1) (d := 2) (b := (1 / 316 : Real))
+  have hHalf := robin_rpow_neg_div_le_of_pow (a := 1) (d := 2) (b := (1 / 272 : Real))
     hHPos (by norm_num) (by omega) (by norm_num; linarith)
   norm_num at hQuarter hHalf
-  exact And.intro (robin_log_hundred_thousand_bounds.1.trans hLog) (And.intro hQuarter hHalf)
+  exact And.intro (robin_log_74500_bounds.1.trans hLog) (And.intro hQuarter hHalf)
 
-theorem robin_sqrt_two_lower : (707 / 500 : Real) <= Real.sqrt 2 := by
+theorem robin_sqrt_two_lower : (7071 / 5000 : Real) <= Real.sqrt 2 := by
   have hSquare := Real.sq_sqrt (by norm_num : (0 : Real) <= 2)
   have hNonneg := Real.sqrt_nonneg (2 : Real)
   nlinarith

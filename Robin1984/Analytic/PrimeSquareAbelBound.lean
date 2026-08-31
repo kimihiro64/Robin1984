@@ -1,9 +1,5 @@
 import Robin1984.Analytic.PrimePowerSecondWeightBounds
-import Robin1984.Equivalence.WeightedKernelBounds
 import Robin1984.Finite.PrimeSquareAbel
-import Robin1984.NicolasLandau.RobinWeightedIntegral
-import Robin1984.NicolasLandau.WeightedPrimePowerTail
-import Robin1984.NicolasLandau.WeightedPsiError
 /-!
 ## Provenance
 
@@ -80,33 +76,33 @@ theorem robinZeroKernel_one_two_bounds {x : Real} (hx : 1 < x) :
   norm_num at hF hNonneg hBound
   constructor <;> linarith
 
-theorem robinThetaWeightedTailTwo_upper {x : Real} (hx : 1 < x) :
+theorem robinPrimePowerWeightedTail_nonneg
+    {n : Nat} {x : Real} (hx : 1 <= x) :
+    0 <= robinPrimePowerWeightedTail n x := by
+  unfold robinPrimePowerWeightedTail
+  apply setIntegral_nonneg measurableSet_Ioi
+  intro t ht
+  exact mul_nonneg (sub_nonneg.mpr (Chebyshev.theta_le_psi t))
+    (robinRealWeight_nonneg (n := n) (lt_of_le_of_lt hx ht))
+
+theorem robinThetaWeightedTailTwo_upper
+    (hRH : RiemannHypothesis) {x : Real} (hx : 2 <= x) :
     robinThetaWeightedTailTwo x <=
-      2 * Real.log 4 * x^(-(1 : Real)) * Inv.inv (Real.log x) := by
-  have hMain : IntegrableOn (fun t : Real => t * robinRealWeight 2 t) (Ioi x) := by
-    simpa only [Real.rpow_one] using
-      integrableOn_rpow_mul_robinRealWeight (n := 2) (r := 1) hx (by norm_num)
-  have hBound : robinThetaWeightedTailTwo x <=
-      Real.log 4 * (robinZeroKernel 2 (1 : Complex) x).re := by
-    have hMono : robinThetaWeightedTailTwo x <=
-        integral (volume.restrict (Ioi x)) (fun t : Real => Real.log 4 * (t * robinRealWeight 2 t)) := by
-      apply integral_mono_ae (integrableOn_robinThetaWeightedTailTwo hx) (hMain.const_mul (Real.log 4))
-      filter_upwards [ae_restrict_mem measurableSet_Ioi] with t ht
-      have htOne : 1 < t := lt_trans hx ht
-      have h := mul_le_mul_of_nonneg_right
-        (Chebyshev.theta_le_log4_mul_x (by linarith : 0 <= t)) (robinRealWeight_nonneg (n := 2) htOne)
-      nlinarith
-    rw [integral_const_mul] at hMono
-    have hMainEq := integral_rpow_mul_robinRealWeight 2 1 hx
-    simp only [Real.rpow_one, Complex.ofReal_one] at hMainEq
-    rw [hMainEq] at hMono
-    exact hMono
-  have hUpper := mul_le_mul_of_nonneg_left (robinZeroKernel_one_two_bounds hx).2
-    (Real.log_nonneg (by norm_num : (1 : Real) <= 4))
-  nlinarith
+      2 * x^(-(1 : Real)) * Inv.inv (Real.log x) +
+        robinPsiWeightedErrorScalar 2 x := by
+  have hxOne : 1 < x := by linarith
+  have hIdentity := robinThetaWeightedTailTwo_eq_main_add_errors hxOne
+  have hZero := (robinZeroKernel_one_two_bounds hxOne).2
+  have hPsi :=
+    (robinPsiWeightedErrorIntegral_bounds_all hRH
+      (n := 2) (by omega) hx).2
+  have hPrime := robinPrimePowerWeightedTail_nonneg
+    (n := 2) (by linarith : (1 : Real) <= x)
+  rw [hIdentity]
+  linarith
 
 theorem robinThetaWeightedTailTwo_lower
-    (hRH : RiemannHypothesis) {x : Real} (hx : 400 <= x) :
+    (hRH : RiemannHypothesis) {x : Real} (hx : 366 <= x) :
     2 * x^(-(1 : Real)) * Inv.inv (Real.log x) -
       x^(-(1 : Real)) * Inv.inv ((Real.log x)^2) -
       (9 / 4 : Real) * x^(-(3 / 2 : Real)) * Inv.inv (Real.log x) -
@@ -154,12 +150,13 @@ theorem robin_complete_prime_square_block_eq
   ring
 
 theorem robin_complete_prime_square_block_lower
-    (hRH : RiemannHypothesis) {s b : Real} (hs : 400 <= s) (hsb : s <= b) :
+    (hRH : RiemannHypothesis) {s b : Real} (hs : 366 <= s) (hsb : s <= b) :
     2 * s^(-(1 : Real)) * Inv.inv (Real.log s) -
       s^(-(1 : Real)) * Inv.inv ((Real.log s)^2) -
       (9 / 4 : Real) * s^(-(3 / 2 : Real)) * Inv.inv (Real.log s) -
       Real.log (2 * Real.pi) * s^(-(2 : Real)) * Inv.inv (Real.log s) -
-      2 * Real.log 4 * b^(-(1 : Real)) * Inv.inv (Real.log b) <=
+      2 * b^(-(1 : Real)) * Inv.inv (Real.log b) -
+      robinPsiWeightedErrorScalar 2 b <=
         Chebyshev.theta s / (s^2 * Real.log s) +
           Finset.sum ((Finset.Ioc (Nat.floor s) (Nat.floor b)).filter Nat.Prime)
             (fun p => (Inv.inv (p : Real))^2) := by
@@ -169,7 +166,7 @@ theorem robin_complete_prime_square_block_lower
   have hBoundary : 0 <= Chebyshev.theta b / (b^2 * Real.log b) := by
     exact div_nonneg (Chebyshev.theta_nonneg b) (by positivity)
   have hLower := robinThetaWeightedTailTwo_lower hRH hs
-  have hUpper := robinThetaWeightedTailTwo_upper hbOne
+  have hUpper := robinThetaWeightedTailTwo_upper hRH (by linarith : 2 <= b)
   rw [robin_complete_prime_square_block_eq hsOne hsb]
   linarith
 

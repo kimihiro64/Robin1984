@@ -57,8 +57,8 @@ The proof development is organized by mathematical role:
 
 The finite proof has three visible parts. Exact prime factorizations cover
 `5041 <= n < 7560`; a common colossally abundant tangent covers
-`7560 <= n < 720720`; and 39 rational log-height rows cover the remaining
-finite range through `log n = 100000`. The final row uses 132 bounded
+`7560 <= n < 720720`; and 36 rational log-height rows cover the remaining
+finite range through `log n = 74500`. The final retained row uses 105 bounded
 prime-product blocks, each recomputed with `decide +kernel`.
 
 ## Provenance
@@ -145,7 +145,7 @@ lake build
 ```
 
 The bare `lake build` command is the complete submission build. Its Lake-native
-default target reads the checked-in 252-module topological order from
+default target reads the checked-in 245-module topological order from
 [`scripts/build-order.txt`](scripts/build-order.txt), schedules one module job
 at a time, and finishes with `Solution`. Each Lean process is additionally
 bounded to one internal task thread (`-j1`). This avoids overlapping the
@@ -162,9 +162,16 @@ adequate memory; no machine-independent cold-build duration is claimed.
 The repository's local checks are:
 
 ```powershell
+./scripts/check-imports.ps1
 ./scripts/check-provenance.ps1
 ruby ./scripts/validate-formalization.rb
 ```
+
+The import linter rejects package and Mathlib-category umbrella imports,
+duplicate or unresolved imports, non-canonical header ordering, and local
+imports already supplied transitively by another direct import. The subsequent
+Lean build separately verifies that every retained narrow import provides the
+notation, tactics, instances, and declarations its file actually needs.
 
 On a Linux host with Git, Go, Ruby, Rust/Cargo, Python 3 and Landrun support,
 run the pinned Comparator and NanoDa toolchain with:
@@ -178,6 +185,14 @@ the advertised Challenge/Solution interface and replays the exported proof in
 NanoDa. Linux CI passes the completed root `.lake/build` tree from its build job
 to the documentation and Comparator jobs, avoiding redundant concurrent cold
 builds while retaining the same checks on fresh standalone verifiers.
+It pins the upstream `leanprover/lean4export` v4.33.0 source commit and compiles
+that source unmodified with this repository's exact Lean v4.33.1 toolchain via
+`ELAN_TOOLCHAIN`. This keeps the exporter compatible with the project's
+`.olean` format without a fork or a machine-local patch.
+The build job also caches that tree across workflow runs under a key derived
+from every Lean source and build-defining file. A source change therefore
+forces a new kernel build, while documentation-only changes can reuse the exact
+Linux `.olean`s.
 
 API documentation is checked by the Linux CI job and can be built from the
 nested `docbuild` project on a host with a compatible native C toolchain:
@@ -186,6 +201,18 @@ nested `docbuild` project on a host with a compatible native C toolchain:
 cd docbuild
 lake build Robin1984:docs
 ```
+
+doc-gen4 includes every transitive import so that declaration links resolve.
+The project therefore avoids umbrella `import Mathlib` declarations and CI
+caches `docbuild/.lake/build`, allowing later documentation runs to update the
+existing database rather than regenerate every imported module.
+
+The same CI run publishes the compiled research paper as the
+`robin1984-research-paper` artifact. Its cached PDF is keyed only by
+[`paper/robin1984-formalization.tex`](paper/robin1984-formalization.tex), so an
+unchanged paper source reuses the same PDF instead of rebuilding it. The build
+uses the source file's last Git change time as `SOURCE_DATE_EPOCH` and checks
+that the final PDF has resolved references and exactly 11 pages.
 
 ## Production and review disclosure
 

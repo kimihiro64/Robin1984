@@ -1,7 +1,4 @@
-import Robin1984.NicolasLandau.XiDivisorCriticalLine
 import Robin1984.NicolasLandau.XiZeroConstant
-import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
-import Mathlib.Analysis.Real.Pi.Bounds
 
 /-!
 ## Provenance

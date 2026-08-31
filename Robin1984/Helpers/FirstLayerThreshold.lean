@@ -1,3 +1,5 @@
+import Mathlib.Analysis.Calculus.Deriv.MeanValue
+import Mathlib.Analysis.SpecialFunctions.Log.Deriv
 import Robin1984.Helpers.Event
 
 /-!

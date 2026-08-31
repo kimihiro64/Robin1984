@@ -1,4 +1,3 @@
-import Robin1984.Finite.CutoffIndex
 import Robin1984.Finite.FiniteTangent
 /-!
 ## Provenance

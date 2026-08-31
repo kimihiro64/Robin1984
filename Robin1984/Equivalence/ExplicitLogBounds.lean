@@ -12,8 +12,8 @@ import Robin1984.NicolasLandau.ZeroConstantBound
 /-!
 # Rational logarithm bounds for the explicit large-height estimate
 
-This module proves the coarse rational enclosures for `log 2`, `log 10`,
-`log 100000`, `log 4`, and `log (2 * pi)` used by later scalar comparisons.
+This module proves the rational enclosures for `log 2`, `log 10`,
+`log 74500`, and `log (2 * pi)` used by later scalar comparisons.
 All transcendental inputs are discharged by proved Mathlib inequalities and
 exact rational arithmetic.
 -/
@@ -37,25 +37,39 @@ theorem robin_log_ten_bounds :
     norm_num
   constructor <;> linarith [robin_log_two_lower, robin_log_two_upper]
 
-theorem robin_log_hundred_thousand_bounds :
-    And ((23 / 2 : Real) <= Real.log 100000) (Real.log 100000 <= (288 / 25 : Real)) := by
-  have hEq : Real.log (100000 : Real) = 5 * Real.log 10 := by
-    rw [show (100000 : Real) = 10^5 by norm_num, Real.log_pow]
-    norm_num
-  constructor <;> linarith [robin_log_ten_bounds.1, robin_log_ten_bounds.2]
+theorem robin_log_149_div_20_bounds :
+    And ((2 : Real) <= Real.log (149 / 20 : Real))
+      (Real.log (149 / 20 : Real) <= (201 / 100 : Real)) := by
+  have hLow := Real.sum_range_le_log_div
+    (x := (129 / 169 : Real)) (by norm_num) (by norm_num) 15
+  have hHigh := Real.log_div_le_sum_range_add
+    (x := (129 / 169 : Real)) (by norm_num) (by norm_num) 15
+  norm_num [Finset.sum_range_succ] at hLow hHigh
+  constructor <;> linarith
 
-theorem robin_log_four_upper : Real.log 4 <= (7 / 5 : Real) := by
-  have hEq : Real.log (4 : Real) = 2 * Real.log 2 := by
-    rw [show (4 : Real) = 2^2 by norm_num, Real.log_pow]
+theorem robin_log_74500_bounds :
+    And ((56 / 5 : Real) <= Real.log 74500)
+      (Real.log 74500 <= (1123 / 100 : Real)) := by
+  have hEq : Real.log (74500 : Real) =
+      4 * Real.log 10 + Real.log (149 / 20 : Real) := by
+    rw [show (74500 : Real) = 10^4 * (149 / 20) by norm_num,
+      Real.log_mul (by norm_num : Not ((10 : Real)^4 = 0))
+        (by norm_num : Not ((149 / 20 : Real) = 0)), Real.log_pow]
     norm_num
-  linarith [robin_log_two_upper]
+  rw [hEq]
+  constructor
+  . linarith [robin_log_ten_bounds.1, robin_log_149_div_20_bounds.1]
+  . linarith [robin_log_ten_bounds.2, robin_log_149_div_20_bounds.2]
 
-theorem robin_log_two_pi_upper : Real.log (2 * Real.pi) <= (3 : Real) := by
-  have h := Real.log_le_log (mul_pos (by norm_num) Real.pi_pos)
-    (show 2 * Real.pi <= (8 : Real) by linarith [Real.pi_lt_four])
-  have hEight : Real.log (8 : Real) = 3 * Real.log 2 := by
-    rw [show (8 : Real) = 2^3 by norm_num, Real.log_pow]
-    norm_num
-  linarith [robin_log_two_upper]
+theorem robin_log_two_pi_upper :
+    Real.log (2 * Real.pi) <= (46 / 25 : Real) := by
+  have hSeries := Real.log_div_le_sum_range_add
+    (x := (1651 / 2276 : Real)) (by norm_num) (by norm_num) 12
+  norm_num [Finset.sum_range_succ] at hSeries
+  have hArg : 2 * Real.pi <= (3927 / 625 : Real) := by
+    linarith [Real.pi_lt_d4]
+  have hLog := Real.log_le_log
+    (mul_pos (by norm_num : (0 : Real) < 2) Real.pi_pos) hArg
+  linarith
 
 end Robin1984

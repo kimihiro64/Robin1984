@@ -1,9 +1,5 @@
-import Robin1984.Arithmetic.Definitions
-import Robin1984.Arithmetic.RobinBounds
-import Robin1984.ColossallyAbundant.CAProfile
 import Robin1984.Finite.RobinFiniteStartupComplete
 import Robin1984.Finite.RobinTangentExplicitCutoff
-import Robin1984.Finite.RobinTangentStartupComplete
 /-!
 ## Provenance
 

@@ -74,6 +74,72 @@ jobs:
           raise SystemExit(failed)
           PY
 
+  paper:
+    name: Build research paper
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Restore the source-keyed paper PDF
+        id: restore-paper
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: paper/build/robin1984-formalization.pdf
+          key: robin1984-paper-${{ hashFiles('paper/robin1984-formalization.tex') }}
+      - name: Install the paper toolchain
+        if: steps.restore-paper.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            lmodern \
+            poppler-utils \
+            texlive-fonts-recommended \
+            texlive-latex-base \
+            texlive-latex-extra \
+            texlive-latex-recommended
+      - name: Build and check the paper
+        if: steps.restore-paper.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p paper/build
+          git log -1 --format=%ct -- paper/robin1984-formalization.tex \
+            > paper/build/source-date-epoch
+          read -r SOURCE_DATE_EPOCH < paper/build/source-date-epoch
+          export SOURCE_DATE_EPOCH
+          export FORCE_SOURCE_DATE=1
+          export TZ=UTC
+          pdflatex -interaction=nonstopmode -halt-on-error -file-line-error \
+            -output-directory=paper/build paper/robin1984-formalization.tex
+          pdflatex -interaction=nonstopmode -halt-on-error -file-line-error \
+            -output-directory=paper/build paper/robin1984-formalization.tex
+          if grep -F \
+            -e 'undefined references' \
+            -e 'undefined citations' \
+            -e 'Rerun to get cross-references right' \
+            paper/build/robin1984-formalization.log
+          then
+            exit 1
+          fi
+          pdfinfo paper/build/robin1984-formalization.pdf \
+            | grep -E '^Pages:[[:space:]]+11$'
+      - name: Check the paper artifact
+        run: test -s paper/build/robin1984-formalization.pdf
+      - name: Save the source-keyed paper PDF
+        if: steps.restore-paper.outputs.cache-hit != 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: paper/build/robin1984-formalization.pdf
+          key: robin1984-paper-${{ hashFiles('paper/robin1984-formalization.tex') }}
+      - name: Upload the research paper
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: robin1984-research-paper
+          path: paper/build/robin1984-formalization.pdf
+          if-no-files-found: error
+          retention-days: 90
+
   sandbox:
     name: Check the Landrun wrapper's flag policy
     runs-on: ubuntu-latest
@@ -99,11 +165,26 @@ jobs:
         run: |
           lake update
           lake exe cache get
+      - name: Restore the repository build cache
+        id: restore-project-build
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: .lake/build
+          key: robin1984-linux-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', 'scripts/build-order.txt', '*.lean', 'Robin1984/**/*.lean') }}
+      - name: Check imports are narrow and nonredundant
+        shell: pwsh
+        run: ./scripts/check-imports.ps1
       - name: Check every Lean file's provenance and documentation
         shell: pwsh
         run: ./scripts/check-provenance.ps1
       - name: Build the formalization
         run: lake build
+      - name: Save the repository build cache
+        if: steps.restore-project-build.outputs.cache-hit != 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: .lake/build
+          key: robin1984-linux-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', 'scripts/build-order.txt', '*.lean', 'Robin1984/**/*.lean') }}
       - name: Upload the built formalization
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
@@ -117,7 +198,7 @@ jobs:
     name: Build API documentation
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -136,6 +217,14 @@ jobs:
         run: |
           test -s .lake/build/lib/lean/Challenge.olean
           test -s .lake/build/lib/lean/Solution.olean
+      - name: Restore the API documentation cache
+        id: restore-docs
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: docbuild/.lake/build
+          key: robin1984-docs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', 'docbuild/lean-toolchain', 'docbuild/lakefile.toml', 'docbuild/lake-manifest.json', '*.lean', 'Robin1984/**/*.lean') }}
+          restore-keys: |
+            robin1984-docs-${{ runner.os }}-${{ runner.arch }}-
       - name: Build doc-gen4 output
         working-directory: docbuild
         env:
@@ -143,6 +232,12 @@ jobs:
           DISABLE_EQUATIONS: "1"
           DOCGEN_SRC: github
         run: lake build Robin1984:docs
+      - name: Save the API documentation cache
+        if: steps.restore-docs.outputs.cache-hit != 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: docbuild/.lake/build
+          key: robin1984-docs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', 'docbuild/lean-toolchain', 'docbuild/lakefile.toml', 'docbuild/lake-manifest.json', '*.lean', 'Robin1984/**/*.lean') }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: api-documentation

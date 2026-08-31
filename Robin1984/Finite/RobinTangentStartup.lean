@@ -1,7 +1,6 @@
+import Mathlib.Tactic.NormNum.Prime
 import Robin1984.ColossallyAbundant.CAProfile
 import Robin1984.Helpers.FirstLayerThreshold
-import Robin1984.Helpers.Event
-import Robin1984.Helpers.Lyapunov
 /-!
 ## Provenance
 

@@ -1,13 +1,5 @@
-import Robin1984.Equivalence.OmegaScaleTransfer
-import Robin1984.NicolasLandau.NicolasLandau
-import Robin1984.NicolasLandau.NicolasLandauCompactBlock
-import Robin1984.NicolasLandau.NicolasLandauComplexFrontier
-import Robin1984.NicolasLandau.NicolasLandauPositiveStrip
-import Robin1984.NicolasLandau.NicolasLandauPositiveTail
-import Robin1984.NicolasLandau.NicolasOscillation
-import Mathlib.Analysis.Analytic.IsolatedZeros
 import Mathlib.Analysis.SpecialFunctions.FrullaniIntegral
-import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
+import Robin1984.NicolasLandau.NicolasLandauComplexFrontier
 
 /-!
 ## Provenance

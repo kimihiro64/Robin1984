@@ -1,11 +1,4 @@
-import Robin1984.Analytic.RiemannZetaRealNonzero
-import Robin1984.Equivalence.OmegaScaleTransfer
-import Robin1984.NicolasLandau.NicolasLandau
-import Robin1984.NicolasLandau.NicolasLandauCompactBlock
 import Robin1984.NicolasLandau.NicolasLandauPositiveStrip
-import Robin1984.NicolasLandau.NicolasLandauPositiveTail
-import Robin1984.NicolasLandau.NicolasOscillation
-import Mathlib.Probability.Moments.ComplexMGF
 
 /-!
 ## Provenance

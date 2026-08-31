@@ -1,8 +1,5 @@
-import Robin1984.NicolasLandau.NicolasLandau
 import Robin1984.NicolasLandau.NicolasLandauFrontier
 import Robin1984.NicolasLandau.NicolasLandauPositiveTail
-import Mathlib.NumberTheory.Harmonic.ZetaAsymp
-import Mathlib.MeasureTheory.Function.Floor
 
 /-!
 ## Provenance

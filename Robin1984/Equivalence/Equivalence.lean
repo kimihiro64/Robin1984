@@ -1,4 +1,3 @@
-import Robin1984.Arithmetic.Definitions
 import Robin1984.Equivalence.LargeHeightRobin
 import Robin1984.Finite.FiniteComplete
 import Robin1984.NicolasLandau.NicolasLandauRobinBridge
@@ -23,7 +22,7 @@ namespace Robin1984
 theorem nativeRobinInequalityAll_of_riemannHypothesis (hRH : RiemannHypothesis) :
     Robin1984.Core.NativeRobinInequalityAll := by
   intro n hn
-  by_cases hLarge : 100000 <= Real.log (n : Real)
+  by_cases hLarge : 74500 <= Real.log (n : Real)
   . exact nativeRobinInequality_of_RH_large_log hRH hLarge
   . exact nativeRobinInequality_finite_log hn (lt_of_not_ge hLarge)
 

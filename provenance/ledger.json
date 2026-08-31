@@ -43,7 +43,7 @@
       "classification": "Primarily project-original",
       "mathematical_source": "Robin's 1984 analytic implication supplies the surrounding mathematical target.",
       "formalization_note": "The exact coefficient normalization, explicit cutoff choices, and proof interfaces in this module are primarily project-authored.",
-      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinMertensWeightedScalar_normalized, robinMertensWeightedScalar_lt_nine_quarters.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinMertensWeightedScalar_normalized, robinMertensWeightedScalar_lt_113_div_50.",
       "dependency_status": "advertised theorem dependency graph",
       "reviewed": true
     },
@@ -52,7 +52,7 @@
       "classification": "Primarily project-original",
       "mathematical_source": "Robin's 1984 analytic implication supplies the surrounding mathematical target.",
       "formalization_note": "The exact coefficient normalization, explicit cutoff choices, and proof interfaces in this module are primarily project-authored.",
-      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_large_log_ratios, robinPrimeCostNormalized, robinPrimeCostNormalized_ge, robin_prime_cost_root_geometry, robin_prime_cost_block_normalized, robin_minimum_prime_cost_ge_large_scalar.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_large_log_ratios, robin_prime_cost_products, robinPrimeCostNormalized, robinPrimeCostNormalized_ge, robin_prime_cost_root_geometry, robin_prime_cost_block_normalized, robin_minimum_prime_cost_ge_large_scalar.",
       "dependency_status": "advertised theorem dependency graph",
       "reviewed": true
     },
@@ -196,7 +196,7 @@
       "classification": "Standard mathematical formalization",
       "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
       "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
-      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_log_two_upper, robin_log_ten_bounds, robin_log_hundred_thousand_bounds, robin_log_four_upper, robin_log_two_pi_upper.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_log_two_upper, robin_log_ten_bounds, robin_log_149_div_20_bounds, robin_log_74500_bounds, robin_log_two_pi_upper.",
       "dependency_status": "advertised theorem dependency graph",
       "reviewed": true
     },
@@ -214,7 +214,7 @@
       "classification": "Standard mathematical formalization",
       "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
       "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
-      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_log_mul_rpow_neg_le, robin_hundred_thousand_power_sixth, robin_log_times_sixth_power_bound, robin_large_height_log_and_powers, robin_sqrt_two_lower, robin_fourth_root_two_upper.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_log_mul_rpow_neg_le, robin_74500_power_sixth, robin_log_times_sixth_power_bound, robin_large_height_log_and_powers, robin_sqrt_two_lower, robin_fourth_root_two_upper.",
       "dependency_status": "advertised theorem dependency graph",
       "reviewed": true
     },
@@ -223,7 +223,7 @@
       "classification": "Direct source formalization",
       "mathematical_source": "Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).",
       "formalization_note": "The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
-      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_log_margin_lt_negative_scale_of_RH, nativeRobinInequality_of_RH_large_log.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_log_margin_lt_zero_of_RH, nativeRobinInequality_of_RH_large_log.",
       "dependency_status": "advertised theorem dependency graph",
       "reviewed": true
     },
@@ -439,34 +439,7 @@
       "classification": "Primarily project-original",
       "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
       "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
-      "content_basis": "Reviewed 8 explicit prime-product records, blocks 104--111, covering 70656--77824, and each associated kernel decision theorem.",
-      "dependency_status": "advertised theorem dependency graph",
-      "reviewed": true
-    },
-    {
-      "path": "Robin1984/Finite/Certificates/PrimeBlocks14.lean",
-      "classification": "Primarily project-original",
-      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
-      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
-      "content_basis": "Reviewed 8 explicit prime-product records, blocks 112--119, covering 77824--84992, and each associated kernel decision theorem.",
-      "dependency_status": "advertised theorem dependency graph",
-      "reviewed": true
-    },
-    {
-      "path": "Robin1984/Finite/Certificates/PrimeBlocks15.lean",
-      "classification": "Primarily project-original",
-      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
-      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
-      "content_basis": "Reviewed 8 explicit prime-product records, blocks 120--127, covering 84992--92160, and each associated kernel decision theorem.",
-      "dependency_status": "advertised theorem dependency graph",
-      "reviewed": true
-    },
-    {
-      "path": "Robin1984/Finite/Certificates/PrimeBlocks16.lean",
-      "classification": "Primarily project-original",
-      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
-      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
-      "content_basis": "Reviewed 4 explicit prime-product records, blocks 128--131, covering 92160--95673, and each associated kernel decision theorem.",
+      "content_basis": "Reviewed the retained explicit prime-product record, block 104 covering 70656--70850, and its associated kernel decision theorem.",
       "dependency_status": "advertised theorem dependency graph",
       "reviewed": true
     },
@@ -791,42 +764,6 @@
       "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
       "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
       "content_basis": "Reviewed row 35, its rational interval (33566442549 / 500000) to (37283397387 / 500000), cut data, product references, and kernel decision theorems.",
-      "dependency_status": "advertised theorem dependency graph",
-      "reviewed": true
-    },
-    {
-      "path": "Robin1984/Finite/Certificates/Row36.lean",
-      "classification": "Primarily project-original",
-      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
-      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
-      "content_basis": "Reviewed row 36, its rational interval (37283397387 / 500000) to (41321869833 / 500000), cut data, product references, and kernel decision theorems.",
-      "dependency_status": "advertised theorem dependency graph",
-      "reviewed": true
-    },
-    {
-      "path": "Robin1984/Finite/Certificates/Row37.lean",
-      "classification": "Primarily project-original",
-      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
-      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
-      "content_basis": "Reviewed row 37, its rational interval (41321869833 / 500000) to (285455918 / 3125), cut data, product references, and kernel decision theorems.",
-      "dependency_status": "advertised theorem dependency graph",
-      "reviewed": true
-    },
-    {
-      "path": "Robin1984/Finite/Certificates/Row38.lean",
-      "classification": "Primarily project-original",
-      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
-      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
-      "content_basis": "Reviewed the complete certificate aggregation, its imported row or block checks, and the exact coverage theorem.",
-      "dependency_status": "advertised theorem dependency graph",
-      "reviewed": true
-    },
-    {
-      "path": "Robin1984/Finite/Certificates/Row38Layers.lean",
-      "classification": "Primarily project-original",
-      "mathematical_source": "Robin's 1984 finite-range obligation supplies the target; the certificate data have no external source attribution.",
-      "formalization_note": "The block or row representation, generated exact data, and kernel-checked verification are original to this formalization.",
-      "content_basis": "Reviewed row 38, its rational interval (285455918 / 3125) to 100000, cut data, product references, and kernel decision theorems.",
       "dependency_status": "advertised theorem dependency graph",
       "reviewed": true
     },

@@ -1,7 +1,5 @@
 import Robin1984.Analytic.MertensExplicitCoefficient
 import Robin1984.Analytic.PrimeCostExplicitCoefficient
-import Robin1984.Arithmetic.Definitions
-import Robin1984.Arithmetic.RobinBounds
 import Robin1984.Equivalence.AbundancyExponentBound
 /-!
 ## Provenance
@@ -16,31 +14,29 @@ import Robin1984.Equivalence.AbundancyExponentBound
 # The RH implication above the explicit logarithmic height
 
 Under the classical Riemann hypothesis, the analytic estimates force the
-logarithmic Robin margin below the required negative error scale whenever
-`log n >= 100000`. The final theorem converts that margin estimate into
-Robin's inequality for every integer in the large-height range.
+logarithmic Robin margin below zero whenever `log n >= 74500`. The final
+theorem converts that strict margin estimate into Robin's inequality for every
+integer in the large-height range.
 -/
 
 namespace Robin1984
 
 noncomputable section
 
-theorem robin_log_margin_lt_negative_scale_of_RH
+theorem robin_log_margin_lt_zero_of_RH
     (hRH : RiemannHypothesis) {n : Nat} (hn : Not (n = 0))
-    (hH : 100000 <= Real.log (n : Real)) :
+    (hH : 74500 <= Real.log (n : Real)) :
     Real.log (abundancy n) - Real.eulerMascheroniConstant -
-        Real.log (Real.log (Real.log (n : Real))) <
-      -(1 / 100 : Real) * ((Real.log (n : Real))^(-(1 / 2 : Real)) *
-        Inv.inv (Real.log (Real.log (n : Real)))) := by
+        Real.log (Real.log (Real.log (n : Real))) < 0 := by
   have hArithmetic := robin_log_abundancy_le_complete_prime_cost hRH hn (by linarith : 20000 <= Real.log (n : Real))
-  have hMertens := robinMertensWeightedScalar_lt_nine_quarters hH
+  have hMertens := robinMertensWeightedScalar_lt_113_div_50 hH
   have hCost := robin_minimum_prime_cost_ge_large_scalar hRH hH
   linarith
 
 /-- The explicit analytic cutoff. The finite range below this height is not
 assumed or hidden in this theorem. -/
 theorem nativeRobinInequality_of_RH_large_log
-    (hRH : RiemannHypothesis) {n : Nat} (hH : 100000 <= Real.log (n : Real)) :
+    (hRH : RiemannHypothesis) {n : Nat} (hH : 74500 <= Real.log (n : Real)) :
     Robin1984.Core.NativeRobinInequality n := by
   have hn : Not (n = 0) := by
     intro hZero
@@ -49,9 +45,7 @@ theorem nativeRobinInequality_of_RH_large_log
   have hnPos : 0 < n := Nat.pos_of_ne_zero hn
   have hHeightOne : 1 < Real.log (n : Real) := by linarith
   have hLogHeightPos := Real.log_pos hHeightOne
-  have hScale : 0 < (Real.log (n : Real))^(-(1 / 2 : Real)) *
-      Inv.inv (Real.log (Real.log (n : Real))) := by positivity
-  have hMargin := robin_log_margin_lt_negative_scale_of_RH hRH hn hH
+  have hMargin := robin_log_margin_lt_zero_of_RH hRH hn hH
   have hLog : Real.log (abundancy n) < Real.eulerMascheroniConstant +
       Real.log (Real.log (Real.log (n : Real))) := by nlinarith
   have hBoundPos : 0 < robinBoundRatio n := by

@@ -1,8 +1,3 @@
-import Robin1984.Arithmetic.Definitions
-import Robin1984.Arithmetic.RobinBounds
-import Robin1984.ColossallyAbundant.CAProfile
-import Robin1984.Equivalence.RobinTangentTransfer
-import Robin1984.Finite.RobinTangentStartup
 import Robin1984.Finite.RobinTangentStartupComplete
 /-!
 ## Provenance

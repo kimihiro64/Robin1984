@@ -1,5 +1,4 @@
 import Robin1984.NicolasLandau.NicolasLandauPositiveTail
-import Robin1984.NicolasLandau.NicolasOscillation
 /-!
 ## Provenance
 

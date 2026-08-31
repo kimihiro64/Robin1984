@@ -1,11 +1,6 @@
 import Robin1984.Analytic.EulerLower
-import Robin1984.Arithmetic.Definitions
-import Robin1984.Arithmetic.RobinBounds
 import Robin1984.Finite.FiniteLayerChecks
-import Robin1984.Finite.FiniteLogCertificate
-import Robin1984.Finite.FiniteLogScale
 import Robin1984.Finite.FinitePacketProducts
-import Robin1984.Finite.FiniteTangent
 import Robin1984.Finite.RobinFiniteStartupCATangent
 /-!
 ## Provenance

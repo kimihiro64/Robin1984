@@ -1,6 +1,5 @@
-import Robin1984.Finite.FiniteLogCertificate
 import Mathlib.NumberTheory.Harmonic.EulerMascheroni
-import Mathlib.Analysis.SpecificLimits.Basic
+import Robin1984.Finite.FiniteLogCertificate
 
 /-!
 ## Provenance

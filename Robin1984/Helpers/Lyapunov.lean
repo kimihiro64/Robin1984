@@ -1,4 +1,4 @@
-import Mathlib
+import Mathlib.NumberTheory.Harmonic.EulerMascheroni
 import Robin1984.Helpers.Event
 
 /-!

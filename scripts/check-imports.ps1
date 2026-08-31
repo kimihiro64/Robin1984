@@ -1,0 +1,255 @@
+param(
+  [string]$RepositoryRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
+)
+
+$ErrorActionPreference = 'Stop'
+
+$sourceRoots = [System.Collections.Generic.List[string]]::new()
+$sourceRoots.Add($RepositoryRoot)
+
+$packagesRoot = Join-Path $RepositoryRoot '.lake/packages'
+if (Test-Path -LiteralPath $packagesRoot) {
+  Get-ChildItem -LiteralPath $packagesRoot -Directory | ForEach-Object {
+    $sourceRoots.Add($_.FullName)
+  }
+}
+
+$directImportCache = @{}
+$modulePathCache = @{}
+$reachabilityCache = @{}
+$failures = [System.Collections.Generic.List[string]]::new()
+
+function Get-HeaderImportsFromText {
+  param(
+    [string]$Text,
+    [string]$Label
+  )
+
+  $imports = [System.Collections.Generic.List[string]]::new()
+  $depth = 0
+  $stoppedAtBody = $false
+  foreach ($rawLine in $Text -split "`r?`n") {
+    $builder = [System.Text.StringBuilder]::new($rawLine.Length)
+    $index = 0
+    while ($index -lt $rawLine.Length) {
+      $hasNext = $index + 1 -lt $rawLine.Length
+      if ($depth -eq 0 -and $hasNext -and
+          $rawLine[$index] -eq '-' -and $rawLine[$index + 1] -eq '-') {
+        break
+      }
+      if ($hasNext -and
+          $rawLine[$index] -eq '/' -and $rawLine[$index + 1] -eq '-') {
+        $depth += 1
+        $index += 2
+        continue
+      }
+      if ($depth -gt 0 -and $hasNext -and
+          $rawLine[$index] -eq '-' -and $rawLine[$index + 1] -eq '/') {
+        $depth -= 1
+        $index += 2
+        continue
+      }
+      if ($depth -eq 0) {
+        [void]$builder.Append($rawLine[$index])
+      }
+      $index += 1
+    }
+
+    $line = $builder.ToString()
+    if ([string]::IsNullOrWhiteSpace($line)) {
+      continue
+    }
+    if ($line -match '^\s*(?:prelude|module)\s*$') {
+      continue
+    }
+    if ($line -match '^\s*(?:(?:public|private)\s+)?(?:meta\s+)?import(?:\s+all)?\s+([A-Za-z0-9_''.]+)\s*$') {
+      $imports.Add($Matches[1])
+      continue
+    }
+    $stoppedAtBody = $true
+    break
+  }
+  if (-not $stoppedAtBody -and $depth -ne 0) {
+    throw "$Label has an unterminated Lean block comment in its header"
+  }
+  return @($imports)
+}
+
+function Get-DirectImports {
+  param([string]$Path)
+
+  if ($directImportCache.ContainsKey($Path)) {
+    return @($directImportCache[$Path])
+  }
+
+  $sourceText = [IO.File]::ReadAllText($Path)
+  $imports = @(Get-HeaderImportsFromText -Text $sourceText -Label $Path)
+  $directImportCache[$Path] = @($imports)
+  return @($imports)
+}
+
+$parserFixture = @'
+/-
+import False.From.LeadingComment
+/- import False.From.NestedComment -/
+-/
+module
+public import Mathlib.Data.Nat.Basic
+/-!
+import False.From.ModuleDoc
+-/
+#check Nat
+#eval "/-"
+'@
+$fixtureImports = @(Get-HeaderImportsFromText -Text $parserFixture -Label 'import parser fixture')
+if ($fixtureImports.Count -ne 1 -or $fixtureImports[0] -cne 'Mathlib.Data.Nat.Basic') {
+  throw 'Import parser fixture failed.'
+}
+
+function Resolve-ModulePath {
+  param([string]$Module)
+
+  if ($modulePathCache.ContainsKey($Module)) {
+    return $modulePathCache[$Module]
+  }
+
+  $relativePath = ($Module -replace '\.', [IO.Path]::DirectorySeparatorChar) + '.lean'
+  foreach ($root in $sourceRoots) {
+    $candidate = Join-Path $root $relativePath
+    if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+      $resolved = (Resolve-Path -LiteralPath $candidate).Path
+      $modulePathCache[$Module] = $resolved
+      return $resolved
+    }
+  }
+
+  $modulePathCache[$Module] = $null
+  return $null
+}
+
+function Test-OwnedModuleName {
+  param([string]$Module)
+
+  return $Module -ceq 'Challenge' -or
+    $Module -ceq 'Solution' -or
+    $Module.StartsWith('Robin1984.', [System.StringComparison]::Ordinal)
+}
+
+function Test-TransitivelyImports {
+  param(
+    [string]$Provider,
+    [string]$Candidate
+  )
+
+  $cacheKey = "$Provider`0$Candidate"
+  if ($reachabilityCache.ContainsKey($cacheKey)) {
+    return [bool]$reachabilityCache[$cacheKey]
+  }
+
+  $visited = [System.Collections.Generic.HashSet[string]]::new(
+    [System.StringComparer]::Ordinal
+  )
+  $pending = [System.Collections.Generic.Stack[string]]::new()
+  $pending.Push($Provider)
+  while ($pending.Count -ne 0) {
+    $module = $pending.Pop()
+    if (-not $visited.Add($module)) {
+      continue
+    }
+    $path = Resolve-ModulePath -Module $module
+    if ($null -eq $path) {
+      continue
+    }
+    foreach ($import in Get-DirectImports -Path $path) {
+      if ($import -ceq $Candidate) {
+        $reachabilityCache[$cacheKey] = $true
+        return $true
+      }
+      if ((Test-OwnedModuleName -Module $import) -and
+          -not $visited.Contains($import)) {
+        $pending.Push($import)
+      }
+    }
+  }
+
+  $reachabilityCache[$cacheKey] = $false
+  return $false
+}
+
+function Test-BroadImport {
+  param([string]$Module)
+
+  if ($Module -in @(
+      'Batteries',
+      'ImportGraph',
+      'LeanCert',
+      'Mathlib',
+      'PrimeNumberTheoremAnd',
+      'Robin1984'
+    )) {
+    return $true
+  }
+
+  return $Module -match '^Mathlib\.(Algebra|Analysis|CategoryTheory|Combinatorics|Data|Geometry|LinearAlgebra|Logic|MeasureTheory|NumberTheory|Order|Probability|SetTheory|Tactic|Topology)$'
+}
+
+$ownedFiles = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
+foreach ($rootFile in @('Challenge.lean', 'Solution.lean')) {
+  $path = Join-Path $RepositoryRoot $rootFile
+  if (Test-Path -LiteralPath $path -PathType Leaf) {
+    $ownedFiles.Add((Get-Item -LiteralPath $path))
+  }
+}
+$ownedSourceRoot = Join-Path $RepositoryRoot 'Robin1984'
+Get-ChildItem -LiteralPath $ownedSourceRoot -Filter '*.lean' -File -Recurse |
+  ForEach-Object { $ownedFiles.Add($_) }
+
+foreach ($file in $ownedFiles | Sort-Object FullName) {
+  $relative = [IO.Path]::GetRelativePath($RepositoryRoot, $file.FullName)
+  $imports = @(Get-DirectImports -Path $file.FullName)
+
+  $seen = [System.Collections.Generic.HashSet[string]]::new(
+    [System.StringComparer]::Ordinal
+  )
+  foreach ($import in $imports) {
+    if (-not $seen.Add($import)) {
+      $failures.Add("${relative}: duplicate import '$import'")
+    }
+    if (Test-BroadImport -Module $import) {
+      $failures.Add("${relative}: broad import '$import' is forbidden")
+    }
+    if ($null -eq (Resolve-ModulePath -Module $import)) {
+      $failures.Add("${relative}: import '$import' does not resolve to a pinned source module")
+    }
+  }
+
+  $sortedImports = @($imports | Sort-Object -CaseSensitive)
+  if ([string]::Join("`n", $imports) -cne [string]::Join("`n", $sortedImports)) {
+    $failures.Add("${relative}: imports must be in ordinal lexicographic order")
+  }
+
+  foreach ($candidate in $imports) {
+    foreach ($provider in $imports) {
+      if ($candidate -ceq $provider) {
+        continue
+      }
+      if (-not (Test-OwnedModuleName -Module $candidate) -or
+          -not (Test-OwnedModuleName -Module $provider)) {
+        continue
+      }
+      if (Test-TransitivelyImports -Provider $provider -Candidate $candidate) {
+        $failures.Add("${relative}: import '$candidate' is transitively supplied by '$provider'")
+        break
+      }
+    }
+  }
+}
+
+if ($failures.Count -ne 0) {
+  $failures | Sort-Object -Unique | ForEach-Object {
+    [Console]::Error.WriteLine($_)
+  }
+  throw "Import lint failed with $($failures.Count) finding(s)."
+}
+
+Write-Host "Import lint passed for $($ownedFiles.Count) owned Lean files."

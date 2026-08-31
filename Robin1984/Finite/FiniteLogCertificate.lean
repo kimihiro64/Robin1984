@@ -1,9 +1,4 @@
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv
-import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.Positivity
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.FieldSimp
-import Mathlib.Tactic.Ring
 
 /-!
 ## Provenance

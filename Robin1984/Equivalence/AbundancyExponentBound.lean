@@ -1,10 +1,6 @@
-import Robin1984.Arithmetic.RobinBounds
 import Robin1984.ColossallyAbundant.CAProfile
 import Robin1984.Equivalence.ExponentProxyBound
 import Robin1984.NicolasLandau.MertensWeightedBound
-import Robin1984.NicolasLandau.NicolasOscillation
-import Robin1984.NicolasLandau.WeightedPrimePowerTail
-import Robin1984.NicolasLandau.WeightedPsiError
 /-!
 ## Provenance
 

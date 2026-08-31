@@ -1,9 +1,5 @@
-import Robin1984.NicolasLandau.RobinWeightedIntegral
 import Robin1984.NicolasLandau.WeightedEndpoint
 import Robin1984.NicolasLandau.WeightedExplicitFormula
-import Robin1984.NicolasLandau.WeightedGammaPairing
-import Robin1984.NicolasLandau.XiDivisorCriticalLine
-import Robin1984.NicolasLandau.XiZeroConstant
 /-!
 ## Provenance
 

@@ -1,8 +1,4 @@
-import Robin1984.Arithmetic.Definitions
-import Robin1984.Arithmetic.RobinBounds
-import Robin1984.ColossallyAbundant.CAProfile
 import Robin1984.ColossallyAbundant.RobinLogMargin
-import Robin1984.Helpers.Lyapunov
 /-!
 ## Provenance
 

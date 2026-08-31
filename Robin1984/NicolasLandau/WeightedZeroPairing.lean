@@ -1,4 +1,3 @@
-import Robin1984.NicolasLandau.RobinWeightedIntegral
 import Robin1984.NicolasLandau.WeightedMellin
 /-!
 ## Provenance

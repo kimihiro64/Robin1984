@@ -1,7 +1,5 @@
 import Robin1984.Equivalence.WeightedKernelBounds
-import Robin1984.NicolasLandau.RobinWeightedIntegral
 import Robin1984.NicolasLandau.WeightedPrimePowerTail
-import Robin1984.NicolasLandau.WeightedPsiError
 import Robin1984.NicolasLandau.ZeroConstantBound
 /-!
 ## Provenance

@@ -1,5 +1,3 @@
-import Robin1984.ColossallyAbundant.CAProfile
-import Robin1984.Equivalence.Equivalence
 import Robin1984.Equivalence.Theorem
 import Robin1984.Public
 

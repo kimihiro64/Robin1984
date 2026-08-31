@@ -1,13 +1,5 @@
-import Robin1984.Equivalence.OmegaScaleTransfer
-import Robin1984.NicolasLandau.NicolasOscillation
-import Mathlib.Analysis.Complex.CauchyIntegral
-import Mathlib.Analysis.Complex.RemovableSingularity
-import Mathlib.Analysis.SpecialFunctions.Gamma.Deligne
-import Mathlib.Analysis.Meromorphic.Order
-import Mathlib.Analysis.SpecialFunctions.Integrability.Basic
-import Mathlib.NumberTheory.LSeries.Nonvanishing
-import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Mathlib.NumberTheory.LSeries.SumCoeff
+import Robin1984.NicolasLandau.NicolasOscillation
 
 /-!
 ## Provenance

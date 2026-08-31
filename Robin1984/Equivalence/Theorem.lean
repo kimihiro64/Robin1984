@@ -1,5 +1,3 @@
-import Robin1984.Arithmetic.Definitions
-import Robin1984.ColossallyAbundant.CAProfile
 import Robin1984.ColossallyAbundant.CAReduction
 import Robin1984.Equivalence.Equivalence
 /-!

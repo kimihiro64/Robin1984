@@ -1,14 +1,8 @@
 import Robin1984.Analytic.FactorizationEulerReserve
-import Robin1984.Arithmetic.Definitions
-import Robin1984.Arithmetic.RobinBounds
 import Robin1984.ColossallyAbundant.LCMPrimeTowerBounds
-import Robin1984.ColossallyAbundant.CAProfile
 import Robin1984.Equivalence.OmegaScaleTransfer
 import Robin1984.Helpers.LCMPrimeSupport
-import Robin1984.Helpers.Lyapunov
 import Robin1984.NicolasLandau.NicolasFunction
-import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
-import Mathlib.Analysis.SpecificLimits.Basic
 
 /-!
 ## Provenance

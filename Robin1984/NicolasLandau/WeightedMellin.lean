@@ -1,6 +1,5 @@
-import Robin1984.NicolasLandau.RobinWeightedIntegral
 import Mathlib.Analysis.MellinInversion
-import Mathlib.MeasureTheory.Integral.Prod
+import Robin1984.NicolasLandau.RobinWeightedIntegral
 
 /-!
 ## Provenance

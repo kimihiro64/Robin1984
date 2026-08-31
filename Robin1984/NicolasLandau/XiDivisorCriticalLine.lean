@@ -1,5 +1,4 @@
 import PrimeNumberTheoremAnd.Mathlib.NumberTheory.LSeries.RiemannXiDivisorZeros
-import Mathlib.NumberTheory.LSeries.Nonvanishing
 
 /-!
 ## Provenance

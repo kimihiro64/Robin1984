@@ -1,7 +1,4 @@
-import Robin1984.NicolasLandau.RobinWeightedIntegral
-import Robin1984.NicolasLandau.WeightedMellin
 import Robin1984.NicolasLandau.WeightedPsiIntegral
-import Mathlib.Analysis.SpecialFunctions.Log.Deriv
 
 /-!
 ## Provenance

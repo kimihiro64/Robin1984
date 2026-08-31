@@ -1,7 +1,4 @@
 import Mathlib.Probability.Moments.MGFAnalytic
-import Mathlib.Analysis.Analytic.ChangeOrigin
-import Mathlib.Analysis.Analytic.Uniqueness
-import Mathlib.MeasureTheory.Integral.DominatedConvergence
 
 /-!
 ## Provenance

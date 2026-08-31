@@ -1,5 +1,4 @@
 import Robin1984.NicolasLandau.NicolasOscillation
-import Robin1984.NicolasLandau.RobinWeightedIntegral
 import Robin1984.NicolasLandau.WeightedEndpoint
 import Robin1984.NicolasLandau.WeightedPsiError
 /-!

@@ -1,10 +1,5 @@
-import Robin1984.Arithmetic.Definitions
-import Robin1984.Arithmetic.RobinBounds
-import Robin1984.ColossallyAbundant.CAProfile
-import Robin1984.Finite.RobinTangentStartup
-import Robin1984.Finite.RobinTangentStartupComplete
-import Mathlib.Analysis.Convex.Jensen
 import Mathlib.Analysis.Convex.SpecificFunctions.Basic
+import Robin1984.Finite.RobinTangentStartupComplete
 
 /-!
 ## Provenance

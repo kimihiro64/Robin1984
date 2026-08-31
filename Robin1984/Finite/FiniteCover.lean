@@ -1,4 +1,3 @@
-import Robin1984.Arithmetic.Definitions
 import Robin1984.Finite.FiniteRowCertificate
 /-!
 ## Provenance

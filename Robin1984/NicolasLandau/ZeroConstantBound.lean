@@ -1,6 +1,5 @@
-import Mathlib.NumberTheory.Harmonic.EulerMascheroni
-import Mathlib.Analysis.SpecialFunctions.Log.Deriv
 import Mathlib.Analysis.Real.Pi.Bounds
+import Mathlib.NumberTheory.Harmonic.EulerMascheroni
 
 /-!
 ## Provenance

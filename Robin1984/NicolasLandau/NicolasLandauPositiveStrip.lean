@@ -1,8 +1,5 @@
 import Robin1984.Analytic.RiemannZetaRealNonzero
-import Robin1984.NicolasLandau.NicolasLandau
 import Robin1984.NicolasLandau.NicolasLandauCompactBlock
-import Robin1984.NicolasLandau.NicolasLandauFrontier
-import Robin1984.NicolasLandau.NicolasLandauPositiveTail
 /-!
 ## Provenance
 

@@ -331,7 +331,7 @@ remaining integers.
 \section{The finite range}\label{sec:finite}
 
 The analytic argument in Section~\ref{sec:rh-forward} starts at
-$\log n=100000$.  The exact cutoff therefore requires a proof for all
+$\log n=74500$.  The exact cutoff therefore requires a proof for all
 $5040<n$ below that logarithmic height.  We divide it into three pieces.
 
 \begin{proposition}\label{prop:small-factor}
@@ -408,16 +408,17 @@ Robin's inequality holds whenever
 \begin{equation}\label{eq:finite-log-range}
   720720\le n,
   \qquad
-  \log n<100000.
+  \log n<74500.
 \end{equation}
 \end{proposition}
 
 \begin{proof}
-Thirty-nine rational rows form a gap-free chain from $336/25$ to $100000$.
-Since $336/25<\log720720$, they cover \eqref{eq:finite-log-range}.  Every row
-satisfies the hypotheses of Lemma~\ref{lem:row-sound}.  In the final row the
-first-layer product includes every prime below $95673$; it is split into 132
-contiguous blocks, whose exact products concatenate to the required prefix.
+Thirty-six rational rows form a gap-free chain from $336/25$ to
+$37283397387/500000$, an endpoint strictly larger than $74500$.  Since
+$336/25<\log720720$, they cover \eqref{eq:finite-log-range}.  Every row
+satisfies the hypotheses of Lemma~\ref{lem:row-sound}.  In the final retained
+row the first-layer product includes every prime at most $70849$; it is split
+into 105 contiguous blocks, whose exact products concatenate to the required prefix.
 All comparisons are integer or rational inequalities.  Thus the list of rows
 and their checks constitute a finite proof of the proposition.
 \end{proof}
@@ -426,7 +427,7 @@ Combining Propositions~\ref{prop:small-factor},
 \ref{prop:startup-tangent}, and~\ref{prop:finite-cover} gives the following.
 
 \begin{theorem}[Finite completion]\label{thm:finite}
-If $5040<n$ and $\log n<100000$, then Robin's inequality holds.
+If $5040<n$ and $\log n<74500$, then Robin's inequality holds.
 \end{theorem}
 
 In particular, Proposition~\ref{prop:ca-reduction} is now unconditional.
@@ -550,9 +551,9 @@ constants cancel with the sum of the $m_p$, giving exactly
 The numerical heart of the large-height proof is the following strict gap.
 
 \begin{proposition}[Explicit coefficient gap]\label{prop:coefficient-gap}
-Assume $\RH$.  For $H\ge100000$,
+Assume $\RH$.  For $H\ge74500$,
 \begin{equation}\label{eq:two-coefficients}
-  \E(H)<\frac94S(H),
+  \E(H)<\frac{113}{50}S(H),
   \qquad
   \Pcost(H)\ge\frac{113}{50}S(H).
 \end{equation}
@@ -566,7 +567,7 @@ The exact identity becomes
   +(8+4c_0)(\log H)^{-2}
   +2H^{-1/6}+\log(2\pi)H^{-1/2}.
 \]
-Uniform rational bounds valid for every $H\ge100000$ control
+Uniform rational bounds valid for every $H\ge74500$ control
 $(\log H)^{-1}$, $H^{-1/6}$, $H^{-1/2}$, $c_0$, and $\log(2\pi)$.
 Substitution reduces the assertion to an exact rational inequality.
 
@@ -580,11 +581,17 @@ a lower bound whose normalization by $S(H)$ is
      \frac{\log H}{\log H+\log2}
   -\log(2\pi)H^{-1/2}
      \frac{\log H}{\log H+\log2}\\
-  &\quad-4\log4\,H^{-1/2}
-     \frac{\log H}{\log H-\log2}.
+  &\quad-4H^{-1/2}\frac{\log H}{\log H-\log2}\\
+  &\quad-2\sqrt2\,c_0H^{-1}\frac{\log H}{\log H-\log2}
+     \left(2+\frac1{\log H-\log2}
+       +\frac4{3(\log H-\log2)^2}\right).
 \end{align*}
-Exact rational bounds for $\sqrt2$, $2^{1/4}$, and the logarithmic ratios
-show that this is at least $113/50$.
+The last line retains the RH error term at the far endpoint instead of
+bounding the entire $\vartheta$ tail by a global multiple of $\log4$.
+The nonnegative prime-power contribution is discarded only after this
+cancellation has been preserved.  Exact rational bounds for $\sqrt2$,
+$2^{1/4}$, and the logarithmic ratios show that the result is at least
+$113/50$.
 \end{proof}
 
 \begin{theorem}[The RH implication]\label{thm:rh-forward}
@@ -592,12 +599,12 @@ If $\RH$ holds, then Robin's inequality holds for every $n>5040$.
 \end{theorem}
 
 \begin{proof}
-If $\log n<100000$, use Theorem~\ref{thm:finite}.  Otherwise combine
+If $\log n<74500$, use Theorem~\ref{thm:finite}.  Otherwise combine
 Propositions~\ref{prop:budget} and~\ref{prop:coefficient-gap}:
 \[
   \M(n)
-  <\left(\frac94-\frac{113}{50}\right)S(\log n)
-  =-\frac1{100}S(\log n)<0.
+  <\left(\frac{113}{50}-\frac{113}{50}\right)S(\log n)
+  =0.
 \]
 This is equivalent to Robin's inequality.
 \end{proof}
@@ -830,8 +837,8 @@ formalization work.  The complete reviewed ledger is distributed with the
 repository.
 
 The finite proof contains no floating-point oracle.  The startup
-factorizations and the 39 interval rows reduce to exact natural-number and
-rational inequalities.  The large final prime product is split into 132
+factorizations and the 36 interval rows reduce to exact natural-number and
+rational inequalities.  The large final retained prime product is split into 105
 blocks only to keep individual kernel computations manageable.  The
 certificate checkers are proved sound once; each data row is then accepted by
 kernel reduction.
@@ -850,9 +857,9 @@ advertised declarations returned exactly the standard principles
 \]
 
 The ordinary \leanname{lake build} command is the full formalization build.
-Its Lake-native default target reads a checked-in topological order of 252
-modules, schedules one module job at a time, bounds each Lean process to two
-internal task threads, and ends with \leanname{Solution}.  Thus the submitted
+Its Lake-native default target reads a checked-in topological order of 245
+modules, schedules one module job at a time, bounds each Lean process to one
+internal task thread, and ends with \leanname{Solution}.  Thus the submitted
 project itself controls the memory-intensive finite-certificate order; no
 external runner or local patching step is part of the proof build.
 

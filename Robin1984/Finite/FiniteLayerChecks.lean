@@ -1,9 +1,5 @@
-import Robin1984.ColossallyAbundant.CAProfile
-import Robin1984.Finite.CutoffIndex
-import Robin1984.Finite.FiniteLogCertificate
 import Robin1984.Finite.FiniteLogScale
 import Robin1984.Finite.FiniteTangent
-import Robin1984.Helpers.Event
 /-!
 ## Provenance
 

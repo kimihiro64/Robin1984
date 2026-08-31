@@ -1,10 +1,7 @@
-import Robin1984.NicolasLandau.NicolasLandau
-import Robin1984.NicolasLandau.NicolasOscillation
 import Mathlib.Analysis.Complex.Schwarz
-import Mathlib.Analysis.Calculus.ParametricIntegral
-import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 import Mathlib.Probability.Moments.Basic
 import Mathlib.Probability.Moments.IntegrableExpMul
+import Robin1984.NicolasLandau.NicolasLandau
 
 /-!
 ## Provenance

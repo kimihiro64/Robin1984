@@ -1,6 +1,5 @@
-import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
-import Mathlib.Analysis.Complex.Basic
+import Mathlib.MeasureTheory.Integral.Prod
 
 /-!
 ## Provenance

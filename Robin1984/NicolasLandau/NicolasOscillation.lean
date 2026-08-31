@@ -1,8 +1,6 @@
+import PrimeNumberTheoremAnd.IEANTN.RosserSchoenfeld.RosserSchoenfeldPrime
 import Robin1984.Equivalence.OmegaScaleTransfer
 import Robin1984.NicolasLandau.NicolasFunction
-import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
-import PrimeNumberTheoremAnd.IEANTN.Mertens
-import PrimeNumberTheoremAnd.IEANTN.RosserSchoenfeld.RosserSchoenfeldPrime
 
 /-!
 ## Provenance

@@ -1,11 +1,4 @@
-import Robin1984.Arithmetic.Definitions
-import Robin1984.Arithmetic.RobinBounds
-import Robin1984.ColossallyAbundant.CAProfile
 import Robin1984.Finite.RobinFiniteStartupCATangent
-import Robin1984.Finite.RobinTangentStartup
-import Robin1984.Helpers.Lyapunov
-import Mathlib.Analysis.Complex.Exponential
-import Mathlib.NumberTheory.Harmonic.EulerMascheroni
 
 /-!
 ## Provenance

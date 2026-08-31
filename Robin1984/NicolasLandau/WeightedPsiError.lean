@@ -1,6 +1,4 @@
-import Robin1984.NicolasLandau.RobinWeightedIntegral
 import Robin1984.NicolasLandau.WeightedExplicitFormula
-import Robin1984.NicolasLandau.WeightedPsiIntegral
 import Robin1984.NicolasLandau.WeightedTrivialCorrection
 /-!
 ## Provenance
