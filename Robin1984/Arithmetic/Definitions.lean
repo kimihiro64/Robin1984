@@ -35,3 +35,11 @@ noncomputable def NativeRobinInequalityAll : Prop :=
 
 
 end Robin1984.Core
+
+namespace Robin1984
+
+/-- Public sum-of-divisors vocabulary used by the Palomar theorem surface. -/
+noncomputable def sigmaOneNat (n : Nat) : Nat :=
+  ArithmeticFunction.sigma 1 n
+
+end Robin1984

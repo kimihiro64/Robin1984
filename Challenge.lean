@@ -1,6 +1,7 @@
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.NumberTheory.ArithmeticFunction.Misc
+import Mathlib.NumberTheory.Harmonic.EulerMascheroni
 import Mathlib.NumberTheory.LSeries.RiemannZeta
-import Robin1984.ColossallyAbundant.CAProfile
-import Robin1984.Public
 
 set_option autoImplicit false
 
@@ -18,11 +19,34 @@ set_option autoImplicit false
 
 This is the small statement surface audited by Palomar Comparator.  The first
 theorem is Robin's published equivalence.  The second records the classical
-reduction to colossally abundant integers.  Both statements use the same
-authoritative public definitions imported by `Solution.lean`.
+reduction to colossally abundant integers.  The ordinary number-theoretic
+definitions below depend only on Mathlib so that Palomar can audit the
+challenge independently of the submitted solution.
 -/
 
 namespace Robin1984
+
+/-- The sum of the positive divisors of `n`. -/
+noncomputable def sigmaOneNat (n : Nat) : Nat :=
+  ArithmeticFunction.sigma 1 n
+
+/-- Robin's inequality
+`sigma(n) < exp(gamma) * n * log(log n)` at the integer `n`. -/
+noncomputable def robinInequality (n : Nat) : Prop :=
+  (sigmaOneNat n : Real) <
+    Real.exp Real.eulerMascheroniConstant * (n : Real) *
+      Real.log (Real.log (n : Real))
+
+/-- The objective maximized by a colossally abundant integer at parameter
+`eps > 0`. -/
+noncomputable def caObjective (eps : Real) (n : Nat) : Real :=
+  (sigmaOneNat n : Real) / ((n : Real) ^ (1 + eps))
+
+/-- `n` is colossally abundant at parameter `eps` when `eps > 0`, `n > 1`,
+and `sigma(k) / k^(1+eps) <= sigma(n) / n^(1+eps)` for every `k > 1`. -/
+noncomputable def IsColossallyAbundantWith (n : Nat) (eps : Real) : Prop :=
+  0 < eps ∧ 1 < n ∧
+    forall k : Nat, 1 < k -> caObjective eps k <= caObjective eps n
 
 /-- Robin's 1984 theorem: the strict divisor-sum inequality above `5040` is
 equivalent to Mathlib's Riemann-hypothesis predicate. -/

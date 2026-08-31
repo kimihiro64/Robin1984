@@ -19,10 +19,11 @@ development free to use its more explicit internal names.
 
 namespace Robin1984
 
-
 /-- Robin's strict inequality at a single natural number. -/
-noncomputable abbrev robinInequality (n : Nat) : Prop :=
-  Core.NativeRobinInequality n
+noncomputable def robinInequality (n : Nat) : Prop :=
+  (sigmaOneNat n : Real) <
+    Real.exp Real.eulerMascheroniConstant * (n : Real) *
+      Real.log (Real.log (n : Real))
 
 
 end Robin1984

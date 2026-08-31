@@ -135,6 +135,43 @@ function Test-OwnedModuleName {
     $Module.StartsWith('Robin1984.', [System.StringComparison]::Ordinal)
 }
 
+function Get-OwnedImportsInClosure {
+  param([string[]]$RootImports)
+
+  $visited = [System.Collections.Generic.HashSet[string]]::new(
+    [System.StringComparer]::Ordinal
+  )
+  $owned = [System.Collections.Generic.HashSet[string]]::new(
+    [System.StringComparer]::Ordinal
+  )
+  $pending = [System.Collections.Generic.Stack[string]]::new()
+  foreach ($rootImport in $RootImports) {
+    $pending.Push($rootImport)
+  }
+
+  while ($pending.Count -ne 0) {
+    $module = $pending.Pop()
+    if (-not $visited.Add($module)) {
+      continue
+    }
+    if (Test-OwnedModuleName -Module $module) {
+      [void]$owned.Add($module)
+      continue
+    }
+    $path = Resolve-ModulePath -Module $module
+    if ($null -eq $path) {
+      continue
+    }
+    foreach ($import in Get-DirectImports -Path $path) {
+      if (-not $visited.Contains($import)) {
+        $pending.Push($import)
+      }
+    }
+  }
+
+  return @($owned | Sort-Object -CaseSensitive)
+}
+
 function Test-TransitivelyImports {
   param(
     [string]$Provider,
@@ -216,6 +253,11 @@ foreach ($file in $ownedFiles | Sort-Object FullName) {
   if ($relative -in @('Challenge.lean', 'Solution.lean') -and
       'Mathlib.NumberTheory.LSeries.RiemannZeta' -notin $imports) {
     $failures.Add("${relative}: the Palomar theorem boundary must directly import Mathlib.NumberTheory.LSeries.RiemannZeta")
+  }
+  if ($relative -ceq 'Challenge.lean') {
+    foreach ($ownedImport in Get-OwnedImportsInClosure -RootImports $imports) {
+      $failures.Add("${relative}: Palomar Challenge closure contains project module '$ownedImport'")
+    }
   }
 
   $seen = [System.Collections.Generic.HashSet[string]]::new(

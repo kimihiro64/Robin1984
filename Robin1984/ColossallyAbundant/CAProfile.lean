@@ -223,7 +223,7 @@ namespace Robin1984
 
 /-- Textbook colossally-abundant objective at parameter `eps`. -/
 noncomputable def caObjective (eps : Real) (n : Nat) : Real :=
-  (Robin1984.Core.sigmaOneNat n : Real) /
+  (sigmaOneNat n : Real) /
     ((n : Real) ^ (1 + eps))
 
 /-- Logarithmic form of the fixed-parameter CA objective. -/
@@ -335,6 +335,7 @@ theorem caObjective_eq_abundancy_div_rpow
   rw [show (1 + eps) = (1 : Real) + eps by ring]
   rw [Real.rpow_add hnR, Real.rpow_one]
   field_simp [hnR.ne', hpow.ne']
+  rfl
 
 
 /-- Logarithmic CA objective split into abundancy and size terms. -/
