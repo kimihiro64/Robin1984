@@ -206,6 +206,11 @@ doc-gen4 includes every transitive import so that declaration links resolve.
 The project therefore avoids umbrella `import Mathlib` declarations and CI
 caches `docbuild/.lake/build`, allowing later documentation runs to update the
 existing database rather than regenerate every imported module.
+After doc-gen4 finishes, CI replaces its server-oriented root page with the
+committed [offline landing page](assets/api-documentation-index.html) and
+checks every link before uploading the site. The resulting `index.html` works
+when the documentation archive is opened directly after extraction, without a
+web server, iframe, external script or CDN.
 
 The same CI run publishes the compiled research paper as the
 `robin1984-research-paper` artifact. Its cached PDF is keyed only by
@@ -213,6 +218,15 @@ The same CI run publishes the compiled research paper as the
 unchanged paper source reuses the same PDF instead of rebuilding it. The build
 uses the source file's last Git change time as `SOURCE_DATE_EPOCH` and checks
 that the final PDF has resolved references and exactly 11 pages.
+
+Successful `main` builds publish an official GitHub release only after every
+job has passed, including Comparator statement matching, NanoDa replay and
+Lean's default-kernel replay. The committed [RELEASE_VERSION](RELEASE_VERSION)
+file supplies the semantic version and must be bumped before a new release;
+CI checks tag collisions before starting the long Lean build. The release
+contains exactly the paper PDF, a compressed Ubuntu `.lake/build` tree, and a
+ZIP of the complete offline-safe API site. A rerun at an already published
+commit verifies the existing release instead of creating a duplicate.
 
 ## Production and review disclosure
 

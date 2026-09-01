@@ -14,6 +14,48 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  release_version:
+    name: Validate release version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Validate committed release version
+        id: version
+        shell: bash
+        run: |
+          version=$(tr -d '\r\n' < RELEASE_VERSION)
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error file=RELEASE_VERSION::Expected one semantic version such as 1.0.1"
+            exit 1
+          fi
+          if [[ "$(cat RELEASE_VERSION)" != "$version" ]]; then
+            echo "::error file=RELEASE_VERSION::Release version contains surrounding whitespace"
+            exit 1
+          fi
+          tag="v$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+          if [[ "$GITHUB_REF" != refs/heads/main ]] ||
+             [[ "$GITHUB_EVENT_NAME" != push && "$GITHUB_EVENT_NAME" != workflow_dispatch ]]; then
+            exit 0
+          fi
+
+          git fetch --force --tags origin
+          if git show-ref --verify --quiet "refs/tags/$tag"; then
+            tagged_commit=$(git rev-list -n 1 "$tag")
+            if [[ "$tagged_commit" != "$GITHUB_SHA" ]]; then
+              echo "::error file=RELEASE_VERSION::$tag already belongs to $tagged_commit; bump RELEASE_VERSION before starting the long build"
+              exit 1
+            fi
+          fi
+
   license:
     name: Check metadata and Apache licence default
     runs-on: ubuntu-latest
@@ -152,6 +194,7 @@ jobs:
 
   build:
     name: Build with Lean
+    needs: release_version
     runs-on: ubuntu-latest
     timeout-minutes: 180
     steps:
@@ -232,6 +275,9 @@ jobs:
           DISABLE_EQUATIONS: "1"
           DOCGEN_SRC: github
         run: lake build Robin1984:docs
+      - name: Prepare the offline API-documentation landing page
+        shell: pwsh
+        run: ./scripts/prepare-api-docs.ps1 -DocumentationRoot docbuild/.lake/build/doc
       - name: Save the API documentation cache
         if: steps.restore-docs.outputs.cache-hit != 'true'
         uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
@@ -273,3 +319,183 @@ jobs:
           cache: false
       - name: Run pinned Comparator toolchain
         run: ./scripts/verify-comparator.sh
+
+  release:
+    name: Publish verified release
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs:
+      - release_version
+      - license
+      - submission-link
+      - paper
+      - sandbox
+      - build
+      - docs
+      - comparator
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ needs.release_version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Check whether this exact release is already complete
+        id: release_state
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_id=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            --jq ".[] | select(.tag_name == \"$RELEASE_TAG\") | .id")
+          if [[ -z "$release_id" ]]; then
+            echo "complete=false" >> "$GITHUB_OUTPUT"
+            echo "draft_id=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          target=$(gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" --jq .target_commitish)
+          if [[ "$target" != "$GITHUB_SHA" ]]; then
+            echo "::error::$RELEASE_TAG targets $target instead of $GITHUB_SHA"
+            exit 1
+          fi
+          draft=$(gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" --jq .draft)
+          if [[ "$draft" == true ]]; then
+            echo "complete=false" >> "$GITHUB_OUTPUT"
+            echo "draft_id=$release_id" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          expected=$(printf '%s\n' \
+            "robin1984-api-documentation-$RELEASE_TAG.zip" \
+            'robin1984-formalization.pdf' \
+            "robin1984-linux-lean-$RELEASE_TAG.tar.zst" | sort)
+          actual=$(gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+            --jq '.assets[].name' | sort)
+          if [[ "$actual" != "$expected" ]]; then
+            echo "::error::Existing $RELEASE_TAG release has the wrong asset set"
+            exit 1
+          fi
+          if [[ $(gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+              --jq '[.assets[] | select(.state != "uploaded" or .size <= 0)] | length') != 0 ]]; then
+            echo "::error::Existing $RELEASE_TAG release has an incomplete asset"
+            exit 1
+          fi
+          echo "complete=true" >> "$GITHUB_OUTPUT"
+          echo "draft_id=" >> "$GITHUB_OUTPUT"
+      - name: Download the research paper
+        if: steps.release_state.outputs.complete != 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: robin1984-research-paper
+          path: release-inputs/paper
+      - name: Download the completed Lean build
+        if: steps.release_state.outputs.complete != 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: robin1984-linux-build
+          path: release-inputs/linux-build
+      - name: Download the API documentation
+        if: steps.release_state.outputs.complete != 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: api-documentation
+          path: release-inputs/api-documentation
+      - name: Validate and package the three release assets
+        if: steps.release_state.outputs.complete != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for command in gh jq sha256sum stat tar zip zstd; do
+            command -v "$command" >/dev/null
+          done
+          test -s release-inputs/paper/robin1984-formalization.pdf
+          test -s release-inputs/linux-build/lib/lean/Challenge.olean
+          test -s release-inputs/linux-build/lib/lean/Solution.olean
+          pwsh -File scripts/prepare-api-docs.ps1 \
+            -DocumentationRoot release-inputs/api-documentation
+
+          mkdir release-assets
+          cp release-inputs/paper/robin1984-formalization.pdf \
+            release-assets/robin1984-formalization.pdf
+          (
+            cd release-inputs/api-documentation
+            zip -q -r -6 \
+              "$GITHUB_WORKSPACE/release-assets/robin1984-api-documentation-$RELEASE_TAG.zip" .
+          )
+          tar -C release-inputs/linux-build -cf - . |
+            zstd -T0 -10 -q \
+              -o "release-assets/robin1984-linux-lean-$RELEASE_TAG.tar.zst"
+
+          test "$(find release-assets -maxdepth 1 -type f | wc -l)" -eq 3
+          sha256sum release-assets/* > release-assets.sha256
+          {
+            echo "Automated release for commit \`$GITHUB_SHA\`."
+            echo
+            echo "Every CI gate passed, including the full Lean build, metadata and provenance checks, research-paper and API-documentation builds, Comparator statement matching, NanoDa replay, and Lean default-kernel replay."
+            echo
+            echo "## Assets"
+            echo
+            echo "- \`robin1984-formalization.pdf\`: research paper."
+            echo "- \`robin1984-linux-lean-$RELEASE_TAG.tar.zst\`: completed Ubuntu \`.lake/build\` contents."
+            echo "- \`robin1984-api-documentation-$RELEASE_TAG.zip\`: complete API site with an offline-safe landing page."
+            echo
+            echo "## SHA-256"
+            echo
+            echo '```text'
+            cat release-assets.sha256
+            echo '```'
+          } > release-notes.md
+      - name: Create or complete the draft release
+        if: steps.release_state.outputs.complete != 'true'
+        shell: bash
+        env:
+          DRAFT_ID: ${{ steps.release_state.outputs.draft_id }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$DRAFT_ID" ]]; then
+            gh release create "$RELEASE_TAG" release-assets/* \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "Robin1984 $RELEASE_TAG" \
+              --notes-file release-notes.md \
+              --draft
+          else
+            gh release upload "$RELEASE_TAG" release-assets/* \
+              --repo "$GITHUB_REPOSITORY" --clobber
+            gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+              --title "Robin1984 $RELEASE_TAG" \
+              --notes-file release-notes.md
+          fi
+
+          release_id=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            --jq ".[] | select(.tag_name == \"$RELEASE_TAG\" and .draft == true) | .id")
+          test -n "$release_id"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+            --jq '.assets | length')" -eq 3
+          for asset in release-assets/*; do
+            name=$(basename "$asset")
+            local_size=$(stat -c '%s' "$asset")
+            remote_size=$(gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+              --jq ".assets[] | select(.name == \"$name\" and .state == \"uploaded\") | .size")
+            test "$remote_size" = "$local_size"
+          done
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --draft=false --latest
+      - name: Verify the published release
+        shell: bash
+        run: |
+          set -euo pipefail
+          release=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG")
+          test "$(jq -r .draft <<< "$release")" = false
+          test "$(jq -r .prerelease <<< "$release")" = false
+          test "$(jq -r .target_commitish <<< "$release")" = "$GITHUB_SHA"
+          test "$(jq '.assets | length' <<< "$release")" -eq 3
+          test "$(jq '[.assets[] | select(.state != "uploaded" or .size <= 0)] | length' \
+            <<< "$release")" -eq 0

@@ -8,3 +8,5 @@
 *.txt text eol=lf
 *.sh text eol=lf
 *.ps1 text eol=lf
+*.html text eol=lf
+RELEASE_VERSION text eol=lf
