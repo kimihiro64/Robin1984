@@ -225,8 +225,11 @@ Lean's default-kernel replay. The committed [RELEASE_VERSION](RELEASE_VERSION)
 file supplies the semantic version and must be bumped before a new release;
 CI checks tag collisions before starting the long Lean build. The release
 contains exactly the paper PDF, a compressed Ubuntu `.lake/build` tree, and a
-ZIP of the complete offline-safe API site. A rerun at an already published
-commit verifies the existing release instead of creating a duplicate.
+ZIP of the complete offline-safe API site. The build archive includes the
+project's licensing statement, while the documentation ZIP also includes the
+licence and notice files for Lean and every pinned dependency represented in
+the generated pages. A rerun at an already published commit verifies the
+existing release instead of creating a duplicate.
 
 ## Production and review disclosure
 
@@ -239,9 +242,13 @@ independent expert mathematical review. No such expert review is claimed.
 
 ## Licence and submission
 
-The repository snapshot is licensed under
-[Apache License 2.0](LICENSE). Mathematical papers and software dependencies
-retain their own copyrights and licences.
+The repository's original material is licensed under the
+[Apache License 2.0](LICENSE) by default. The research paper is additionally
+available under CC-BY-4.0, at the recipient's option. Mathematical provenance,
+cited papers, external dependencies, file-specific exceptions, and generated
+release archives are explained in [LICENSING.md](LICENSING.md); the project
+licence does not relicense third-party material or claim ownership of the
+underlying mathematical results.
 
 Machine-readable citation information for this formalization is provided in
 [CITATION.cff](CITATION.cff). The canonical source repository is

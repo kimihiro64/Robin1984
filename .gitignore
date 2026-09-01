@@ -2,5 +2,6 @@
 /.lake/
 /docbuild/.lake/
 /paper/build/
+/tmp/
 /AGENTS.md
 

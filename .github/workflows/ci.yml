@@ -84,6 +84,26 @@ jobs:
             abort "LICENSE is not detected exactly as Apache-2.0" unless identifiers == ["Apache-2.0"]
           ' "$RUNNER_TEMP/license.json"
 
+  release-licensing:
+    name: Check release licensing bundles
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9
+        with:
+          build: false
+      - name: Fetch the pinned project dependencies
+        run: lake update
+      - name: Fetch the pinned documentation dependencies
+        working-directory: docbuild
+        run: lake update
+      - name: Exercise producer and release-consumer packaging
+        shell: pwsh
+        run: ./test/release_licensing_test.ps1
+
   submission-link:
     name: Check where the README sends a submitter
     runs-on: ubuntu-latest
@@ -328,6 +348,7 @@ jobs:
     needs:
       - release_version
       - license
+      - release-licensing
       - submission-link
       - paper
       - sandbox
@@ -418,8 +439,13 @@ jobs:
           test -s release-inputs/paper/robin1984-formalization.pdf
           test -s release-inputs/linux-build/lib/lean/Challenge.olean
           test -s release-inputs/linux-build/lib/lean/Solution.olean
+          test -s release-inputs/api-documentation/licensing/index.html
+          test -s release-inputs/api-documentation/licensing/Robin1984-Apache-2.0.txt
           pwsh -File scripts/prepare-api-docs.ps1 \
-            -DocumentationRoot release-inputs/api-documentation
+            -DocumentationRoot release-inputs/api-documentation \
+            -UsePreparedLicensing
+          pwsh -File scripts/prepare-release-licensing.ps1 \
+            -DestinationRoot release-inputs/linux-build
 
           mkdir release-assets
           cp release-inputs/paper/robin1984-formalization.pdf \
@@ -443,8 +469,8 @@ jobs:
             echo "## Assets"
             echo
             echo "- \`robin1984-formalization.pdf\`: research paper."
-            echo "- \`robin1984-linux-lean-$RELEASE_TAG.tar.zst\`: completed Ubuntu \`.lake/build\` contents."
-            echo "- \`robin1984-api-documentation-$RELEASE_TAG.zip\`: complete API site with an offline-safe landing page."
+            echo "- \`robin1984-linux-lean-$RELEASE_TAG.tar.zst\`: completed Ubuntu \`.lake/build\` contents with project licensing information."
+            echo "- \`robin1984-api-documentation-$RELEASE_TAG.zip\`: complete API site with an offline-safe landing page and applicable third-party licence notices."
             echo
             echo "## SHA-256"
             echo

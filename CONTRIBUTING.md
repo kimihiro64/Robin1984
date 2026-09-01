@@ -89,5 +89,8 @@ temporary kernel axiom audit and the Comparator/NanoDa checks.
 ## Licence
 
 Contributions to this repository are accepted under the repository's
-Apache-2.0 licence. Cited papers and external dependencies retain their own
-copyrights and licences.
+Apache-2.0 licence unless explicitly agreed and marked otherwise. Preserve all
+applicable third-party notices and submit only material you are authorized to
+license. The paper's additional CC-BY-4.0 option and the precise treatment of
+mathematical provenance, dependencies, and generated archives are documented
+in [LICENSING.md](LICENSING.md).

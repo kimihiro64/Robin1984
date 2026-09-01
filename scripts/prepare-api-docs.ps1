@@ -3,7 +3,9 @@ param(
   [string]$DocumentationRoot,
 
   [string]$TemplatePath =
-    (Join-Path $PSScriptRoot '../assets/api-documentation-index.html')
+    (Join-Path $PSScriptRoot '../assets/api-documentation-index.html'),
+
+  [switch]$UsePreparedLicensing
 )
 
 $ErrorActionPreference = 'Stop'
@@ -13,6 +15,12 @@ $template = (Resolve-Path -LiteralPath $TemplatePath).Path
 $index = Join-Path $root 'index.html'
 if (-not (Test-Path -LiteralPath $index -PathType Leaf)) {
   throw "Generated documentation has no index.html: $index"
+}
+
+if (-not $UsePreparedLicensing) {
+  & (Join-Path $PSScriptRoot 'prepare-release-licensing.ps1') `
+    -DestinationRoot $root `
+    -IncludeDependencyLicenses
 }
 
 $templateText = [IO.File]::ReadAllText($template)
