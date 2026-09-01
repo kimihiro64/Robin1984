@@ -147,7 +147,7 @@ jobs:
           fetch-depth: 0
       - name: Restore the source-keyed paper PDF
         id: restore-paper
-        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: paper/build/robin1984-formalization.pdf
           key: robin1984-paper-${{ hashFiles('paper/robin1984-formalization.tex') }}
@@ -230,7 +230,7 @@ jobs:
           lake exe cache get
       - name: Restore the repository build cache
         id: restore-project-build
-        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: .lake/build
           key: robin1984-linux-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', 'scripts/build-order.txt', '*.lean', 'Robin1984/**/*.lean') }}
@@ -282,7 +282,7 @@ jobs:
           test -s .lake/build/lib/lean/Solution.olean
       - name: Restore the API documentation cache
         id: restore-docs
-        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: docbuild/.lake/build
           key: robin1984-docs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', 'docbuild/lean-toolchain', 'docbuild/lakefile.toml', 'docbuild/lake-manifest.json', '*.lean', 'Robin1984/**/*.lean') }}
