@@ -32,33 +32,9 @@ theorem mem_interior_integrableExpSet_of_two_sided
     (hl : Membership.mem (integrableExpSet X mu) l)
     (hr : Membership.mem (integrableExpSet X mu) r)
     (hla : l < a) (har : a < r) :
-    Membership.mem (interior (integrableExpSet X mu)) a := by
-  rw [mem_interior_iff_mem_nhds]
-  let eps : Real := min (a - l) (r - a) / 2
-  have hMinPos : 0 < min (a - l) (r - a) :=
-    lt_min (sub_pos.mpr hla) (sub_pos.mpr har)
-  have hEpsPos : 0 < eps := by
-    dsimp [eps]
-    positivity
-  apply mem_of_superset (Metric.ball_mem_nhds a hEpsPos)
-  intro y hy
-  rw [Metric.mem_ball, Real.dist_eq] at hy
-  have hEpsLeft : eps <= a - l := by
-    dsimp [eps]
-    have hMinLe := min_le_left (a - l) (r - a)
-    linarith
-  have hEpsRight : eps <= r - a := by
-    dsimp [eps]
-    have hMinLe := min_le_right (a - l) (r - a)
-    linarith
-  have hyLeft : l <= y := by
-    have hyLower := (abs_lt.mp hy).1
-    linarith
-  have hyRight : y <= r := by
-    have hyUpper := (abs_lt.mp hy).2
-    linarith
-  exact convex_integrableExpSet.ordConnected.out hl hr
-    (And.intro hyLeft hyRight)
+    Membership.mem (interior (integrableExpSet X mu)) a :=
+  ProbabilityTheory.mem_interior_integrableExpSet_of_two_sided
+    hl hr hla har
 
 theorem Iio_subset_interior_integrableExpSet_of_analyticContinuation
     {Omega : Type*} [MeasurableSpace Omega]

@@ -7,9 +7,12 @@ the two advertised results.  Paths, filenames, and keyword searches were used
 only to find material for inspection; they did not determine classifications.
 
 The machine-readable record is [`provenance/ledger.json`](../provenance/ledger.json).
-It contains one entry for each of the 154 Lean files and records the
-content-level basis for its designation.  `scripts/check-provenance.ps1`
-requires exact agreement between the ledger and every in-file header.
+It contains one entry for each of the 157 Lean files and records the
+content-level basis for its designation. `scripts/check-provenance.ps1`
+requires exact agreement between the ledger and every project provenance
+header; upstream-ready files below `Robin1984/Mathlib/` instead require the
+standard Mathlib copyright, licence, authorship, and module-documentation
+markers.
 
 The four designations mean:
 
@@ -28,8 +31,8 @@ The four designations mean:
   decomposition, or connective proof engineering.  Any imported published
   theorem keeps its attribution at its own source.
 
-Current reviewed counts are 36 direct-source files, 3 other-source files,
-11 standard-mathematics files, and 104 primarily project-original files.
+Current reviewed counts are 37 direct-source files, 3 other-source files,
+19 standard-mathematics files, and 98 primarily project-original files.
 The last group includes all exact finite row and prime-product certificates:
 their mathematical obligation comes from Robin's cutoff, but their data
 format, interval partition, and kernel verification are original to this

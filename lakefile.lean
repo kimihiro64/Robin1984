@@ -37,8 +37,8 @@ require mathlib from git
   "https://github.com/leanprover-community/mathlib4.git" @ "v4.33.1"
 
 private def buildModulesSequentially (moduleNames : Array Lean.Name) : FetchM (Job Unit) := do
-  if moduleNames.size != 245 then
-    error s!"Expected 245 modules in the default build order, found {moduleNames.size}."
+  if moduleNames.size != 255 then
+    error s!"Expected 255 modules in the default build order, found {moduleNames.size}."
   if moduleNames.back? != some `Solution then
     error "Solution must be the final module in the default build order."
   let mut seen : Lean.NameSet := {}

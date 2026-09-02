@@ -97,7 +97,7 @@
       "classification": "Primarily project-original",
       "mathematical_source": "Robin's 1984 analytic implication supplies the surrounding mathematical target.",
       "formalization_note": "The exact coefficient normalization, explicit cutoff choices, and proof interfaces in this module are primarily project-authored.",
-      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robinThetaWeightedTailTwo, integrableOn_robinThetaWeightedTailTwo, robinThetaWeightedTailTwo_eq_main_add_errors, robinZeroKernel_one_two_bounds, robinThetaWeightedTailTwo_upper, robinThetaWeightedTailTwo_lower, robinRealWeight_two_eq_primeSquareTailKernel, robin_complete_prime_square_block_eq, and 1 further retained declarations.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, candidate-definition reduction sites, and proof role. Retained declarations include robinThetaWeightedTailTwo, integrableOn_robinThetaWeightedTailTwo, robinThetaWeightedTailTwo_eq_main_add_errors, robinZeroKernel_one_two_bounds, robinThetaWeightedTailTwo_upper, robinThetaWeightedTailTwo_lower, robinRealWeight_two_eq_primeSquareTailKernel, robin_complete_prime_square_block_eq, and 1 further retained declarations.",
       "dependency_status": "advertised theorem dependency graph",
       "reviewed": true
     },
@@ -862,7 +862,7 @@
       "classification": "Standard mathematical formalization",
       "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
       "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
-      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include primeLogCoeff, sum_primeLogCoeff_Icc_eq_theta, primeLogCoeff_abel.",
+      "content_basis": "Reviewed the module documentation, imports, compatibility declarations, and proof role. The retained declarations preserve the project API while delegating primeLogCoeff, sum_primeLogCoeff_Icc_eq_theta, and primeLogCoeff_abel to the Mathlib candidate layer.",
       "dependency_status": "advertised theorem dependency graph",
       "reviewed": true
     },
@@ -871,7 +871,7 @@
       "classification": "Standard mathematical formalization",
       "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
       "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
-      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include primeSquareKernel, primeSquareTailKernel, primeSquareKernel_mul_primeLogCoeff, sum_primeSquareKernel_mul_primeLogCoeff, differentiableAt_primeSquareKernel, deriv_primeSquareKernel, deriv_primeSquareKernel_eq_neg_tailKernel, continuousAt_primeSquareTailKernel, and 6 further retained declarations.",
+      "content_basis": "Reviewed the module documentation, imports, compatibility declarations, and proof role. The retained declarations preserve the project API while delegating the reciprocal-square kernels and 12 associated Abel, derivative, continuity, and integrability theorems to the Mathlib candidate layer.",
       "dependency_status": "advertised theorem dependency graph",
       "reviewed": true
     },
@@ -1015,7 +1015,7 @@
       "classification": "Standard mathematical formalization",
       "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
       "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
-      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include factorization_lcmUpto_support_eq_primesUpToSet.",
+      "content_basis": "Reviewed the module documentation, imports, compatibility theorem, and proof role. The retained factorization_lcmUpto_support_eq_primesUpToSet declaration delegates its generic factorization-support step to the Mathlib candidate layer.",
       "dependency_status": "advertised theorem dependency graph",
       "reviewed": true
     },
@@ -1026,6 +1026,96 @@
       "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
       "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include CAState, zeroCAState, lyapunov, applyPacket, eventLogMass, primesUpToSet, layerEventOfPrime, eventGainSum.",
       "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Mathlib.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
+      "formalization_note": "The retained definitions, interfaces, reductions, or proof assembly are primarily original to this formalization.",
+      "content_basis": "Reviewed the complete facade and its one-way import role; it declares no theorem and exposes only maximal Mathlib candidate modules.",
+      "dependency_status": "documented Mathlib candidate facade exception",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Mathlib/Analysis/Asymptotics/Omega.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the Mathlib-style source header, narrow asymptotics import, Asymptotics namespace, one-sided at-top Omega definitions, and complete little-o stability and real-power comparison proofs.",
+      "dependency_status": "Mathlib candidate dependency graph; project-independent",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Mathlib/Analysis/SpecialFunctions/Log/RatBounds.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the Mathlib-style source header, narrow logarithm import, Rat namespace, exact atanh-series certificate definitions, and complete rational lower and upper logarithm proofs.",
+      "dependency_status": "Mathlib candidate dependency graph; project-independent",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Mathlib/MeasureTheory/Integral/IntervalIntegral/TailReweight.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the Mathlib-style source header, module documentation, narrow imports, MeasureTheory namespace, triangular integrand, three section-integral identities, and complete absolute tail-reweight proof.",
+      "dependency_status": "Mathlib candidate dependency graph; project-independent",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Mathlib/NumberTheory/Chebyshev/LcmSupport.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the Mathlib-style source header, module documentation, single narrow Chebyshev import, Nat namespace, statement, and complete factorization-support proof.",
+      "dependency_status": "Mathlib candidate dependency graph; project-independent",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Mathlib/NumberTheory/Chebyshev/MertensProduct.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the Mathlib-style source header, narrow Chebyshev import, finite Mertens product definition, and complete natural-floor invariance proof.",
+      "dependency_status": "Mathlib candidate dependency graph; project-independent",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Mathlib/NumberTheory/Chebyshev/PrimeLogAbel.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the Mathlib-style source header, module documentation, narrow imports, Chebyshev namespace, definitions, theorem statements, and complete proofs of primeLogCoeff, sum_primeLogCoeff_Icc_eq_theta, and primeLogCoeff_abel.",
+      "dependency_status": "Mathlib candidate dependency graph; project-independent",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Mathlib/NumberTheory/Chebyshev/PrimeSquareAbel.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the Mathlib-style source header, module documentation, candidate-only import, Chebyshev namespace, definitions, theorem statements, and complete reciprocal-square Abel proofs.",
+      "dependency_status": "Mathlib candidate dependency graph; project-independent",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Mathlib/NumberTheory/LSeries/RiemannZetaReal.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A conventional algebraic, analytic, order-theoretic, or finite-sum fact with no single author claimed.",
+      "formalization_note": "The fact is standard; its exact statement, chosen constants, and Lean proof are formalization work.",
+      "content_basis": "Reviewed the Mathlib-style source header, candidate-only and narrow Mathlib imports, RiemannZeta namespace, removable pole factor, Euler remainder measure, analytic-continuation identity, and complete positive-real nonvanishing proof.",
+      "dependency_status": "Mathlib candidate dependency graph; project-independent",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Mathlib/Probability/Moments/MGFAnalyticContinuation.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jean-Louis Nicolas (1983), Landau's oscillation principle, and Guy Robin's use of that argument (1984).",
+      "formalization_note": "The retained mathematical step reconstructs the cited Nicolas--Landau argument; module boundaries and Lean proof engineering are original to this formalization.",
+      "content_basis": "Reviewed the Mathlib-style source header, narrow MGF import, ProbabilityTheory namespace, two-sided interior lemma, and four complete nonnegative-MGF analytic continuation and strict-frontier-crossing proofs.",
+      "dependency_status": "Mathlib candidate dependency graph; project-independent",
       "reviewed": true
     },
     {

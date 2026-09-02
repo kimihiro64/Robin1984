@@ -1,4 +1,5 @@
 import Mathlib.NumberTheory.LSeries.SumCoeff
+import Robin1984.Mathlib.NumberTheory.LSeries.RiemannZetaReal
 import Robin1984.NicolasLandau.NicolasOscillation
 
 /-!
@@ -1452,107 +1453,36 @@ theorem nicolasPsiMellinTailContinuation_three_simplePoleLimit_Ioi
   simpa [Function.comp_def] using hLimit.comp hRay
 
 
-/-- The removable regular part of zeta at one.  Away from one this is exactly
-`zeta(s) - 1 / (s - 1)`; at one it is assigned its punctured limit. -/
-def nicolasZetaRegularPart (s : Complex) : Complex :=
-  Function.update
-    (fun w : Complex => riemannZeta w - 1 / (w - 1)) 1
-    (limUnder (nhdsWithin 1 (Set.compl {(1 : Complex)}))
-      (fun w : Complex => riemannZeta w - 1 / (w - 1))) s
+/-! The removable zeta regular part and pole factor are maintained in the
+Mathlib candidate layer; these declarations preserve the project API. -/
+
+noncomputable abbrev nicolasZetaRegularPart : Complex -> Complex :=
+  RiemannZeta.regularPart
 
 theorem nicolasZetaRegularPart_eq_of_ne_one
     {s : Complex} (hs : Not (s = 1)) :
-    nicolasZetaRegularPart s = riemannZeta s - 1 / (s - 1) := by
-  simp [nicolasZetaRegularPart, hs]
+    nicolasZetaRegularPart s = riemannZeta s - 1 / (s - 1) :=
+  RiemannZeta.regularPart_eq_of_ne_one hs
 
-/-- The regular part is entire after filling the removable singularity. -/
 theorem nicolasZetaRegularPart_differentiable :
-    Differentiable Complex nicolasZetaRegularPart := by
-  intro s
-  let f : Complex -> Complex := fun w => riemannZeta w - 1 / (w - 1)
-  by_cases hs : s = 1
-  . subst s
-    have hDiffAway : DifferentiableOn Complex f
-        (Set.univ \ {1}) := by
-      intro w hw
-      have hwOne : Not (w = 1) := by
-        exact Set.mem_compl_singleton_iff.mp hw.2
-      have hNumerator : DifferentiableAt Complex
-          (fun _ : Complex => (1 : Complex)) w := by fun_prop
-      have hDenominator : DifferentiableAt Complex
-          (fun z : Complex => z - 1) w := by fun_prop
-      dsimp [f]
-      exact ((differentiableAt_riemannZeta hwOne).sub
-        (hNumerator.div hDenominator (sub_ne_zero.mpr hwOne))).differentiableWithinAt
-    have hLittleO : (fun w : Complex => f w - f 1) =o[
-        nhdsWithin 1 (Set.compl {(1 : Complex)})]
-        (fun w : Complex => Inv.inv (w - 1)) := by
-      refine Asymptotics.isLittleO_of_tendsto' ?_ ?_
-      . filter_upwards [self_mem_nhdsWithin] with w hw hwInv
-        rw [inv_eq_zero, sub_eq_zero] at hwInv
-        tauto
-      . simp_rw [div_eq_mul_inv, inv_inv, sub_mul,
-          (by ring_nf : nhds (0 : Complex) =
-            nhds ((1 - 1) - f 1 * (1 - 1)))]
-        apply Tendsto.sub
-        . simp_rw [mul_comm (f _), f, mul_sub]
-          apply riemannZeta_residue_one.sub
-          refine Tendsto.congr' ?_
-            (tendsto_const_nhds.mono_left nhdsWithin_le_nhds)
-          filter_upwards [self_mem_nhdsWithin] with w hw
-          field_simp [sub_ne_zero.mpr
-            (Set.mem_compl_singleton_iff.mp hw)]
-        . exact ((tendsto_id.sub tendsto_const_nhds).mono_left
-            nhdsWithin_le_nhds).const_mul _
-    have hFilled := Complex.differentiableOn_update_limUnder_of_isLittleO
-      (s := Set.univ) (c := (1 : Complex)) univ_mem hDiffAway hLittleO
-    change DifferentiableAt Complex
-      (Function.update f 1
-        (limUnder (nhdsWithin 1 (Set.compl {(1 : Complex)})) f)) 1
-    exact (hFilled 1 (Set.mem_univ 1)).differentiableAt Filter.univ_mem
-  . have hBase : DifferentiableAt Complex f s := by
-      have hNumerator : DifferentiableAt Complex
-          (fun _ : Complex => (1 : Complex)) s := by fun_prop
-      have hDenominator : DifferentiableAt Complex
-          (fun z : Complex => z - 1) s := by fun_prop
-      dsimp [f]
-      exact (differentiableAt_riemannZeta hs).sub
-        (hNumerator.div hDenominator (sub_ne_zero.mpr hs))
-    change DifferentiableAt Complex
-      (Function.update f 1
-        (limUnder (nhdsWithin 1 (Set.compl {(1 : Complex)})) f)) s
-    apply hBase.congr_of_eventuallyEq
-    filter_upwards [isOpen_compl_singleton.mem_nhds hs] with w hw
-    simp [Function.update_of_ne
-      (Set.mem_compl_singleton_iff.mp hw)]
+    Differentiable Complex nicolasZetaRegularPart :=
+  RiemannZeta.regularPart_differentiable
 
-/-- The entire factor left after extracting zeta's simple pole at one. -/
-def nicolasZetaPoleFactor (s : Complex) : Complex :=
-  1 + (s - 1) * nicolasZetaRegularPart s
+noncomputable abbrev nicolasZetaPoleFactor : Complex -> Complex :=
+  RiemannZeta.poleFactor
 
 theorem nicolasZetaPoleFactor_differentiable :
-    Differentiable Complex nicolasZetaPoleFactor := by
-  intro s
-  unfold nicolasZetaPoleFactor
-  have hConst : DifferentiableAt Complex
-      (fun _ : Complex => (1 : Complex)) s := by fun_prop
-  have hDifference : DifferentiableAt Complex
-      (fun w : Complex => w - 1) s := by fun_prop
-  exact hConst.add
-    (hDifference.mul (nicolasZetaRegularPart_differentiable s))
+    Differentiable Complex nicolasZetaPoleFactor :=
+  RiemannZeta.poleFactor_differentiable
 
 @[simp] theorem nicolasZetaPoleFactor_one :
-    nicolasZetaPoleFactor 1 = 1 := by
-  unfold nicolasZetaPoleFactor
-  ring
+    nicolasZetaPoleFactor 1 = 1 :=
+  RiemannZeta.poleFactor_one
 
 theorem riemannZeta_eq_nicolasZetaPoleFactor_div
     {s : Complex} (hs : Not (s = 1)) :
-    riemannZeta s = nicolasZetaPoleFactor s / (s - 1) := by
-  unfold nicolasZetaPoleFactor
-  rw [nicolasZetaRegularPart_eq_of_ne_one hs]
-  field_simp [sub_ne_zero.mpr hs]
-  ring
+    riemannZeta s = nicolasZetaPoleFactor s / (s - 1) :=
+  RiemannZeta.eq_poleFactor_div hs
 
 theorem logDeriv_riemannZeta_eq_poleFactor_sub
     {s : Complex} (hs : Not (s = 1))
@@ -1677,7 +1607,8 @@ theorem eventually_nicolasJ_add_rpow_pos_of_not_omegaMinus
     (hNot : Not (AtTopOmegaMinus nicolasJ (fun x : Real => x ^ (-b)))) :
     Filter.Eventually
       (fun x : Real => 0 < nicolasJ x + x ^ (-b)) atTop := by
-  unfold AtTopOmegaMinus AtTopOmegaPlus at hNot
+  unfold AtTopOmegaMinus Asymptotics.AtTopOmegaMinus at hNot
+  unfold Asymptotics.AtTopOmegaPlus at hNot
   push Not at hNot
   specialize hNot 1 zero_lt_one
   choose X hX using hNot

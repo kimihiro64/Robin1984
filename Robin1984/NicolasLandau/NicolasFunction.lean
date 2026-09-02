@@ -1,5 +1,5 @@
-import Mathlib.NumberTheory.Chebyshev
 import Mathlib.NumberTheory.Harmonic.EulerMascheroni
+import Robin1984.Mathlib.NumberTheory.Chebyshev.MertensProduct
 
 /-!
 ## Provenance
@@ -22,12 +22,9 @@ namespace Robin1984
 
 noncomputable section
 
-/-- The finite Mertens product over primes not exceeding the real frontier
-`x`. -/
-def nicolasMertensProduct (x : Real) : Real := by
-  classical
-  exact Finset.prod (Nat.primesLE (Nat.floor x))
-    (fun p => 1 - 1 / (p : Real))
+/-- Compatibility alias for the upstream-ready finite Mertens product. -/
+noncomputable abbrev nicolasMertensProduct : Real -> Real :=
+  Chebyshev.mertensProduct
 
 /-- Nicolas's function
 `exp(gamma) * log(theta(x)) * product_{p <= x} (1 - 1/p)`. -/
@@ -44,9 +41,8 @@ def nicolasLogMertensOscillation (x : Real) : Real :=
 /-- The finite Mertens product is unchanged when a real frontier is replaced
 by its natural floor. -/
 theorem nicolasMertensProduct_natFloor (x : Real) :
-    nicolasMertensProduct (Nat.floor x : Real) = nicolasMertensProduct x := by
-  unfold nicolasMertensProduct
-  simp only [Nat.floor_natCast]
+    nicolasMertensProduct (Nat.floor x : Real) = nicolasMertensProduct x :=
+  Chebyshev.mertensProduct_natFloor x
 
 /-- Nicolas's function is unchanged when a real frontier is replaced by its
 natural floor. -/

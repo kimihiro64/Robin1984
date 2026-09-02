@@ -526,7 +526,7 @@ theorem primesUpToSet_eq_primesLE (P : Nat) :
 /-- Every finite Nicolas Mertens product at a natural frontier is positive. -/
 theorem nicolasMertensProduct_natCast_pos (P : Nat) :
     0 < nicolasMertensProduct (P : Real) := by
-  unfold nicolasMertensProduct
+  unfold nicolasMertensProduct Chebyshev.mertensProduct
   simp only [Nat.floor_natCast]
   apply Finset.prod_pos
   intro p hp
@@ -552,7 +552,7 @@ theorem factorizationEulerSaturation_lcmUpto_eq_neg_log_nicolasMertensProduct
   unfold factorizationEulerSaturation
   rw [Finsupp.sum, factorization_lcmUpto_support_eq_primesUpToSet,
     primesUpToSet_eq_primesLE]
-  unfold nicolasMertensProduct
+  unfold nicolasMertensProduct Chebyshev.mertensProduct
   simp only [Nat.floor_natCast]
   rw [Real.log_prod hFactorNonzero]
   unfold primeTowerTopCorrection
@@ -716,14 +716,14 @@ theorem lcmRobinLogMarginFloor_atTopOmegaPlus_of_nicolasOmegaMinus
       (fun x : Real => x ^ (-b))) :
     AtTopOmegaPlus lcmRobinLogMarginFloor
       (fun x : Real => x ^ (-b)) := by
-  unfold AtTopOmegaMinus at hOmega
+  unfold AtTopOmegaMinus Asymptotics.AtTopOmegaMinus at hOmega
   have hScalePos : Filter.Eventually
       (fun x : Real => 0 < x ^ (-b)) Filter.atTop := by
     filter_upwards [Filter.eventually_gt_atTop (0 : Real)] with x hx
     exact Real.rpow_pos_of_pos hx _
   have hLoss := lcmTransferLoss_natFloor_isLittleO_rpow_neg (b := b) hb
   have hCombined := hOmega.add_isLittleO hScalePos hLoss.neg_left
-  apply hCombined.congr_eventually
+  apply AtTopOmegaPlus.congr_eventually hCombined
   filter_upwards [eventually_lcmRobinLogMarginFloor_eq_neg_nicolasLog_sub_loss]
     with x hIdentity
   rw [hIdentity]

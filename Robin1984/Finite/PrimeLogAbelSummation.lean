@@ -1,5 +1,4 @@
-import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
-import Mathlib.NumberTheory.Chebyshev
+import Robin1984.Mathlib.NumberTheory.Chebyshev.PrimeLogAbel
 
 /-!
 ## Provenance
@@ -25,21 +24,16 @@ open MeasureTheory
 
 noncomputable section
 
-/-- Coefficient sequence whose partial sums are Chebyshev theta. -/
-noncomputable def primeLogCoeff (n : Nat) : Real :=
-  if Nat.Prime n then Real.log (n : Real) else 0
+/-- Compatibility alias for the upstream-ready prime-log coefficient. -/
+noncomputable abbrev primeLogCoeff : Nat → Real := Chebyshev.primeLogCoeff
 
-
-/-- Partial sums of `primeLogCoeff` are exactly `Chebyshev.theta`. -/
+/-- Compatibility theorem for the upstream-ready partial-sum identity. -/
 theorem sum_primeLogCoeff_Icc_eq_theta (x : Real) :
     (∑ n ∈ Finset.Icc 0 ⌊x⌋₊, primeLogCoeff n) =
-      Chebyshev.theta x := by
-  rw [Chebyshev.theta_eq_sum_Icc]
-  simp [primeLogCoeff, Finset.sum_filter]
+      Chebyshev.theta x :=
+  Chebyshev.sum_primeLogCoeff_Icc_eq_theta x
 
-/-- Abel summation specialized to the prime-log coefficient.  The analytic
-choice `f(t)=1/(t log t)` will turn the left side into a reciprocal-prime
-sum; this theorem keeps `f` abstract so the first bridge stays lightweight. -/
+/-- Compatibility theorem for the upstream-ready prime-log Abel identity. -/
 theorem primeLogCoeff_abel
     {f : Real → Real} {a b : Real}
     (ha : 0 ≤ a) (hab : a ≤ b)
@@ -47,20 +41,8 @@ theorem primeLogCoeff_abel
     (hf_int : IntegrableOn (deriv f) (Set.Icc a b)) :
     ∑ k ∈ Finset.Ioc ⌊a⌋₊ ⌊b⌋₊, f k * primeLogCoeff k =
       f b * Chebyshev.theta b - f a * Chebyshev.theta a -
-        ∫ t in Set.Ioc a b, deriv f t * Chebyshev.theta t := by
-  rw [sum_mul_eq_sub_sub_integral_mul primeLogCoeff ha hab hf_diff hf_int]
-  rw [sum_primeLogCoeff_Icc_eq_theta b, sum_primeLogCoeff_Icc_eq_theta a]
-  have hInt :
-      ∫ t in Set.Ioc a b,
-          deriv f t * (∑ k ∈ Finset.Icc 0 ⌊t⌋₊, primeLogCoeff k) =
-        ∫ t in Set.Ioc a b, deriv f t * Chebyshev.theta t := by
-    apply MeasureTheory.setIntegral_congr_fun measurableSet_Ioc
-    intro t _ht
-    change deriv f t * (∑ k ∈ Finset.Icc 0 ⌊t⌋₊, primeLogCoeff k) =
-      deriv f t * Chebyshev.theta t
-    rw [sum_primeLogCoeff_Icc_eq_theta t]
-  rw [hInt]
-
+        ∫ t in Set.Ioc a b, deriv f t * Chebyshev.theta t :=
+  Chebyshev.primeLogCoeff_abel ha hab hf_diff hf_int
 
 end
 

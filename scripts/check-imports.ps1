@@ -18,6 +18,29 @@ $directImportCache = @{}
 $modulePathCache = @{}
 $reachabilityCache = @{}
 $failures = [System.Collections.Generic.List[string]]::new()
+$mathlibCandidateRoot = 'Robin1984.Mathlib'
+$mathlibAllowedExternalPrefixes = @('Batteries.', 'Init.', 'Lean.', 'Mathlib.', 'Std.')
+$mathlibHeaderMarkers = @(
+  'Copyright (c)',
+  'Released under Apache 2.0 license',
+  'Authors:',
+  '/-!'
+)
+$mathlibReadinessStates = @(
+  'extracting',
+  'project-verified',
+  'mathlib-ready',
+  'submitted',
+  'upstreamed'
+)
+$compatibilityUnfoldPairs = @(
+  @('AtTopOmegaMinus', 'Asymptotics.AtTopOmegaMinus'),
+  @('AtTopOmegaPlus', 'Asymptotics.AtTopOmegaPlus'),
+  @('nicolasMertensProduct', 'Chebyshev.mertensProduct'),
+  @('robinLogLower', 'Rat.logSeriesLower'),
+  @('robinLogUpper', 'Rat.logSeriesUpper'),
+  @('robinTailTriangle', 'MeasureTheory.tailTriangle')
+)
 
 function Get-HeaderImportsFromText {
   param(
@@ -240,11 +263,53 @@ foreach ($rootFile in @('Challenge.lean', 'Solution.lean')) {
 $ownedSourceRoot = Join-Path $RepositoryRoot 'Robin1984'
 Get-ChildItem -LiteralPath $ownedSourceRoot -Filter '*.lean' -File -Recurse |
   ForEach-Object { $ownedFiles.Add($_) }
+$mathlibFacadePath = Join-Path $RepositoryRoot 'Robin1984\Mathlib.lean'
+if (-not (Test-Path -LiteralPath $mathlibFacadePath -PathType Leaf)) {
+  $failures.Add('Missing required Mathlib candidate facade: Robin1984/Mathlib.lean')
+}
+$mathlibManifestPath = Join-Path $RepositoryRoot 'MATHLIB_PORTING.md'
+$mathlibManifestLines = @()
+if (-not (Test-Path -LiteralPath $mathlibManifestPath -PathType Leaf)) {
+  $failures.Add('Missing required Mathlib candidate inventory: MATHLIB_PORTING.md')
+} else {
+  $mathlibManifestLines = @(Get-Content -LiteralPath $mathlibManifestPath)
+}
+$moduleNameFixture = 'Robin1984\Mathlib\Example.lean'
+$moduleNameFixtureResult = $moduleNameFixture.Substring(
+  0,
+  $moduleNameFixture.Length - '.lean'.Length
+).Replace('\', '.').Replace('/', '.')
+if ($moduleNameFixtureResult -cne 'Robin1984.Mathlib.Example') {
+  throw "Lean module-name normalization fixture failed: $moduleNameFixtureResult"
+}
 
 foreach ($file in $ownedFiles | Sort-Object FullName) {
   $relative = [IO.Path]::GetRelativePath($RepositoryRoot, $file.FullName)
   $sourceText = [IO.File]::ReadAllText($file.FullName)
   $imports = @(Get-DirectImports -Path $file.FullName)
+  if (-not $relative.EndsWith('.lean', [System.StringComparison]::Ordinal)) {
+    throw "Owned Lean path lacks the expected suffix: $relative"
+  }
+  $module = $relative.Substring(0, $relative.Length - '.lean'.Length).Replace('\', '.').Replace('/', '.')
+  if ($module.EndsWith('.', [System.StringComparison]::Ordinal) -or
+      $module.Contains('\') -or $module.Contains('/')) {
+    throw "Owned Lean path did not normalize to a module name: $relative => $module"
+  }
+  $isMathlibCandidate = $module -ceq $mathlibCandidateRoot -or
+    $module.StartsWith("$mathlibCandidateRoot.", [System.StringComparison]::Ordinal)
+
+  if (-not $isMathlibCandidate) {
+    foreach ($pair in $compatibilityUnfoldPairs) {
+      $legacyName = $pair[0]
+      $candidateName = $pair[1]
+      $unfoldPattern = "(?m)^\s*unfold\s+[^`r`n]*\b$([regex]::Escape($legacyName))\b[^`r`n]*$"
+      foreach ($unfoldMatch in [regex]::Matches($sourceText, $unfoldPattern)) {
+        if (-not $unfoldMatch.Value.Contains($candidateName)) {
+          $failures.Add("${relative}: unfold of compatibility alias '$legacyName' must also unfold '$candidateName'")
+        }
+      }
+    }
+  }
 
   if ($relative -in @('Challenge.lean', 'Solution.lean') -and
       $sourceText -notmatch '(?m)^set_option autoImplicit false\s*$') {
@@ -257,6 +322,52 @@ foreach ($file in $ownedFiles | Sort-Object FullName) {
   if ($relative -ceq 'Challenge.lean') {
     foreach ($ownedImport in Get-OwnedImportsInClosure -RootImports $imports) {
       $failures.Add("${relative}: Palomar Challenge closure contains project module '$ownedImport'")
+    }
+  }
+
+  if ($isMathlibCandidate) {
+    foreach ($import in $imports) {
+      if (Test-OwnedModuleName -Module $import) {
+        if (-not ($import -ceq $mathlibCandidateRoot -or
+            $import.StartsWith("$mathlibCandidateRoot.", [System.StringComparison]::Ordinal))) {
+          $failures.Add("${relative}: Mathlib candidate imports project module '$import'")
+        }
+        continue
+      }
+      $allowedExternal = @($mathlibAllowedExternalPrefixes | Where-Object {
+        $import.StartsWith($_, [System.StringComparison]::Ordinal)
+      }).Count -ne 0
+      if (-not $allowedExternal) {
+        $failures.Add("${relative}: Mathlib candidate imports non-Mathlib dependency '$import'")
+      }
+    }
+
+    if ($module -cne $mathlibCandidateRoot) {
+      foreach ($marker in $mathlibHeaderMarkers) {
+        if (-not $sourceText.Contains($marker)) {
+          $failures.Add("${relative}: Mathlib candidate missing source marker '$marker'")
+        }
+      }
+      $body = $sourceText -replace '(?m)^\s*(?:(?:public|private)\s+)?(?:meta\s+)?import(?:\s+all)?\s+[A-Za-z0-9_''\.]+\s*$', ''
+      if ($body -match '\bRobin1984\b') {
+        $failures.Add("${relative}: Mathlib candidate body references project namespace Robin1984")
+      }
+      $manifestNeedle = [string]::Concat('`', $module, '`')
+      $manifestRows = @($mathlibManifestLines | Where-Object { $_.Contains($manifestNeedle) })
+      if ($manifestRows.Count -ne 1) {
+        $failures.Add("${relative}: expected exactly one MATHLIB_PORTING.md inventory row")
+      } else {
+        $manifestRow = $manifestRows[0]
+        if (-not $manifestRow.Contains('`Mathlib/')) {
+          $failures.Add("${relative}: inventory row lacks a proposed Mathlib path")
+        }
+        $hasReadinessState = @($mathlibReadinessStates | Where-Object {
+          $manifestRow.Contains($_)
+        }).Count -ne 0
+        if (-not $hasReadinessState) {
+          $failures.Add("${relative}: inventory row lacks a recognized readiness state")
+        }
+      }
     }
   }
 

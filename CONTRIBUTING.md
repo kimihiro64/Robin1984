@@ -27,12 +27,18 @@ actually used; unused Lean code is not retained as a future convenience.
 
 ## Documentation and provenance
 
-Every owned Lean file must contain:
+Every project-specific Lean file must contain:
 
 1. exactly one provenance header that agrees with
    `provenance/ledger.json`; and
 2. a separate human-readable module description explaining the mathematical
    contents and proof role.
+
+Files below `Robin1984/Mathlib/` instead carry an upstream-ready Mathlib
+copyright, Apache-2.0 licence and authorship header plus ordinary Mathlib module
+documentation. They still require a reviewed entry in
+`provenance/ledger.json`; the separate project provenance block is deliberately
+omitted so the source can move upstream without editing its contents.
 
 Provenance classifications must be assigned by reading the declarations and
 their use in the final proof. Do not infer them from filenames, paths, or
@@ -43,6 +49,21 @@ both repository prose checks.
 Generated finite data must document its exact range, certificate meaning, and
 kernel verification. Include or update the generation method when changing
 certificate values.
+
+## Mathlib candidate layer
+
+Project-independent declarations intended for upstreaming belong below
+`Robin1984/Mathlib/`, mirroring their proposed path after the prefix is
+removed. They must use their proposed Mathlib namespace and may import only
+narrow Mathlib, Batteries, Init, Lean, Std, or other candidate modules. They
+may not import Robin1984 definitions, proof branches, `Challenge`, `Solution`,
+or third-party project libraries.
+
+Record every real candidate exactly once in `MATHLIB_PORTING.md`. The
+`mathlib-ready` state requires an identified destination, Mathlib-style source,
+no project dependency or proof placeholder, a clean boundary audit, and a
+focused build against the pinned Mathlib revision. Existing project names may
+be preserved by thin compatibility declarations outside the candidate layer.
 
 ## Dependencies
 
@@ -59,7 +80,7 @@ recorded upstream base, pinned by full SHA, and verified from a fresh Lake
 checkout.
 
 The default `lake build` target follows `scripts/build-order.txt`: the exact
-252-module dependency closure ending in `Solution`. If a source import or
+250-module dependency closure ending in `Solution`. If a source import or
 dependency update changes that closure, update the file in topological order,
 check for missing or duplicate modules, and verify that `Solution` remains the
 last entry. Do not replace the Lake-native sequential target with an
@@ -72,6 +93,7 @@ On Windows PowerShell:
 
 ```powershell
 ./scripts/bootstrap.ps1
+./scripts/check-imports.ps1
 ./scripts/check-provenance.ps1
 lake exe cache get
 lake build

@@ -54,6 +54,8 @@ The proof development is organized by mathematical role:
   the public equivalence theorem.
 - `Robin1984/Helpers/` contains reusable event, threshold, state and
   prime-tower lemmas.
+- `Robin1984/Mathlib/` contains project-independent modules maintained in their
+  proposed upstream namespaces and source format.
 
 The finite proof has three visible parts. Exact prime factorizations cover
 `5041 <= n < 7560`; a common colossally abundant tangent covers
@@ -61,9 +63,27 @@ The finite proof has three visible parts. Exact prime factorizations cover
 finite range through `log n = 74500`. The final retained row uses 105 bounded
 prime-product blocks, each recomputed with `decide +kernel`.
 
+## Mathlib candidate layer
+
+[`MATHLIB_PORTING.md`](MATHLIB_PORTING.md) inventories the reusable modules
+maintained for possible upstreaming. The current candidate layer contains nine
+modules covering Abel identities, `Nat.lcmUpto` support, finite Mertens
+products, exact rational logarithm bounds, one-sided Omega transfer, absolute
+tail reweighting, nonnegative-MGF continuation, and positive-real zeta
+nonvanishing. Each uses its proposed upstream namespace at a path mirroring
+its intended Mathlib destination. Existing project declarations and the
+advertised downstream API retain their original names.
+
+The import audit enforces a one-way boundary: candidates may depend only on
+narrow Mathlib-family modules or other candidates, never on Robin1984 proof
+code or third-party project libraries. It also checks Mathlib source headers,
+absence of the project namespace from candidate bodies, one manifest row per
+candidate, and a recognized readiness state. All nine candidates build
+directly against the pinned Mathlib revision before the complete project.
+
 ## Provenance
 
-Every owned Lean file has two separate module headers:
+Every project-specific Lean file has two separate module headers:
 
 1. a content-reviewed provenance designation identifying whether the file
    directly formalizes Robin, Nicolas, Landau or another published source;
@@ -71,6 +91,10 @@ Every owned Lean file has two separate module headers:
    this Lean development; and
 2. a human-readable description of the module's definitions, theorems and role
    in the proof.
+
+Mathlib candidate source instead uses Mathlib's upstream-ready copyright,
+licence, authorship and module-documentation header while retaining an exact
+reviewed entry in the repository provenance ledger.
 
 The review methodology and category counts are in
 [docs/PROVENANCE.md](docs/PROVENANCE.md). The machine-readable, path-exact
@@ -145,7 +169,7 @@ lake build
 ```
 
 The bare `lake build` command is the complete submission build. Its Lake-native
-default target reads the checked-in 245-module topological order from
+default target reads the checked-in 250-module topological order from
 [`scripts/build-order.txt`](scripts/build-order.txt), schedules one module job
 at a time, and finishes with `Solution`. Each Lean process is additionally
 bounded to one internal task thread (`-j1`). This avoids overlapping the
@@ -169,8 +193,9 @@ ruby ./scripts/validate-formalization.rb
 
 The import linter rejects package and Mathlib-category umbrella imports,
 duplicate or unresolved imports, non-canonical header ordering, and local
-imports already supplied transitively by another direct import. The subsequent
-Lean build separately verifies that every retained narrow import provides the
+imports already supplied transitively by another direct import. It also
+enforces the Mathlib candidate boundary and inventory. The subsequent Lean
+build separately verifies that every retained narrow import provides the
 notation, tactics, instances, and declarations its file actually needs.
 
 On a Linux host with Git, Go, Ruby, Rust/Cargo, Python 3 and Landrun support,

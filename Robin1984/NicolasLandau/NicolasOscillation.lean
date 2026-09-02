@@ -88,7 +88,7 @@ theorem nicolasMertensSummandTail_le {x : Real} (hx : 2 <= x) :
 theorem nicolasMertensProduct_pos (x : Real) :
     0 < nicolasMertensProduct x := by
   classical
-  unfold nicolasMertensProduct
+  unfold nicolasMertensProduct Chebyshev.mertensProduct
   apply Finset.prod_pos
   intro p hp
   have hpPrime : Nat.Prime p := Nat.prime_of_mem_primesLE hp
@@ -105,7 +105,7 @@ theorem nicolasLogMertensProduct_eq_summandPrefix_sub_primeReciprocal
         Finset.sum (Nat.primesLE (Nat.floor x))
           (fun p => 1 / (p : Real)) := by
   classical
-  unfold nicolasMertensProduct
+  unfold nicolasMertensProduct Chebyshev.mertensProduct
   have hFactors : forall p : Nat,
       Membership.mem (Nat.primesLE (Nat.floor x)) p ->
       Not (1 - 1 / (p : Real) = 0) := by
@@ -480,8 +480,8 @@ theorem AtTopOmegaMinus.of_eventuallyLE
     (hg : AtTopOmegaMinus g h)
     (hfg : Filter.Eventually (fun x => f x <= g x) atTop) :
     AtTopOmegaMinus f h := by
-  unfold AtTopOmegaMinus at hg
-  unfold AtTopOmegaMinus
+  unfold AtTopOmegaMinus Asymptotics.AtTopOmegaMinus at hg
+  unfold AtTopOmegaMinus Asymptotics.AtTopOmegaMinus
   choose c hc hLarge using hg
   refine Exists.intro c (And.intro hc ?_)
   intro X

@@ -66,6 +66,10 @@ foreach ($taskFile in $taskFiles) {
     [IO.Path]::DirectorySeparatorChar,
     '/'
   )
+  $taskIsMathlibCandidate = $taskRelative.StartsWith(
+    'Robin1984/Mathlib/',
+    [StringComparison]::Ordinal
+  )
   $taskText = [IO.File]::ReadAllText($taskFile.FullName)
   $taskModuleDocs = [Text.RegularExpressions.Regex]::Matches(
     $taskText,
@@ -76,6 +80,21 @@ foreach ($taskFile in $taskFiles) {
     -not $taskBody.Contains('## Provenance') -and
       -not [string]::IsNullOrWhiteSpace($taskBody)
   })
+  if ($taskIsMathlibCandidate) {
+    foreach ($taskMarker in @(
+        'Copyright (c)',
+        'Released under Apache 2.0 license',
+        'Authors:'
+      )) {
+      if (-not $taskText.Contains($taskMarker)) {
+        $taskFailures.Add("Missing Mathlib source marker '$taskMarker': $taskRelative")
+      }
+    }
+    if ($taskSubstantiveModuleDocs.Count -lt 1) {
+      $taskFailures.Add("Missing substantive module documentation: $taskRelative")
+    }
+    continue
+  }
   $taskCount = [Text.RegularExpressions.Regex]::Matches(
     $taskText,
     '(?m)^## Provenance$'

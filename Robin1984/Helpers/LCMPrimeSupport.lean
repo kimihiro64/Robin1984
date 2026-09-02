@@ -1,5 +1,5 @@
-import Mathlib.NumberTheory.Chebyshev
 import Robin1984.Helpers.Lyapunov
+import Robin1984.Mathlib.NumberTheory.Chebyshev.LcmSupport
 
 /-!
 ## Provenance
@@ -28,7 +28,7 @@ noncomputable section
 
 theorem factorization_lcmUpto_support_eq_primesUpToSet (P : Nat) :
     (Nat.lcmUpto P).factorization.support = Robin1984.primesUpToSet P := by
-  rw [Nat.support_factorization, Nat.primeFactors_lcmUpto]
+  rw [Nat.support_factorization_lcmUpto]
   ext p
   simp [Robin1984.primesUpToSet, Nat.mem_primesLE]
 

@@ -1,4 +1,5 @@
 import Robin1984.Equivalence.Theorem
+import Robin1984.Mathlib
 import Robin1984.Public
 
 /-!
@@ -13,7 +14,8 @@ import Robin1984.Public
 /-!
 # Public Robin 1984 library facade
 
-Importing this module exposes the formal equivalence theorem together with the
-small public API intended for downstream users. The mathematical development
-remains organized in the narrower modules imported by these two facades.
+Importing this module exposes the formal equivalence theorem, the small public
+API intended for downstream users, and the project-independent Mathlib
+candidate layer. The mathematical development remains organized in the
+narrower modules imported by these facades.
 -/

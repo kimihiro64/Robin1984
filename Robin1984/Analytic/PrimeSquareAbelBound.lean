@@ -118,6 +118,7 @@ theorem robinRealWeight_two_eq_primeSquareTailKernel {t : Real} (ht : 1 < t) :
     robinRealWeight 2 t = Robin1984.FiniteSupport.primeSquareTailKernel t := by
   have htPos : 0 < t := by linarith
   unfold robinRealWeight Robin1984.FiniteSupport.primeSquareTailKernel
+    Chebyshev.primeSquareTailKernel
   norm_num [Real.rpow_neg htPos.le]
   field_simp
 
@@ -143,7 +144,8 @@ theorem robin_complete_prime_square_block_eq
     rw [robinRealWeight_two_eq_primeSquareTailKernel (lt_trans hs ht.1)]
     exact mul_comm _ _
   rw [hKernel] at hAbel
-  unfold Robin1984.FiniteSupport.primeSquareKernel at hAbel
+  unfold Robin1984.FiniteSupport.primeSquareKernel
+    Chebyshev.primeSquareKernel at hAbel
   change robinThetaWeightedTailTwo s - robinThetaWeightedTailTwo b = _ at hSplit
   rw [<- hSplit] at hAbel
   rw [hAbel]
