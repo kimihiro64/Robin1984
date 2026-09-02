@@ -41,6 +41,48 @@ $compatibilityUnfoldPairs = @(
   @('robinLogUpper', 'Rat.logSeriesUpper'),
   @('robinTailTriangle', 'MeasureTheory.tailTriangle')
 )
+$requiredDirectImportContracts = @(
+  [PSCustomObject]@{
+    Declaration = 'Iio_subset_interior_integrableExpSet_of_analyticContinuation'
+    Provider = 'Robin1984.NicolasLandau.NicolasLandauFrontier'
+  }
+)
+
+foreach ($contract in $requiredDirectImportContracts) {
+  foreach ($property in @('Declaration', 'Provider')) {
+    $value = $contract.$property
+    if ($value -isnot [string] -or [string]::IsNullOrWhiteSpace($value)) {
+      throw "Malformed required direct-import contract property '$property'."
+    }
+  }
+}
+
+function Test-MissingRequiredDirectImport {
+  param(
+    [string]$SourceText,
+    [string]$Module,
+    [string[]]$Imports,
+    [PSCustomObject]$Contract
+  )
+
+  return $Module -cne $Contract.Provider -and
+    $SourceText.Contains($Contract.Declaration) -and
+    $Contract.Provider -notin $Imports
+}
+
+$requiredImportFixture = $requiredDirectImportContracts[0]
+if (-not (Test-MissingRequiredDirectImport `
+    -SourceText $requiredImportFixture.Declaration `
+    -Module 'Robin1984.Fixture.Consumer' -Imports @() `
+    -Contract $requiredImportFixture)) {
+  throw 'Required direct-import negative fixture failed.'
+}
+if (Test-MissingRequiredDirectImport `
+    -SourceText $requiredImportFixture.Declaration `
+    -Module 'Robin1984.Fixture.Consumer' -Imports @($requiredImportFixture.Provider) `
+    -Contract $requiredImportFixture) {
+  throw 'Required direct-import positive fixture failed.'
+}
 
 function Get-HeaderImportsFromText {
   param(
@@ -297,6 +339,13 @@ foreach ($file in $ownedFiles | Sort-Object FullName) {
   }
   $isMathlibCandidate = $module -ceq $mathlibCandidateRoot -or
     $module.StartsWith("$mathlibCandidateRoot.", [System.StringComparison]::Ordinal)
+
+  foreach ($contract in $requiredDirectImportContracts) {
+    if (Test-MissingRequiredDirectImport -SourceText $sourceText `
+        -Module $module -Imports $imports -Contract $contract) {
+      $failures.Add("${relative}: use of '$($contract.Declaration)' requires direct import '$($contract.Provider)'")
+    }
+  }
 
   if (-not $isMathlibCandidate) {
     foreach ($pair in $compatibilityUnfoldPairs) {
