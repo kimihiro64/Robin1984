@@ -8,7 +8,7 @@
 \usepackage[nopatch=footnote]{microtype}
 \usepackage[margin=1.1in]{geometry}
 \usepackage{amsmath,amssymb,amsthm,mathtools}
-\usepackage{booktabs}
+\usepackage{array,booktabs}
 \usepackage{enumitem}
 \usepackage{xcolor}
 \usepackage{hyperref}
@@ -57,6 +57,15 @@
   \href{\repositoryurl/blob/main/#1}{\texttt{#2}}}
 \newcommand{\dirlink}[2]{%
   \href{\repositoryurl/tree/main/#1}{\texttt{#2}}}
+\newcommand{\pntrepositoryurl}{%
+  https://github.com/kimihiro64/PrimeNumberTheoremAnd}
+\newcommand{\pntrevision}{f8f58c749d6cde8a641348fcd5e4702993651cd6}
+\newcommand{\pntfile}[2]{%
+  \href{\pntrepositoryurl/blob/\pntrevision/#1}{\texttt{#2}}}
+\newcommand{\actionsurl}{%
+  https://github.com/kimihiro64/Robin1984/actions/workflows/ci.yml}
+\newcommand{\releasesurl}{%
+  https://github.com/kimihiro64/Robin1984/releases}
 
 \title[Robin's 1984 criterion]{Robin's 1984 criterion for the Riemann hypothesis:\\
 a formally verified proof}
@@ -163,14 +172,150 @@ Pereira~\cite{CostaPereira1985,CostaPereira1987}.  Our purpose is not to claim
 new priority for those ingredients, but to give a complete proof whose exact
 logical and numerical dependencies have been checked.
 
+The new contribution is consequently one of reconstruction and verification.
+The analytic argument is carried through a multiplicity-counted zero divisor,
+the finite range is reduced to a reusable soundness theorem plus exact data,
+and the public biconditional is assembled without a project axiom.  This
+separation is useful beyond the present theorem: source mathematics, generic
+analytic lemmas, untrusted certificate discovery, kernel-checked certificate
+validation, and final theorem assembly remain distinct layers.
+
 The proof has four parts.  Section~\ref{sec:extremal} develops the
 colossally abundant tangent reduction.  Section~\ref{sec:finite} closes the
 bounded range.  Section~\ref{sec:rh-forward} proves the inequality under
 $\RH$ from a strict explicit coefficient gap.  Sections~\ref{sec:oscillation}
 and~\ref{sec:lcm} prove the converse by transferring Nicolas's negative
-oscillations to least common multiples.  Only
+oscillations to least common multiples.  At the highest level the two
+directions are
+\[
+ \RH\ \Longrightarrow\ \text{explicit prime-function bounds}\
+ \Longrightarrow\ \M(n)<0,
+\]
+and
+\[
+ \neg\RH\ \Longrightarrow\ \text{negative Nicolas oscillations}\
+ \Longrightarrow\ \M(L_P)>0\ \text{for arbitrarily large }P.
+\]
+The finite theorem joins the first chain to the exact cutoff $5040$, and the
+LCM identity joins the second chain to literal integer counterexamples.  Only
 Section~\ref{sec:formalization} discusses the organization and checking of
 the Lean development itself.
+
+\section{An informal guide to the proof}\label{sec:informal}
+
+This section gives the argument without its explicit constants or
+formalization details.  It is intended as a map for readers who do not work
+regularly with analytic number theory.  The later sections prove each step in
+the form actually needed for the theorem.
+
+\subsection{What Robin's inequality measures}
+
+The ratio $\A(n)=\sig(n)/n$ measures how rich $n$ is in divisors relative to
+its size.  If
+\[
+ n=\prod_p p^{a_p},
+\]
+then $\A(n)$ is a product of local factors, one for each prime dividing $n$.
+Small primes increase this ratio most efficiently, and raising a prime to a
+higher power gives progressively smaller additional gains.  Integers built
+from many small prime powers are therefore the difficult cases for an upper
+bound on $\A(n)$.
+
+Robin's inequality says that even these difficult integers satisfy
+\[
+ \A(n)<e^\euler\log\log n
+\]
+once $n>5040$, exactly when $\RH$ is true.  Taking logarithms turns the
+comparison into the sign of
+\[
+ \M(n)=\log\A(n)-\euler-\log\log\log n.
+\]
+The proof is consequently a search for structural reasons why this margin is
+negative, or, if $\RH$ fails, why it must sometimes be positive.
+
+\subsection{Why the extremal integers suffice}
+
+For a positive penalty $\eps$, the quantity
+\[
+ Q_\eps(m)=\A(m)m^{-\eps}
+\]
+rewards divisors but charges for size.  Its maximizers are the colossally
+abundant integers.  They are useful because the penalty separates into
+independent prime-power decisions: include a prime-power event when its
+marginal gain exceeds its size cost, exclude it when the cost is larger.
+
+Given a general integer $n$, choose the penalty
+\[
+ \eps=\frac{1}{\log n\,\log\log n}.
+\]
+Let $q$ maximize $Q_\eps$.  Maximality says that the logarithmic abundancy of
+$n$ lies below the affine line determined by $q$ and this penalty.  The
+function appearing in Robin's bound is concave, and the chosen penalty is its
+tangent slope at $n$.  The tangent inequality therefore transfers Robin's
+inequality from $q$ back to $n$.  A short exact calculation at the transition
+$5040\leftrightarrow55440$ ensures that the chosen maximizer lies above the
+exceptional cutoff whenever this reduction is used.  The bounded interval
+not covered by that argument is settled separately.  This explains why
+checking colossally abundant integers is both sufficient and necessary.
+
+\subsection{Why the Riemann hypothesis implies the inequality}
+
+Write $H=\log n$.  The prime-power factorization of $n$ expresses
+$\log\A(n)$ as a sum of marginal gains.  Completing this sum to a convenient
+set of small primes produces two competing quantities.  One is an analytic
+error term, controlled through weighted estimates for the Chebyshev
+functions $\vartheta$ and $\psi$.  The other is a definite arithmetic
+deduction: an integer of height $H$ cannot take every small-prime gain for
+free, so omitted primes or finite exponents impose a cost.
+
+Under $\RH$, the weighted explicit formula bounds the analytic error on the
+natural square-root scale
+\[
+ S(H)=H^{-1/2}(\log H)^{-1}.
+\]
+For $H\ge74500$, the proof shows that the total error is strictly less than
+$(113/50)S(H)$, while a complete block of prime squares guarantees a cost of
+at least $(113/50)S(H)$.  Hence error minus cost is negative, which is exactly
+$\M(n)<0$.
+
+Below that analytic height, the argument is finite but not a decimal
+computation.  Exact factorizations handle the first interval.  The remaining
+range is covered by rational log-height rows.  Each row lists a finite box of
+possible profitable prime powers and proves, by exact integer products and
+rational logarithm bounds, that the Robin margin is negative throughout the
+whole interval.  Thus the finite and analytic halves meet at $H=74500$
+without an unverified numerical gap.
+
+\subsection{Why the inequality implies the Riemann hypothesis}
+
+The converse is best read contrapositively.  If $\RH$ is false, symmetry of
+the zeta function supplies a nontrivial zero to the right of the critical
+line.  That zero becomes a pole of a Mellin transform built from a weighted
+prime-counting error.  Landau's positivity principle says that this transform
+cannot remain analytic as far as that pole if the underlying error is
+eventually of one sign.  Consequently the error has negative excursions of a
+fixed power size arbitrarily far out.
+
+Nicolas's finite product $F(P)$ converts those analytic excursions into
+negative excursions of $\log F(P)$.  To obtain actual integers, take
+\[
+ L_P=\operatorname{lcm}(1,2,\ldots,P).
+\]
+This least common multiple contains precisely the prime powers up to $P$ and
+satisfies $\log L_P=\psi(P)$.  An exact identity expresses its Robin margin
+as
+\[
+ \M(L_P)=-\log F(P)-D(P)-T(P),
+\]
+where the height loss $D(P)$ and the finite-prime-power reserve $T(P)$ are
+nonnegative but smaller than the oscillation.  The negative excursions of
+$\log F(P)$ therefore give positive values of $\M(L_P)$ for arbitrarily
+large $P$.  These are violations of Robin's inequality above $5040$.
+Hence universal validity of the inequality forces $\RH$.
+
+The technical proof that follows adds the exact thresholds, constants,
+convergence arguments, and finite data needed to make this outline rigorous;
+it does not change the four-step logical route.
 
 \section{Arithmetic preliminaries}
 
@@ -438,9 +583,18 @@ The maximality of $5040$ at $\eps_0$ gives
   \log\A(n)-\eps_0\log n
   \le \log\A(5040)-\eps_0\log5040.
 \]
-As a function of $y=\log n$, the difference between the Robin bound and the
-right-hand tangent is concave.  A concave function on an interval is bounded
-below by the smaller endpoint value.  The two endpoint checks use the
+Set $y=\log n$.  It is enough to prove positivity of the explicit gap
+\[
+ G(y)=\euler+\log\log y-\log\A(5040)
+      -\eps_0\bigl(y-\log5040\bigr),
+\]
+because the preceding inequality then places $\log\A(n)$ strictly below
+$\euler+\log\log y$.  There is no hidden convexity convention here:
+\[
+ G''(y)=-\frac{\log y+1}{y^2(\log y)^2}<0\qquad(y>1).
+\]
+Thus $G$ is concave, and its value at every point of a closed interval is at
+least the smaller of its two endpoint values.  The endpoint checks use the
 following strict rational bounds:
 \begin{center}
 \begin{tabular}{@{}cp{.72\textwidth}@{}}
@@ -488,6 +642,41 @@ lower bounds for $\log L,\log U$
 \bottomrule
 \end{tabular}
 \end{center}
+
+The logarithm certificates used here are elementary and explicit.  For a
+rational $q\ge1$, put $z=(q-1)/(q+1)$.  Then $0\le z<1$ and, for $N\ge1$,
+\begin{align}
+ L_N(q)&=2\sum_{i=0}^{N-1}\frac{z^{2i+1}}{2i+1},\notag\\
+ U_N(q)&=L_N(q)+\frac{2z^{2N+1}}{1-z^2},\label{eq:log-series}\\
+ L_N(q)&\le\log q\le U_N(q).\notag
+\end{align}
+The upper remainder is deliberately coarse: it follows by deleting the
+denominators $2i+1$ from the positive tail of the atanh series.  Consequently
+both bounds in \eqref{eq:log-series} are rational and their soundness is proved
+once for arbitrary $q$ and $N$.  Every row in this proof uses $N=20$.
+
+\paragraph{Certificate discovery versus certificate checking.}
+A practical way to find a row is to choose rational $L,U,\lambda$ and then,
+for layer $j$, choose an integer cutoff $c_j$.  The checker compares the
+threshold formula at $c_j$ and $c_j+1$: the former must have nonnegative
+reduced weight and the latter nonpositive reduced weight.  Monotonicity in
+the base then proves the signs for every prime in that layer.  A final check
+at base $2$ proves that no still higher layer can contribute positively.
+From the resulting finite box one computes the exact integer products
+\[
+ A=\prod(p^{j+1}-1),\qquad
+ B=\prod p(p^j-1),\qquad
+ Q=\prod p.
+\]
+Rational bounds of the forms $A\le(\text{gain upper})B$ and
+$2^e m\le Q$, together with \eqref{eq:log-series}, produce the objective and
+height bounds.  If either endpoint inequality fails, one changes the slope
+or shortens the interval; accepted endpoints are then chained exactly.
+This search is only certificate discovery.  It need not be trusted or even
+reproduced: the stored row contains all of its outputs, the general soundness
+lemma proves what successful checks imply, and Lean's kernel evaluates every
+row predicate from those visible rational and integer values.
+
 The height data certify that the relevant prime-base product is at least
 $2^e m$; the checker turns this into a lower logarithmic height with a
 20-term rational log series.  The gain bound is likewise converted into an
@@ -561,6 +750,15 @@ The analytic estimate is most transparent after setting $H=\log n$ and
 \begin{equation}\label{eq:natural-scale}
   S(H)=H^{-1/2}(\log H)^{-1}.
 \end{equation}
+
+The section is easiest read backward from its last line.  We seek
+$\M(n)<0$.  Proposition~\ref{prop:budget} bounds this margin by an analytic
+debit $\E(H)$ minus an arithmetic credit $\Pcost(H)$.  The weighted explicit
+formula controls the debit; a complete block of prime squares supplies the
+credit; and Proposition~\ref{prop:coefficient-gap} proves that, once
+$H\ge74500$, the credit is at least $(113/50)S(H)$ while the debit is
+strictly smaller.  The formulas below establish these three statements but
+do not add another logical layer.
 
 We first record the weighted explicit-formula input.  For $m\ge1$, define
 \begin{equation}\label{eq:weight}
@@ -647,6 +845,11 @@ Also define
   +\log(2\pi)\frac{H^{-1}}{\log H}.
   \label{eq:mertens-scalar}
 \end{align}
+Thus $\E(H)$ is a uniform upper bound assembled from the weighted
+prime-function errors, whereas $\Pcost(H)$ is a nonnegative deduction forced
+by completing the exponent sum to all small primes.  Their names record
+their roles in \eqref{eq:budget}; neither is a new number-theoretic function
+outside this proof.
 
 \begin{proposition}[Complete exponent budget]\label{prop:budget}
 Assume $\RH$.  If $n\ge1$ and $H=\log n\ge20000$, then
@@ -791,6 +994,14 @@ For functions $g,h:\R\to\R$, write $g=\Omega_-(h)$ at infinity if there
 is $c>0$ such that, for every $X$, some $x\ge X$ satisfies
 $g(x)\le-c h(x)$.
 
+Only two outputs of this section are needed later.  First,
+$\log F(x)$ is bounded above by the weighted prime error $J(x)$ plus a term
+of order $x^{-1}$.  Second, if $\RH$ fails, Landau's principle forces
+$J(x)$ below a negative multiple of $x^{-b}$ arbitrarily far out for some
+$b<1/2$.  Since $x^{-1}=o(x^{-b})$, the first output transfers the second
+one to $\log F$.  Section~\ref{sec:lcm} then absorbs the remaining LCM
+losses, which are only of order $P^{-1/2}\log P$.
+
 \begin{lemma}[Finite Nicolas comparison]\label{lem:nicolas-comparison}
 For all sufficiently large $x$,
 \begin{equation}\label{eq:nicolas-upper}
@@ -824,8 +1035,17 @@ symmetry, gives a nontrivial zero $\rho$ of $\zeta$ with
 $1/2<\Re\rho<1$.  On its horizontal line choose a zero $\rho_*$ with
 maximal real part.  Choose
 \[
-  1-\Re\rho_*<b<\frac12.
+ 1-\Re\rho_*<b<\frac12.
 \]
+
+The contradiction is an instance of a simple positivity obstruction.
+If the corrected tail $J(x)+x^{-b}$ were eventually positive, its Mellin
+transform would be the Laplace transform, under $x=e^y$, of a positive
+measure.  Positivity makes convergence propagate to every real point that
+the analytic continuation can cross.  The zeta logarithmic derivative,
+however, gives that continuation a pole at $s=1-\rho_*$, strictly inside
+the propagated half-plane.  The remainder of the proof makes each part of
+this obstruction precise.
 
 Suppose \eqref{eq:J-omega} fails.  Then, beyond some $X$,
 \begin{equation}\label{eq:positive-tail}
@@ -994,6 +1214,8 @@ to every integer above $5040$.  Theorem~\ref{thm:main} then gives $\RH$.
 
 \section{Formal verification and reproducibility}\label{sec:formalization}
 
+\subsection{Public statements and the checked proof graph}
+
 The preceding proof has been formalized in Lean~4.33.1 using
 Mathlib~\cite{Lean4,Mathlib}.  The two public declarations have the
 mathematical types
@@ -1020,13 +1242,86 @@ Here the symbol $\RH$ is not an informal placeholder.  Expanding Mathlib's
 definition, it is the proposition
 \[
  \forall s\in\C,\quad \zeta(s)=0\ \Longrightarrow\
- \bigl(s\ne-2(k+1)\text{ for every }k\in\N\bigr)\ \Longrightarrow\
+ \bigl(\nexists k\in\N,\ s=-2(k+1)\bigr)\ \Longrightarrow\
  s\ne1\ \Longrightarrow\ \Re s=\frac12.
 \]
 Thus the public biconditional uses the usual statement that every nontrivial
 zero of the analytically continued zeta function lies on the critical line.
 The converse proof uses the functional equation and conjugation symmetry to
 turn a violation of this predicate into a zero with $1/2<\Re s<1$.
+No alternate project definition of $\RH$ is introduced.  The exact reduction
+from the negation of Mathlib's predicate to such a right-half zero is proved
+in \codelink{Robin1984/NicolasLandau/NicolasLandau.lean}{NicolasLandau}.
+
+The shortest route through the checked declarations is the following table.
+An arrow here means use as a theorem, not merely an import.
+\begin{center}
+\small
+\begin{tabular}{@{}p{.23\textwidth}p{.69\textwidth}@{}}
+\toprule
+mathematical branch & checked Lean route \\
+\midrule
+public boundary &
+  \codelink{Challenge.lean}{Challenge} $\leftrightarrow$
+  \codelink{Solution.lean}{Solution} by exact statement comparison \\
+equivalence assembly &
+  \codelink{Robin1984/Equivalence/Equivalence.lean}{Equivalence}
+  combines the forward and converse declarations \\
+forward implication &
+  \codelink{Robin1984/Equivalence/LargeHeightRobin.lean}{LargeHeightRobin}
+  above $74500$, and
+  \codelink{Robin1984/Finite/FiniteComplete.lean}{FiniteComplete} below it \\
+converse implication &
+  \codelink{Robin1984/NicolasLandau/NicolasLandauRobinBridge.lean}
+    {NicolasLandauRobinBridge}
+  combines the negative oscillation with the LCM transfer \\
+CA restriction &
+  \codelink{Robin1984/ColossallyAbundant/CAReduction.lean}{CAReduction}
+  combines startup completion with tangent coverage \\
+\bottomrule
+\end{tabular}
+\end{center}
+Thus the full biconditional does not emerge from one opaque analytic theorem:
+the finite and large-height forward branches meet only in the final
+case split, and the converse is a separate contradiction branch.
+
+\subsection{How the checked artifact was produced}
+
+What the final proof says and how it was produced are different questions.
+The former is answered by the declarations above and by the mathematical
+proof in Sections~\ref{sec:extremal}--\ref{sec:lcm}.  The production process
+was a source-guided reconstruction with the following stages.
+\begin{enumerate}[leftmargin=1.7em,itemsep=.3em]
+  \item The public statements were fixed first in
+    \codelink{Challenge.lean}{Challenge}, directly over Mathlib definitions
+    and without importing any project module.  This prevented later proof
+    engineering from silently changing the target.
+  \item Robin's argument and the cited inputs from Nicolas, Landau, Alaoglu--
+    Erd\H{o}s, Rosser--Schoenfeld, and Costa Pereira were decomposed into named
+    intermediate statements.  Source-specific results remained in their
+    mathematical families, while reusable order, integration, logarithm,
+    Mellin-transform, and prime-power lemmas were separated from the final
+    theorem assembly.
+  \item Analytic identities were proved symbolically before numerical
+    constants were introduced.  Infinite sums and integrals were accompanied
+    by explicit summability or integrability proofs; the weighted zero sums
+    retained analytic multiplicity.
+  \item The finite-range checker and its soundness theorem were proved before
+    certificate data were accepted.  Candidate rows and prime blocks could be
+    found by ordinary computation, but only their exact integer and rational
+    outputs entered Lean, where kernel reduction checked them.
+  \item The resulting source graph was reduced to the declarations needed by
+    the advertised results and the public convenience facades.  Direct-import,
+    provenance, placeholder, metadata, statement-boundary, and independent
+    replay checks were then applied to the completed graph.
+\end{enumerate}
+Human direction selected the theorem statements, mathematical route, source
+correspondences, and final assertions.  AI-assisted proof engineering helped
+with implementation, refactoring, certificate organization, and audits.  The
+production history is not itself a proof: correctness rests on the resulting
+proof terms, exact certificates, and the validation pipeline described below.
+
+\subsection{Project-local mathematics and provenance}
 
 The formalization status of the principal arguments is as follows.
 \begin{itemize}[leftmargin=1.5em,itemsep=.35em]
@@ -1047,14 +1342,37 @@ The formalization status of the principal arguments is as follows.
     \codelink{Robin1984/Finite/FiniteRowCertificate.lean}{row soundness}
     and \codelink{Robin1984/Finite/Certificates/AllRows.lean}{all rows}.
 \end{itemize}
+The dependency boundary can be summarized without inspecting import syntax:
+\begin{center}
+\small
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{.72\textwidth}@{}}
+\toprule
+source & mathematical role \\
+\midrule
+Mathlib &
+  definitions of $\zeta$, $\xi$, and $\RH$; complex and real analysis,
+  measure and integration theory, infinite sums, arithmetic, and elementary
+  asymptotics \\
+pinned PNTAnd fork &
+  Hadamard-factorization and divisor infrastructure, completed-zeta facts,
+  Mertens and prime-function infrastructure, and the explicit
+  Rosser--Schoenfeld and Costa Pereira estimates \\
+Robin1984 &
+  the weighted formula in the form used here, its zero-series interchanges
+  and $m=1$ endpoint, the complete exponent budget and coefficient gap, the
+  Nicolas--Landau continuation and oscillation, the LCM transfer, the CA
+  reduction, and every finite certificate \\
+\bottomrule
+\end{tabular}
+\end{center}
 In particular, Lemma~\ref{lem:weighted-ef} and
 Proposition~\ref{prop:nicolas-landau} are not assumptions imported as opaque
 theorems: their full proofs occur in the linked repository-owned modules.
-They do use foundational results from Mathlib and the pinned
-\leanname{PrimeNumberTheoremAnd} dependency, including complex analysis,
-measure theory, zeta-function infrastructure, and explicit prime-function
-estimates.  The distinction is recorded declaration by declaration in the
-provenance metadata.
+The lower-level imported analysis is substantial, as it should be for a
+theorem about zeta zeros, but no imported declaration states Robin's
+biconditional or the Nicolas--Landau conclusion needed here.  The exact
+distinction is recorded declaration by declaration in the provenance
+metadata.
 
 The formal development separates arithmetic identities, colossally abundant
 extrema, the RH estimates, the Nicolas--Landau argument, finite certificates,
@@ -1067,16 +1385,16 @@ formalization work.  The complete reviewed ledger is distributed with the
 repository as the \codelink{docs/PROVENANCE.md}{provenance guide} and its
 \codelink{provenance/ledger.json}{machine-readable ledger}.
 
-The most useful entry points are the statement-only
-\codelink{Challenge.lean}{Challenge}, the proved Palomar
-\codelink{Solution.lean}{Solution}, the assembled
+For more detailed reading, the assembled
 \codelink{Robin1984/Finite/RobinTangentStartupComplete.lean}{startup transition},
-the \codelink{Robin1984/Analytic/MertensExplicitCoefficient.lean}{Mertens coefficient}
-and \codelink{Robin1984/Analytic/PrimeCostExplicitCoefficient.lean}{prime-cost coefficient},
-and the \dirlink{Robin1984/Finite/Certificates}{finite certificate data}.
-These links follow the repository's main branch for convenient browsing;
-each GitHub release identifies and archives the exact source commit used to
-produce its paper and Lean artifacts.
+the \codelink{Robin1984/Analytic/MertensExplicitCoefficient.lean}{Mertens coefficient},
+the \codelink{Robin1984/Analytic/PrimeCostExplicitCoefficient.lean}{prime-cost coefficient},
+and the \dirlink{Robin1984/Finite/Certificates}{finite certificate data}
+correspond directly to Sections~\ref{sec:extremal}--\ref{sec:rh-forward}.
+These source links follow the main branch for browsing; each release archives
+the exact commit from which its paper and Lean artifacts were built.
+
+\subsection{Exact finite certificates}
 
 The finite proof contains no floating-point oracle.  The startup
 factorizations and the 36 interval rows reduce to exact natural-number and
@@ -1084,6 +1402,72 @@ rational inequalities.  The large final retained prime product is split into
 105 blocks only to keep individual kernel computations manageable.  The
 certificate checkers are proved sound once; each data row is then accepted by
 kernel reduction.
+
+The essential checked interface is small enough to quote.  With the first
+proof body elided, the declarations have the following signatures and proof
+heads:
+\begin{verbatim}
+theorem RobinFiniteRowChecks.sound {r : RobinFiniteRow}
+    (h : RobinFiniteRowChecks r) {n : Nat} (hn : 5040 < n)
+    (hLo : (r.lo : Real) <= Real.log (n : Real))
+    (hHi : Real.log (n : Real) <= (r.hi : Real)) :
+    Robin1984.Core.NativeRobinInequality n := by ...
+
+theorem robinFiniteRow00_checks :
+    RobinFiniteRowChecks robinFiniteRow00 := by
+  decide +kernel
+\end{verbatim}
+The first theorem is an ordinary proof reducing a successful row predicate to
+Robin's inequality throughout its interval.  The second evaluates the visible
+record by Lean's kernel.  The aggregate theorem similarly checks that the row
+endpoints form a gap-free cover.  The full definitions are in
+\codelink{Robin1984/Finite/FiniteRowCertificate.lean}{FiniteRowCertificate}
+and \codelink{Robin1984/Finite/Certificates/Row00.lean}{Row00}.
+
+\subsection{What Comparator and the kernel replays establish}
+
+The validation stages have different jobs.  The ordinary Lean build checks
+that every project module elaborates and that Lean's kernel accepts the final
+proof terms.
+\href{https://github.com/leanprover/comparator/tree/68a064109f01c08f47c8edc9f51d6a2bbffaa188}
+{Comparator} then protects the public theorem boundary against a different
+risk: a purported solution might prove an easier proposition with the same
+informal description, or redefine a symbol occurring in the target.
+
+The trusted \codelink{Challenge.lean}{Challenge} module imports only four
+narrow Mathlib modules.  It defines the divisor sum, Robin inequality, and CA
+predicate directly, and states the two advertised theorems with deliberate
+proof holes.  The \codelink{Solution.lean}{Solution} module imports the project
+and supplies the actual proofs.  The checked
+\codelink{comparator.json}{Comparator configuration} names exactly those two
+theorems, permits only
+\leanname{propext}, \leanname{Quot.sound}, and
+\leanname{Classical.choice}, requires NanoDa, and declares no definition
+holes.  In particular, the solution is not allowed to choose a convenient
+meaning for $\sig$, Robin's inequality, CA, or $\RH$.
+
+Using pinned tool revisions, the Comparator job performs the following checks.
+\begin{enumerate}[leftmargin=1.7em,itemsep=.3em]
+  \item It builds and exports the Challenge and Solution environments
+    separately under the Landrun sandbox.
+  \item For each advertised theorem it compares the exported statement and
+    every declaration on which that statement depends.  This is a comparison
+    of Lean declarations, not of displayed text or theorem names alone.
+  \item It follows the Solution theorem bodies transitively and rejects any
+    axiom outside the three permitted standard principles.
+  \item It replays the exported Solution environment through Lean's default
+    kernel.
+  \item Because \leanname{enable\_nanoda} is true, it also submits the export
+    to NanoDa, an independent kernel implementation.
+\end{enumerate}
+Passing Comparator therefore establishes statement identity, the configured
+axiom bound, and kernel acceptance through two implementations.  It does not
+establish that the trusted Challenge statement is the historically intended
+reading of Robin's paper, nor that the exposition is persuasive.  The explicit
+Challenge definitions, the expansion of Mathlib's $\RH$ predicate above, and
+ordinary mathematical review address that separate question.
+
+\subsection{Axioms and dependency boundary}
 
 The repository contains no project-local axiom declarations.  Outside the
 two deliberate statement holes in the Palomar challenge, project proof
@@ -1112,16 +1496,130 @@ external runner or local patching step is part of the proof build.
 
 All dependencies are pinned.  The required Lean~4.33.1 changes to
 \leanname{PrimeNumberTheoremAnd} are published in the public fork
-\url{https://github.com/kimihiro64/PrimeNumberTheoremAnd} at
-\href{https://github.com/kimihiro64/PrimeNumberTheoremAnd/commit/f8f58c749d6cde8a641348fcd5e4702993651cd6}
-{commit \texttt{f8f58c7}}, based on
+\href{\pntrepositoryurl}{\nolinkurl{https://github.com/kimihiro64/PrimeNumberTheoremAnd}}
+at
+\href{\pntrepositoryurl/commit/\pntrevision}{commit \texttt{f8f58c7}}, based
+on
 \href{https://github.com/AlexKontorovich/PrimeNumberTheoremAnd/commit/47fa48680663df41146704d02a5b092d792bd5b9}
 {upstream commit \texttt{47fa486}}.  The full hashes are recorded in the Lake
 manifest.  Lake reconstructs this dependency directly from public Git
-history; no local patching step is required.  The added multiplicity-aware
-xi-divisor source retains Matteo Cipollina's authorship and Apache-2.0 notice.
-The upstream project is due to Alex Kontorovich, Terence Tao, and its
-contributors.
+history; no local patching step is required.
+
+The fork is intended as a temporary compatibility and extension branch, not
+as a permanent divergence.  At the time of this revision, the
+\href{https://github.com/AlexKontorovich/PrimeNumberTheoremAnd/blob/main/lean-toolchain}
+{upstream \leanname{main} toolchain file} still declares Lean~4.32.2, and
+upstream \leanname{main} does not yet contain the xi-divisor source used here.
+Replacing the fork therefore requires two things: an upstream revision
+compatible with the project's Lean toolchain, and upstream versions or
+equivalent replacements for the additional xi-divisor and Mertens interfaces.
+
+The fork has two distinct roles.  First, it updates proof scripts and package
+pins for Lean~4.33.1 and exposes named consequences of the existing Mertens
+development needed by this project.  These changes repair elaboration against
+the new toolchain; they do not replace an analytic theorem by an assumption
+or alter Mathlib's definition of $\RH$.  Second, it adds the
+multiplicity-aware interface used by the weighted zero sums.  The principal
+declarations in
+\pntfile{PrimeNumberTheoremAnd/Mathlib/NumberTheory/LSeries/RiemannXiDivisorZeros.lean}
+  {RiemannXiDivisorZeros}
+are:
+\begin{itemize}[leftmargin=1.5em,itemsep=.25em]
+  \item \path{RiemannXiDivisorZeroIndex} and
+    \path{riemannXiDivisorZeroValue} give an index type and value map for the
+    nonzero divisor of $\xi$, retaining analytic multiplicity;
+  \item \path{riemannXiDivisorZeroValue_ne_zero} and
+    \path{riemannXiDivisorZeroValue_eq_zero} prove that every indexed value
+    is nonzero and is an actual zero of $\xi$;
+  \item \path{summable_riemannXiDivisorZero_norm_inv_sq} proves summability
+    of the inverse-square norms of those values;
+  \item \path{completedRiemannZeta_eq_cpow_mul_Gamma_mul_riemannZeta}
+    expands completed zeta under its stated nonvanishing hypotheses; and
+  \item \path{neg_two_mul_logDeriv_riemannXi_zero_eq} proves the exact identity
+    $-2(\xi'/\xi)(0)=\euler+2-\log(4\pi)$.
+\end{itemize}
+The companion
+\pntfile{PrimeNumberTheoremAnd/IEANTN/RobinXiZeroSummability.lean}
+  {RobinXiZeroSummability}
+proves, as
+\path{summable_riemannXiDivisorZero_norm_inv_rpow}, the fractional
+inverse-norm summability used to interchange the zero sum and Mellin
+integral.  These results are derived from the dependency's
+existing divisor support, Hadamard growth and summability, completed-zeta,
+and differentiability theorems.  The fork adds no axiom, proof placeholder,
+or numerical oracle.  The xi-divisor files retain Matteo Cipollina's
+authorship and Apache-2.0 notice; the upstream project is due to Alex
+Kontorovich, Terence Tao, and its contributors.  The complete
+\href{https://github.com/kimihiro64/PrimeNumberTheoremAnd/compare/47fa48680663df41146704d02a5b092d792bd5b9...f8f58c749d6cde8a641348fcd5e4702993651cd6}
+{fork diff} is public.
+
+Project-independent helper results are isolated under
+\codedir{Robin1984/Mathlib} and mapped to proposed upstream Mathlib paths in
+\codelink{MATHLIB_PORTING.md}{MATHLIB\_PORTING.md}.  The inventory records
+which files are ready but not yet submitted.  The intended maintenance path
+is to upstream those generic units separately and to propose the xi-divisor
+interface and compatibility repairs to \leanname{PrimeNumberTheoremAnd};
+until acceptance, the pinned public fork is the reproducible source of the
+checked dependency.  When both replacement conditions are met, the project
+can repin directly to upstream, but only after the full Lean build and
+Comparator/NanoDa pipeline pass against that revision.
+
+\subsection{Reproducing and independently checking the result}
+
+There are three useful levels of reproduction.  First, a reader can inspect a
+completed run without compiling Lean.  The
+\href{\actionsurl}{public CI history} exposes the separate job results and
+logs.  After every required job succeeds, the workflow publishes a
+\href{\releasesurl}{GitHub release} containing the paper, an offline API site,
+and the complete Linux \leanname{.lake/build} tree.  The release identifies
+the exact source commit and records checksums for its assets.  The compiled
+objects are a convenience for inspection and compatible incremental use; the
+source and pinned revisions remain authoritative.
+
+Second, a source-level kernel rebuild can be made from a clean release tag:
+\begin{verbatim}
+git clone https://github.com/kimihiro64/Robin1984.git
+cd Robin1984
+git checkout TAG
+lake update
+lake exe cache get
+lake build
+\end{verbatim}
+Here \leanname{TAG} is the tag named on the chosen GitHub release.
+\leanname{lake update} reconstructs the exact dependency revisions from the
+manifest, and \leanname{lake exe cache get} downloads the matching Mathlib
+cache; omitting the cache step gives a larger cold build.  The final
+\leanname{lake build} follows the repository's checked-in sequential module
+order and ends by building \leanname{Solution}.  On Windows,
+\codelink{scripts/bootstrap.ps1}{bootstrap.ps1} installs and checks the same
+project prerequisites before these commands.
+
+The repository-level structural checks can then be run as
+\begin{verbatim}
+pwsh -File scripts/check-imports.ps1
+pwsh -File scripts/check-provenance.ps1
+ruby scripts/validate-formalization.rb
+\end{verbatim}
+They check narrow imports, the candidate-module boundary, per-file provenance
+and documentation, and the Palomar metadata.  They are consistency checks,
+not substitutes for kernel checking.
+
+Third, on Linux with Git, Lake, Go, Rust/Cargo, Python~3, and Landrun, the
+independent statement and replay pipeline is
+\begin{verbatim}
+./scripts/verify-comparator.sh
+\end{verbatim}
+The checked-in
+\codelink{scripts/verify-comparator.sh}{verification script}
+checks out exact reviewed revisions of Comparator, lean4export, Landrun, and
+NanoDa; requires the project's Lean~4.33.1 toolchain; performs the sequential
+project build; and runs the five Comparator stages listed above.  The
+checked-in
+\codelink{.github/workflows/ci.yml}{CI workflow} is the complete executable
+recipe: it additionally validates licensing and release metadata, builds the
+paper and API documentation, transfers the completed Lean artifacts to the
+downstream jobs, and publishes a release only if every dependency job,
+including Comparator, succeeds.
 
 The formalization was developed with human mathematical direction and
 AI-assisted proof engineering.  Lean's kernel checks that the linked proof

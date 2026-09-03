@@ -140,14 +140,18 @@ an independent NanoDa replay are configured as release gates in Linux CI.
 The project is pinned to Lean `v4.33.1`; see [lean-toolchain](lean-toolchain)
 and [lake-manifest.json](lake-manifest.json). The proof depends on Mathlib and
 `leancert` at pinned Git revisions. The analytic dependency
-`PrimeNumberTheoremAnd` is fetched from a
-[public fork](https://github.com/kimihiro64/PrimeNumberTheoremAnd/tree/robin1984-lean-4.33.1)
+`PrimeNumberTheoremAnd` is fetched from a temporary
+[public compatibility and extension fork](https://github.com/kimihiro64/PrimeNumberTheoremAnd/tree/robin1984-lean-4.33.1)
 at the exact commit recorded in the manifest. That commit is based on upstream
-commit `47fa48680663df41146704d02a5b092d792bd5b9` and contains the eight source
-changes required for Lean 4.33.1 compatibility and the xi-divisor interfaces
-used here. The added xi-divisor source retains Matteo Cipollina's authorship
-and Apache-2.0 notice. A fresh Lake build reconstructs the patched dependency
-from public Git history and needs no local or build-time patch step.
+commit `47fa48680663df41146704d02a5b092d792bd5b9` and contains the Lean 4.33.1
+proof repairs plus the xi-divisor and Mertens interfaces used here. As of
+September 2026, [upstream `main`](https://github.com/AlexKontorovich/PrimeNumberTheoremAnd/blob/main/lean-toolchain)
+still declares Lean 4.32.2 and does not contain the required xi-divisor source.
+The fork can be removed after a compatible upstream revision contains or
+replaces those interfaces and the full build and Comparator/NanoDa checks pass.
+The added xi-divisor source retains Matteo Cipollina's authorship and
+Apache-2.0 notice. A fresh Lake build reconstructs the dependency from public
+Git history and needs no local or build-time patch step.
 
 ## Building
 
@@ -169,7 +173,7 @@ lake build
 ```
 
 The bare `lake build` command is the complete submission build. Its Lake-native
-default target reads the checked-in 250-module topological order from
+default target reads the checked-in 257-module topological order from
 [`scripts/build-order.txt`](scripts/build-order.txt), schedules one module job
 at a time, and finishes with `Solution`. Each Lean process is additionally
 bounded to one internal task thread (`-j1`). This avoids overlapping the
@@ -198,16 +202,20 @@ enforces the Mathlib candidate boundary and inventory. The subsequent Lean
 build separately verifies that every retained narrow import provides the
 notation, tactics, instances, and declarations its file actually needs.
 
-On a Linux host with Git, Go, Ruby, Rust/Cargo, Python 3 and Landrun support,
+On a Linux host with Git, Lake, Go, Rust/Cargo, Python 3 and Landrun support,
 run the pinned Comparator and NanoDa toolchain with:
 
 ```sh
 ./scripts/verify-comparator.sh
 ```
 
-The verifier first runs the repository's sequential default build, then checks
-the advertised Challenge/Solution interface and replays the exported proof in
-NanoDa. Linux CI passes the completed root `.lake/build` tree from its build job
+The verifier first runs the repository's sequential default build. Comparator
+then exports the Challenge and Solution environments separately, compares each
+advertised theorem statement and the declarations used by that statement,
+audits the Solution proof bodies against the three permitted standard axioms,
+and replays the export through Lean's default kernel. The configuration has no
+definition holes and requires a second replay through the independent NanoDa
+kernel. Linux CI passes the completed root `.lake/build` tree from its build job
 to the documentation and Comparator jobs, avoiding redundant concurrent cold
 builds while retaining the same checks on fresh standalone verifiers.
 It pins the upstream `leanprover/lean4export` v4.33.0 source commit and compiles
@@ -242,7 +250,8 @@ The same CI run publishes the compiled research paper as the
 [`paper/robin1984-formalization.tex`](paper/robin1984-formalization.tex), so an
 unchanged paper source reuses the same PDF instead of rebuilding it. The build
 uses the source file's last Git change time as `SOURCE_DATE_EPOCH` and checks
-that the final PDF has resolved references and exactly 11 pages.
+that the final PDF is nonempty and has resolved references and a positive page
+count.
 
 Successful `main` builds publish an official GitHub release only after every
 job has passed, including Comparator statement matching, NanoDa replay and
