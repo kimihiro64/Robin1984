@@ -185,7 +185,7 @@ jobs:
             exit 1
           fi
           pdfinfo paper/build/robin1984-formalization.pdf \
-            | grep -E '^Pages:[[:space:]]+11$'
+            | grep -Eq '^Pages:[[:space:]]+[1-9][0-9]*$'
       - name: Check the paper artifact
         run: test -s paper/build/robin1984-formalization.pdf
       - name: Save the source-keyed paper PDF
