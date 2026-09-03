@@ -8,7 +8,7 @@
 \usepackage[nopatch=footnote]{microtype}
 \usepackage[margin=1.1in]{geometry}
 \usepackage{amsmath,amssymb,amsthm,mathtools}
-\usepackage{array,booktabs}
+\usepackage{array,booktabs,longtable}
 \usepackage{enumitem}
 \usepackage{xcolor}
 \usepackage{hyperref}
@@ -57,6 +57,10 @@
   \href{\repositoryurl/blob/main/#1}{\texttt{#2}}}
 \newcommand{\dirlink}[2]{%
   \href{\repositoryurl/tree/main/#1}{\texttt{#2}}}
+\newcommand{\commitlink}[2]{%
+  \href{\repositoryurl/commit/#1}{\texttt{#2}}}
+\newcommand{\runlink}[2]{%
+  \href{\repositoryurl/actions/runs/#1}{#2}}
 \newcommand{\pntrepositoryurl}{%
   https://github.com/kimihiro64/PrimeNumberTheoremAnd}
 \newcommand{\pntrevision}{f8f58c749d6cde8a641348fcd5e4702993651cd6}
@@ -76,22 +80,37 @@ a formally verified proof}
 colossally abundant numbers, Nicolas criterion, formal verification, Lean}
 
 \begin{document}
+\raggedbottom
 \begin{abstract}
 Guy Robin proved in 1984 that the Riemann hypothesis is equivalent to the
 strict inequality
 \[
   \sig(n)<e^{\euler}n\log\log n \qquad(n>5040).
 \]
-We give a proof in a form that has been formally verified in Lean~4.  The
-argument includes the reduction to colossally abundant integers, the
-implication under the Riemann hypothesis, the Nicolas--Landau oscillation
-argument for the converse, and exact certificates for the bounded range.
-The weighted explicit formula and the Nicolas--Landau oscillation argument
-are proved in repository-owned modules rather than assumed as project axioms.
-The mathematical ingredients are credited to their original and later
-sources below; the decomposition into explicit lemmas and the finite
-certificate system are part of the formal reconstruction.  The theorem is
-an equivalence criterion and does not prove the Riemann hypothesis.
+We give a detailed mathematical reconstruction paired with a formally verified
+Lean~4 proof.  The argument reduces arbitrary integers to colossally abundant
+extrema, proves the bounded range with exact rational certificates, establishes
+the large-height implication under the Riemann hypothesis through a weighted
+explicit formula and a strict coefficient gap, and proves the converse by
+turning Nicolas--Landau oscillations into least-common-multiple counterexamples.
+The source-specific weighted formula and oscillation argument are proved in
+repository-owned modules, while substantial foundational analysis is imported
+from pinned public libraries: axiom-free here does not mean dependency-free or
+redeveloped from first principles.
+
+A declaration-level map connects the exposition to the checked source.
+Comparator verifies that the solution proves the exact Mathlib-only challenge
+statements and respects the configured axiom boundary; Lean's kernel and the
+independent NanoDa kernel then replay the export.  Public source, certificates,
+CI logs, release artifacts, and reproduction instructions make this assurance
+chain inspectable.  The reconstruction used a human-directed automated context
+system to track sources, theorem state, dependencies, numerical evidence, and
+verification status.  The paper documents its role through retained outputs
+and two concrete failure-and-revision cases, without claiming a measured
+productivity advantage.  Reusable outputs include a generic positive-transform
+theorem, multiplicity-aware zero infrastructure, and a theorem-parametric
+finite-certificate checker.  Robin's result remains an equivalence criterion;
+it does not prove the Riemann hypothesis.
 \end{abstract}
 \maketitle
 
@@ -172,21 +191,34 @@ Pereira~\cite{CostaPereira1985,CostaPereira1987}.  Our purpose is not to claim
 new priority for those ingredients, but to give a complete proof whose exact
 logical and numerical dependencies have been checked.
 
-The new contribution is consequently one of reconstruction and verification.
-The analytic argument is carried through a multiplicity-counted zero divisor,
-the finite range is reduced to a reusable soundness theorem plus exact data,
-and the public biconditional is assembled without a project axiom.  This
-separation is useful beyond the present theorem: source mathematics, generic
-analytic lemmas, untrusted certificate discovery, kernel-checked certificate
+The new contribution is consequently one of reconstruction, reusable formal
+infrastructure, and verification.  The analytic argument is carried through
+a multiplicity-counted zero divisor; Landau's positive-transform principle is
+isolated as a generic theorem about moment-generating functions; the finite
+range is reduced to a reusable soundness theorem plus exact data; and the
+public biconditional is assembled without a project axiom.  This separation
+is useful beyond the present theorem: source mathematics, generic analytic
+lemmas, untrusted certificate discovery, kernel-checked certificate
 validation, and final theorem assembly remain distinct layers.
 
-The proof has four parts.  Section~\ref{sec:extremal} develops the
-colossally abundant tangent reduction.  Section~\ref{sec:finite} closes the
-bounded range.  Section~\ref{sec:rh-forward} proves the inequality under
-$\RH$ from a strict explicit coefficient gap.  Sections~\ref{sec:oscillation}
-and~\ref{sec:lcm} prove the converse by transferring Nicolas's negative
-oscillations to least common multiples.  At the highest level the two
-directions are
+The development was assisted by an automated research and formalization
+context system.  It maintained source provenance, exact theorem targets,
+definition and import dependencies, live proof obligations, failed routes,
+numerical evidence, and verification status while human direction selected
+the mathematical claims and accepted the final statements.  Section
+\ref{sec:formalization} describes this architecture and its trust boundary.
+The claims made about that system concern the retained source, certificates,
+documented revisions, and validation records.  No controlled comparison of
+human effort, elapsed development time, or error rate is claimed.
+
+The proof has four parts.  Section~\ref{sec:extremal} reduces arbitrary
+integers to colossally abundant numbers, the global maximizers of
+$Q_\eps$.  Section~\ref{sec:finite} closes the bounded range.
+Section~\ref{sec:rh-forward} proves the inequality under $\RH$ from a strict
+explicit coefficient gap.  Sections~\ref{sec:oscillation} and~\ref{sec:lcm}
+give the Nicolas--Landau converse: an off-critical zero forces recurring
+prime-product oscillations, which least common multiples turn into integer
+counterexamples.  At the highest level the two directions are
 \[
  \RH\ \Longrightarrow\ \text{explicit prime-function bounds}\
  \Longrightarrow\ \M(n)<0,
@@ -197,16 +229,56 @@ and
  \Longrightarrow\ \M(L_P)>0\ \text{for arbitrarily large }P.
 \]
 The finite theorem joins the first chain to the exact cutoff $5040$, and the
-LCM identity joins the second chain to literal integer counterexamples.  Only
-Section~\ref{sec:formalization} discusses the organization and checking of
-the Lean development itself.
+LCM identity joins the second chain to literal integer counterexamples.  The
+dedicated main-text account of the Lean organization and checking is confined
+to Section~\ref{sec:formalization}; the appendices contain supporting audits.
 
-\section{An informal guide to the proof}\label{sec:informal}
+\section{Roadmap and informal guide}\label{sec:informal}
 
 This section gives the argument without its explicit constants or
 formalization details.  It is intended as a map for readers who do not work
 regularly with analytic number theory.  The later sections prove each step in
 the form actually needed for the theorem.
+
+The proof and its checked endpoints can be read as the following directed
+graph.  The declaration names are printed here so that a reader can move from
+the mathematical route to the exact Lean statement without searching the
+repository.
+\begin{center}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.25\textwidth}
+  >{\raggedright\arraybackslash}p{.66\textwidth}@{}}
+\toprule
+mathematical stage & paper endpoint and checked declaration \\
+\midrule
+CA extremal reduction
+& Proposition~\ref{prop:ca-reduction};
+  \path{nativeRobinInequalityAll_iff_colossallyAbundant} in
+  \codelink{Robin1984/ColossallyAbundant/CAReduction.lean}{CAReduction}
+  \\
+finite range
+& Theorem~\ref{thm:finite}; \path{nativeRobinInequality_finite_log} in
+  \codelink{Robin1984/Finite/FiniteComplete.lean}{FiniteComplete}
+  \\
+large-height RH branch
+& Theorem~\ref{thm:rh-forward};
+  \path{nativeRobinInequality_of_RH_large_log} in
+  \codelink{Robin1984/Equivalence/LargeHeightRobin.lean}{LargeHeightRobin}
+  \\
+false-RH converse
+& Theorem~\ref{thm:converse};
+  \path{riemannHypothesis_of_nativeRobinInequalityAll} in
+  \codelink{Robin1984/NicolasLandau/NicolasLandauRobinBridge.lean}{LCM bridge}
+  \\
+public biconditionals
+& Theorems~\ref{thm:main} and~\ref{thm:ca-main};
+  \path{Robin1984.robin_inequality_iff_riemannHypothesis} and
+  \path{Robin1984.riemannHypothesis_iff_colossallyAbundant_robin} in
+  \codelink{Solution.lean}{Solution}
+  \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 \subsection{What Robin's inequality measures}
 
@@ -278,6 +350,21 @@ $(113/50)S(H)$, while a complete block of prime squares guarantees a cost of
 at least $(113/50)S(H)$.  Hence error minus cost is negative, which is exactly
 $\M(n)<0$.
 
+The square-root scale has a simple spectral interpretation.  The explicit
+formula rewrites the weighted prime-counting discrepancy as a superposition
+of contributions resembling $H^\rho$, one for each nontrivial zero $\rho$ of
+zeta.  Under $\RH$, every contribution has magnitude on the $H^{1/2}$ scale;
+the weight damps the oscillation and the inverse-square zero sum controls the
+aggregate amplitude.  The displayed error term is therefore a rigorous
+envelope for all of those waves, not a numerical fit.
+
+The prime cost is the complementary combinatorial picture.  An integer with
+logarithmic size $H$ has a finite budget of prime exponents.  It cannot collect
+every favorable small-prime contribution without spending that budget.  The
+minimum in \eqref{eq:prime-cost} records whichever of two unavoidable losses
+is cheaper for a prime.  The strict coefficient gap says that even this
+conservative total loss is larger than the worst analytic envelope.
+
 Below that analytic height, the argument is finite but not a decimal
 computation.  Exact factorizations handle the first interval.  The remaining
 range is covered by rational log-height rows.  Each row lists a finite box of
@@ -295,6 +382,15 @@ prime-counting error.  Landau's positivity principle says that this transform
 cannot remain analytic as far as that pole if the underlying error is
 eventually of one sign.  Consequently the error has negative excursions of a
 fixed power size arbitrarily far out.
+
+Geometrically, the real axis of convergence acts like a wall.  Eventual
+one-sidedness turns the Mellin transform, after $x=e^y$, into the Laplace
+transform of a positive measure.  Positivity forces convergence to advance
+whenever the transform analytically crosses that wall.  An off-critical zero,
+however, creates a genuine pole just beyond it.  The two statements are
+incompatible, so the assumed one-sided tail must fail repeatedly.  Section
+\ref{sec:oscillation} replaces this picture by the exact continuation,
+integrability, and pole calculations.
 
 Nicolas's finite product $F(P)$ converts those analytic excursions into
 negative excursions of $\log F(P)$.  To obtain actual integers, take
@@ -316,6 +412,123 @@ Hence universal validity of the inequality forces $\RH$.
 The technical proof that follows adds the exact thresholds, constants,
 convergence arguments, and finite data needed to make this outline rigorous;
 it does not change the four-step logical route.
+
+\section{Historical comparison and scope of novelty}\label{sec:comparison}
+
+The theorem, the use of colossally abundant extrema, the weighted
+prime-function estimates, and the Nicolas--Landau oscillation mechanism are
+classical.  This paper claims no new unconditional theorem about the zeta
+function and no priority for those ingredients.  Its contributions occur at
+three different levels: an English reconstruction of Robin's proof; several
+exact decompositions and interfaces chosen to make that proof formalizable;
+and a checked Lean artifact with independent statement and kernel replay.
+The distinction is summarized below.
+
+\begin{center}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.18\textwidth}
+  >{\raggedright\arraybackslash}p{.30\textwidth}
+  >{\raggedright\arraybackslash}p{.42\textwidth}@{}}
+\toprule
+stage & classical source & present reconstruction \tabularnewline
+\midrule
+criterion and cutoff
+& Robin's Theorem~1~\cite{Robin1984}
+& The same theorem and cutoff, stated directly over Mathlib objects; no new
+  mathematical claim. \tabularnewline
+CA reduction
+& Robin's Section~3, Proposition~1, compares successive CA integers using the
+  convexity of $x\mapsto\eps x-\log\log x$.
+& Proposition~\ref{prop:tangent-transfer} expresses the same supporting-line
+  geometry at an arbitrary target and separates the exact
+  $5040\leftrightarrow55440$ startup transition.  The reformulation and its
+  quantifier-exact assembly are project work; the reduction is Robin's.
+  \tabularnewline
+RH implication
+& Robin's Section~3, especially Lemmas~2--8 and Proposition~3, combines a
+  weighted explicit formula with prime-product estimates, following Nicolas
+  but requiring finer bounds.
+& The complete exponent budget packages every actual exponent into an error
+  term and a nonnegative prime cost, then proves a single exact coefficient
+  gap at $H\ge74500$.  This is a project-authored formal decomposition and
+  explicit cutoff, not a claim of a new asymptotic estimate or an optimal
+  constant. \tabularnewline
+finite range
+& Robin reports computing 2347 CA integers below the analytic range and then
+  checking the remaining integers below $55440$.
+& Exact startup factorizations, a tangent interval, and rational certificate
+  rows replace the historical computer calculation by kernel-checkable data
+  plus a general soundness theorem. \tabularnewline
+false-RH converse
+& Robin invokes Nicolas's oscillation theorem, itself based on Landau's
+  principle, and transfers the conclusion directly to CA integers.
+& Sections~\ref{sec:oscillation} and~\ref{sec:lcm} reconstruct the transform
+  argument, isolate the positive-transform theorem, and use least common
+  multiples to obtain literal integer counterexamples before applying the CA
+  equivalence.  This is an alternative formal proof architecture, not a new
+  oscillation theorem attributed to this project. \tabularnewline
+\bottomrule
+\end{tabular}
+\end{center}
+
+Two formal interfaces merit a more precise explanation.  First, a classical
+sum over zeta zeros is normally understood to repeat a zero according to its
+analytic multiplicity.  That convention is not enough for the interchanges
+needed in Lean.  The multiplicity-aware infrastructure supplies an explicit
+index type for the divisor of $\xi$, a value map from indices to nonzero zeros,
+inverse-norm summability, and the hypotheses licensing each exchange of an
+integral with an infinite sum.  It proves no new fact about where the zeros
+lie; it turns the classical convention into a reusable formal interface.
+
+Second, the complete prime cost in \eqref{eq:prime-cost} is a
+bookkeeping device.  Robin estimates several prime products separately.  The
+present proof first sums the actual exponent choices of an arbitrary integer,
+then completes to all relevant primes.  Each missing prime or prematurely
+terminated exponent pays the smaller of two explicit penalties, so the
+analytic error and arithmetic loss can be bounded in independent modules.
+This modularity is useful for verification, but no theorem here says that it
+is computationally minimal or analytically more efficient than every earlier
+argument.
+
+Third, Lemma~\ref{lem:nicolas-comparison} is called a ``finite Nicolas
+comparison'' because it connects Nicolas's finite product to the analytic
+error used in his oscillation theorem.  The product, Mertens series, and
+partial-summation idea are classical.  The repository-owned contribution is
+the exact identity
+$\log F=R_M+R_\vartheta+K$, the explicit $4/x$ tail, and the separately proved
+signs $R_\vartheta\le0$ and $K\le J$ that make the comparison usable without
+asymptotic shorthand.  This is again a formal reconstruction and reusable
+interface, not a new oscillation phenomenon.
+
+\subsection{Relation to prior formal work}
+
+The adjacent formal literature concerns the analytic objects around the
+criterion rather than Robin's divisor-sum biconditional itself.
+Gomes and Kontorovich~\cite{GomesKontorovich2020} formalized an equivalent
+zero-locus formulation of the Riemann hypothesis through the Dirichlet eta
+function and supplied a Mathlib implementation of its analytic prerequisites;
+their development does not state Robin's inequality.  Loeffler and
+Stoll~\cite{LoefflerStoll2025} describe the Mathlib development of zeta and
+$L$-functions, including the formal statement of the Riemann hypothesis used
+here.  The PrimeNumberTheoremAnd project~\cite{PrimeNumberTheoremAnd} supplies
+Hadamard-factorization, completed-zeta, Mertens, and explicit prime-function
+infrastructure on which the present reconstruction builds.
+
+Those developments establish definitions and reusable analytic foundations.
+The present artifact connects them to a different endpoint: Robin's exact
+sum-of-divisors criterion, including the weighted endpoint, complete exponent
+budget, finite certificate cover, Nicolas--Landau continuation, and LCM
+transfer.  The author is not aware of an earlier mechanically checked proof of
+this complete biconditional, but no exhaustive priority claim is made.  The
+comparison asserted here is narrower and inspectable: none of the cited formal
+developments contains the two public declarations proved by this repository.
+
+The primary intended audience is therefore formal mathematics and analytic
+number theory.  For AI-assisted mathematics, the contribution is a concrete
+case study in maintaining fixed theorem targets, provenance, exact
+certificates, and independent acceptance gates; it is not a new general
+machine-learning model.  Section~\ref{sec:formalization} makes that case study
+and its evidence explicit.
 
 \section{Arithmetic preliminaries}
 
@@ -482,11 +695,31 @@ $(11,1)$ & $12/11$ & $\tau_{11,1}=\eps_0$ \\
 \bottomrule
 \end{tabular}
 \end{center}
-Each strict comparison is certified without decimal approximation: after
-clearing the positive logarithmic denominators and exponentiating, it is a
-rational power inequality.  The same method gives
-$(12/11)^{34}>11$ and $(12/11)^{22}<11$, which are exactly
-\eqref{eq:epsilon-enclosure}.
+Here is the complete arithmetic behind the strict signs.  For an event with
+base $p$ and gain ratio $r$, positivity of logarithms gives
+\[
+ p<r^N\ \Longrightarrow\ \frac1N<\frac{\log r}{\log p},
+ \qquad
+ r^N<p\ \Longrightarrow\ \frac{\log r}{\log p}<\frac1N.
+\]
+The cutoff enclosure~\eqref{eq:epsilon-enclosure} follows from the two exact
+rational inequalities
+\[
+ 11<(12/11)^{34},\qquad (12/11)^{22}<11.
+\]
+For the four included top events the kernel checks
+\[
+ 2<(31/30)^{22},\quad 3<(13/12)^{22},\quad
+ 5<(6/5)^{22},\quad 7<(8/7)^{22};
+\]
+hence their thresholds exceed $1/22>\eps_0$.  For the four first-missing
+events it checks
+\[
+ (63/62)^{34}<2,\quad (40/39)^{34}<3,\quad
+ (31/30)^{34}<5,\quad (57/56)^{34}<7;
+\]
+hence their thresholds lie below $1/34<\eps_0$.  These are integer
+comparisons after denominators are cleared; the tie $(11,1)$ is definitional.
 
 For a fixed prime, monotonicity in $j$ propagates the displayed top-event
 and first-missing-event signs through every layer.  Every prime not dividing
@@ -589,7 +822,7 @@ Set $y=\log n$.  It is enough to prove positivity of the explicit gap
       -\eps_0\bigl(y-\log5040\bigr),
 \]
 because the preceding inequality then places $\log\A(n)$ strictly below
-$\euler+\log\log y$.  There is no hidden convexity convention here:
+$\euler+\log\log y$.  The curvature used at this step is explicit:
 \[
  G''(y)=-\frac{\log y+1}{y^2(\log y)^2}<0\qquad(y>1).
 \]
@@ -625,23 +858,41 @@ bounds the maximum possible value of
 $\log\A(n)-\lambda\log n$.  Finally, concavity reduces the Robin comparison
 on $[L,U]$ to two endpoint inequalities.
 
-For concreteness, the first of the 36 rows is the following exact record:
-\begin{center}
-\small
-\begin{tabular}{@{}ll@{}}
-\toprule
-field & stored rational value \\
-\midrule
-$[L,U]$ & $[336/25,\ 22117363/1000000]$ \\
-$\lambda$ & $9771914406623/500000000000000$ \\
-layer cutoffs & $[17,5,3,2,2]$ \\
-gain upper bound & $5141587823941/1000000000000$ \\
-height data $(e,m)$ & $(28,\ 11486475/8388608)$ \\
-lower bounds for $\log L,\log U$
-  & $1299117667/500000000,\ 619272591/200000000$ \\
-\bottomrule
-\end{tabular}
-\end{center}
+More precisely, for a cutoff vector $c=(c_1,\ldots,c_d)$ define the layer box
+\[
+ \mathcal B(c)=\{(p,j):p\ \hbox{prime},\ 1\le j\le d,\ p\le c_j\}.
+\]
+The reduced weight of an event is
+\begin{equation}\label{eq:row-reduced-weight}
+ w_{p,j}(\lambda)=g_{p,j}-\lambda\log p
+ =\log p\,(\tau_{p,j}-\lambda).
+\end{equation}
+To state the integer boundary checks without pretending that a cutoff is
+prime, extend this expression to every real base $x>1$ by
+\[
+ \widetilde w_j(x;\lambda)=
+ \log\!\left(1+\frac{x-1}{x(x^j-1)}\right)-\lambda\log x.
+\]
+For a prime $p$, this is exactly $w_{p,j}(\lambda)$.  For every layer $j$,
+the row proves
+\[
+ \widetilde w_j(c_j;\lambda)\ge0,
+ \qquad \widetilde w_j(c_j+1;\lambda)\le0,
+\]
+using the rational logarithm bounds below.  The gain decreases with the base,
+so these two boundary signs classify every prime in that layer.  The extra
+check $\widetilde w_{d+1}(2;\lambda)\le0$, together with monotonicity in the
+layer and base, excludes every event above the stored vector.  Thus events inside
+$\mathcal B(c)$ have nonnegative weight and all events outside have
+nonpositive weight.  Any integer's actual exponent packet is consequently
+bounded above by the sum over this finite box; this is the precise sense in
+which the box is a valid worst case.
+
+Appendix~\ref{app:certificate} prints the complete first row, the scaled
+logarithm checker, and the two endpoint predicates.  Appendix
+\ref{app:cover-inventory} lists all 36 intervals and their main structural
+parameters.  Keeping those arithmetic audits separate here leaves the main
+argument focused on the row schema and its soundness theorem.
 
 The logarithm certificates used here are elementary and explicit.  For a
 rational $q\ge1$, put $z=(q-1)/(q+1)$.  Then $0\le z<1$ and, for $N\ge1$,
@@ -664,9 +915,32 @@ the base then proves the signs for every prime in that layer.  A final check
 at base $2$ proves that no still higher layer can contribute positively.
 From the resulting finite box one computes the exact integer products
 \[
- A=\prod(p^{j+1}-1),\qquad
- B=\prod p(p^j-1),\qquad
- Q=\prod p.
+A=\prod(p^{j+1}-1),\qquad
+B=\prod p(p^j-1),\qquad
+Q=\prod p.
+\]
+All three products are over $\mathcal B(c)$.  Their logarithms give exactly
+\[
+\sum_{(p,j)\in\mathcal B(c)}w_{p,j}(\lambda)
+ =\log A-\log B-\lambda\log Q.
+\]
+For example, Row~00 has $c=[17,5,3,2,2]$.  Its layers contain respectively
+the prime bases
+\[
+ \{2,3,5,7,11,13,17\},\quad \{2,3,5\},\quad
+ \{2,3\},\quad \{2\},\quad \{2\}.
+\]
+Direct multiplication gives
+\begin{align*}
+ A&=8\,490\,305\,136\,604\,741\,632\,000,\qquad
+ B=1\,651\,300\,226\,181\,365\,760\,000,\\
+ Q&=367\,567\,200.
+\end{align*}
+The kernel then verifies, among the remaining row predicates,
+\[
+ A\le\frac{5141587823941}{10^{12}}B,
+ \qquad
+ 2^{28}\frac{11486475}{8388608}\le Q.
 \]
 Rational bounds of the forms $A\le(\text{gain upper})B$ and
 $2^e m\le Q$, together with \eqref{eq:log-series}, produce the objective and
@@ -676,6 +950,25 @@ This search is only certificate discovery.  It need not be trusted or even
 reproduced: the stored row contains all of its outputs, the general soundness
 lemma proves what successful checks imply, and Lean's kernel evaluates every
 row predicate from those visible rational and integer values.
+
+The discovery process was iterative, not an optimization computation.  An
+earlier checked cover contained 39 rows.  The cancellation-aware coefficient
+revision in \commitlink{208b44750090b7b0e2254e3d511b4d119052cd03}{208b447}
+lowered the analytic handoff from $100000$ to $74500$ and removed the last
+three rows, leaving the present 36-row witness.  Rejected candidate rows were
+not retained as a stable trace, so no numerical count of trial proposals is
+claimed.  Nor is 36 claimed minimal: it is an upper bound supplied by one
+accepted cover, and there is no nontrivial lower bound or optimality theorem
+for this certificate format.  Different slopes, interval widths, or
+logarithm approximants could change the row count without changing the
+soundness argument.
+
+The historical discovery runs were not instrumented per candidate, so the
+paper does not report invented search times or a trial count.  Appendix
+\ref{app:cover-inventory} instead reports a reproducible quantity: the elapsed
+time for each accepted row module in one identified clean CI build.  Those
+times measure elaboration and kernel checking on that runner, not intrinsic
+certificate complexity; they vary with hardware, toolchain, and cache state.
 
 The height data certify that the relevant prime-base product is at least
 $2^e m$; the checker turns this into a lower logarithmic height with a
@@ -723,7 +1016,11 @@ $336/25<\log720720$, they cover \eqref{eq:finite-log-range}.  Every row
 satisfies the hypotheses of Lemma~\ref{lem:row-sound}.  In the final retained
 row the first-layer product includes every prime at most $70849$; it is split
 into 105 contiguous blocks, whose exact products concatenate to the required
-prefix.
+prefix.  The blocks cover the half-open base range $[0,70850)$ without a gap,
+and each block proves its numerator, denominator, and prime-base product.
+Concatenation therefore reconstructs the same first-layer factors in $A,B,Q$
+that a monolithic product would contain; the split changes evaluation cost,
+not the mathematical packet.
 All comparisons are integer or rational inequalities.  Thus the list of rows
 and their checks constitute a finite proof of the proposition.
 \end{proof}
@@ -760,6 +1057,12 @@ $H\ge74500$, the credit is at least $(113/50)S(H)$ while the debit is
 strictly smaller.  The formulas below establish these three statements but
 do not add another logical layer.
 
+For a first reading, Lemma~\ref{lem:weighted-ef} may be used as the analytic
+input and its kernel-estimate proof skipped; the narrative resumes at the
+definition of $\Pcost(H)$ and $\E(H)$.  The intervening integration-by-parts
+calculation is retained because it explains the exact constant $c_0$, the
+asymmetric error bound, and the otherwise delicate endpoint $m=1$.
+
 We first record the weighted explicit-formula input.  For $m\ge1$, define
 \begin{equation}\label{eq:weight}
   w_m(t)=t^{-m-1}\frac{m\log t+1}{(\log t)^2},
@@ -777,8 +1080,18 @@ Assume $\RH$.  For $m\ge1$ and $x\ge2$,
 \begin{equation}\label{eq:weighted-ef}
   I_m(x)=-\sum_{\rho}\frac{K_m(\rho,x)}{\rho}-T_m(x),
 \end{equation}
-where $T_m(x)$ is the correction from the pole, the gamma factor, and the
-trivial zeros.  If
+where the pole, gamma-factor, and trivial-zero correction is the explicit
+nonnegative integral
+\begin{equation}\label{eq:trivial-correction}
+ T_m(x)=\int_x^\infty w_m(t)
+ \left(\log(2\pi)+\frac12\log(1-t^{-2})\right)\,dt.
+\end{equation}
+For $t\ge2$ the parenthesis lies between $0$ and $\log(2\pi)$, and hence
+\begin{equation}\label{eq:trivial-correction-bound}
+ 0\le T_m(x)\le
+ \frac{\log(2\pi)x^{-m}}{\log x}.
+\end{equation}
+If
 \[
   c_0=\euler+2-\log(4\pi),
 \]
@@ -803,8 +1116,26 @@ nontrivial zeros, and the negative even zeros.  Every interchange is
 justified by an explicit summable norm majorant, so the zero sum retains
 analytic multiplicity rather than choosing an enumeration without proof.
 
-Under $\RH$, $\Re\rho=1/2$.  Two integrations by parts give the pointwise
-majorant
+The kernel calculation is not a black box.  Since
+\[
+ -\frac{d}{dt}\frac{t^{-m}}{\log t}
+ =t^{-m-1}\frac{m\log t+1}{(\log t)^2},
+\]
+one integration by parts gives
+\begin{equation}\label{eq:kernel-first-parts}
+ \frac{K_m(\rho,x)}{\rho}
+ =\frac{x^{\rho-m}}{\rho\log x}
+  \int_x^\infty\frac{t^{\rho-m-1}}{\log t}\,dt.
+\end{equation}
+A second integration by parts, with
+$d(t^{\rho-m})=(\rho-m)t^{\rho-m-1}\,dt$, separates the leading term
+\[
+ \frac{m}{\rho(m-\rho)}
+ \frac{x^{\rho-m}}{\log x}
+\]
+from a remainder containing $(\log t)^{-2}$.  Bounding that remainder once
+more by integration against $(\log t)^{-3}$ gives, under
+$\RH$ and hence $\Re\rho=1/2$, the pointwise majorant
 \[
  \left|\frac{K_m(\rho,x)}{\rho}\right|
  \le \frac1{|\rho|^2}\,
@@ -818,11 +1149,24 @@ multiplicity-counted identity
   \sum_{\rho}|\rho|^{-2}=\euler+2-\log(4\pi)=c_0.
 \]
 Summing the majorant gives $B_m(x)$.  The combined pole/trivial-zero factor
-contributes a nonnegative correction bounded above by
-$\log(2\pi)x^{-m}/\log x$, which explains the asymmetry in
-\eqref{eq:weighted-bound}.  The contour identity initially covers $m\ge2$;
-the endpoint $m=1$ follows by an exact integration-by-parts reweighting of
-the $m=2$ identity, including its zero and trivial-zero series.  This is
+is exactly \eqref{eq:trivial-correction}; its integrand bound and
+$\int_x^\infty w_m(t)\,dt=x^{-m}/\log x$ prove
+\eqref{eq:trivial-correction-bound}, explaining the asymmetry in
+\eqref{eq:weighted-bound}.
+
+The contour identity initially covers $m\ge2$.  For the endpoint let
+\[
+ q(t)=\frac{t(\log t+1)}{2\log t+1},\qquad
+ q'(t)=\frac{\log t(2\log t+3)}{(2\log t+1)^2}.
+\]
+Exact integration by parts gives
+\[
+ I_1(x)=q(x)I_2(x)+\int_x^\infty q'(t)I_2(t)\,dt.
+\]
+The same identity is proved separately for the zero series and for
+$T_m$, with absolute-integrability bounds licensing each interchange.
+Substitution of the $m=2$ formula therefore yields \eqref{eq:weighted-ef}
+at $m=1$, rather than obtaining it by a limiting convention.  This is
 Robin's Lemma~2 with no omitted endpoint.
 \end{proof}
 
@@ -915,43 +1259,38 @@ The values actually used are
  \log(2\pi)&\le\frac{46}{25}.
 \end{aligned}
 \end{equation}
-Substitution, with the negative coefficient $c_0-2$ retained rather than
-replaced by its absolute value, reduces the assertion to one exact rational
-inequality.
+There is no numerical conflict in the bound for $c_0$:
+\[
+ c_0=\euler+2-\log(4\pi)
+     =0.0461914179\ldots < 0.05=\frac1{20}.
+\]
+The proof does not depend on that decimal evaluation.  The harmonic-number
+and logarithm bounds in Appendix~\ref{app:coefficients} prove
+$c_0<154/3125<1/20$ rationally.  Substitution into
+\eqref{eq:error-rational-data}, while retaining the favorable negative
+coefficient $c_0-2$, gives the exact margin
+\[
+ \frac{\E(H)}{S(H)}\le\frac{3010451}{1332800}
+ =\frac{113}{50}-\frac{1677}{1332800}<\frac{113}{50}.
+\]
 
 For the second inequality, take the complete prime-square block between
-$\sqrt{2H}$ and $H/2$.  Abel summation and the RH bounds for $\vartheta$ give
-a lower bound whose normalization by $S(H)$ is
-\begin{align*}
-  &2\sqrt2\frac{\log H}{\log H+\log2}
-     \left(1-\frac1{\log H+\log2}\right)\\
-  &\quad-\frac94\,2^{1/4}H^{-1/4}
-     \frac{\log H}{\log H+\log2}
-  -\log(2\pi)H^{-1/2}
-     \frac{\log H}{\log H+\log2}\\
-  &\quad-4H^{-1/2}\frac{\log H}{\log H-\log2}\\
-  &\quad-2\sqrt2\,c_0H^{-1}\frac{\log H}{\log H-\log2}
-     \left(2+\frac1{\log H-\log2}
-       +\frac4{3(\log H-\log2)^2}\right).
-\end{align*}
-The last line retains the RH error term at the far endpoint instead of
-bounding the entire $\vartheta$ tail by a global multiple of $\log4$.
-The nonnegative prime-power contribution is discarded only after this
-cancellation has been preserved.  The lower-bound calculation uses
-\begin{align}\label{eq:cost-rational-data}
- \sqrt2&\ge\frac{7071}{5000}, & 2^{1/4}&\le\frac{119}{100},\notag\\
- \frac{\log H}{\log H+\log2}&\ge\frac{16}{17}, &
- \frac1{\log H+\log2}&\le\frac{17}{202},\notag\\
- H^{-1/4}\frac{\log H}{\log H+\log2}&\le\frac{573}{10000}, &
- H^{-1/2}\frac{\log H}{\log H+\log2}&\le\frac7{2000},\notag\\
- H^{-1/2}\frac{\log H}{\log H-\log2}&\le\frac{197}{50000}, &
- \frac{\log H}{\log H-\log2}&\le\frac{107}{100}.
-\end{align}
-Finally, the normalized far-end zero term is at most $1/10000$.  Replacing
-each positive main factor by its lower bound and each subtracted factor by
-its upper bound leaves a rational quantity at least $113/50$.  Thus both
-sides of the strict gap are independently checkable from
-\eqref{eq:error-rational-data} and \eqref{eq:cost-rational-data}.
+$\sqrt{2H}$ and $H/2$.  Abel summation gives a dominant normalized main term
+tending to $2\sqrt2$, while the prime-function error, endpoint, and
+prime-power terms are lower order.  The calculation retains the RH error at
+the far endpoint instead of replacing the whole $\vartheta$ tail by a coarse
+global bound; only after that cancellation is the remaining nonnegative
+prime-power contribution discarded.  Appendix~\ref{app:coefficients} gives
+the complete normalized expression and every rational substitution.  The
+resulting exact lower margin is
+\[
+ \frac{\Pcost(H)}{S(H)}\ge
+ \frac{15537277889}{6868000000}
+ =\frac{113}{50}+\frac{15597889}{6868000000}>
+ \frac{113}{50}.
+\]
+Thus the two sides of the gap are proved independently and meet with positive
+rational margins.
 \end{proof}
 
 \begin{theorem}[The RH implication]\label{thm:rh-forward}
@@ -1010,11 +1349,30 @@ For all sufficiently large $x$,
 \end{lemma}
 
 \begin{proof}
-Mertens' convergent summand series and partial summation give the exact
-decomposition of $\log F(x)$ into a summand remainder, a concave height
-remainder, and $K(x)$.  The first is at most $4/x$, and
-$\log y\le y-1$ makes the height remainder nonpositive.  Finally
-$\psi-\vartheta\ge0$ and $k(t)\ge0$ imply $K(x)\le J(x)$.
+The exact decomposition, with no asymptotic notation, is
+\begin{align}
+ \log F(x)={}&R_M(x)+R_\vartheta(x)+K(x),
+ \label{eq:finite-nicolas-split}\\
+ R_M(x)={}&
+ \sum_{0<n\le\lfloor x\rfloor}
+ \left(\log(1-n^{-1})+n^{-1}\right)-(M-\euler),\notag\\
+ R_\vartheta(x)={}&
+ \log\log\vartheta(x)-\log\log x
+ -\frac{\vartheta(x)-x}{x\log x},\notag
+\end{align}
+where the summand is understood to be zero for nonprimes and $M$ is the
+Meissel--Mertens constant in the convergent prime summand series.  The
+explicit tail estimate gives $|R_M(x)|\le4/x$.  The inequality
+$\log y\le y-1$, applied to the ratio of the two logarithmic heights, is
+exactly $R_\vartheta(x)\le0$ after simplification.
+
+Finally
+\[
+ J(x)-K(x)=\int_x^\infty
+   \bigl(\psi(t)-\vartheta(t)\bigr)k(t)\,dt\ge0,
+\]
+because both factors are nonnegative.  Applying these three bounds to
+\eqref{eq:finite-nicolas-split} gives \eqref{eq:nicolas-upper}.
 \end{proof}
 
 \begin{proposition}[Nicolas--Landau negative oscillation]
@@ -1072,6 +1430,32 @@ The added power has the exact transform
 These formulas define an analytic continuation $H_b(s)$ wherever the zeta
 factor is regular.
 
+Here is the transform calculation used in that sentence.  The Frullani
+identity
+\[
+ k(t)=\int_0^\infty (u+1)t^{-(u+2)}\,du
+\]
+and Fubini's theorem give, for $\Re s<0$,
+\begin{equation}\label{eq:J-mellin-explicit}
+ \int_3^\infty x^{s-1}J(x)\,dx
+ =\int_0^\infty (u+1)
+ \frac{\Phi_3(u+1-s)-3^s\Phi_3(u+1)}{s}\,du,
+\end{equation}
+where
+\begin{align}
+ \Phi_3(z)={}&
+ \left(\frac{-\zeta'(z)}{z\zeta(z)}-\frac1{z-1}\right)\notag\\
+ &-\int_1^3(\psi(t)-t)t^{-z-1}\,dt.
+ \label{eq:psi-tail-continuation}
+\end{align}
+The apparent value at $s=0$ is filled by analytic continuation.  Absolute
+integrability of the three-variable carrier $3<x<t$, $u>0$ licenses the two
+exchanges of integration in \eqref{eq:J-mellin-explicit}; compact and
+large-$u$ majorants then prove analyticity of the filled expression.  Formula
+\eqref{eq:psi-tail-continuation} makes the singularity source explicit: the
+finite startup integral is entire, while the logarithmic derivative records
+the nontrivial zeros of $\zeta$.
+
 We now separate the two roles of Landau's argument.  First, positivity of
 $\mu_b$ makes the real convergence set of \eqref{eq:landau-mgf} convex.
 At an interior point $a$, the derivatives of $M_b$ are its nonnegative
@@ -1104,6 +1488,16 @@ eventual positivity is impossible, proving \eqref{eq:J-omega}.
 The proof just given is the strict form of the oscillation argument used by
 Nicolas and Robin.  Its quantifiers are important: the excursions occur
 arbitrarily far out, rather than at one selected numerical frontier.
+The positive-transform step is not imported as an unnamed principle.
+Its reusable formal statement proves that if a nonnegative exponential
+transform converges at every real exponent below a frontier and has an
+analytic continuation across the frontier, then it actually converges at
+some strictly larger exponent.  The proof expands the continuation into its
+power series, identifies its coefficients with nonnegative moments, and
+uses monotone convergence to recover exponential integrability.  This
+generic theorem is linked explicitly in Section~\ref{sec:formalization};
+the subsequent Nicolas modules supply \eqref{eq:J-mellin-explicit}, the
+rightmost-zero ray, and the blow-up contradiction.
 
 \begin{corollary}\label{cor:finite-nicolas-omega}
 If $\RH$ is false, there exists $0<b<1/2$ such that
@@ -1285,6 +1679,65 @@ Thus the full biconditional does not emerge from one opaque analytic theorem:
 the finite and large-height forward branches meet only in the final
 case split, and the converse is a separate contradiction branch.
 
+The two advertised biconditionals also have different quantifier surfaces
+but no gap between them.  From $\RH$, Theorem~\ref{thm:main} immediately
+specializes to every colossally abundant integer.  Conversely, the CA
+hypothesis and Proposition~\ref{prop:ca-reduction} extend the inequality from
+those extrema to every integer above $5040$; Theorem~\ref{thm:main} then
+returns $\RH$.  Thus the second result is assembled from the all-integer
+criterion and the independently proved extremal reduction; Sections
+\ref{sec:finite} and \ref{sec:rh-forward} are not being mistaken for proofs
+only about CA integers.
+
+For the technically dense statements, the correspondence is declaration
+level rather than merely thematic:
+\begin{center}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.25\textwidth}
+  >{\raggedright\arraybackslash}p{.67\textwidth}@{}}
+\toprule
+paper statement & checked Lean declaration and relation \\
+\midrule
+Lemma~\ref{lem:weighted-ef} &
+ \path{robinPsiWeightedErrorIntegral_eq_zero_sum_correction_all} is
+ \eqref{eq:weighted-ef} with \eqref{eq:trivial-correction};
+ \path{robinPsiWeightedErrorIntegral_bounds_all} is
+ \eqref{eq:weighted-bound}, both in
+ \codelink{Robin1984/Equivalence/RobinLemmaTwo.lean}{RobinLemmaTwo} \\
+Proposition~\ref{prop:budget} &
+ \path{robin_log_abundancy_le_complete_prime_cost} in
+ \codelink{Robin1984/Equivalence/AbundancyExponentBound.lean}
+ {AbundancyExponentBound} is the same inequality after unfolding
+ $\M$, $\E$, and $\Pcost$ \\
+Proposition~\ref{prop:coefficient-gap} &
+ \path{robinMertensWeightedScalar_lt_113_div_50} and
+ \path{robin_minimum_prime_cost_ge_large_scalar} in the linked
+ \codelink{Robin1984/Analytic/MertensExplicitCoefficient.lean}
+ {Mertens coefficient} and
+ \codelink{Robin1984/Analytic/PrimeCostExplicitCoefficient.lean}
+ {prime-cost coefficient} modules are the two inequalities in
+ \eqref{eq:two-coefficients} \\
+Lemma~\ref{lem:nicolas-comparison} &
+ \path{nicolasLogMertensOscillation_le_J_add_four_div} in
+ \codelink{Robin1984/NicolasLandau/NicolasOscillation.lean}
+ {NicolasOscillation} is \eqref{eq:nicolas-upper} \\
+Landau crossing &
+ \path{exists_integrableExpSet_gt_of_analyticContinuationAt} in
+ \codelink{Robin1984/Mathlib/Probability/Moments/MGFAnalyticContinuation.lean}
+ {MGFAnalyticContinuation} is the generic positive-transform theorem \\
+Proposition~\ref{prop:nicolas-landau} &
+ \path{exists_nicolasJ_omegaMinus_of_not_riemannHypothesis} in
+ \codelink{Robin1984/NicolasLandau/NicolasLandauRightmostRay.lean}
+ {NicolasLandauRightmostRay} has exactly the quantifiers in
+ \eqref{eq:b-range}--\eqref{eq:J-omega} \\
+Theorem~\ref{thm:converse} &
+ \path{not_nativeRobinInequalityAll_of_not_riemannHypothesis} in
+ \codelink{Robin1984/NicolasLandau/NicolasLandauRobinBridge.lean}
+ {NicolasLandauRobinBridge} is its contrapositive \\
+\bottomrule
+\end{tabular}
+\end{center}
+
 \subsection{How the checked artifact was produced}
 
 What the final proof says and how it was produced are different questions.
@@ -1320,6 +1773,202 @@ correspondences, and final assertions.  AI-assisted proof engineering helped
 with implementation, refactoring, certificate organization, and audits.  The
 production history is not itself a proof: correctness rests on the resulting
 proof terms, exact certificates, and the validation pipeline described below.
+
+\subsection{Automated research and formalization context system}
+
+The AI assistance was not a single prompt followed by unchecked code
+generation.  The project used a persistent, structured context system that
+connected four kinds of state:
+\begin{enumerate}[leftmargin=1.7em,itemsep=.3em]
+  \item \emph{Research state} associated claims with exact source passages,
+    bibliographic identities, chronology, and provenance classifications.
+    Later reconstructions and formalization choices were kept distinct from
+    results stated by Robin, Nicolas, Landau, and the other cited authors.
+  \item \emph{Mathematical state} recorded exact definitions, quantifier
+    signatures, sign conventions, normalizations, numerical domains, and the
+    current hard lemma connecting an open branch to the advertised theorem.
+    Numerical experiments were attached only as evidence for a matching
+    domain, never promoted to hypotheses.
+  \item \emph{Formal state} tracked the exact Lean declaration under attack,
+    its direct and transitive dependencies, import providers, proof-state
+    obligations, prior failed approaches, focused-build evidence, and the
+    declarations on the final dependency path.
+  \item \emph{Assurance state} tracked placeholder and axiom audits, provenance
+    coverage, direct-import checks, certificate coverage, statement-boundary
+    comparison, kernel replay, and release status.  Substantive mistakes were
+    converted into explicit preflight rules before the same class of action
+    could be repeated.
+\end{enumerate}
+
+Reusable task-specific \emph{skills} formed the control layer over that
+state.  A skill is a versioned workflow package activated for a class of
+work, not a learned mathematical oracle.  The packages used here covered:
+\begin{itemize}[leftmargin=1.5em,itemsep=.25em]
+  \item source and provenance review, including chronology and the distinction
+    between direct source formalization and project-original glue;
+  \item hard-theorem discipline, which fixes the live declaration, forbids
+    replacing a universal parameter by an unjustified finite experiment, and
+    separates proved results from certificate evidence and open obligations;
+  \item numerical and certificate work, requiring the proposed inequality and
+    its domain to be checked independently before Lean formalization and
+    requiring every retained certificate to pass a general soundness theorem;
+  \item repository engineering, including exact import providers, dependency
+    closure, placeholder scans, focused builds, and staged-surface checks; and
+  \item paper and artifact production, requiring source-to-declaration
+    correspondence, exact-link checks, repeated PDF builds, extracted-text
+    checks, and page-by-page visual inspection.
+\end{itemize}
+The context router activated the smallest applicable set and supplied each
+skill with the same live theorem identity and evidence ledger.  Skills could
+compose---for example, a numerical bound proposed during proof work could not
+enter the paper until the numerical-domain rule, Lean proof rule, provenance
+rule, and document-verification rule all agreed on its status.  Their durable
+preflight and hard-stop conditions also carried lessons from a failed build
+or incorrect claim into later sessions, instead of relying on conversational
+memory alone.
+
+The skill library also evolved during the project.  When a build failure,
+mathematical contradiction, inaccurate claim, or user correction exposed a
+substantive failure class, work on the affected path stopped.  The system
+recorded four fields: the triggering condition, a check that must run before
+the action is attempted again, the action now prohibited, and the corrected
+action.  A repeated failure strengthened the entry with a mechanically tested
+hard stop.  Rules that applied only to one declaration remained in the
+project context; rules that generalized across formalizations were promoted
+into, or used to revise, a reusable skill.  Subsequent sessions loaded the
+revised package before acting, so failure-derived knowledge changed future
+behavior even when the earlier conversation was no longer present.
+
+\paragraph{Worked mathematical case: closing the large-height gap.}
+One retained task packet fixed the upper-error and lower-cost Lean targets in
+\codelink{Robin1984/Analytic/MertensExplicitCoefficient.lean}{Mertens coefficient}
+and
+\codelink{Robin1984/Analytic/PrimeCostExplicitCoefficient.lean}{prime-cost coefficient},
+the universal
+domain $H\ge74500$, the normalization $S(H)$, and the prohibition on adding
+an assumption or changing the public theorem.  The prior checked route began
+at $H=100000$.  The automated proposal that survived review had three parts:
+retain the favorable sign of $(c_0-2)/\log H$ instead of taking an absolute
+value; complete a block of prime squares between $\sqrt{2H}$ and $H/2$; and
+carry the far-end RH error through the Abel-summation cancellation before
+discarding nonnegative terms.  It then proposed separate rational subgoals
+for every monotone factor.
+
+Human acceptance was conditional on two independent checks: the normalized
+upper and lower expressions had to be numerically true on the stated domain,
+and Lean had to prove their symbolic monotonicity and exact rational margins.
+The accepted output is not the proposal text but the declarations in
+\codelink{Robin1984/Analytic/MertensExplicitCoefficient.lean}{MertensExplicitCoefficient}
+and
+\codelink{Robin1984/Analytic/PrimeCostExplicitCoefficient.lean}{PrimeCostExplicitCoefficient},
+together with the fractions printed in Appendix~\ref{app:coefficients}.
+Commit
+\commitlink{208b44750090b7b0e2254e3d511b4d119052cd03}{208b447}
+records the resulting $100000$-to-$74500$ handoff and the removal of three
+now-unneeded certificate rows.  The numerical check was evidence; only the
+Lean proofs and subsequent kernel checks were accepted into the artifact.
+
+\paragraph{Worked failure-to-rule case: theorem and import boundaries.}
+During submission hardening, a Comparator failure reported that the Challenge
+and Solution theorem statements did not match even though their displayed
+formulas appeared identical.  The failure class was dependence on implicit
+or project-local declaration identity at the public boundary.  The corrected
+rule requires \leanname{autoImplicit false}, permits only Mathlib imports in
+\path{Challenge.lean}, defines the statement vocabulary directly there, and
+requires exported declaration equality before release.  The public changes
+are visible in commits
+\commitlink{9612f5e}{9612f5e} and
+\commitlink{160cd08}{160cd08}.
+
+A second failure occurred after import narrowing: modules using
+\leanname{Nat.lcmUpto} no longer imported its defining provider and failed
+with an unknown-constant error.  The corresponding rule now resolves the
+exact provider, requires a direct import in every consumer, and builds the
+first affected consumer before any full CI run.  Commits
+\commitlink{1d60111}{1d60111} and
+\commitlink{0544629}{0544629} apply the correction.  The mechanical hard stop
+is encoded in \codelink{scripts/check-imports.ps1}{check-imports.ps1}; the
+statement hard stop is Comparator itself.  A later
+\runlink{33661242178}{complete successful run} exercised the Lean build,
+documentation, Comparator, Lean replay, NanoDa replay, and release gate.
+
+These examples expose the task inputs, the accepted decomposition, the human
+acceptance criterion, the retained source output, and the recurrence barrier.
+They are the two documented workflow cases evaluated here, not a complete
+telemetry record of every exploratory interaction.  No baseline run without
+the system was performed, so the paper makes no causal claim that automation
+reduced elapsed time, human effort, or the total number of errors.  The public
+before-and-after commits, exact proof terms, check scripts, and CI logs make
+the narrower claims about retained outputs and recurrence barriers testable.
+
+This evolution is controlled rather than autonomous self-modification of the
+proof environment.  Skill revisions are explicit, reviewable instruction
+artifacts; they are checked on representative tasks and remain subordinate to
+human direction and repository policy.  They may alter search order,
+preflight checks, context selection, or stopping conditions, but they cannot
+alter a theorem statement, convert evidence into a proof, whitelist a new
+axiom, or bypass Lean's kernel and the independent replay gates.  The public
+artifact therefore depends on the skills for engineering discipline, not for
+logical soundness.
+
+At each stage, the system selected only the source excerpts, definitions,
+theorem types, dependency fragments, and earlier failure evidence relevant to
+the live obligation.  This constrained context mattered more than raw context
+volume: it reduced namespace confusion, accidental quantifier changes,
+unjustified numerical specialization, duplicate lemmas, and work on
+declarations outside the final proof graph.  Candidate formal steps were
+tested first against the smallest relevant module; expensive full builds were
+run only for coherent repository states.
+
+Human control remained at the mathematical boundary.  The maintainer chose
+the target theorems, sources, proof route, attribution, and public claims.
+Automated agents did propose intermediate definitions and lemma decompositions,
+search library interfaces, construct candidate proof terms, generate exact
+certificate candidates, refactor dependencies, and run audits.  Human review
+selected which definitions, statements, and proofs were retained.  Every
+accepted output is visible as Lean source, rational data, provenance metadata,
+or a validation log; no model response, research summary, numerical search,
+confidence score, or context record is trusted by either advertised theorem.
+
+The methodological claim is therefore limited to the architecture and the two
+cases above.  Reproducing the checked result requires the public source and
+certificates, not a replay of the exploratory interaction history: the build,
+Comparator, and two kernel implementations check the retained artifact.
+
+\subsection{Reusable formalization outputs}
+
+Beyond the two final biconditionals, the development leaves several units
+intended for reuse:
+\begin{itemize}[leftmargin=1.5em,itemsep=.3em]
+  \item a generic Landau positive-transform theorem in the
+    \path{ProbabilityTheory} namespace, proving strict extension of
+    exponential integrability from analytic continuation and nonnegative
+    moments;
+  \item multiplicity-aware zero-divisor and summability interfaces for
+    completed zeta, together with explicit Mellin/zero-series interchange
+    lemmas;
+  \item exact rational logarithm bounds and a theorem-parametric finite-row
+    checker that separates certificate discovery from proof;
+  \item reusable bounds for prime-power layers, least-common-multiple towers,
+    and normalized explicit coefficients; and
+  \item provenance, dependency, Challenge/Solution, replay, and release gates
+    for a large formal-mathematics artifact.
+\end{itemize}
+The first and other project-independent units are isolated under
+\codedir{Robin1984/Mathlib}; their proposed upstream destinations are recorded
+in \codelink{MATHLIB_PORTING.md}{MATHLIB\_PORTING.md}.  The result is therefore
+both a checked reconstruction of Robin's theorem and a case study in turning
+source mathematics, exploratory computation, and AI-assisted proof
+engineering into a narrowly trusted formal artifact.
+
+For an AI or machine-learning audience, the relevant contribution is not a
+claim that a model resolved an open conjecture.  It is a controlled
+human--agent workflow whose endpoint is falsifiable at declaration level:
+fixed targets, explicit dependencies, exact certificates, recorded failure
+classes, and independent kernel acceptance.  No new general-purpose Lean
+tactic is claimed.  The reusable outputs are the mathematical interfaces,
+certificate architecture, context-and-skill discipline, and validation
+pipeline described above.
 
 \subsection{Project-local mathematics and provenance}
 
@@ -1365,6 +2014,15 @@ Robin1984 &
 \bottomrule
 \end{tabular}
 \end{center}
+It would therefore be incorrect to describe every dependency as proved from
+scratch in repository-owned modules.  Mathlib and the pinned PNTAnd revision
+supply a large body of foundational and explicit analytic number theory.
+The project-local claim is narrower and checkable: the source-specific chain
+from those imported results to Robin's two advertised biconditionals,
+including the weighted endpoint, Nicolas--Landau continuation, LCM transfer,
+CA reduction, and finite certificates, is proved here without adding a new
+axiom.
+
 In particular, Lemma~\ref{lem:weighted-ef} and
 Proposition~\ref{prop:nicolas-landau} are not assumptions imported as opaque
 theorems: their full proofs occur in the linked repository-owned modules.
@@ -1403,24 +2061,13 @@ rational inequalities.  The large final retained prime product is split into
 certificate checkers are proved sound once; each data row is then accepted by
 kernel reduction.
 
-The essential checked interface is small enough to quote.  With the first
-proof body elided, the declarations have the following signatures and proof
-heads:
-\begin{verbatim}
-theorem RobinFiniteRowChecks.sound {r : RobinFiniteRow}
-    (h : RobinFiniteRowChecks r) {n : Nat} (hn : 5040 < n)
-    (hLo : (r.lo : Real) <= Real.log (n : Real))
-    (hHi : Real.log (n : Real) <= (r.hi : Real)) :
-    Robin1984.Core.NativeRobinInequality n := by ...
-
-theorem robinFiniteRow00_checks :
-    RobinFiniteRowChecks robinFiniteRow00 := by
-  decide +kernel
-\end{verbatim}
-The first theorem is an ordinary proof reducing a successful row predicate to
-Robin's inequality throughout its interval.  The second evaluates the visible
-record by Lean's kernel.  The aggregate theorem similarly checks that the row
-endpoints form a gap-free cover.  The full definitions are in
+Appendix~\ref{app:certificate} quotes the checked interface and expands Row~00
+into its stored record, scaled logarithm bounds, product tests, and endpoint
+predicates.  The conceptual separation is simple: one ordinary theorem proves
+that any successful row implies Robin's inequality throughout its interval;
+another declaration asks Lean's kernel to evaluate the visible rational row.
+The aggregate theorem checks that the accepted endpoints form a gap-free
+cover.  The full definitions are in
 \codelink{Robin1984/Finite/FiniteRowCertificate.lean}{FiniteRowCertificate}
 and \codelink{Robin1984/Finite/Certificates/Row00.lean}{Row00}.
 
@@ -1445,6 +2092,19 @@ theorems, permits only
 \leanname{Classical.choice}, requires NanoDa, and declares no definition
 holes.  In particular, the solution is not allowed to choose a convenient
 meaning for $\sig$, Robin's inequality, CA, or $\RH$.
+
+The complete semantic policy is short enough to display:
+\begin{verbatim}
+"theorem_names": [
+  "Robin1984.robin_inequality_iff_riemannHypothesis",
+  "Robin1984.riemannHypothesis_iff_colossallyAbundant_robin"
+],
+"definition_names": [],
+"permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
+"enable_nanoda": true
+\end{verbatim}
+The omitted JSON fields only name the modules \path{Challenge} and
+\path{Solution}; there is no additional whitelist of project definitions.
 
 Using pinned tool revisions, the Comparator job performs the following checks.
 \begin{enumerate}[leftmargin=1.7em,itemsep=.3em]
@@ -1566,6 +2226,28 @@ Comparator/NanoDa pipeline pass against that revision.
 
 \subsection{Reproducing and independently checking the result}
 
+The audit record is public and readable without repository membership or
+GitHub authentication:
+\begin{description}[leftmargin=1.7em,style=nextline,itemsep=.25em]
+  \item[Source and history.]
+    \url{https://github.com/kimihiro64/Robin1984}
+  \item[Complete CI runs and job logs.]
+    \url{https://github.com/kimihiro64/Robin1984/actions/workflows/ci.yml}
+  \item[Tagged source, paper, API site, compiled Lean tree, and checksums.]
+    \url{https://github.com/kimihiro64/Robin1984/releases}
+  \item[Machine-readable theorem and provenance metadata.]
+    \codefile{formalization.yaml}, \codefile{comparator.json}, and
+    \codefile{provenance/ledger.json}
+  \item[Trusted statement boundary and implementation.]
+    \codefile{Challenge.lean} and \codefile{Solution.lean}
+\end{description}
+The string \path{kimihiro64} is simply the public GitHub owner namespace,
+not an indication of a private repository.  Each release is tied to an exact
+Git commit and is therefore a citable immutable snapshot even though the
+\path{main} branch continues to develop.  A DOI-bearing archival mirror would
+add another persistence layer, but is not required to inspect or reproduce
+the present artifact.
+
 There are three useful levels of reproduction.  First, a reader can inspect a
 completed run without compiling Lean.  The
 \href{\actionsurl}{public CI history} exposes the separate job results and
@@ -1621,6 +2303,54 @@ paper and API documentation, transfers the completed Lean artifacts to the
 downstream jobs, and publishes a release only if every dependency job,
 including Comparator, succeeds.
 
+\paragraph{Observed cost and hardware.}
+The hosted workflow uses GitHub's standard public
+\href{https://docs.github.com/en/actions/reference/runners/github-hosted-runners}
+{\path{ubuntu-latest} runner}, which at the time of this revision provides
+four x64 CPU cores, 16~GB RAM, and 14~GB SSD storage.  This is a tested
+sufficient environment, not a proven minimum; peak memory below 16~GB and a
+smaller storage floor have not been benchmarked.  The project build is
+deliberately serialized to control memory, so a clean \leanname{lake build}
+should be budgeted at roughly two hours; one measured cold build took about
+1~hour 42~minutes.
+
+The independent pipeline is longer.  In the representative source-changing
+\runlink{33661242178}{successful run of commit \texttt{4d0b59e}}, the Lean
+job took 1~hour 16~minutes, API documentation 16~minutes 58~seconds,
+Comparator and its two replays 2~hours 39~minutes, and total wall time was
+3~hours 56~minutes 59~seconds because downstream jobs overlap.  In a
+\runlink{33477843519}{cache-reusing successful run}, the Lean job fell to
+15~minutes 36~seconds, while Comparator still took 2~hours 17~minutes.
+Accordingly, an independent team should budget about four hours for a full
+uncached assurance run, not merely the duration of \leanname{lake build}.
+Source changes invalidate the project-object cache; paper-only changes can
+reuse it.  The release's compiled tree avoids the first rebuild for a matching
+environment but does not replace source-level verification.
+
+\paragraph{Portability and maintenance.}
+The authoritative artifact is the source at an immutable release tag.
+The downloadable \leanname{.olean} tree is a Linux x64 convenience built for
+Lean~4.33.1; compiled objects are not expected to work across Lean versions,
+platforms, or incompatible dependency revisions.  A source rebuild uses
+\codefile{lean-toolchain} and \codefile{lake-manifest.json}, which currently
+pin Mathlib commit
+\texttt{0df444a360eaa60ab8c11dca51a86af692955474} and the PNTAnd fork commit
+\texttt{f8f58c749d6cde8a641348fcd5e4702993651cd6}.  The Windows bootstrap covers
+the main Lean build; the full Comparator/Landrun/NanoDa recipe is presently
+Linux-oriented and additionally requires the tools listed above.
+
+Maintenance is deliberate rather than automatic.  A toolchain or dependency
+repin is tested first on the affected modules and then must pass the complete
+Lean, provenance, Comparator, Lean-kernel, and NanoDa gates before release.
+Generic project-owned modules are tracked for upstreaming in
+\codelink{MATHLIB_PORTING.md}{MATHLIB\_PORTING.md}.  As verified for this
+revision, PNTAnd upstream \path{main} still declares Lean~4.32.2 and lacks the
+xi-divisor interface, so the public fork remains necessary.  The fork will be
+removed only when both compatibility and interface replacements exist and the
+full pipeline passes after repinning.  Future maintenance may be required as
+Lean evolves; immutable tagged releases preserve the exact historical inputs
+rather than promising that old compiled objects will load in new toolchains.
+
 The formalization was developed with human mathematical direction and
 AI-assisted proof engineering.  Lean's kernel checks that the linked proof
 terms inhabit the exact public types above, using only the reported logical
@@ -1631,6 +2361,316 @@ mathematical and scholarly review obligations.  The explicit expansion of
 Mathlib's $\RH$ predicate, the source-to-module table, and the provenance
 ledger make that comparison inspectable rather than implicit.  The present
 status is self-assessed; no independent expert review is claimed.
+
+\appendix
+
+\section{Exact rational coefficient audit}\label{app:coefficients}
+
+This appendix collects the arithmetic intentionally omitted from the main
+narrative of Proposition~\ref{prop:coefficient-gap}.  First, the formal bound
+for the zero constant uses
+\[
+ \euler<H_{256}-\log256,\qquad
+ H_{256}\le\frac{15311}{2500},\qquad
+ \log2\ge\frac{69314}{100000},\qquad
+ \log(4\pi)\ge\frac{253}{100}.
+\]
+Consequently
+\[
+ c_0<
+ \frac{15311}{2500}-8\frac{69314}{100000}
+ +2-\frac{253}{100}
+ =\frac{154}{3125}<\frac1{20}.
+\]
+This is the rational proof behind the decimal orientation
+$c_0=0.0461914179\ldots$.
+
+For the error bound, put $q=(\log H)^{-1}$.  The
+$H^{-1/6}$ estimate in \eqref{eq:error-rational-data} turns
+$2H^{-1/6}$ into at most $(87/25)q$.  Combining this with the favorable
+term $-2q$ and applying the remaining bounds gives
+\begin{align*}
+ \frac{\E(H)}{S(H)}
+ &\le
+ 2+\frac{37}{25}\frac5{56}
+ +8\left(\frac5{56}\right)^2\\
+ &\quad+\frac1{20}
+   \left(1+\frac5{56}+4\left(\frac5{56}\right)^2\right)
+ +\frac{46}{25}\frac1{272}\\
+ &=\frac{3010451}{1332800}
+ =\frac{113}{50}-\frac{1677}{1332800}
+ <\frac{113}{50}.
+\end{align*}
+
+For the complete prime cost, Abel summation over the prime-square block
+$\sqrt{2H}<p\le H/2$ gives the following normalized lower expression:
+\begin{align*}
+ &2\sqrt2\frac{\log H}{\log H+\log2}
+    \left(1-\frac1{\log H+\log2}\right)\\
+ &\quad-\frac94\,2^{1/4}H^{-1/4}
+    \frac{\log H}{\log H+\log2}
+ -\log(2\pi)H^{-1/2}
+    \frac{\log H}{\log H+\log2}\\
+ &\quad-4H^{-1/2}\frac{\log H}{\log H-\log2}\\
+ &\quad-2\sqrt2\,c_0H^{-1}\frac{\log H}{\log H-\log2}
+    \left(2+\frac1{\log H-\log2}
+      +\frac4{3(\log H-\log2)^2}\right).
+\end{align*}
+The last line is the far-end RH term retained through the cancellation.
+The rational bounds used for $H\ge74500$ are
+\begin{align}\label{eq:cost-rational-data}
+ \sqrt2&\ge\frac{7071}{5000}, & 2^{1/4}&\le\frac{119}{100},\notag\\
+ \frac{\log H}{\log H+\log2}&\ge\frac{16}{17}, &
+ \frac1{\log H+\log2}&\le\frac{17}{202},\notag\\
+ H^{-1/4}\frac{\log H}{\log H+\log2}&\le\frac{573}{10000}, &
+ H^{-1/2}\frac{\log H}{\log H+\log2}&\le\frac7{2000},\notag\\
+ H^{-1/2}\frac{\log H}{\log H-\log2}&\le\frac{197}{50000}, &
+ \frac{\log H}{\log H-\log2}&\le\frac{107}{100}.
+\end{align}
+The normalized far-end term is at most $1/10000$, so the final exact
+substitution is
+\begin{align*}
+ &2\frac{7071}{5000}\frac{16}{17}
+    \left(1-\frac{17}{202}\right)
+ -\frac94\frac{119}{100}\frac{573}{10000}
+ -\frac{46}{25}\frac7{2000}\\
+ &\hspace{2em}-4\frac{197}{50000}-\frac1{10000}\\
+ &\qquad=
+ \frac{15537277889}{6868000000}
+ =\frac{113}{50}+\frac{15597889}{6868000000}
+ >\frac{113}{50}.
+\end{align*}
+
+\section{A finite certificate in full}\label{app:certificate}
+
+The first of the 36 accepted rows stores the following exact record:
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+field & stored rational value \\
+\midrule
+$[L,U]$ & $[336/25,\ 22117363/1000000]$ \\
+$\lambda$ & $9771914406623/500000000000000$ \\
+layer cutoffs & $[17,5,3,2,2]$ \\
+gain upper bound & $5141587823941/1000000000000$ \\
+height data $(e,m)$ & $(28,\ 11486475/8388608)$ \\
+lower bounds for $\log L,\log U$
+  & $1299117667/500000000,\ 619272591/200000000$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The essential checked interface, with one proof body elided, is
+\begin{verbatim}
+theorem RobinFiniteRowChecks.sound {r : RobinFiniteRow}
+    (h : RobinFiniteRowChecks r) {n : Nat} (hn : 5040 < n)
+    (hLo : (r.lo : Real) <= Real.log (n : Real))
+    (hHi : Real.log (n : Real) <= (r.hi : Real)) :
+    Robin1984.Core.NativeRobinInequality n := by ...
+
+theorem robinFiniteRow00_checks :
+    RobinFiniteRowChecks robinFiniteRow00 := by
+  decide +kernel
+\end{verbatim}
+Let $g=5141587823941/10^{12}$ be the stored gain bound and
+$k(q)=\lfloor\log_2q\rfloor$.  In terms of the functions in
+\eqref{eq:log-series}, the scaled upper checker is
+\[
+ U^{\rm sc}_{20}(q)=
+ k(q)\frac{693147180559945310}{10^{18}}
+ +U_{20}\!\left(\frac{q}{2^{k(q)}}\right),
+\]
+and the lower checker uses
+$693147180559945309/10^{18}$ and $L_{20}$.  With the stored
+$\lambda$, exponent $e=28$, and mantissa $m=11486475/8388608$, the
+objective supplied to both endpoints is
+\[
+ B_0=U^{\rm sc}_{20}(g)
+ -\lambda\left(
+ 28\frac{693147180559945309}{10^{18}}+L_{20}(m)\right).
+\]
+The kernel decision verifies the integer product inequalities
+$A\le gB$ and $2^{28}m\le Q$, every adjacent layer-sign comparison, and
+\[
+ B_0<
+ \frac{57721}{100000}+L^{\rm sc}_{20}(\ell_L)-\lambda L,
+ \qquad
+ B_0<
+ \frac{57721}{100000}+L^{\rm sc}_{20}(\ell_U)-\lambda U.
+\]
+The general logarithm and Euler-constant theorems then convert these
+rational facts into the real endpoint inequalities used by
+Lemma~\ref{lem:row-sound}.  The record and its kernel proof are
+\codelink{Robin1984/Finite/Certificates/Row00.lean}{Row00}; the reusable
+soundness theorem is
+\codelink{Robin1984/Finite/FiniteRowCertificate.lean}{FiniteRowCertificate}.
+
+\clearpage
+\section{Complete finite-cover inventory}\label{app:cover-inventory}
+
+Table~\ref{tab:row-inventory} lists every accepted row.  The columns $L,U$
+and $\lambda$ are the exact stored rationals.  The entry $c_1/d$ gives the
+first-layer cutoff and the number of stored layers; ''blocks'' is the number
+of separately checked first-layer prime-product blocks, with zero denoting the
+direct monolithic calculation used by Row~00.  The final column is the elapsed
+module time reported by the clean
+\runlink{33661242178}{CI build of commit \texttt{4d0b59e}}.  These are
+observed elaboration and kernel-checking times on that runner, not discovery
+times or hardware-independent complexity bounds.
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{1.5pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{longtable}{@{}rccc rrr@{}}
+\caption{The complete 36-row certificate cover.}\label{tab:row-inventory}\\
+\toprule
+row & $L$ & $U$ & $\lambda$ & $c_1/d$ & blocks & seconds \\
+\midrule
+\endfirsthead
+\toprule
+row & $L$ & $U$ & $\lambda$ & $c_1/d$ & blocks & seconds \\
+\midrule
+\endhead
+00 & $\tfrac{336}{25}$ & $\tfrac{22117363}{1000000}$ & $\tfrac{9771914406623}{500000000000000}$ & 17/5 & 0 & 2.3 \\
+01 & $\tfrac{22117363}{1000000}$ & $\tfrac{35788699}{1000000}$ & $\tfrac{2565510579241}{250000000000000}$ & 28/6 & 2 & 2.3 \\
+02 & $\tfrac{35788699}{1000000}$ & $\tfrac{29149999}{500000}$ & $\tfrac{5519615043151}{1000000000000000}$ & 46/7 & 3 & 2.4 \\
+03 & $\tfrac{29149999}{500000}$ & $\tfrac{47544747}{500000}$ & $\tfrac{3004424868557}{1000000000000000}$ & 76/7 & 4 & 2.4 \\
+04 & $\tfrac{47544747}{500000}$ & $\tfrac{146801491}{1000000}$ & $\tfrac{1724212981141}{1000000000000000}$ & 120/8 & 5 & 2.5 \\
+05 & $\tfrac{146801491}{1000000}$ & $\tfrac{111686563}{500000}$ & $\tfrac{8278925801}{8000000000000}$ & 184/9 & 6 & 2.5 \\
+06 & $\tfrac{111686563}{500000}$ & $\tfrac{163594351}{500000}$ & $\tfrac{80829194299}{125000000000000}$ & 274/10 & 7 & 2.6 \\
+07 & $\tfrac{163594351}{500000}$ & $\tfrac{464815043}{1000000}$ & $\tfrac{422180858753}{1000000000000000}$ & 395/10 & 8 & 2.6 \\
+08 & $\tfrac{464815043}{1000000}$ & $\tfrac{130165559}{200000}$ & $\tfrac{70868018799}{250000000000000}$ & 557/11 & 9 & 2.7 \\
+09 & $\tfrac{130165559}{200000}$ & $\tfrac{893036263}{1000000}$ & $\tfrac{38967393937}{200000000000000}$ & 771/11 & 10 & 2.7 \\
+10 & $\tfrac{893036263}{1000000}$ & $\tfrac{240770673}{200000}$ & $\tfrac{137136588803}{1000000000000000}$ & 1048/12 & 12 & 2.8 \\
+11 & $\tfrac{240770673}{200000}$ & $\tfrac{63176719}{40000}$ & $\tfrac{99275427189}{1000000000000000}$ & 1391/12 & 13 & 2.8 \\
+12 & $\tfrac{63176719}{40000}$ & $\tfrac{2035337871}{1000000}$ & $\tfrac{73775311097}{1000000000000000}$ & 1806/13 & 14 & 2.9 \\
+13 & $\tfrac{2035337871}{1000000}$ & $\tfrac{518900301}{200000}$ & $\tfrac{11152011487}{200000000000000}$ & 2314/13 & 16 & 2.9 \\
+14 & $\tfrac{518900301}{200000}$ & $\tfrac{815385537}{250000}$ & $\tfrac{42786768497}{1000000000000000}$ & 2927/14 & 17 & 3.1 \\
+15 & $\tfrac{815385537}{250000}$ & $\tfrac{406392661}{100000}$ & $\tfrac{6654185407}{200000000000000}$ & 3662/14 & 19 & 3.1 \\
+16 & $\tfrac{406392661}{100000}$ & $\tfrac{1248690297}{250000}$ & $\tfrac{2622639723}{100000000000000}$ & 4528/14 & 21 & 3.1 \\
+17 & $\tfrac{1248690297}{250000}$ & $\tfrac{3045165617}{500000}$ & $\tfrac{20930175389}{1000000000000000}$ & 5542/15 & 23 & 3.3 \\
+18 & $\tfrac{3045165617}{500000}$ & $\tfrac{458996953}{62500}$ & $\tfrac{16893531041}{1000000000000000}$ & 6716/15 & 25 & 3.4 \\
+19 & $\tfrac{458996953}{62500}$ & $\tfrac{4387795691}{500000}$ & $\tfrac{13794103247}{1000000000000000}$ & 8059/15 & 27 & 3.5 \\
+20 & $\tfrac{4387795691}{500000}$ & $\tfrac{10433152137}{1000000}$ & $\tfrac{11354367573}{1000000000000000}$ & 9603/15 & 30 & 3.6 \\
+21 & $\tfrac{10433152137}{1000000}$ & $\tfrac{12279993269}{1000000}$ & $\tfrac{2357543377}{250000000000000}$ & 11356/16 & 33 & 3.8 \\
+22 & $\tfrac{12279993269}{1000000}$ & $\tfrac{179906601}{12500}$ & $\tfrac{1973616211}{250000000000000}$ & 13335/16 & 36 & 4.0 \\
+23 & $\tfrac{179906601}{12500}$ & $\tfrac{16784073643}{1000000}$ & $\tfrac{6644793849}{1000000000000000}$ & 15587/16 & 39 & 4.3 \\
+24 & $\tfrac{16784073643}{1000000}$ & $\tfrac{9718846411}{500000}$ & $\tfrac{1126354703}{200000000000000}$ & 18110/16 & 42 & 4.6 \\
+25 & $\tfrac{9718846411}{500000}$ & $\tfrac{22433188173}{1000000}$ & $\tfrac{1200244709}{250000000000000}$ & 20934/17 & 46 & 4.9 \\
+26 & $\tfrac{22433188173}{1000000}$ & $\tfrac{1287242339}{50000}$ & $\tfrac{2057220229}{500000000000000}$ & 24088/17 & 50 & 5.4 \\
+27 & $\tfrac{1287242339}{50000}$ & $\tfrac{7349340853}{250000}$ & $\tfrac{3547339421}{1000000000000000}$ & 27570/17 & 54 & 5.8 \\
+28 & $\tfrac{7349340853}{250000}$ & $\tfrac{1338267981}{40000}$ & $\tfrac{3072760897}{1000000000000000}$ & 31426/17 & 59 & 6.4 \\
+29 & $\tfrac{1338267981}{40000}$ & $\tfrac{9481137173}{250000}$ & $\tfrac{2672852847}{1000000000000000}$ & 35690/18 & 64 & 7.1 \\
+30 & $\tfrac{9481137173}{250000}$ & $\tfrac{1070418171}{25000}$ & $\tfrac{2335546837}{1000000000000000}$ & 40370/18 & 70 & 8.2 \\
+31 & $\tfrac{1070418171}{25000}$ & $\tfrac{48110318623}{1000000}$ & $\tfrac{2050940953}{1000000000000000}$ & 45463/18 & 76 & 9.6 \\
+32 & $\tfrac{48110318623}{1000000}$ & $\tfrac{10789326747}{200000}$ & $\tfrac{1807809003}{1000000000000000}$ & 51028/18 & 82 & 10 \\
+33 & $\tfrac{10789326747}{200000}$ & $\tfrac{30165067587}{500000}$ & $\tfrac{1597827091}{1000000000000000}$ & 57137/18 & 89 & 12 \\
+34 & $\tfrac{30165067587}{500000}$ & $\tfrac{33566442549}{500000}$ & $\tfrac{1418388113}{1000000000000000}$ & 63731/18 & 97 & 15 \\
+35 & $\tfrac{33566442549}{500000}$ & $\tfrac{37283397387}{500000}$ & $\tfrac{157973183}{125000000000000}$ & 70849/19 & 105 & 19 \\
+\bottomrule
+\end{longtable}
+\endgroup
+
+The endpoint list satisfies $U_i=L_{i+1}$ for every adjacent pair.  Two
+declarations in the linked
+\codelink{Robin1984/Finite/Certificates/AllRows.lean}{AllRows module}
+complete the aggregate check:
+\begin{itemize}[leftmargin=1.5em,itemsep=.15em]
+  \item \path{robinFiniteRows_cover} checks the gap-free equalities and outer
+    endpoints by kernel reduction;
+  \item \path{robinFiniteRows_checks} dispatches every row to its separately
+    checked predicate.
+\end{itemize}
+The exact remaining cutoffs, gain bound, height mantissa and exponent, and
+endpoint logarithm bounds are stored in the linked
+\dirlink{Robin1984/Finite/Certificates}{certificate directory}.
+
+\section{Notation map}\label{app:notation}
+
+\begingroup
+\small
+\renewcommand{\arraystretch}{1.12}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{.19\textwidth}
+  >{\raggedright\arraybackslash}p{.57\textwidth}
+  >{\raggedright\arraybackslash}p{.16\textwidth}@{}}
+\toprule
+symbol & meaning & first definition \\
+\midrule
+\endfirsthead
+\toprule
+symbol & meaning & first definition \\
+\midrule
+\endhead
+$\sig(n)$
+& Sum of the positive divisors of $n$.
+& Section~\ref{sec:informal} \\
+$\A(n)$
+& Abundancy ratio $\sig(n)/n$.
+& Section~\ref{sec:informal} \\
+$Q_\eps(n)$
+& Penalized abundancy $\A(n)n^{-\eps}$; its global maximizers are
+  colossally abundant at parameter $\eps$.
+& \eqref{eq:ca-objective} \\
+$\M(n)$
+& Logarithmic Robin margin; Robin's inequality is $\M(n)<0$.
+& \eqref{eq:margin} \\
+$g_{p,j},\tau_{p,j}$
+& Marginal log gain for raising $p^{j-1}$ to $p^j$, and its gain per unit
+  log height.
+& \eqref{eq:event} \\
+$\lambda(n)$
+& Tangent slope $1/(\log n,\log\log n)$.
+& \eqref{eq:lambda} \\
+$\eps_0$
+& Exact parameter $\log(12/11)/\log11$ tying $5040$ and $55440$.
+& \eqref{eq:epsilon-zero} \\
+$\mathcal B(c)$
+& Finite prime-layer box determined by the cutoff vector $c$.
+& Section~\ref{sec:finite} \\
+$L_N,U_N$
+& Rational lower and upper bounds for the logarithm.
+& \eqref{eq:log-series} \\
+$H$
+& Logarithmic height $\log n$ in the analytic argument.
+& Section~\ref{sec:rh-forward} \\
+$S(H)$
+& Natural RH comparison scale $H^{-1/2}/\log H$.
+& \eqref{eq:natural-scale} \\
+$I_m,K_m,T_m,B_m$
+& Weighted prime error, one-zero kernel, explicit correction, and its
+  RH majorant.
+& \eqref{eq:weight}--\eqref{eq:Bmx} \\
+$c_0$
+& Multiplicity-counted inverse-square zero sum
+  $\euler+2-\log(4\pi)$.
+& \eqref{eq:Bmx} \\
+$\E(H)$
+& Uniform analytic debit in the complete exponent budget.
+& \eqref{eq:mertens-scalar} \\
+$\Pcost(H)$
+& Nonnegative arithmetic cost forced by omitted primes or finite exponents.
+& \eqref{eq:prime-cost} \\
+$\vartheta,\psi$
+& Chebyshev prime and prime-power counting functions.
+& Section~\ref{sec:rh-forward} \\
+$\Pprod(x),F(x)$
+& Nicolas's finite Euler product and its normalized oscillation function.
+& \eqref{eq:nicolas-function} \\
+$k,K,J$
+& Positive kernel and the weighted $\vartheta$- and $\psi$-error tails used
+  in the Landau argument.
+& \eqref{eq:KJ} \\
+$L_P$
+& Least common multiple of $1,\ldots,P$.
+& Section~\ref{sec:lcm} \\
+$D(P),T(P)$
+& Log-height loss and finite prime-power reserve in the LCM transfer.
+& \eqref{eq:height-loss}--\eqref{eq:tower-reserve} \\
+\bottomrule
+\end{longtable}
+\endgroup
 
 \par\bigskip
 \begin{center}
@@ -1667,6 +2707,12 @@ N. Costa Pereira,
 $\psi(x)-\vartheta(x)$''},
 Math. Comp. 48 (1987), no. 177, 447.
 
+\bibitem{GomesKontorovich2020}
+B. Gomes and A. Kontorovich,
+\emph{Riemann hypothesis in Lean (with or without Mathlib)},
+formal development, 2020,
+\url{https://github.com/AlexKontorovich/Lean-RH}.
+
 \bibitem{Landau1905}
 E. Landau,
 \emph{\"Uber einen Satz von Tschebyschef},
@@ -1678,6 +2724,12 @@ L. de Moura and S. Ullrich,
 \emph{The Lean 4 theorem prover and programming language},
 in: Automated Deduction--CADE 28, Lecture Notes in Computer Science 12699,
 Springer, 2021, 625--635.
+
+\bibitem{LoefflerStoll2025}
+D. Loeffler and M. Stoll,
+\emph{Formalizing zeta and $L$-functions in Lean},
+Ann. Formalized Math. 1 (2025),
+\href{https://doi.org/10.46298/afm.15328}{doi:10.46298/afm.15328}.
 
 \bibitem{Mathlib}
 The Mathlib Community,
@@ -1696,6 +2748,13 @@ J.-L. Nicolas,
 \emph{Small values of the Euler function and the Riemann hypothesis},
 Acta Arith. 155 (2012), no. 3, 311--321,
 \href{https://doi.org/10.4064/aa155-3-7}{doi:10.4064/aa155-3-7}.
+
+\bibitem{PrimeNumberTheoremAnd}
+The PrimeNumberTheoremAnd contributors,
+\emph{PrimeNumberTheoremAnd: a Lean formalization of the prime number theorem
+and related results},
+source repository,
+\url{https://github.com/AlexKontorovich/PrimeNumberTheoremAnd}.
 
 \bibitem{Robin1984}
 G. Robin,
