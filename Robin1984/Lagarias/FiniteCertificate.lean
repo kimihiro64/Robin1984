@@ -1,5 +1,4 @@
 import Mathlib.NumberTheory.Harmonic.Bounds
-import Robin1984.Mathlib.Analysis.SpecialFunctions.Log.RatBounds
 import Robin1984.Analytic.EulerLower
 import Robin1984.Arithmetic.Definitions
 import Robin1984.Lagarias.Definitions
