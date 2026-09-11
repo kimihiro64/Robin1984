@@ -1,0 +1,1322 @@
+/-
+Copyright (c) 2024 LeanCert Contributors. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: LeanCert Contributors
+-/
+import Submission.LeanCert.Tactic.IntervalAuto.Basic
+import Submission.LeanCert.Tactic.NumericalRefinement
+import Submission.LeanCert.Tactic.Verification
+import Submission.LeanCert.Validity.Bounds
+import Submission.LeanCert.Validity.DyadicBounds
+import Submission.LeanCert.Engine.Eval.Core
+import Submission.LeanCert.Engine.Optimization.BoundVerify
+
+/-!
+# Main Interval Bound Tactics
+
+Core interval bound proving: `intervalBoundCore`, `certify_bound`, `certify_bound`.
+Also includes shadow diagnostics for error reporting.
+-/
+
+open Lean Meta Elab Tactic Term
+
+namespace LeanCert.Tactic.Auto
+
+open LeanCert.Meta
+open LeanCert.Core
+open LeanCert.Engine
+open LeanCert.Validity
+
+/-! ## Diagnostic Helpers for Shadow Computation -/
+
+/-- Reify a function expression to actual AST value for diagnostics -/
+private def reifyFuncForDiag (func : Lean.Expr) : TacticM LeanCert.Core.Expr := do
+  lambdaTelescope func fun _vars body => do
+    let fn := body.getAppFn
+    if fn.isConstOf ``LeanCert.Core.Expr.eval then
+      let args := body.getAppArgs
+      if args.size ≥ 2 then
+        let astExpr := args[1]!
+        let astVal ← unsafe evalExpr LeanCert.Core.Expr (mkConst ``LeanCert.Core.Expr) astExpr
+        return astVal
+      else
+        throwError "Unexpected Expr.eval structure in diagnostic"
+    else
+      let astExpr := (← reifyWithReport func).expr
+      let astVal ← unsafe evalExpr LeanCert.Core.Expr (mkConst ``LeanCert.Core.Expr) astExpr
+      return astVal
+
+/-- Run shadow computation to diagnose why a proof failed -/
+def runShadowDiagnostic (boundGoal : Option BoundGoal) (_goalType : Lean.Expr) : TacticM MessageData := do
+  let some bg := boundGoal | return m!"(Could not parse goal for diagnostics)"
+
+  match bg with
+  | .forallLe _ interval func bound
+  | .forallGe _ interval func bound
+  | .forallLt _ interval func bound
+  | .forallGt _ interval func bound =>
+    try
+      -- Extract interval bounds
+      let some (lo, hi) := extractIntervalBoundsForDiag interval
+        | return m!"(Could not extract interval bounds for diagnostics)"
+      let I : IntervalRat :=
+        if hle : lo ≤ hi then ⟨lo, hi, hle⟩
+        else ⟨0, 1, by norm_num⟩
+
+      -- Reify function to actual AST value
+      let ast ← reifyFuncForDiag func
+
+      -- Evaluate with high precision
+      let diagCfg : EvalConfig := { taylorDepth := 30 }
+      let result := LeanCert.Internal.Rational.evalTotalCore1 ast I diagCfg
+
+      -- Extract bound as rational
+      let limitOpt ← extractRatFromReal bound
+
+      -- Format diagnostic based on goal type
+      let isUpperBound := match bg with
+        | .forallLe .. | .forallLt .. => true
+        | .forallGe .. | .forallGt .. => false
+
+      match limitOpt with
+      | some limit =>
+        if isUpperBound then
+          -- For f(x) ≤ c, check if computed lower bound exceeds limit
+          if result.lo > limit then
+            return m!"❌ Diagnostic Analysis:\n\
+                      Goal: f(x) ≤ {limit}\n\
+                      Computed Range (depth 30): [{result.lo}, {result.hi}]\n\n\
+                      • Mathematical Violation: Lower bound {result.lo} > limit {limit}.\n\
+                      • The theorem is likely FALSE."
+          else if result.hi > limit then
+            return m!"⚠️ Diagnostic Analysis:\n\
+                      Goal: f(x) ≤ {limit}\n\
+                      Computed Range (depth 30): [{result.lo}, {result.hi}]\n\n\
+                      • Precision Issue: Upper bound {result.hi} > limit {limit}.\n\
+                      • Try: certify_bound 50 or subdivide the domain."
+          else
+            return m!"Diagnostic Analysis:\n\
+                      Computed Range: [{result.lo}, {result.hi}] ≤ {limit}\n\
+                      The proof failed for technical reasons (side goal closure, etc.)."
+        else
+          -- For c ≤ f(x), check if computed upper bound is below limit
+          if result.hi < limit then
+            return m!"❌ Diagnostic Analysis:\n\
+                      Goal: {limit} ≤ f(x)\n\
+                      Computed Range (depth 30): [{result.lo}, {result.hi}]\n\n\
+                      • Mathematical Violation: Upper bound {result.hi} < limit {limit}.\n\
+                      • The theorem is likely FALSE."
+          else if result.lo < limit then
+            return m!"⚠️ Diagnostic Analysis:\n\
+                      Goal: {limit} ≤ f(x)\n\
+                      Computed Range (depth 30): [{result.lo}, {result.hi}]\n\n\
+                      • Precision Issue: Lower bound {result.lo} < limit {limit}.\n\
+                      • Try: certify_bound 50 or subdivide the domain."
+          else
+            return m!"Diagnostic Analysis:\n\
+                      Computed Range: [{result.lo}, {result.hi}] ≥ {limit}\n\
+                      The proof failed for technical reasons (side goal closure, etc.)."
+      | none =>
+        return m!"Diagnostic Analysis:\n\
+                  Computed Range (depth 30): [{result.lo}, {result.hi}]\n\
+                  (Could not extract rational from bound for comparison)"
+    catch e =>
+      return m!"(Diagnostic computation failed: {e.toMessageData})"
+
+
+/-! ## Dyadic Backend Helper -/
+
+/-- Runtime facts from a retained checked-Dyadic bound proof. -/
+structure DyadicBoundOutcome where
+  checker : Name
+  verifier : Name
+  verification : LeanCert.Tactic.VerificationUsage
+  precision : Int
+  taylorDepth : Nat
+  deriving Inhabited
+
+/-- Runtime facts from the retained direct-bound proof. Both Dyadic success and
+the checked Rational fallback retain their checker, Golden Theorem, and
+verification event. -/
+structure IntervalBoundOutcome where
+  dyadic : Bool
+  checker : Option Name := none
+  verifier : Option Name := none
+  verification : LeanCert.Tactic.VerificationUsage := {}
+  precision : Option Int := none
+  taylorDepth : Nat
+  deriving Inhabited
+
+/-- Expected non-successes from the direct interval-bound portfolio. -/
+inductive IntervalBoundFailure where
+  | unsupported (expression detail : String)
+  | inconclusive (detail : String)
+  | transportFailure (detail : String)
+  | internalFailure (detail : String)
+  deriving Inhabited, Repr
+
+private def boundVerifierName (isStrict isLower useChecked fromIcc : Bool) : Name :=
+  match isStrict, isLower, useChecked, fromIcc with
+  | false, false, false, false => ``verify_upper_bound
+  | false, false, true, false => ``verify_upper_bound_checked
+  | false, false, false, true => ``verify_upper_bound_Icc_core
+  | false, false, true, true => ``verify_upper_bound_Icc_checked
+  | false, true, false, false => ``verify_lower_bound
+  | false, true, true, false => ``verify_lower_bound_checked
+  | false, true, false, true => ``verify_lower_bound_Icc_core
+  | false, true, true, true => ``verify_lower_bound_Icc_checked
+  | true, false, false, false => ``verify_strict_upper_bound
+  | true, false, true, false => ``verify_strict_upper_bound_checked
+  | true, false, false, true => ``verify_strict_upper_bound_Icc_core
+  | true, false, true, true => ``verify_strict_upper_bound_Icc_checked
+  | true, true, false, false => ``verify_strict_lower_bound
+  | true, true, true, false => ``verify_strict_lower_bound_checked
+  | true, true, false, true => ``verify_strict_lower_bound_Icc_core
+  | true, true, true, true => ``verify_strict_lower_bound_Icc_checked
+
+private def boundCheckerName (isStrict isLower useChecked : Bool) : Name :=
+  match isStrict, isLower, useChecked with
+  | false, false, false => ``LeanCert.Validity.checkUpperBound
+  | false, false, true => ``LeanCert.Validity.checkUpperBoundChecked
+  | false, true, false => ``LeanCert.Validity.checkLowerBound
+  | false, true, true => ``LeanCert.Validity.checkLowerBoundChecked
+  | true, false, false => ``LeanCert.Validity.checkStrictUpperBound
+  | true, false, true => ``LeanCert.Validity.checkStrictUpperBoundChecked
+  | true, true, false => ``LeanCert.Validity.checkStrictLowerBound
+  | true, true, true => ``LeanCert.Validity.checkStrictLowerBoundChecked
+
+private def closeBoundCertificate (_verifier : Name) (goal : MVarId) :
+    TacticM Unit := do
+  match ← closeCertificateGoalTyped (← VerificationConfig.current) goal
+      (tacticName := "certify_bound") with
+  | .accepted _ => pure ()
+  | .rejected => throwError "certify_bound: certificate checker evaluated to false"
+  | .failed failure => throwError (failure.message "certify_bound")
+
+private def closeBoundTransport (goal : MVarId) (proof : Lean.Expr)
+    (reified? : Option LeanCert.Meta.ReifyReport := none) :
+    TacticM Bool := do
+  let saved ← saveState
+  try
+    let proofTerm ← Lean.Elab.Term.exprToSyntax proof
+    setGoals [goal]
+    evalTactic (← `(tactic| convert ($proofTerm) using 3))
+    let sideGoals ← getGoals
+    for sideGoal in sideGoals do
+      setGoals [sideGoal]
+      let tryClose (tactic : TacticM Unit) : TacticM Bool := do
+        let attempt ← saveState
+        try
+          tactic
+          if (← getGoals).isEmpty then return true
+          attempt.restore
+          return false
+        catch _ =>
+          attempt.restore
+          return false
+      if ← tryClose (evalTactic (← `(tactic|
+          norm_num; simp only [Rat.divInt_eq_div]; try push_cast; try ring))) then
+        continue
+      if ← tryCloseRpowSideGoal then continue
+      if ← tryClose (evalTactic (← `(tactic| rfl))) then continue
+      if ← tryClose (evalTactic (← `(tactic| congr 1 <;> norm_num))) then continue
+      if ← tryClose (evalTactic (← `(tactic| norm_cast))) then continue
+      if ← tryClose (evalTactic (← `(tactic| norm_num))) then continue
+      if ← tryClose (evalTactic (← `(tactic|
+          simp only [sq, pow_two, pow_succ, pow_zero, pow_one, one_mul,
+            mul_one]))) then
+        continue
+      if ← tryClose (evalTactic (← `(tactic|
+          simp only [LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_mul,
+            LeanCert.Core.Expr.eval_neg, LeanCert.Core.Expr.eval_const,
+            LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_sin,
+            LeanCert.Core.Expr.eval_cos, LeanCert.Core.Expr.eval_exp,
+            LeanCert.Core.Expr.eval_log, LeanCert.Core.Expr.eval_sqrt,
+            LeanCert.Core.Expr.eval_sub, Real.sqrt_mul_self_eq_abs,
+            LeanCert.Meta.max_eq_half_add_abs_sub,
+            LeanCert.Meta.min_eq_half_sub_abs_sub, Rat.divInt_eq_div,
+            div_eq_mul_inv, sub_eq_add_neg];
+          try push_cast; try ring_nf))) then
+        continue
+      if let some reified := reified? then
+        if ← tryClose (closeReificationBridge reified) then continue
+      saved.restore
+      return false
+    setGoals []
+    return true
+  catch _ =>
+    saved.restore
+    return false
+
+/-- Try to prove a forall-bound goal using the Dyadic backend.
+    Returns metadata if the entire goal was closed, `none` otherwise.
+    Uses the checked Dyadic evaluator for arbitrary expressions. -/
+def tryDyadicBoundImpl (goal : MVarId) (reified : LeanCert.Meta.ReifyReport)
+    (boundRat : Lean.Expr)
+    (intervalInfo : IntervalInfo) (taylorDepth : Nat)
+    (isStrict isLower : Bool) (precision : Int := -80) :
+    TacticM (Except IntervalBoundFailure (Option DyadicBoundOutcome)) := do
+  let saved ← saveState
+  let ast := reified.expr
+  let (theoremName, checkName) :=
+      match isStrict, isLower with
+      | false, false => (``LeanCert.Validity.verify_upper_bound_dyadic_checked, ``LeanCert.Validity.checkUpperBoundDyadicChecked)
+      | false, true  => (``LeanCert.Validity.verify_lower_bound_dyadic_checked, ``LeanCert.Validity.checkLowerBoundDyadicChecked)
+      | true,  false => (``LeanCert.Validity.verify_strict_upper_bound_dyadic_checked, ``LeanCert.Validity.checkStrictUpperBoundDyadicChecked)
+      | true,  true  => (``LeanCert.Validity.verify_strict_lower_bound_dyadic_checked, ``LeanCert.Validity.checkStrictLowerBoundDyadicChecked)
+    let prec := precision
+    let precExpr := toExpr prec
+    let depthExpr := toExpr taylorDepth
+    let precLeZeroProof ← mkDecideProof (← mkAppM ``LE.le #[precExpr, toExpr (0 : Int)])
+    match intervalInfo.fromSetIcc with
+    | some (_lo, _hi, loRatExpr, hiRatExpr, leProof, _origLo, _origHi) =>
+      let proof ← mkAppM theoremName
+        #[ast, loRatExpr, hiRatExpr, leProof, boundRat,
+          precExpr, depthExpr, precLeZeroProof]
+      let checkExpr ← mkAppM checkName
+        #[ast, loRatExpr, hiRatExpr, leProof, boundRat, precExpr, depthExpr]
+      let certTy ← mkAppM ``Eq #[checkExpr, mkConst ``Bool.true]
+      let certGoal ← mkFreshExprMVar certTy
+      let certGoalId := certGoal.mvarId!
+      let verificationResult ← certGoalId.withContext do
+        setGoals [certGoalId]
+        closeCertificateGoalTyped (← VerificationConfig.current)
+          (← getMainGoal) (tacticName := "certify_bound")
+      let event ←
+        match verificationResult with
+        | .accepted event => pure event
+        | .rejected =>
+            trace[interval_decide] "Dyadic certificate rejected in certify_bound"
+            saved.restore
+            return .ok none
+        | .failed failure =>
+            saved.restore
+            return .error <| .internalFailure
+              (failure.message "certify_bound")
+      let conclusionProof ← mkAppM' proof #[certGoal]
+      -- Retain the event locally until all transport goals have closed.
+      setGoals [goal]
+      let transported ← closeBoundTransport goal conclusionProof (some reified)
+      if transported then
+        return .ok <| some {
+          checker := checkName
+          verifier := theoremName
+          verification := event.toUsage
+          precision := prec
+          taylorDepth := taylorDepth
+        }
+      saved.restore
+      return .error <| .transportFailure
+        "the verified Dyadic certificate did not close every transport goal"
+    | none => saved.restore; return .ok none
+
+private def tryDyadicBoundOrThrow (goal : MVarId)
+    (reified : LeanCert.Meta.ReifyReport) (boundRat : Lean.Expr)
+    (intervalInfo : IntervalInfo) (taylorDepth : Nat)
+    (isStrict isLower : Bool) : TacticM (Option DyadicBoundOutcome) := do
+  match ← tryDyadicBoundImpl goal reified boundRat intervalInfo taylorDepth
+      isStrict isLower with
+  | .ok outcome => return outcome
+  | .error (.transportFailure detail) =>
+      throwError "certify_bound: Dyadic proof transport failed:\n{detail}"
+  | .error (.unsupported expression detail) =>
+      throwError "certify_bound: unsupported expression {expression}:\n{detail}"
+  | .error (.inconclusive detail) =>
+      throwError "certify_bound: {detail}"
+  | .error (.internalFailure detail) =>
+      throwError "certify_bound: certificate verification failed:\n{detail}"
+
+/-! ## Main Tactic Implementation -/
+
+/-- The main certify_bound tactic implementation -/
+def intervalBoundCore (taylorDepth : Nat) (useDyadic : Bool := true) :
+    TacticM Unit := do
+  intervalNormCore
+  -- Pre-process: convert ≥ to ≤ and > to < for uniform handling
+  -- First intro variables to get into the body of the forall
+  let preprocessed ← do
+    try
+      evalTactic (← `(tactic| intro _x _hx; simp only [ge_iff_le, gt_iff_lt]; revert _x _hx))
+      pure true
+    catch e =>
+      trace[interval_decide] "Forall preprocessing failed: {e.toMessageData}"
+      try
+        evalTactic (← `(tactic| simp only [ge_iff_le, gt_iff_lt]))
+        pure true
+      catch _ => pure false
+  if preprocessed then
+    trace[interval_decide] "Preprocessing applied ≥/> → ≤/<"
+
+  -- Pre-process: lightweight power cleanup after intervalNormCore.
+  try
+    evalTactic (← `(tactic| simp only [pow_zero, pow_one, one_mul, mul_one] at *))
+  catch _ => pure ()
+
+  -- Check if the goal was already solved by simplification (e.g., x^0 ≤ 1 → 1 ≤ 1)
+  let goals ← getGoals
+  if goals.isEmpty then
+    return
+
+  let goal ← getMainGoal
+  let goalType ← goal.getType
+
+  -- Parse the goal
+  let some boundGoal ← parseBoundGoal goalType
+    | do
+      -- If parsing fails, try to solve trivially (e.g., after x^0 → 1, goal becomes 1 ≤ 1)
+      try
+        evalTactic (← `(tactic| intro _ _; norm_num))
+        return
+      catch _ => pure ()
+      -- Debug: show the goal structure
+      let goalWhnf ← whnf goalType
+      throwError "certify_bound: Could not parse goal as a bound. Expected:\n\
+                  • ∀ x ∈ I, f x ≤ c\n\
+                  • ∀ x ∈ I, c ≤ f x\n\
+                  • ∀ x ∈ I, f x < c\n\
+                  • ∀ x ∈ I, c < f x\n\
+                  \nGoal type: {goalType}\n\
+                  Goal (whnf): {goalWhnf}"
+
+  match boundGoal with
+  | .forallLe _name interval func bound =>
+    proveForallLe goal interval func bound taylorDepth
+  | .forallGe _name interval func bound =>
+    proveForallGe goal interval func bound taylorDepth
+  | .forallLt _name interval func bound =>
+    proveForallLt goal interval func bound taylorDepth
+  | .forallGt _name interval func bound =>
+    proveForallGt goal interval func bound taylorDepth
+
+
+where
+  /-- Prove ∀ x ∈ I, f x ≤ c -/
+  proveForallLe (goal : MVarId) (intervalInfo : IntervalInfo) (func bound : Lean.Expr)
+      (taylorDepth : Nat) : TacticM Unit := do
+    goal.withContext do
+      discard <| tryNormalizeGoalToIcc
+      let goal ← getMainGoal
+      -- 1. Get AST (either from Expr.eval or by reifying)
+      let reified ← getAstWithReport func
+      let ast := reified.expr
+
+      -- 2. Extract rational bound from possible coercion
+      let boundRat ← extractRatBound bound
+
+      -- 2.5. Try Dyadic backend first
+      let savedState ← saveState
+      if useDyadic &&
+          (← tryDyadicBoundOrThrow goal reified boundRat intervalInfo taylorDepth false false).isSome then
+        return
+      restoreState savedState
+
+      -- 3. Generate support proof (tries Core first, falls back to Checked for log/inv)
+      let (supportProof, useChecked) ← getSupportProof ast
+      let verifier := boundVerifierName false false useChecked
+        intervalInfo.fromSetIcc.isSome
+
+      -- 4. Build config expression
+      let cfgExpr ← mkAppM ``EvalConfig.mk #[toExpr taylorDepth]
+
+      -- 5. Apply appropriate theorem based on interval source and support type
+      match intervalInfo.fromSetIcc with
+        | some (_lo, _hi, loRatExpr, hiRatExpr, leProof, _origLo, _origHi) =>
+          -- Choose theorem and arguments based on support type
+          -- Note: Checked theorems don't take a cfg parameter
+          let proof ← if useChecked then
+            mkAppM ``verify_upper_bound_Icc_checked #[ast, loRatExpr, hiRatExpr, leProof, boundRat]
+          else
+            mkAppM ``verify_upper_bound_Icc_core #[ast, supportProof, loRatExpr, hiRatExpr, leProof, boundRat, cfgExpr]
+
+          -- Try direct apply first
+          setGoals [goal]
+          try
+            let newGoals ← goal.apply proof
+            setGoals newGoals
+            for g in newGoals do
+              setGoals [g]
+              let tryClose (tac : TacticM Unit) : TacticM Bool := do
+                let saved ← saveState
+                try
+                  tac
+                  if (← getGoals).isEmpty then
+                    return true
+                  saved.restore
+                  return false
+                catch _ =>
+                  saved.restore
+                  return false
+              if ← tryClose (evalTactic (← `(tactic| rfl))) then
+                continue
+              closeBoundCertificate verifier (← getMainGoal)
+          catch _ =>
+            -- Apply failed, so we need to use convert
+            setGoals [goal]
+
+            -- Build the certificate expression (using appropriate check function)
+            -- Note: Checked check functions don't take a cfg parameter
+            let intervalRat ← mkAppM ``IntervalRat.mk #[loRatExpr, hiRatExpr, leProof]
+            let checkExpr ← if useChecked then
+              mkAppM ``LeanCert.Validity.checkUpperBoundChecked #[ast, intervalRat, boundRat]
+            else
+              mkAppM ``LeanCert.Validity.checkUpperBound #[ast, intervalRat, boundRat, cfgExpr]
+
+            -- Build proof that checkUpperBound ... = true using native_decide via an auxiliary goal
+            let certTy ← mkAppM ``Eq #[checkExpr, mkConst ``Bool.true]
+            let certGoal ← mkFreshExprMVar certTy
+            let certGoalId := certGoal.mvarId!
+            setGoals [certGoalId]
+            closeBoundCertificate verifier (← getMainGoal)
+            let certProof := certGoal
+
+            -- Apply the theorem with the certificate to get the conclusion
+            let conclusionProof ← mkAppM' proof #[certProof]
+            let conclusionTerm ← Lean.Elab.Term.exprToSyntax conclusionProof
+
+            -- Now use convert on the conclusion (not the full proof)
+            setGoals [goal]
+            evalTactic (← `(tactic| convert ($conclusionTerm) using 3))
+
+            -- Close side goals (usually equality goals for Set.Icc and bounds)
+            let goals ← getGoals
+            for g in goals do
+              setGoals [g]
+              -- Helper: try a tactic and check if goal was actually closed
+              let tryClose (tac : TacticM Unit) : TacticM Bool := do
+                let saved ← saveState
+                try
+                  tac
+                  if (← getGoals).isEmpty then
+                    return true
+                  saved.restore
+                  return false
+                catch _ =>
+                  saved.restore
+                  return false
+              -- Try decimal-specific tactic first for efficiency
+              if ← tryClose (evalTactic (← `(tactic| norm_num; simp only [Rat.divInt_eq_div]; push_cast; rfl))) then continue
+              if ← tryCloseRpowSideGoal then continue
+              -- Handle negative decimals (-(1/2) = ↑(Rat.divInt (-1) 2))
+              if ← tryClose (evalTactic (← `(tactic| norm_num; simp only [Rat.divInt_eq_div]; try (push_cast; try ring)))) then continue
+              if ← tryClose (evalTactic (← `(tactic| rfl))) then continue
+              -- For Set.Icc equality, use congr_arg with norm_num
+              if ← tryClose (evalTactic (← `(tactic| congr 1 <;> norm_num))) then continue
+              if ← tryClose (evalTactic (← `(tactic| rfl))) then continue
+              if ← tryCloseRpowSideGoal then continue
+              if ← tryClose (evalTactic (← `(tactic| norm_cast))) then continue
+              if ← tryClose (evalTactic (← `(tactic| norm_num))) then continue
+              -- Handle power expansion (x^2 = x*x, x^3 = x*x*x, etc.)
+              if ← tryClose (evalTactic (← `(tactic| simp only [sq, pow_two, pow_succ, pow_zero, pow_one, one_mul, mul_one]))) then continue
+              -- Handle Expr.eval unfolding - unfolds Expr.eval to raw arithmetic, then uses ring to close
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_log, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_neg, Rat.divInt_eq_div]; ring_nf))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos, LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_sub, Real.sqrt_mul_self_eq_abs, LeanCert.Meta.max_eq_half_add_abs_sub, LeanCert.Meta.min_eq_half_sub_abs_sub, div_eq_mul_inv, sub_eq_add_neg]))) then continue
+              -- Same but with push_cast for rational coercion issues
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos, LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_sub, Real.sqrt_mul_self_eq_abs, LeanCert.Meta.max_eq_half_add_abs_sub, LeanCert.Meta.min_eq_half_sub_abs_sub, div_eq_mul_inv, sub_eq_add_neg]; try (push_cast; try ring)))) then continue
+              -- Handle decimal bounds (2.72 = ↑(Rat.divInt 68 25))
+              -- norm_num converts 2.72 to 68/25, then simp+push_cast closes the equality
+              if ← tryClose (evalTactic (← `(tactic| norm_num; simp only [Rat.divInt_eq_div]; push_cast; rfl))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp only [Rat.divInt_eq_div]; push_cast; rfl))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp [Rat.divInt_eq_div]))) then continue
+              if ← tryClose (evalTactic (← `(tactic| push_cast; rfl))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp only [Rat.cast_natCast, Rat.cast_intCast, Nat.cast_ofNat, Int.cast_ofNat, NNRat.cast_natCast]))) then continue
+              if ← tryClose (closeReificationBridge reified) then continue
+              throwError "certify_bound: could not prove the reflected expression agrees with the user's expression.\n\
+                Remaining bridge goal: {← g.getType}"
+
+        | none =>
+          -- Direct IntervalRat goal - use appropriate verify_upper_bound theorem
+          let proof ← if useChecked then
+            mkAppM ``verify_upper_bound_checked #[ast, intervalInfo.intervalRat, boundRat]
+          else
+            mkAppM ``verify_upper_bound #[ast, supportProof, intervalInfo.intervalRat, boundRat, cfgExpr]
+          -- Try direct apply first
+          setGoals [goal]
+          try
+            let newGoals ← goal.apply proof
+            setGoals newGoals
+            for g in newGoals do
+              setGoals [g]
+              closeBoundCertificate verifier (← getMainGoal)
+          catch _ =>
+            -- Apply failed, use convert
+            setGoals [goal]
+            let checkExpr ← if useChecked then
+              mkAppM ``LeanCert.Validity.checkUpperBoundChecked #[ast, intervalInfo.intervalRat, boundRat]
+            else
+              mkAppM ``LeanCert.Validity.checkUpperBound #[ast, intervalInfo.intervalRat, boundRat, cfgExpr]
+            let certTy ← mkAppM ``Eq #[checkExpr, mkConst ``Bool.true]
+            let certGoal ← mkFreshExprMVar certTy
+            let certGoalId := certGoal.mvarId!
+            setGoals [certGoalId]
+            closeBoundCertificate verifier (← getMainGoal)
+            let certProof := certGoal
+            let conclusionProof ← mkAppM' proof #[certProof]
+            let conclusionTerm ← Lean.Elab.Term.exprToSyntax conclusionProof
+            setGoals [goal]
+            evalTactic (← `(tactic| convert ($conclusionTerm) using 3))
+            let goals ← getGoals
+            for g in goals do
+              setGoals [g]
+              let tryClose (tac : TacticM Unit) : TacticM Bool := do
+                let saved ← saveState
+                try
+                  tac
+                  if (← getGoals).isEmpty then
+                    return true
+                  saved.restore
+                  return false
+                catch _ =>
+                  saved.restore
+                  return false
+              if ← tryClose (evalTactic (← `(tactic| rfl))) then continue
+              if ← tryCloseRpowSideGoal then continue
+              if ← tryClose (evalTactic (← `(tactic| norm_cast))) then continue
+              if ← tryClose (evalTactic (← `(tactic| norm_num))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos, LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_sub, Real.sqrt_mul_self_eq_abs, LeanCert.Meta.max_eq_half_add_abs_sub, LeanCert.Meta.min_eq_half_sub_abs_sub, div_eq_mul_inv, sub_eq_add_neg]))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos, LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_sub, Real.sqrt_mul_self_eq_abs, LeanCert.Meta.max_eq_half_add_abs_sub, LeanCert.Meta.min_eq_half_sub_abs_sub, div_eq_mul_inv, sub_eq_add_neg]; try (push_cast; try ring)))) then continue
+              if ← tryClose (closeReificationBridge reified) then continue
+              throwError "certify_bound: could not prove the reflected expression agrees with the user's expression.\n\
+                Remaining bridge goal: {← g.getType}"
+
+  /-- Prove ∀ x ∈ I, c ≤ f x -/
+  proveForallGe (goal : MVarId) (intervalInfo : IntervalInfo) (func bound : Lean.Expr)
+      (taylorDepth : Nat) : TacticM Unit := do
+    goal.withContext do
+      discard <| tryNormalizeGoalToIcc
+      let goal ← getMainGoal
+      let reified ← getAstWithReport func
+      let ast := reified.expr
+      let boundRat ← extractRatBound bound
+
+      -- Try Dyadic backend first
+      let savedState ← saveState
+      if useDyadic &&
+          (← tryDyadicBoundOrThrow goal reified boundRat intervalInfo taylorDepth false true).isSome then
+        return
+      restoreState savedState
+
+      let (supportProof, useChecked) ← getSupportProof ast
+      let verifier := boundVerifierName false true useChecked
+        intervalInfo.fromSetIcc.isSome
+      let cfgExpr ← mkAppM ``EvalConfig.mk #[toExpr taylorDepth]
+
+      -- Handle based on interval source
+      match intervalInfo.fromSetIcc with
+        | some (_lo, _hi, loRatExpr, hiRatExpr, leProof, _origLo, _origHi) =>
+          -- Choose theorem and arguments based on support type
+          -- Note: Checked theorems don't take a cfg parameter
+          let proof ← if useChecked then
+            mkAppM ``verify_lower_bound_Icc_checked #[ast, loRatExpr, hiRatExpr, leProof, boundRat]
+          else
+            mkAppM ``verify_lower_bound_Icc_core #[ast, supportProof, loRatExpr, hiRatExpr, leProof, boundRat, cfgExpr]
+
+          -- Try direct apply first
+          setGoals [goal]
+          try
+            let newGoals ← goal.apply proof
+            setGoals newGoals
+            for g in newGoals do
+              setGoals [g]
+              let tryClose (tac : TacticM Unit) : TacticM Bool := do
+                let saved ← saveState
+                try
+                  tac
+                  if (← getGoals).isEmpty then
+                    return true
+                  saved.restore
+                  return false
+                catch _ =>
+                  saved.restore
+                  return false
+              if ← tryClose (evalTactic (← `(tactic| rfl))) then
+                continue
+              closeBoundCertificate verifier (← getMainGoal)
+          catch _ =>
+            -- Apply failed, use convert
+            setGoals [goal]
+            let intervalRat ← mkAppM ``IntervalRat.mk #[loRatExpr, hiRatExpr, leProof]
+            let checkExpr ← if useChecked then
+              mkAppM ``LeanCert.Validity.checkLowerBoundChecked #[ast, intervalRat, boundRat]
+            else
+              mkAppM ``LeanCert.Validity.checkLowerBound #[ast, intervalRat, boundRat, cfgExpr]
+
+            -- Build proof using native_decide via an auxiliary goal
+            let certTy ← mkAppM ``Eq #[checkExpr, mkConst ``Bool.true]
+            let certGoal ← mkFreshExprMVar certTy
+            let certGoalId := certGoal.mvarId!
+            setGoals [certGoalId]
+            closeBoundCertificate verifier (← getMainGoal)
+            let certProof := certGoal
+
+            let conclusionProof ← mkAppM' proof #[certProof]
+            let conclusionTerm ← Lean.Elab.Term.exprToSyntax conclusionProof
+            setGoals [goal]
+            evalTactic (← `(tactic| convert ($conclusionTerm) using 3))
+
+            -- Close side goals
+            let goals ← getGoals
+            for g in goals do
+              setGoals [g]
+              -- Helper: try a tactic and check if goal was actually closed
+              let tryClose (tac : TacticM Unit) : TacticM Bool := do
+                let saved ← saveState
+                try
+                  tac
+                  if (← getGoals).isEmpty then
+                    return true
+                  saved.restore
+                  return false
+                catch _ =>
+                  saved.restore
+                  return false
+              -- Try decimal-specific tactic first for efficiency
+              if ← tryClose (evalTactic (← `(tactic| norm_num; simp only [Rat.divInt_eq_div]; push_cast; rfl))) then continue
+              if ← tryCloseRpowSideGoal then continue
+              -- Handle negative decimals (-(1/2) = ↑(Rat.divInt (-1) 2))
+              if ← tryClose (evalTactic (← `(tactic| norm_num; simp only [Rat.divInt_eq_div]; try (push_cast; try ring)))) then continue
+              if ← tryClose (evalTactic (← `(tactic| rfl))) then continue
+              if ← tryClose (evalTactic (← `(tactic| congr 1 <;> norm_num))) then continue
+              if ← tryClose (evalTactic (← `(tactic| rfl))) then continue
+              if ← tryCloseRpowSideGoal then continue
+              if ← tryClose (evalTactic (← `(tactic| norm_cast))) then continue
+              if ← tryClose (evalTactic (← `(tactic| norm_num))) then continue
+              -- Handle power expansion (x^2 = x*x, x^3 = x*x*x, etc.)
+              if ← tryClose (evalTactic (← `(tactic| simp only [sq, pow_two, pow_succ, pow_zero, pow_one, one_mul, mul_one]))) then continue
+              -- Handle Expr.eval unfolding - unfolds Expr.eval to raw arithmetic, then uses ring to close
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_log, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_neg, Rat.divInt_eq_div]; ring_nf))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos, LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_sub, Real.sqrt_mul_self_eq_abs, LeanCert.Meta.max_eq_half_add_abs_sub, LeanCert.Meta.min_eq_half_sub_abs_sub, div_eq_mul_inv, sub_eq_add_neg]))) then continue
+              -- Same but with push_cast for rational coercion issues
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos, LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_sub, Real.sqrt_mul_self_eq_abs, LeanCert.Meta.max_eq_half_add_abs_sub, LeanCert.Meta.min_eq_half_sub_abs_sub, div_eq_mul_inv, sub_eq_add_neg]; try (push_cast; try ring)))) then continue
+              -- Handle decimal bounds (2.72 = ↑(Rat.divInt 68 25)) - fallback tactics
+              if ← tryClose (evalTactic (← `(tactic| simp only [Rat.divInt_eq_div]; push_cast; rfl))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp [Rat.divInt_eq_div]))) then continue
+              if ← tryClose (evalTactic (← `(tactic| push_cast; rfl))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp only [Rat.cast_natCast, Rat.cast_intCast, Nat.cast_ofNat, Int.cast_ofNat, NNRat.cast_natCast]))) then continue
+              if ← tryClose (closeReificationBridge reified) then continue
+              throwError "certify_bound: could not prove the reflected expression agrees with the user's expression.\n\
+                Remaining bridge goal: {← g.getType}"
+
+        | none =>
+          -- Direct IntervalRat goal - use appropriate verify_lower_bound theorem
+          let proof ← if useChecked then
+            mkAppM ``verify_lower_bound_checked #[ast, intervalInfo.intervalRat, boundRat]
+          else
+            mkAppM ``verify_lower_bound #[ast, supportProof, intervalInfo.intervalRat, boundRat, cfgExpr]
+          -- Try direct apply first
+          setGoals [goal]
+          try
+            let newGoals ← goal.apply proof
+            setGoals newGoals
+            for g in newGoals do
+              setGoals [g]
+              closeBoundCertificate verifier (← getMainGoal)
+          catch _ =>
+            -- Apply failed, use convert
+            setGoals [goal]
+            let checkExpr ← if useChecked then
+              mkAppM ``LeanCert.Validity.checkLowerBoundChecked #[ast, intervalInfo.intervalRat, boundRat]
+            else
+              mkAppM ``LeanCert.Validity.checkLowerBound #[ast, intervalInfo.intervalRat, boundRat, cfgExpr]
+            let certTy ← mkAppM ``Eq #[checkExpr, mkConst ``Bool.true]
+            let certGoal ← mkFreshExprMVar certTy
+            let certGoalId := certGoal.mvarId!
+            setGoals [certGoalId]
+            closeBoundCertificate verifier (← getMainGoal)
+            let certProof := certGoal
+            let conclusionProof ← mkAppM' proof #[certProof]
+            let conclusionTerm ← Lean.Elab.Term.exprToSyntax conclusionProof
+            setGoals [goal]
+            evalTactic (← `(tactic| convert ($conclusionTerm) using 3))
+            let goals ← getGoals
+            for g in goals do
+              setGoals [g]
+              let tryClose (tac : TacticM Unit) : TacticM Bool := do
+                let saved ← saveState
+                try
+                  tac
+                  if (← getGoals).isEmpty then
+                    return true
+                  saved.restore
+                  return false
+                catch _ =>
+                  saved.restore
+                  return false
+              if ← tryClose (evalTactic (← `(tactic| rfl))) then continue
+              if ← tryCloseRpowSideGoal then continue
+              if ← tryClose (evalTactic (← `(tactic| norm_cast))) then continue
+              if ← tryClose (evalTactic (← `(tactic| norm_num))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos, LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_sub, Real.sqrt_mul_self_eq_abs, LeanCert.Meta.max_eq_half_add_abs_sub, LeanCert.Meta.min_eq_half_sub_abs_sub, div_eq_mul_inv, sub_eq_add_neg]))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos, LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_sub, Real.sqrt_mul_self_eq_abs, LeanCert.Meta.max_eq_half_add_abs_sub, LeanCert.Meta.min_eq_half_sub_abs_sub, div_eq_mul_inv, sub_eq_add_neg]; try (push_cast; try ring)))) then continue
+              if ← tryClose (closeReificationBridge reified) then continue
+              throwError "certify_bound: could not prove the reflected expression agrees with the user's expression.\n\
+                Remaining bridge goal: {← g.getType}"
+
+  /-- Prove ∀ x ∈ I, f x < c -/
+  proveForallLt (goal : MVarId) (intervalInfo : IntervalInfo) (func bound : Lean.Expr)
+      (taylorDepth : Nat) : TacticM Unit := do
+    goal.withContext do
+      discard <| tryNormalizeGoalToIcc
+      let goal ← getMainGoal
+      let reified ← getAstWithReport func
+      let ast := reified.expr
+      let boundRat ← extractRatBound bound
+
+      -- Try Dyadic backend first
+      let savedState ← saveState
+      if useDyadic &&
+          (← tryDyadicBoundOrThrow goal reified boundRat intervalInfo taylorDepth true false).isSome then
+        return
+      restoreState savedState
+
+      let (supportProof, useChecked) ← getSupportProof ast
+      let verifier := boundVerifierName true false useChecked
+        intervalInfo.fromSetIcc.isSome
+      let cfgExpr ← mkAppM ``EvalConfig.mk #[toExpr taylorDepth]
+
+      -- Handle based on interval source
+      match intervalInfo.fromSetIcc with
+        | some (_lo, _hi, loRatExpr, hiRatExpr, leProof, _origLo, _origHi) =>
+          -- Choose theorem and arguments based on support type
+          -- Note: Checked theorems don't take a cfg parameter
+          let proof ← if useChecked then
+            mkAppM ``verify_strict_upper_bound_Icc_checked #[ast, loRatExpr, hiRatExpr, leProof, boundRat]
+          else
+            mkAppM ``verify_strict_upper_bound_Icc_core #[ast, supportProof, loRatExpr, hiRatExpr, leProof, boundRat, cfgExpr]
+
+          -- Try direct apply first
+          setGoals [goal]
+          try
+            let newGoals ← goal.apply proof
+            setGoals newGoals
+            for g in newGoals do
+              setGoals [g]
+              let tryClose (tac : TacticM Unit) : TacticM Bool := do
+                let saved ← saveState
+                try
+                  tac
+                  if (← getGoals).isEmpty then
+                    return true
+                  saved.restore
+                  return false
+                catch _ =>
+                  saved.restore
+                  return false
+              if ← tryClose (evalTactic (← `(tactic| rfl))) then
+                continue
+              closeBoundCertificate verifier (← getMainGoal)
+          catch _ =>
+            -- Apply failed, use convert
+            setGoals [goal]
+            let intervalRat ← mkAppM ``IntervalRat.mk #[loRatExpr, hiRatExpr, leProof]
+            let checkExpr ← if useChecked then
+              mkAppM ``LeanCert.Validity.checkStrictUpperBoundChecked #[ast, intervalRat, boundRat]
+            else
+              mkAppM ``LeanCert.Validity.checkStrictUpperBound #[ast, intervalRat, boundRat, cfgExpr]
+
+            -- Build proof using native_decide via an auxiliary goal
+            let certTy ← mkAppM ``Eq #[checkExpr, mkConst ``Bool.true]
+            let certGoal ← mkFreshExprMVar certTy
+            let certGoalId := certGoal.mvarId!
+            setGoals [certGoalId]
+            closeBoundCertificate verifier (← getMainGoal)
+            let certProof := certGoal
+
+            let conclusionProof ← mkAppM' proof #[certProof]
+            let conclusionTerm ← Lean.Elab.Term.exprToSyntax conclusionProof
+            setGoals [goal]
+            evalTactic (← `(tactic| convert ($conclusionTerm) using 3))
+
+            -- Close side goals
+            let goals ← getGoals
+            for g in goals do
+              setGoals [g]
+              -- Helper: try a tactic and check if goal was actually closed
+              let tryClose (tac : TacticM Unit) : TacticM Bool := do
+                let saved ← saveState
+                try
+                  tac
+                  if (← getGoals).isEmpty then
+                    return true
+                  saved.restore
+                  return false
+                catch _ =>
+                  saved.restore
+                  return false
+              -- Try decimal-specific tactic first for efficiency
+              if ← tryClose (evalTactic (← `(tactic| norm_num; simp only [Rat.divInt_eq_div]; push_cast; rfl))) then continue
+              if ← tryCloseRpowSideGoal then continue
+              -- Handle negative decimals (-(1/2) = ↑(Rat.divInt (-1) 2))
+              if ← tryClose (evalTactic (← `(tactic| norm_num; simp only [Rat.divInt_eq_div]; try (push_cast; try ring)))) then continue
+              if ← tryClose (evalTactic (← `(tactic| rfl))) then continue
+              if ← tryClose (evalTactic (← `(tactic| congr 1 <;> norm_num))) then continue
+              if ← tryClose (evalTactic (← `(tactic| rfl))) then continue
+              if ← tryClose (evalTactic (← `(tactic| norm_cast))) then continue
+              if ← tryClose (evalTactic (← `(tactic| norm_num))) then continue
+              -- Handle power expansion (x^2 = x*x, x^3 = x*x*x, etc.)
+              if ← tryClose (evalTactic (← `(tactic| simp only [sq, pow_two, pow_succ, pow_zero, pow_one, one_mul, mul_one]))) then continue
+              -- Handle Expr.eval unfolding - unfolds Expr.eval to raw arithmetic, then uses ring to close
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_log, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_neg, Rat.divInt_eq_div]; ring_nf))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos, LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_sub, Real.sqrt_mul_self_eq_abs, LeanCert.Meta.max_eq_half_add_abs_sub, LeanCert.Meta.min_eq_half_sub_abs_sub, div_eq_mul_inv, sub_eq_add_neg]))) then continue
+              -- Same but with push_cast for rational coercion issues
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos, LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_sub, Real.sqrt_mul_self_eq_abs, LeanCert.Meta.max_eq_half_add_abs_sub, LeanCert.Meta.min_eq_half_sub_abs_sub, div_eq_mul_inv, sub_eq_add_neg]; try (push_cast; try ring)))) then continue
+              -- Handle decimal bounds - fallback tactics
+              if ← tryClose (evalTactic (← `(tactic| simp only [Rat.divInt_eq_div]; push_cast; rfl))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp [Rat.divInt_eq_div]))) then continue
+              if ← tryClose (evalTactic (← `(tactic| push_cast; rfl))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp only [Rat.cast_natCast, Rat.cast_intCast, Nat.cast_ofNat, Int.cast_ofNat, NNRat.cast_natCast]))) then continue
+              if ← tryClose (closeReificationBridge reified) then continue
+              throwError "certify_bound: could not prove the reflected expression agrees with the user's expression.\n\
+                Remaining bridge goal: {← g.getType}"
+
+        | none =>
+          -- Direct IntervalRat goal - use appropriate theorem
+          let proof ← if useChecked then
+            mkAppM ``verify_strict_upper_bound_checked #[ast, intervalInfo.intervalRat, boundRat]
+          else
+            mkAppM ``verify_strict_upper_bound #[ast, supportProof, intervalInfo.intervalRat, boundRat, cfgExpr]
+          let newGoals ← goal.apply proof
+          setGoals newGoals
+          for g in newGoals do
+            setGoals [g]
+            try
+              closeBoundCertificate verifier (← getMainGoal)
+            catch _ =>
+              try
+                evalTactic (← `(tactic| norm_cast))
+              catch _ =>
+                evalTactic (← `(tactic| simp only [Rat.cast_zero, Rat.cast_one, Rat.cast_intCast, Rat.cast_natCast]))
+
+  /-- Prove ∀ x ∈ I, c < f x -/
+  proveForallGt (goal : MVarId) (intervalInfo : IntervalInfo) (func bound : Lean.Expr)
+      (taylorDepth : Nat) : TacticM Unit := do
+    goal.withContext do
+      discard <| tryNormalizeGoalToIcc
+      let goal ← getMainGoal
+      let reified ← getAstWithReport func
+      let ast := reified.expr
+      let boundRat ← extractRatBound bound
+
+      -- Try Dyadic backend first
+      let savedState ← saveState
+      if useDyadic &&
+          (← tryDyadicBoundOrThrow goal reified boundRat intervalInfo taylorDepth true true).isSome then
+        return
+      restoreState savedState
+
+      let (supportProof, useChecked) ← getSupportProof ast
+      let verifier := boundVerifierName true true useChecked
+        intervalInfo.fromSetIcc.isSome
+      let cfgExpr ← mkAppM ``EvalConfig.mk #[toExpr taylorDepth]
+
+      -- Handle based on interval source
+      match intervalInfo.fromSetIcc with
+        | some (_lo, _hi, loRatExpr, hiRatExpr, leProof, _origLo, _origHi) =>
+          -- Choose theorem and arguments based on support type
+          -- Note: Checked theorems don't take a cfg parameter
+          let proof ← if useChecked then
+            mkAppM ``verify_strict_lower_bound_Icc_checked #[ast, loRatExpr, hiRatExpr, leProof, boundRat]
+          else
+            mkAppM ``verify_strict_lower_bound_Icc_core #[ast, supportProof, loRatExpr, hiRatExpr, leProof, boundRat, cfgExpr]
+
+          -- Try direct apply first
+          setGoals [goal]
+          try
+            let newGoals ← goal.apply proof
+            setGoals newGoals
+            for g in newGoals do
+              setGoals [g]
+              let tryClose (tac : TacticM Unit) : TacticM Bool := do
+                let saved ← saveState
+                try
+                  tac
+                  if (← getGoals).isEmpty then
+                    return true
+                  saved.restore
+                  return false
+                catch _ =>
+                  saved.restore
+                  return false
+              if ← tryClose (evalTactic (← `(tactic| rfl))) then
+                continue
+              closeBoundCertificate verifier (← getMainGoal)
+          catch _ =>
+            -- Apply failed, use convert
+            setGoals [goal]
+            let intervalRat ← mkAppM ``IntervalRat.mk #[loRatExpr, hiRatExpr, leProof]
+            let checkExpr ← if useChecked then
+              mkAppM ``LeanCert.Validity.checkStrictLowerBoundChecked #[ast, intervalRat, boundRat]
+            else
+              mkAppM ``LeanCert.Validity.checkStrictLowerBound #[ast, intervalRat, boundRat, cfgExpr]
+
+            -- Build proof using native_decide via an auxiliary goal
+            let certTy ← mkAppM ``Eq #[checkExpr, mkConst ``Bool.true]
+            let certGoal ← mkFreshExprMVar certTy
+            let certGoalId := certGoal.mvarId!
+            setGoals [certGoalId]
+            closeBoundCertificate verifier (← getMainGoal)
+            let certProof := certGoal
+
+            let conclusionProof ← mkAppM' proof #[certProof]
+            let conclusionTerm ← Lean.Elab.Term.exprToSyntax conclusionProof
+            setGoals [goal]
+            evalTactic (← `(tactic| convert ($conclusionTerm) using 3))
+
+            -- Close side goals
+            let goals ← getGoals
+            for g in goals do
+              setGoals [g]
+              -- Helper: try a tactic and check if goal was actually closed
+              let tryClose (tac : TacticM Unit) : TacticM Bool := do
+                let saved ← saveState
+                try
+                  tac
+                  if (← getGoals).isEmpty then
+                    return true
+                  saved.restore
+                  return false
+                catch _ =>
+                  saved.restore
+                  return false
+              -- Try decimal-specific tactic first for efficiency
+              if ← tryClose (evalTactic (← `(tactic| norm_num; simp only [Rat.divInt_eq_div]; push_cast; rfl))) then continue
+              if ← tryCloseRpowSideGoal then continue
+              -- Handle negative decimals (-(1/2) = ↑(Rat.divInt (-1) 2))
+              if ← tryClose (evalTactic (← `(tactic| norm_num; simp only [Rat.divInt_eq_div]; try (push_cast; try ring)))) then continue
+              if ← tryClose (evalTactic (← `(tactic| rfl))) then continue
+              if ← tryClose (evalTactic (← `(tactic| congr 1 <;> norm_num))) then continue
+              if ← tryClose (evalTactic (← `(tactic| rfl))) then continue
+              if ← tryClose (evalTactic (← `(tactic| norm_cast))) then continue
+              if ← tryClose (evalTactic (← `(tactic| norm_num))) then continue
+              -- Handle power expansion (x^2 = x*x, x^3 = x*x*x, etc.)
+              if ← tryClose (evalTactic (← `(tactic| simp only [sq, pow_two, pow_succ, pow_zero, pow_one, one_mul, mul_one]))) then continue
+              -- Handle Expr.eval unfolding - unfolds Expr.eval to raw arithmetic, then uses ring to close
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_log, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_neg, Rat.divInt_eq_div]; ring_nf))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos, LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_sub, Real.sqrt_mul_self_eq_abs, LeanCert.Meta.max_eq_half_add_abs_sub, LeanCert.Meta.min_eq_half_sub_abs_sub, div_eq_mul_inv, sub_eq_add_neg]))) then continue
+              -- Same but with push_cast for rational coercion issues
+              if ← tryClose (evalTactic (← `(tactic| simp only [LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg, LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_var, LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos, LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_sqrt, LeanCert.Core.Expr.eval_sub, Real.sqrt_mul_self_eq_abs, LeanCert.Meta.max_eq_half_add_abs_sub, LeanCert.Meta.min_eq_half_sub_abs_sub, div_eq_mul_inv, sub_eq_add_neg]; try (push_cast; try ring)))) then continue
+              -- Handle decimal bounds - fallback tactics
+              if ← tryClose (evalTactic (← `(tactic| simp only [Rat.divInt_eq_div]; push_cast; rfl))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp [Rat.divInt_eq_div]))) then continue
+              if ← tryClose (evalTactic (← `(tactic| push_cast; rfl))) then continue
+              if ← tryClose (evalTactic (← `(tactic| simp only [Rat.cast_natCast, Rat.cast_intCast, Nat.cast_ofNat, Int.cast_ofNat, NNRat.cast_natCast]))) then continue
+              if ← tryClose (closeReificationBridge reified) then continue
+              throwError "certify_bound: could not prove the reflected expression agrees with the user's expression.\n\
+                Remaining bridge goal: {← g.getType}"
+
+        | none =>
+          -- Direct IntervalRat goal - use appropriate theorem
+          let proof ← if useChecked then
+            mkAppM ``verify_strict_lower_bound_checked #[ast, intervalInfo.intervalRat, boundRat]
+          else
+            mkAppM ``verify_strict_lower_bound #[ast, supportProof, intervalInfo.intervalRat, boundRat, cfgExpr]
+          let newGoals ← goal.apply proof
+          setGoals newGoals
+          for g in newGoals do
+            setGoals [g]
+            try
+              closeBoundCertificate verifier (← getMainGoal)
+            catch _ =>
+              try
+                evalTactic (← `(tactic| norm_cast))
+              catch _ =>
+                evalTactic (← `(tactic| simp only [Rat.cast_zero, Rat.cast_one, Rat.cast_intCast, Rat.cast_natCast]))
+
+private def rationalBoundAttemptTyped (goal : MVarId)
+    (intervalInfo : IntervalInfo) (func bound : Lean.Expr)
+    (taylorDepth : Nat) (isStrict isLower : Bool) :
+    TacticM (Except IntervalBoundFailure IntervalBoundOutcome) := do
+  let saved ← saveState
+  goal.withContext do
+    let preparation ←
+      try
+        discard <| tryNormalizeGoalToIcc
+        let normalizedGoal ← getMainGoal
+        let reified ← getAstWithReport func
+        let ast := reified.expr
+        let boundRat ← extractRatBound bound
+        let (supportProof, useChecked) ← getSupportProof ast
+        pure <| some
+          (normalizedGoal, reified, ast, boundRat, supportProof, useChecked)
+      catch e =>
+        saved.restore
+        return .error <| .unsupported (toString func)
+          (← e.toMessageData.toString)
+    let some (normalizedGoal, reified, ast, boundRat, supportProof, useChecked) :=
+        preparation
+      | saved.restore
+        return .error <| .unsupported (toString func)
+          "direct-bound preparation produced no expression"
+    let checker := boundCheckerName isStrict isLower useChecked
+    let verifier := boundVerifierName isStrict isLower useChecked
+      intervalInfo.fromSetIcc.isSome
+    let cfgExpr ← mkAppM ``EvalConfig.mk #[toExpr taylorDepth]
+    let intervalRat ←
+      match intervalInfo.fromSetIcc with
+      | some (_lo, _hi, loRatExpr, hiRatExpr, leProof, _origLo, _origHi) =>
+          mkAppM ``IntervalRat.mk #[loRatExpr, hiRatExpr, leProof]
+      | none => pure intervalInfo.intervalRat
+    let checkExpr ←
+      if useChecked then
+        mkAppM checker #[ast, intervalRat, boundRat]
+      else
+        mkAppM checker #[ast, intervalRat, boundRat, cfgExpr]
+    let theoremArgs ←
+      match intervalInfo.fromSetIcc with
+      | some (_lo, _hi, loRatExpr, hiRatExpr, leProof, _origLo, _origHi) =>
+          if useChecked then
+            pure #[ast, loRatExpr, hiRatExpr, leProof, boundRat]
+          else
+            pure #[ast, supportProof, loRatExpr, hiRatExpr, leProof, boundRat,
+              cfgExpr]
+      | none =>
+          if useChecked then
+            pure #[ast, intervalInfo.intervalRat, boundRat]
+          else
+            pure #[ast, supportProof, intervalInfo.intervalRat, boundRat, cfgExpr]
+    let theoremProof ←
+      try mkAppM verifier theoremArgs
+      catch e =>
+        saved.restore
+        return .error <| .transportFailure (← e.toMessageData.toString)
+    let certTy ← mkAppM ``Eq #[checkExpr, mkConst ``Bool.true]
+    let certGoal ← mkFreshExprMVar certTy
+    let certGoalId := certGoal.mvarId!
+    let verificationResult ← certGoalId.withContext do
+      setGoals [certGoalId]
+      closeCertificateGoalTyped (← VerificationConfig.current)
+        certGoalId (tacticName := "certify_bound")
+    let event ←
+      match verificationResult with
+      | .accepted event => pure event
+      | .rejected =>
+          saved.restore
+          return .error <| .inconclusive
+            "The Rational interval checker rejected the candidate certificate."
+      | .failed failure =>
+          saved.restore
+          return .error <| .internalFailure
+            (failure.message "certify_bound")
+    let conclusionProof ←
+      try mkAppM' theoremProof #[certGoal]
+      catch e =>
+        saved.restore
+        return .error <| .transportFailure (← e.toMessageData.toString)
+    unless ← closeBoundTransport normalizedGoal conclusionProof (some reified) do
+      saved.restore
+      return .error <| .transportFailure
+        "the verified Rational certificate did not close every transport goal"
+    return .ok {
+      dyadic := false
+      checker := some checker
+      verifier := some verifier
+      verification := event.toUsage
+      taylorDepth
+    }
+
+/-- Direct typed Rational implementation. It performs one checker closure and
+returns the observation from that closure; failure classification never reruns
+the numerical checker. -/
+def intervalBoundRationalCoreTyped (taylorDepth : Nat) :
+    TacticM (Except IntervalBoundFailure IntervalBoundOutcome) := do
+  let original ← saveState
+  intervalNormCore
+  try
+    evalTactic (← `(tactic|
+      intro _x _hx
+      simp only [ge_iff_le, gt_iff_lt]
+      revert _x _hx))
+  catch _ =>
+    try evalTactic (← `(tactic| simp only [ge_iff_le, gt_iff_lt]))
+    catch _ => pure ()
+  try
+    evalTactic (← `(tactic|
+      simp only [pow_zero, pow_one, one_mul, mul_one] at *))
+  catch _ => pure ()
+  let goal ← getMainGoal
+  let some boundGoal ← parseBoundGoal (← goal.getType)
+    | original.restore
+      return .error <| .unsupported (toString (← goal.getType))
+        "Rational normalization did not produce a supported direct bound"
+  match boundGoal with
+  | .forallLe _ intervalInfo func bound =>
+      rationalBoundAttemptTyped goal intervalInfo func bound taylorDepth false false
+  | .forallGe _ intervalInfo func bound =>
+      rationalBoundAttemptTyped goal intervalInfo func bound taylorDepth false true
+  | .forallLt _ intervalInfo func bound =>
+      rationalBoundAttemptTyped goal intervalInfo func bound taylorDepth true false
+  | .forallGt _ intervalInfo func bound =>
+      rationalBoundAttemptTyped goal intervalInfo func bound taylorDepth true true
+
+/-- Direct typed bound attempt at an explicit Dyadic precision and Taylor
+depth. The Rational fallback runs only after that Dyadic attempt is
+inconclusive. Rational proof construction runs once on success. -/
+def intervalBoundCoreTypedAt (precision : Int) (taylorDepth : Nat)
+    (rationalFallback : Bool := true) :
+    TacticM (Except IntervalBoundFailure IntervalBoundOutcome) := do
+  let original ← saveState
+  intervalNormCore
+  try
+    evalTactic (← `(tactic|
+      intro _x _hx
+      simp only [ge_iff_le, gt_iff_lt]
+      revert _x _hx))
+  catch _ =>
+    try evalTactic (← `(tactic| simp only [ge_iff_le, gt_iff_lt]))
+    catch _ => pure ()
+  try
+    evalTactic (← `(tactic|
+      simp only [pow_zero, pow_one, one_mul, mul_one] at *))
+  catch _ => pure ()
+  let goal ← getMainGoal
+  let goalType ← goal.getType
+  let some boundGoal ← parseBoundGoal goalType
+    | original.restore
+      return .error <| .unsupported (toString goalType)
+        "goal normalization did not produce a supported direct bound"
+  let attempt (intervalInfo : IntervalInfo) (func bound : Lean.Expr)
+      (isStrict isLower : Bool) :
+      TacticM (Except IntervalBoundFailure (Option DyadicBoundOutcome)) :=
+    goal.withContext do
+      let prepared ←
+        try
+          discard <| tryNormalizeGoalToIcc
+          let normalizedGoal ← getMainGoal
+          let reified ← getAstWithReport func
+          let boundRat ← extractRatBound bound
+          pure <| some (normalizedGoal, reified, boundRat)
+        catch e =>
+          original.restore
+          return .error <| .unsupported (toString func)
+            (← e.toMessageData.toString)
+      let some (normalizedGoal, reified, boundRat) := prepared
+        | original.restore
+          return .error <| .unsupported (toString func)
+            "Dyadic preparation produced no expression"
+      tryDyadicBoundImpl normalizedGoal reified boundRat intervalInfo taylorDepth
+        isStrict isLower precision
+  let dyadicResult ←
+    match boundGoal with
+    | .forallLe _ intervalInfo func bound =>
+        attempt intervalInfo func bound false false
+    | .forallGe _ intervalInfo func bound =>
+        attempt intervalInfo func bound false true
+    | .forallLt _ intervalInfo func bound =>
+        attempt intervalInfo func bound true false
+    | .forallGt _ intervalInfo func bound =>
+        attempt intervalInfo func bound true true
+  match dyadicResult with
+  | .error failure =>
+      original.restore
+      return .error failure
+  | .ok (some outcome) =>
+      return .ok {
+        dyadic := true
+        checker := some outcome.checker
+        verifier := some outcome.verifier
+        verification := outcome.verification
+        precision := some outcome.precision
+        taylorDepth := outcome.taylorDepth
+      }
+  | .ok none =>
+      original.restore
+      if rationalFallback then
+        intervalBoundRationalCoreTyped taylorDepth
+      else
+        return .error <| .inconclusive
+          s!"The Dyadic checker was inconclusive at precision {precision} and \
+            Taylor depth {taylorDepth}."
+
+/-- Compatibility entry point retaining the historical fixed `-80` Dyadic
+attempt before Rational fallback. New adaptive callers should use
+`intervalBoundAdaptiveCoreTyped`. -/
+def intervalBoundCoreTyped (taylorDepth : Nat) :
+    TacticM (Except IntervalBoundFailure IntervalBoundOutcome) :=
+  intervalBoundCoreTypedAt (-80) taylorDepth
+
+/-- Try coordinated Dyadic stages in increasing refinement order, then run the
+Rational fallback once at the final Taylor depth. Each attempt is isolated in
+the original tactic state. -/
+def intervalBoundAdaptiveCoreTyped (policy : NumericalRefinementPolicy) :
+    TacticM (Except IntervalBoundFailure IntervalBoundOutcome) := do
+  let original ← saveState
+  let stages := policy.stages
+  let mut lastFailure : Option IntervalBoundFailure := none
+  for stage in stages do
+    original.restore
+    match ← intervalBoundCoreTypedAt stage.dyadicPrecision stage.taylorDepth false with
+    | .ok outcome => return .ok outcome
+    | .error failure@(.inconclusive ..) =>
+        lastFailure := some failure
+    | .error failure =>
+        original.restore
+        return .error failure
+  original.restore
+  match stages.getLast? with
+  | some stage => intervalBoundRationalCoreTyped stage.taylorDepth
+  | none => return .error <| lastFailure.getD <|
+      .inconclusive "the numerical refinement policy contains no stages"
+
+/-! ## Tactic Syntax -/
+
+private def IntervalBoundFailure.message : IntervalBoundFailure → MessageData
+  | .unsupported expression detail =>
+      m!"certify_bound: unsupported expression {expression}:\n{detail}"
+  | .inconclusive detail => m!"certify_bound: {detail}"
+  | .transportFailure detail =>
+      m!"certify_bound: proof transport failed:\n{detail}"
+  | .internalFailure detail =>
+      m!"certify_bound: certificate verification failed:\n{detail}"
+
+/-- Core of `certify_bound`. Without an explicit Taylor depth, Dyadic
+precision and Taylor depth increase together. With an explicit depth, only
+Dyadic precision is refined. Rational fallback runs once after the final
+Dyadic stage. -/
+def certifyBoundWithDepth (depth : Option Nat) : TacticM Unit := do
+  let policy := match depth with
+    | some n => NumericalRefinementPolicy.fixedTaylor n 0
+    | none => NumericalRefinementPolicy.adaptive 10 0
+  let goalState ← saveState
+  match ← intervalBoundAdaptiveCoreTyped policy with
+  | .ok _ => pure ()
+  | .error failure =>
+      restoreState goalState
+      let diagMsg ← try
+        try
+          evalTactic (← `(tactic|
+            intro _x _hx; simp only [ge_iff_le, gt_iff_lt]; revert _x _hx))
+        catch _ =>
+          try evalTactic (← `(tactic| simp only [ge_iff_le, gt_iff_lt]))
+          catch _ => pure ()
+        try
+          evalTactic (← `(tactic|
+            simp only [pow_zero, pow_one, one_mul, mul_one] at *))
+        catch _ => pure ()
+        let goal ← getMainGoal
+        let goalType ← goal.getType
+        runShadowDiagnostic (← parseBoundGoal goalType) goalType
+      catch _ =>
+        pure m!"(Could not run diagnostics)"
+      throwError m!"{failure.message}\n\n{diagMsg}"
+
+/-- The certify_bound tactic.
+
+    Automatically proves bounds on expressions using interval arithmetic.
+
+    Usage:
+    - `certify_bound` - coordinates increasing Dyadic precision and Taylor depth
+    - `certify_bound 20` - fixes Taylor depth at 20 while refining Dyadic precision
+    - `certify_bound (trust := kernel)` - kernel-only certificate verification
+      (likewise `native`, `auto`; defaults to the `leancert.trust` option)
+
+    Supports goals of the form:
+    - `∀ x ∈ I, f x ≤ c`
+    - `∀ x ∈ I, c ≤ f x`
+    - `∀ x ∈ I, f x < c`
+    - `∀ x ∈ I, c < f x`
+-/
+elab "certify_bound" depth:(num)? t:(leancertTrustItem)? : tactic => do
+  discard <| VerificationConfig.current
+  withTrustMode (← elabTrustItem? t) do
+    certifyBoundWithDepth (depth.map (·.getNat))
+
+end LeanCert.Tactic.Auto

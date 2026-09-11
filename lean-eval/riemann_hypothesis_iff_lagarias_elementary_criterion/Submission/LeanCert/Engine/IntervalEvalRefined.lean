@@ -1,0 +1,595 @@
+/-
+Copyright (c) 2024 LeanCert Contributors. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: LeanCert Contributors
+-/
+import Submission.LeanCert.Engine.TaylorModel
+import Submission.LeanCert.Engine.AD
+
+/-!
+# Refined Interval Evaluation using Taylor Models
+
+This file provides interval evaluation functions that use Taylor-model-based
+bounds for transcendental functions (exp, sin, cos) when the interval is small,
+falling back to coarse bounds for larger intervals.
+
+## Main definitions
+
+* `sinIntervalRefined`, `cosIntervalRefined` - Refined bounds using Taylor models
+* `evalIntervalRefined` - Total refined evaluation for a supported expression
+* `LeanCert.Internal.Refined.evalDualUnchecked` - AD evaluation using refined bounds
+
+## Design
+
+The refined evaluators give tighter bounds on small intervals by using
+Taylor approximations. For example, `expIntervalRefined` uses a degree-5
+Taylor model when the interval width is ≤ 1, which gives much tighter bounds
+than the monotonicity-based `expInterval`.
+
+The correctness proofs follow directly from the Taylor model correctness
+theorems (`mem_expIntervalRefined`, etc.).
+-/
+
+namespace LeanCert.Engine
+
+open LeanCert.Core
+
+/-! ### Refined transcendental intervals
+
+We define refined versions of sin and cos intervals using Taylor models,
+following the same pattern as `expIntervalRefined`.
+-/
+
+/-- Refined interval bound for sin using Taylor models.
+    For small intervals (width ≤ 1), uses degree-5 Taylor model.
+    For larger intervals, uses the global [-1, 1] bound. -/
+noncomputable def sinIntervalRefined (I : IntervalRat) : IntervalRat :=
+  if I.width ≤ 1 then
+    (TaylorModel.tmSin I 5).bound
+  else
+    sinInterval I
+
+/-- FTIA for refined sin: if x ∈ I, then sin(x) ∈ sinIntervalRefined I -/
+theorem mem_sinIntervalRefined {x : ℝ} {I : IntervalRat} (hx : x ∈ I) :
+    Real.sin x ∈ sinIntervalRefined I := by
+  unfold sinIntervalRefined
+  by_cases hw : I.width ≤ 1
+  · simp only [hw, ↓reduceIte]
+    exact taylorModel_correct (TaylorModel.tmSin I 5) Real.sin
+      (fun z hz => TaylorModel.tmSin_correct I 5 z hz) x hx
+  · simp only [hw, ↓reduceIte]
+    exact mem_sinInterval hx
+
+/-- Refined interval bound for cos using Taylor models.
+    For small intervals (width ≤ 1), uses degree-5 Taylor model.
+    For larger intervals, uses the global [-1, 1] bound. -/
+noncomputable def cosIntervalRefined (I : IntervalRat) : IntervalRat :=
+  if I.width ≤ 1 then
+    (TaylorModel.tmCos I 5).bound
+  else
+    cosInterval I
+
+/-- FTIA for refined cos: if x ∈ I, then cos(x) ∈ cosIntervalRefined I -/
+theorem mem_cosIntervalRefined {x : ℝ} {I : IntervalRat} (hx : x ∈ I) :
+    Real.cos x ∈ cosIntervalRefined I := by
+  unfold cosIntervalRefined
+  by_cases hw : I.width ≤ 1
+  · simp only [hw, ↓reduceIte]
+    exact taylorModel_correct (TaylorModel.tmCos I 5) Real.cos
+      (fun z hz => TaylorModel.tmCos_correct I 5 z hz) x hx
+  · simp only [hw, ↓reduceIte]
+    exact mem_cosInterval hx
+
+/-- Refined interval bound for log using Taylor models.
+    For strictly positive intervals with width ≤ 1, uses degree-5 Taylor model.
+    For larger intervals or non-positive intervals, falls back to coarse bound. -/
+noncomputable def logIntervalRefined (I : IntervalRat.IntervalRatPos) : IntervalRat :=
+  if I.width ≤ 1 then
+    match TaylorModel.tmLog I.toIntervalRat 5 with
+    | some logTM => logTM.bound
+    | none => IntervalRat.logInterval I  -- Fallback shouldn't happen for positive intervals
+  else
+    IntervalRat.logInterval I
+
+/-- FTIA for refined log: if x ∈ I and I is positive, then log(x) ∈ logIntervalRefined I -/
+theorem mem_logIntervalRefined {x : ℝ} {I : IntervalRat.IntervalRatPos} (hx : x ∈ I.toIntervalRat) :
+    Real.log x ∈ logIntervalRefined I := by
+  unfold logIntervalRefined
+  by_cases hw : I.width ≤ 1
+  · simp only [hw, ↓reduceIte]
+    cases hlog : TaylorModel.tmLog I.toIntervalRat 5 with
+    | none =>
+      -- This case shouldn't happen for positive intervals
+      exact IntervalRat.mem_logInterval hx
+    | some logTM =>
+      -- Use tmLog_correct: log x ∈ logTM.evalSet x, then taylorModel_correct gives bound
+      have h_evalSet := TaylorModel.tmLog_correct I.toIntervalRat 5 logTM hlog x hx
+      -- logTM.domain = I.toIntervalRat from tmLog definition
+      have hdom : logTM.domain = I.toIntervalRat := by
+        simp only [TaylorModel.tmLog, I.lo_pos, ↓reduceDIte, Option.some.injEq] at hlog
+        simp only [← hlog]
+      exact taylorModel_correct logTM Real.log
+        (fun z hz => TaylorModel.tmLog_correct I.toIntervalRat 5 logTM hlog z (hdom ▸ hz)) x (hdom.symm ▸ hx)
+  · simp only [hw, ↓reduceIte]
+    exact IntervalRat.mem_logInterval hx
+
+/-- Refined interval bound for atanh using Taylor models.
+    For small intervals with |x| < 1 and width ≤ 1, uses degree-5 Taylor model.
+    For larger intervals, uses computed bound via monotonicity.
+    Requires -1 < I.lo and I.hi < 1 for correctness. -/
+noncomputable def atanhIntervalRefined' (I : IntervalRat) (hlo : -1 < I.lo) (hhi : I.hi < 1) : IntervalRat :=
+  -- Use Taylor model only when interval is small AND radius is bounded away from 1
+  if I.width ≤ 1 ∧ max (|I.lo|) (|I.hi|) ≤ 99/100 then
+    (TaylorModel.tmAtanh I 5).bound
+  else
+    -- Use computed bound via monotonicity
+    let Iball : IntervalRat.IntervalRatInUnitBall := ⟨I.lo, I.hi, I.le, hlo, hhi⟩
+    IntervalRat.atanhIntervalComputed Iball
+
+/-- Refined interval bound for atanh (version without proof arguments, falls back to default) -/
+noncomputable def atanhIntervalRefined (I : IntervalRat) : IntervalRat :=
+  if h : -1 < I.lo ∧ I.hi < 1 then
+    atanhIntervalRefined' I h.1 h.2
+  else
+    default  -- Not in valid domain
+
+/-- FTIA for refined atanh: if x ∈ I and I ⊂ (-1, 1), then atanh(x) ∈ atanhIntervalRefined I -/
+theorem mem_atanhIntervalRefined {x : ℝ} {I : IntervalRat}
+    (hx : x ∈ I) (hlo : -1 < I.lo) (hhi : I.hi < 1) :
+    Real.atanh x ∈ atanhIntervalRefined I := by
+  unfold atanhIntervalRefined
+  simp only [hlo, hhi, and_self, ↓reduceDIte]
+  unfold atanhIntervalRefined'
+  by_cases hw : I.width ≤ 1 ∧ max (|I.lo|) (|I.hi|) ≤ 99/100
+  · -- Use Taylor model approach
+    simp only [hw]
+    have ⟨_, hradius⟩ := hw
+    -- Prove |x| < 1 from interval bounds
+    have hx_lo : (I.lo : ℝ) ≤ x := hx.1
+    have hx_hi : x ≤ I.hi := hx.2
+    have hlo_real : (-1 : ℝ) < I.lo := by exact_mod_cast hlo
+    have hhi_real : (I.hi : ℝ) < 1 := by exact_mod_cast hhi
+    have hx_abs : |x| < 1 := by
+      rw [abs_lt]
+      constructor <;> linarith
+    -- Use tmAtanh_correct
+    have hdom : (TaylorModel.tmAtanh I 5).domain = I := rfl
+    exact taylorModel_correct (TaylorModel.tmAtanh I 5) Real.atanh
+      (fun z hz => TaylorModel.tmAtanh_correct I 5 hradius z (hdom ▸ hz) (by
+        have hz' : z ∈ I := hdom ▸ hz
+        rw [abs_lt]
+        have hlo' : (-1 : ℝ) < I.lo := by exact_mod_cast hlo
+        have hhi' : (I.hi : ℝ) < 1 := by exact_mod_cast hhi
+        constructor <;> linarith [hz'.1, hz'.2])) x hx
+  · -- Fallback to computed bound via monotonicity
+    simp only [hw, ↓reduceIte]
+    let Iball : IntervalRat.IntervalRatInUnitBall := ⟨I.lo, I.hi, I.le, hlo, hhi⟩
+    have hx_ball : x ∈ Iball := by
+      simp only [Membership.mem]
+      exact hx
+    exact IntervalRat.mem_atanhIntervalComputed hx_ball
+
+/-! ### Refined interval evaluation
+
+Interval evaluation that uses Taylor-model-based bounds for transcendental
+functions when the interval is reasonably small.
+-/
+
+/-- Strict refined interval evaluation.
+
+Unsupported partial operations return `none`, and compound expressions return
+`none` if a required subexpression fails.
+-/
+noncomputable def evalIntervalRefined? (e : Expr) (ρ : IntervalEnv) : Option IntervalRat :=
+  match e with
+  | Expr.const q => some (IntervalRat.singleton q)
+  | Expr.var i => some (ρ i)
+  | Expr.add e₁ e₂ =>
+      match evalIntervalRefined? e₁ ρ, evalIntervalRefined? e₂ ρ with
+      | some I₁, some I₂ => some (IntervalRat.add I₁ I₂)
+      | _, _ => none
+  | Expr.mul e₁ e₂ =>
+      match evalIntervalRefined? e₁ ρ, evalIntervalRefined? e₂ ρ with
+      | some I₁, some I₂ => some (IntervalRat.mul I₁ I₂)
+      | _, _ => none
+  | Expr.neg e =>
+      match evalIntervalRefined? e ρ with
+      | some I => some (IntervalRat.neg I)
+      | none => none
+  | Expr.inv _ => none
+  | Expr.sin e =>
+      match evalIntervalRefined? e ρ with
+      | some I => some (sinIntervalRefined I)
+      | none => none
+  | Expr.cos e =>
+      match evalIntervalRefined? e ρ with
+      | some I => some (cosIntervalRefined I)
+      | none => none
+  | Expr.exp e =>
+      match evalIntervalRefined? e ρ with
+      | some I => some (expIntervalRefined I)
+      | none => none
+  | Expr.log _ => none
+  | Expr.atan e =>
+      match evalIntervalRefined? e ρ with
+      | some I => some (atanInterval I)
+      | none => none
+  | Expr.arsinh e =>
+      match evalIntervalRefined? e ρ with
+      | some I => some (arsinhInterval I)
+      | none => none
+  | Expr.atanh _ => none
+  | Expr.sinc _ => some ⟨-1, 1, by norm_num⟩
+  | Expr.erf _ => some ⟨-1, 1, by norm_num⟩
+  | Expr.sinh e =>
+      match evalIntervalRefined? e ρ with
+      | some I => some (sinhInterval I)
+      | none => none
+  | Expr.cosh e =>
+      match evalIntervalRefined? e ρ with
+      | some I => some (coshInterval I)
+      | none => none
+  | Expr.tanh e =>
+      match evalIntervalRefined? e ρ with
+      | some I => some (tanhInterval I)
+      | none => none
+  | Expr.sqrt e =>
+      match evalIntervalRefined? e ρ with
+      | some I => some I.sqrtInterval
+      | none => none
+  | Expr.namedConst c => some c.interval
+
+/-- Strict single-variable refined interval evaluation. -/
+noncomputable def evalIntervalRefined1? (e : Expr) (I : IntervalRat) : Option IntervalRat :=
+  evalIntervalRefined? e (fun _ => I)
+
+/-- A supported expression always succeeds in the strict refined evaluator. -/
+theorem evalIntervalRefined?_isSome_of_supported (e : Expr) (hsupp : ADSupported e)
+    (ρ : IntervalEnv) : (evalIntervalRefined? e ρ).isSome = true := by
+  induction hsupp with
+  | const q => simp [evalIntervalRefined?]
+  | var i => simp [evalIntervalRefined?]
+  | add _ _ ih₁ ih₂ =>
+      obtain ⟨I₁, hI₁⟩ := Option.isSome_iff_exists.mp ih₁
+      obtain ⟨I₂, hI₂⟩ := Option.isSome_iff_exists.mp ih₂
+      simp [evalIntervalRefined?, hI₁, hI₂]
+  | mul _ _ ih₁ ih₂ =>
+      obtain ⟨I₁, hI₁⟩ := Option.isSome_iff_exists.mp ih₁
+      obtain ⟨I₂, hI₂⟩ := Option.isSome_iff_exists.mp ih₂
+      simp [evalIntervalRefined?, hI₁, hI₂]
+  | neg _ ih =>
+      obtain ⟨I, hI⟩ := Option.isSome_iff_exists.mp ih
+      simp [evalIntervalRefined?, hI]
+  | sin _ ih =>
+      obtain ⟨I, hI⟩ := Option.isSome_iff_exists.mp ih
+      simp [evalIntervalRefined?, hI]
+  | cos _ ih =>
+      obtain ⟨I, hI⟩ := Option.isSome_iff_exists.mp ih
+      simp [evalIntervalRefined?, hI]
+  | exp _ ih =>
+      obtain ⟨I, hI⟩ := Option.isSome_iff_exists.mp ih
+      simp [evalIntervalRefined?, hI]
+
+/-- Refined evaluation with failure ruled out by the supported-expression proof. -/
+noncomputable def evalIntervalRefined (e : Expr) (hsupp : ADSupported e)
+    (ρ : IntervalEnv) : IntervalRat :=
+  Classical.choose
+    (Option.isSome_iff_exists.mp (evalIntervalRefined?_isSome_of_supported e hsupp ρ))
+
+theorem evalIntervalRefined_eq_some (e : Expr) (hsupp : ADSupported e)
+    (ρ : IntervalEnv) :
+    evalIntervalRefined? e ρ = some (evalIntervalRefined e hsupp ρ) :=
+  Classical.choose_spec
+    (Option.isSome_iff_exists.mp (evalIntervalRefined?_isSome_of_supported e hsupp ρ))
+
+/-- Single-variable refined evaluation with an explicit support proof. -/
+noncomputable def evalIntervalRefined1 (e : Expr) (hsupp : ADSupported e)
+    (I : IntervalRat) : IntervalRat :=
+  evalIntervalRefined e hsupp (fun _ => I)
+
+/-- Strict refined interval evaluation is correct whenever it returns an interval. -/
+theorem evalIntervalRefined?_correct (e : Expr)
+    (ρ_real : Nat → ℝ) (ρ_int : IntervalEnv) (hρ : envMem ρ_real ρ_int)
+    {I : IntervalRat} (hI : evalIntervalRefined? e ρ_int = some I) :
+    Expr.eval ρ_real e ∈ I := by
+  induction e generalizing I with
+  | const q =>
+      simp [evalIntervalRefined?] at hI
+      subst I
+      simp only [Expr.eval_const]
+      exact IntervalRat.mem_singleton q
+  | var i =>
+      simp [evalIntervalRefined?] at hI
+      subst I
+      simp only [Expr.eval_var]
+      exact hρ i
+  | add e₁ e₂ ih₁ ih₂ =>
+      cases h₁ : evalIntervalRefined? e₁ ρ_int with
+      | none =>
+          simp [evalIntervalRefined?, h₁] at hI
+      | some I₁ =>
+          cases h₂ : evalIntervalRefined? e₂ ρ_int with
+          | none =>
+              simp [evalIntervalRefined?, h₁, h₂] at hI
+          | some I₂ =>
+              simp [evalIntervalRefined?, h₁, h₂] at hI
+              subst I
+              simp only [Expr.eval_add]
+              exact IntervalRat.mem_add (ih₁ h₁) (ih₂ h₂)
+  | mul e₁ e₂ ih₁ ih₂ =>
+      cases h₁ : evalIntervalRefined? e₁ ρ_int with
+      | none =>
+          simp [evalIntervalRefined?, h₁] at hI
+      | some I₁ =>
+          cases h₂ : evalIntervalRefined? e₂ ρ_int with
+          | none =>
+              simp [evalIntervalRefined?, h₁, h₂] at hI
+          | some I₂ =>
+              simp [evalIntervalRefined?, h₁, h₂] at hI
+              subst I
+              simp only [Expr.eval_mul]
+              exact IntervalRat.mem_mul (ih₁ h₁) (ih₂ h₂)
+  | neg e ih =>
+      cases h₀ : evalIntervalRefined? e ρ_int with
+      | none =>
+          simp [evalIntervalRefined?, h₀] at hI
+      | some I₀ =>
+          simp [evalIntervalRefined?, h₀] at hI
+          subst I
+          simp only [Expr.eval_neg]
+          exact IntervalRat.mem_neg (ih h₀)
+  | inv _ =>
+      simp [evalIntervalRefined?] at hI
+  | sin e ih =>
+      cases h₀ : evalIntervalRefined? e ρ_int with
+      | none =>
+          simp [evalIntervalRefined?, h₀] at hI
+      | some I₀ =>
+          simp [evalIntervalRefined?, h₀] at hI
+          subst I
+          simp only [Expr.eval_sin]
+          exact mem_sinIntervalRefined (ih h₀)
+  | cos e ih =>
+      cases h₀ : evalIntervalRefined? e ρ_int with
+      | none =>
+          simp [evalIntervalRefined?, h₀] at hI
+      | some I₀ =>
+          simp [evalIntervalRefined?, h₀] at hI
+          subst I
+          simp only [Expr.eval_cos]
+          exact mem_cosIntervalRefined (ih h₀)
+  | exp e ih =>
+      cases h₀ : evalIntervalRefined? e ρ_int with
+      | none =>
+          simp [evalIntervalRefined?, h₀] at hI
+      | some I₀ =>
+          simp [evalIntervalRefined?, h₀] at hI
+          subst I
+          simp only [Expr.eval_exp]
+          exact mem_expIntervalRefined (ih h₀)
+  | log _ =>
+      simp [evalIntervalRefined?] at hI
+  | atan e ih =>
+      cases h₀ : evalIntervalRefined? e ρ_int with
+      | none =>
+          simp [evalIntervalRefined?, h₀] at hI
+      | some I₀ =>
+          simp [evalIntervalRefined?, h₀] at hI
+          subst I
+          simp only [Expr.eval_atan]
+          exact mem_atanInterval (ih h₀)
+  | arsinh e ih =>
+      cases h₀ : evalIntervalRefined? e ρ_int with
+      | none =>
+          simp [evalIntervalRefined?, h₀] at hI
+      | some I₀ =>
+          simp [evalIntervalRefined?, h₀] at hI
+          subst I
+          simp only [Expr.eval_arsinh]
+          exact mem_arsinhInterval (ih h₀)
+  | atanh _ =>
+      simp [evalIntervalRefined?] at hI
+  | sinc e =>
+      simp [evalIntervalRefined?] at hI
+      subst I
+      simpa only [Expr.eval_sinc, IntervalRat.mem_def, Rat.cast_neg, Rat.cast_one]
+        using! Real.sinc_mem_Icc (Expr.eval ρ_real e)
+  | erf e =>
+      simp [evalIntervalRefined?] at hI
+      subst I
+      simpa only [Expr.eval_erf, IntervalRat.mem_def, Rat.cast_neg, Rat.cast_one]
+        using! Real.erf_mem_Icc (Expr.eval ρ_real e)
+  | sinh e ih =>
+      cases h₀ : evalIntervalRefined? e ρ_int with
+      | none =>
+          simp [evalIntervalRefined?, h₀] at hI
+      | some I₀ =>
+          simp [evalIntervalRefined?, h₀] at hI
+          subst I
+          simp only [Expr.eval_sinh]
+          exact IntervalRat.mem_sinhComputable (ih h₀) 10
+  | cosh e ih =>
+      cases h₀ : evalIntervalRefined? e ρ_int with
+      | none =>
+          simp [evalIntervalRefined?, h₀] at hI
+      | some I₀ =>
+          simp [evalIntervalRefined?, h₀] at hI
+          subst I
+          simp only [Expr.eval_cosh]
+          exact IntervalRat.mem_coshComputable (ih h₀) 10
+  | tanh e ih =>
+      cases h₀ : evalIntervalRefined? e ρ_int with
+      | none =>
+          simp [evalIntervalRefined?, h₀] at hI
+      | some I₀ =>
+          simp [evalIntervalRefined?, h₀] at hI
+          subst I
+          simp only [Expr.eval_tanh]
+          exact mem_tanhInterval (ih h₀)
+  | sqrt e ih =>
+      cases h₀ : evalIntervalRefined? e ρ_int with
+      | none =>
+          simp [evalIntervalRefined?, h₀] at hI
+      | some I₀ =>
+          simp [evalIntervalRefined?, h₀] at hI
+          subst I
+          simp only [Expr.eval_sqrt]
+          exact IntervalRat.mem_sqrtInterval' (ih h₀)
+  | namedConst c =>
+      simp [evalIntervalRefined?] at hI
+      subst I
+      simp only [Expr.eval_namedConst]
+      exact c.mem_interval
+
+/-- Strict single-variable refined interval evaluation is correct. -/
+theorem evalIntervalRefined1?_correct (e : Expr) (x : ℝ) (I J : IntervalRat)
+    (hx : x ∈ I) (hJ : evalIntervalRefined1? e I = some J) :
+    Expr.eval (fun _ => x) e ∈ J :=
+  evalIntervalRefined?_correct e (fun _ => x) (fun _ => I) (fun _ => hx) hJ
+
+/-- Refined interval evaluation is correct for supported expressions -/
+theorem evalIntervalRefined_correct (e : Expr) (hsupp : ADSupported e)
+    (ρ_real : Nat → ℝ) (ρ_int : IntervalEnv) (hρ : envMem ρ_real ρ_int) :
+    Expr.eval ρ_real e ∈ evalIntervalRefined e hsupp ρ_int :=
+  evalIntervalRefined?_correct e ρ_real ρ_int hρ
+    (evalIntervalRefined_eq_some e hsupp ρ_int)
+
+/-- Single-variable refined evaluation is correct -/
+theorem evalIntervalRefined1_correct (e : Expr) (hsupp : ADSupported e)
+    (x : ℝ) (I : IntervalRat) (hx : x ∈ I) :
+    Expr.eval (fun _ => x) e ∈ evalIntervalRefined1 e hsupp I :=
+  evalIntervalRefined_correct e hsupp (fun _ => x) (fun _ => I) (fun _ => hx)
+
+/-! ### Refined dual interval (AD) evaluation
+
+Automatic differentiation using refined interval bounds.
+-/
+
+/-- Refined dual interval for exp -/
+noncomputable def DualInterval.expRefined (d : DualInterval) : DualInterval :=
+  { val := expIntervalRefined d.val
+    der := IntervalRat.mul (expIntervalRefined d.val) d.der }
+
+/-- Refined dual interval for sin: d/dx sin(f(x)) = cos(f(x)) * f'(x) -/
+noncomputable def DualInterval.sinRefined (d : DualInterval) : DualInterval :=
+  { val := sinIntervalRefined d.val
+    der := IntervalRat.mul (cosIntervalRefined d.val) d.der }
+
+/-- Refined dual interval for cos: d/dx cos(f(x)) = -sin(f(x)) * f'(x) -/
+noncomputable def DualInterval.cosRefined (d : DualInterval) : DualInterval :=
+  { val := cosIntervalRefined d.val
+    der := IntervalRat.mul (IntervalRat.neg (sinIntervalRefined d.val)) d.der }
+
+end LeanCert.Engine
+
+namespace LeanCert.Internal.Refined
+
+open LeanCert.Core LeanCert.Engine
+
+/-- Refined dual interval evaluation.
+    For partial functions (inv, log), returns default. -/
+noncomputable def evalDualUnchecked (e : Expr) (ρ : DualEnv) : DualInterval :=
+  match e with
+  | Expr.const q => DualInterval.const q
+  | Expr.var i => ρ i
+  | Expr.add e₁ e₂ => DualInterval.add (LeanCert.Internal.Refined.evalDualUnchecked e₁ ρ) (LeanCert.Internal.Refined.evalDualUnchecked e₂ ρ)
+  | Expr.mul e₁ e₂ => DualInterval.mul (LeanCert.Internal.Refined.evalDualUnchecked e₁ ρ) (LeanCert.Internal.Refined.evalDualUnchecked e₂ ρ)
+  | Expr.neg e => DualInterval.neg (LeanCert.Internal.Refined.evalDualUnchecked e ρ)
+  | Expr.inv _ => default  -- Not supported; safe default
+  | Expr.sin e => DualInterval.sinRefined (LeanCert.Internal.Refined.evalDualUnchecked e ρ)
+  | Expr.cos e => DualInterval.cosRefined (LeanCert.Internal.Refined.evalDualUnchecked e ρ)
+  | Expr.exp e => DualInterval.expRefined (LeanCert.Internal.Refined.evalDualUnchecked e ρ)
+  | Expr.log _ => default  -- Not supported; use partial evaluation instead
+  | Expr.atan e => DualInterval.atan (LeanCert.Internal.Refined.evalDualUnchecked e ρ)
+  | Expr.arsinh e => DualInterval.arsinh (LeanCert.Internal.Refined.evalDualUnchecked e ρ)
+  | Expr.atanh _ => default  -- Partial function; use partial evaluation instead
+  | Expr.sinc e => DualInterval.sinc (LeanCert.Internal.Refined.evalDualUnchecked e ρ)
+  | Expr.erf e => DualInterval.erf (LeanCert.Internal.Refined.evalDualUnchecked e ρ)
+  | Expr.sinh e => DualInterval.sinh (LeanCert.Internal.Refined.evalDualUnchecked e ρ)
+  | Expr.cosh e => DualInterval.cosh (LeanCert.Internal.Refined.evalDualUnchecked e ρ)
+  | Expr.tanh e => DualInterval.tanh (LeanCert.Internal.Refined.evalDualUnchecked e ρ)
+  | Expr.sqrt e => DualInterval.sqrt (LeanCert.Internal.Refined.evalDualUnchecked e ρ)
+  | Expr.namedConst c => DualInterval.ofMathConst c
+
+/-- Single-variable refined dual evaluation -/
+noncomputable def evalDualUnchecked1 (e : Expr) (I : IntervalRat) : DualInterval :=
+  LeanCert.Internal.Refined.evalDualUnchecked e (fun _ => DualInterval.varActive I)
+
+end LeanCert.Internal.Refined
+
+namespace LeanCert.Engine
+
+open LeanCert.Core
+
+/-! ### Correctness of refined dual evaluation -/
+
+/-- Refined exp preserves value correctness -/
+theorem DualInterval.expRefined_val_mem {d : DualInterval} {x : ℝ} (hx : x ∈ d.val) :
+    Real.exp x ∈ (DualInterval.expRefined d).val := by
+  simp only [DualInterval.expRefined]
+  exact mem_expIntervalRefined hx
+
+/-- Refined sin preserves value correctness -/
+theorem DualInterval.sinRefined_val_mem {d : DualInterval} {x : ℝ} (hx : x ∈ d.val) :
+    Real.sin x ∈ (DualInterval.sinRefined d).val := by
+  simp only [DualInterval.sinRefined]
+  exact mem_sinIntervalRefined hx
+
+/-- Refined cos preserves value correctness -/
+theorem DualInterval.cosRefined_val_mem {d : DualInterval} {x : ℝ} (hx : x ∈ d.val) :
+    Real.cos x ∈ (DualInterval.cosRefined d).val := by
+  simp only [DualInterval.cosRefined]
+  exact mem_cosIntervalRefined hx
+
+/-- atan preserves value correctness -/
+theorem DualInterval.atan_val_mem {d : DualInterval} {x : ℝ} (hx : x ∈ d.val) :
+    Real.arctan x ∈ (DualInterval.atan d).val := by
+  simp only [DualInterval.atan]
+  exact mem_atanInterval hx
+
+/-- arsinh preserves value correctness -/
+theorem DualInterval.arsinh_val_mem {d : DualInterval} {x : ℝ} (hx : x ∈ d.val) :
+    Real.arsinh x ∈ (DualInterval.arsinh d).val := by
+  simp only [DualInterval.arsinh]
+  exact mem_arsinhInterval hx
+
+/-- Refined dual evaluation value is correct for supported expressions -/
+theorem evalDualRefined_val_correct (e : Expr) (hsupp : ADSupported e)
+    (ρ_real : Nat → ℝ) (ρ_dual : DualEnv) (hρ : ∀ i, ρ_real i ∈ (ρ_dual i).val) :
+    Expr.eval ρ_real e ∈ (LeanCert.Internal.Refined.evalDualUnchecked e ρ_dual).val := by
+  induction hsupp with
+  | const q =>
+    simp only [LeanCert.Internal.Refined.evalDualUnchecked, Expr.eval_const, DualInterval.const]
+    exact IntervalRat.mem_singleton q
+  | var i =>
+    simp only [LeanCert.Internal.Refined.evalDualUnchecked, Expr.eval_var]
+    exact hρ i
+  | add h₁ h₂ ih₁ ih₂ =>
+    simp only [LeanCert.Internal.Refined.evalDualUnchecked, Expr.eval_add, DualInterval.add]
+    exact IntervalRat.mem_add ih₁ ih₂
+  | mul h₁ h₂ ih₁ ih₂ =>
+    simp only [LeanCert.Internal.Refined.evalDualUnchecked, Expr.eval_mul, DualInterval.mul]
+    exact IntervalRat.mem_mul ih₁ ih₂
+  | neg h ih =>
+    simp only [LeanCert.Internal.Refined.evalDualUnchecked, Expr.eval_neg, DualInterval.neg]
+    exact IntervalRat.mem_neg ih
+  | sin h ih =>
+    simp only [LeanCert.Internal.Refined.evalDualUnchecked, Expr.eval_sin]
+    exact DualInterval.sinRefined_val_mem ih
+  | cos h ih =>
+    simp only [LeanCert.Internal.Refined.evalDualUnchecked, Expr.eval_cos]
+    exact DualInterval.cosRefined_val_mem ih
+  | exp h ih =>
+    simp only [LeanCert.Internal.Refined.evalDualUnchecked, Expr.eval_exp]
+    exact DualInterval.expRefined_val_mem ih
+
+/-- Single-variable refined dual evaluation is correct for values -/
+theorem evalDualRefined1_val_correct (e : Expr) (hsupp : ADSupported e)
+    (x : ℝ) (I : IntervalRat) (hx : x ∈ I) :
+    Expr.eval (fun _ => x) e ∈ (LeanCert.Internal.Refined.evalDualUnchecked1 e I).val := by
+  apply evalDualRefined_val_correct e hsupp (fun _ => x) (fun _ => DualInterval.varActive I)
+  intro i
+  simp only [DualInterval.varActive]
+  exact hx
+
+end LeanCert.Engine

@@ -77,7 +77,8 @@ a formally verified proof}
 \date{September 2026}
 \subjclass[2020]{11M26, 11N37, 03B35}
 \keywords{Riemann hypothesis, sum of divisors, Robin's inequality,
-colossally abundant numbers, Nicolas criterion, formal verification, Lean}
+Lagarias criterion, harmonic numbers, colossally abundant numbers,
+Nicolas criterion, formal verification, Lean}
 
 \begin{document}
 \raggedbottom
@@ -93,6 +94,13 @@ extrema, proves the bounded range with exact rational certificates, establishes
 the large-height implication under the Riemann hypothesis through a weighted
 explicit formula and a strict coefficient gap, and proves the converse by
 turning Nicolas--Landau oscillations into least-common-multiple counterexamples.
+We then formalize Lagarias's elementary criterion
+\[
+  \sig(n)\le H_n+e^{H_n}\log H_n\qquad(n\ge1)
+\]
+by reusing the completed Robin implications, proving Lagarias's two harmonic
+comparison estimates, and checking the remaining range $2\le n\le5040$ with
+exact kernel certificates.
 The source-specific weighted formula and oscillation argument are proved in
 repository-owned modules, while substantial foundational analysis is imported
 from pinned public libraries: axiom-free here does not mean dependency-free or
@@ -1606,12 +1614,68 @@ The finite startup theorem and Proposition~\ref{prop:ca-reduction} extend it
 to every integer above $5040$.  Theorem~\ref{thm:main} then gives $\RH$.
 \end{proof}
 
+\section{Lagarias's elementary criterion}\label{sec:lagarias}
+
+Write $H_n=\sum_{k=1}^n 1/k$.  Lagarias proved the following elementary
+reformulation of the Riemann hypothesis~\cite{Lagarias2002}.
+
+\begin{theorem}[Lagarias]\label{thm:lagarias}
+The Riemann hypothesis holds if and only if every positive integer $n$
+satisfies
+\begin{equation}\label{eq:lagarias}
+  \sig(n)\le H_n+e^{H_n}\log H_n.
+\end{equation}
+\end{theorem}
+
+The formal proof deliberately reuses the hard Robin work rather than
+reconstructing it.  For the forward implication, Lagarias's Lemma~3.1 gives,
+for $n\ge3$,
+\begin{equation}\label{eq:lagarias-lower}
+  e^{\euler}n\log\log n\le e^{H_n}\log H_n.
+\end{equation}
+Indeed $\euler+\log n\le H_n$, exponentiation gives
+$e^{\euler}n\le e^{H_n}$, and
+$\log n\le H_n$ gives $\log\log n\le\log H_n$; all factors have the
+required signs.  Under $\RH$, Theorem~\ref{thm:main} and
+\eqref{eq:lagarias-lower} prove \eqref{eq:lagarias} for $n>5040$.
+The case $n=1$ is equality.  The interval $2\le n\le5040$ is split into
+46 consecutive blocks.  Each block records an exact upper bound for
+$\sig(n)$ throughout the block and rational lower bounds for $H_n$,
+$e^{H_n}$, and $\log H_n$.  The reusable block soundness theorem converts
+those checks into \eqref{eq:lagarias}; all arithmetic checks use
+\path{decide +kernel}, not \path{native_decide}.
+
+For the converse, a relaxed form of Lagarias's Lemma~3.2 suffices:
+for $n\ge20$,
+\begin{equation}\label{eq:lagarias-upper}
+ H_n+e^{H_n}\log H_n
+ \le e^{\euler}n\log\log n+\frac{24n}{\log n}.
+\end{equation}
+The published lemma has the sharper constant $7$; no sharp constant is
+needed here.  Apply \eqref{eq:lagarias-upper} to
+$L_P=\mathop{\rm lcm}(1,\ldots,P)$.  If \eqref{eq:lagarias} holds, the
+positive logarithmic Robin margin at $L_P$ is at most
+$24/\log L_P$.  The elementary Chebyshev lower bound
+$\log L_P\gg P$ makes this $O(P^{-1})$.  The already formalized
+Nicolas--Landau argument under $\neg\RH$ supplies positive margin excursions
+of order $P^{-b}$ for some $0<b<1/2$, while $P^{-1}=o(P^{-b})$.
+The two estimates contradict one another for arbitrarily large $P$.
+
+The corresponding Lean declarations are
+\path{robinBound_le_exp_harmonic_mul_log_harmonic},
+\path{lagarias_upper_bound},
+\path{lagarias_finite_two_to_5040}, and
+\path{Robin1984.riemannHypothesis_iff_lagariasElementaryCriterion}, in
+\codedir{Robin1984/Lagarias}.  The first and third parts encode Lagarias's
+forward argument and bounded verification; the converse calls the existing
+LCM oscillation theorem directly.
+
 \section{Formal verification and reproducibility}\label{sec:formalization}
 
 \subsection{Public statements and the checked proof graph}
 
-The preceding proof has been formalized in Lean~4.33.1 using
-Mathlib~\cite{Lean4,Mathlib}.  The two public declarations have the
+The preceding proofs have been formalized in Lean~4.33.1 using
+Mathlib~\cite{Lean4,Mathlib}.  The three public equivalence declarations have the
 mathematical types
 \begin{align*}
  &(\forall n\in\N,\ 5040<n\Rightarrow
@@ -1620,17 +1684,20 @@ mathematical types
  &\RH\ \Longleftrightarrow\
    (\forall n,\eps,\ 5040<n\Rightarrow
    n\text{ is colossally abundant at }\eps\Rightarrow
-   \sig(n)<e^{\euler}n\log\log n).
+   \sig(n)<e^{\euler}n\log\log n),\\
+ &\RH\ \Longleftrightarrow\
+   (\forall n\ge1,\ \sig(n)\le H_n+e^{H_n}\log H_n).
 \end{align*}
 They are named
 \begin{center}
 \small
 \path{Robin1984.robin_inequality_iff_riemannHypothesis}\\
-\path{Robin1984.riemannHypothesis_iff_colossallyAbundant_robin}.
+\path{Robin1984.riemannHypothesis_iff_colossallyAbundant_robin}\\
+\path{Robin1984.riemannHypothesis_iff_lagariasElementaryCriterion}.
 \end{center}
-The small Palomar challenge file fixes these statements using Mathlib only;
-the solution file supplies the proof terms, so statement comparison is
-independent of the internal proof graph.
+All three statement boundaries use Mathlib primitives.  The corresponding
+solution files supply the proof terms, so statement comparison is independent
+of the internal proof graph.
 
 Here the symbol $\RH$ is not an informal placeholder.  Expanding Mathlib's
 definition, it is the proposition
@@ -1669,6 +1736,10 @@ converse implication &
   \codelink{Robin1984/NicolasLandau/NicolasLandauRobinBridge.lean}
     {NicolasLandauRobinBridge}
   combines the negative oscillation with the LCM transfer \\
+Lagarias criterion &
+  \codelink{Robin1984/Lagarias/Theorem.lean}{Lagarias.Theorem}
+  combines the Robin forward theorem, a 46-block finite certificate, and the
+  existing Nicolas--Landau converse \\
 CA restriction &
   \codelink{Robin1984/ColossallyAbundant/CAReduction.lean}{CAReduction}
   combines startup completion with tangent coverage \\
@@ -2712,6 +2783,15 @@ B. Gomes and A. Kontorovich,
 \emph{Riemann hypothesis in Lean (with or without Mathlib)},
 formal development, 2020,
 \url{https://github.com/AlexKontorovich/Lean-RH}.
+
+\bibitem{Lagarias2002}
+J. C. Lagarias,
+\emph{An elementary problem equivalent to the Riemann hypothesis},
+Amer. Math. Monthly 109 (2002), no. 6, 534--543,
+\href{https://doi.org/10.1080/00029890.2002.11919883}
+{doi:10.1080/00029890.2002.11919883};
+preprint submitted in 2001,
+\href{https://arxiv.org/abs/math/0008177}{arXiv:math/0008177}.
 
 \bibitem{Landau1905}
 E. Landau,

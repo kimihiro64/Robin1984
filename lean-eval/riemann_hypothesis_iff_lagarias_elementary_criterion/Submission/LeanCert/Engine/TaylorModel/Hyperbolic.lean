@@ -1,0 +1,1303 @@
+/-
+Copyright (c) 2024 LeanCert Contributors. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: LeanCert Contributors
+-/
+import Submission.LeanCert.Engine.TaylorModel.Core
+import Mathlib.Analysis.Analytic.Binomial
+import Mathlib.Analysis.Analytic.Uniqueness
+import Mathlib.Analysis.Complex.ExponentialBounds
+
+/-!
+# Taylor Models - Hyperbolic Functions
+
+This file contains Taylor polynomial definitions and remainder bounds for
+hyperbolic functions (sinh, cosh, tanh, atan, atanh, asinh), along with
+function-level Taylor models and their correctness proofs.
+
+## Main definitions
+
+* `sinhTaylorPoly`, `coshTaylorPoly`, etc. - Taylor polynomials
+* `sinhRemainderBound`, `coshRemainderBound`, etc. - Remainder bounds
+* `tmSinh`, `tmCosh`, `tmTanh`, `tmAtan`, `tmAtanh`, `tmAsinh` - Taylor models
+* `tmSinh_correct`, `tmCosh_correct`, `tmAtanh_correct` - Correctness theorems
+-/
+
+namespace LeanCert.Engine
+
+open LeanCert.Core
+open Polynomial
+
+namespace TaylorModel
+
+/-! ### sinh Taylor polynomial -/
+
+/-- Taylor polynomial coefficients for sinh at center c = 0:
+    sinh(x) = x + x³/3! + x⁵/5! + ... -/
+noncomputable def sinhTaylorCoeffs (n : ℕ) : ℕ → ℚ := fun i =>
+  if i ≤ n then
+    if i % 2 = 1 then  -- odd terms only
+      1 / (Nat.factorial i : ℚ)
+    else 0
+  else 0
+
+/-- Taylor polynomial for sinh of degree n -/
+noncomputable def sinhTaylorPoly (n : ℕ) : Polynomial ℚ :=
+  ∑ i ∈ Finset.range (n + 1), Polynomial.C (sinhTaylorCoeffs n i) * Polynomial.X ^ i
+
+/-- Remainder bound for sinh: |sinh(x) - T_n(x)| ≤ cosh(r) * |x|^{n+1} / (n+1)!
+    where r = max(|lo|, |hi|). We use cosh(r) ≤ exp(r) ≤ 3^(⌈r⌉+1). -/
+noncomputable def sinhRemainderBound (domain : IntervalRat) (n : ℕ) : ℚ :=
+  let r := max (|domain.lo|) (|domain.hi|)
+  let coshBound := (3 : ℚ) ^ (Nat.ceil r + 1)
+  coshBound * r ^ (n + 1) / (Nat.factorial (n + 1) : ℚ)
+
+/-- Remainder bound for sinh is nonnegative -/
+theorem sinhRemainderBound_nonneg (domain : IntervalRat) (n : ℕ) :
+    0 ≤ sinhRemainderBound domain n := by
+  unfold sinhRemainderBound
+  simp only
+  apply div_nonneg
+  · apply mul_nonneg
+    · apply pow_nonneg; norm_num
+    · apply pow_nonneg
+      exact le_max_of_le_left (abs_nonneg _)
+  · exact Nat.cast_nonneg _
+
+/-! ### cosh Taylor polynomial -/
+
+/-- Taylor polynomial coefficients for cosh at center c = 0:
+    cosh(x) = 1 + x²/2! + x⁴/4! + ... -/
+noncomputable def coshTaylorCoeffs (n : ℕ) : ℕ → ℚ := fun i =>
+  if i ≤ n then
+    if i % 2 = 0 then  -- even terms only
+      1 / (Nat.factorial i : ℚ)
+    else 0
+  else 0
+
+/-- Taylor polynomial for cosh of degree n -/
+noncomputable def coshTaylorPoly (n : ℕ) : Polynomial ℚ :=
+  ∑ i ∈ Finset.range (n + 1), Polynomial.C (coshTaylorCoeffs n i) * Polynomial.X ^ i
+
+/-- Remainder bound for cosh: |cosh(x) - T_n(x)| ≤ cosh(r) * |x|^{n+1} / (n+1)!
+    where r = max(|lo|, |hi|). We use cosh(r) ≤ exp(r) ≤ 3^(⌈r⌉+1). -/
+noncomputable def coshRemainderBound (domain : IntervalRat) (n : ℕ) : ℚ :=
+  let r := max (|domain.lo|) (|domain.hi|)
+  let coshBound := (3 : ℚ) ^ (Nat.ceil r + 1)
+  coshBound * r ^ (n + 1) / (Nat.factorial (n + 1) : ℚ)
+
+/-- Remainder bound for cosh is nonnegative -/
+theorem coshRemainderBound_nonneg (domain : IntervalRat) (n : ℕ) :
+    0 ≤ coshRemainderBound domain n := by
+  unfold coshRemainderBound
+  simp only
+  apply div_nonneg
+  · apply mul_nonneg
+    · apply pow_nonneg; norm_num
+    · apply pow_nonneg
+      exact le_max_of_le_left (abs_nonneg _)
+  · exact Nat.cast_nonneg _
+
+/-! ### atan Taylor polynomial
+
+atan(x) = x - x³/3 + x⁵/5 - x⁷/7 + ... = ∑_{k=0}^∞ (-1)^k x^{2k+1} / (2k+1)
+
+Converges for |x| ≤ 1 (inclusive at endpoints by Abel's theorem).
+-/
+
+/-- Taylor polynomial coefficients for atan at center 0 -/
+noncomputable def atanTaylorCoeffs (n : ℕ) : ℕ → ℚ := fun i =>
+  if i ≤ n then
+    if i % 2 = 1 then  -- odd terms only
+      let k := (i - 1) / 2
+      ((-1 : ℚ) ^ k) / (2 * k + 1 : ℚ)
+    else 0
+  else 0
+
+/-- Taylor polynomial for atan of degree n -/
+noncomputable def atanTaylorPoly (n : ℕ) : Polynomial ℚ :=
+  ∑ i ∈ Finset.range (n + 1), Polynomial.C (atanTaylorCoeffs n i) * Polynomial.X ^ i
+
+/-- Remainder bound for atan -/
+noncomputable def atanRemainderBound (domain : IntervalRat) (n : ℕ) : ℚ :=
+  let r := max (|domain.lo|) (|domain.hi|)
+  let r_safe := min r (99/100)  -- clamp to avoid issues near |x|=1
+  let denom := max (1 - r_safe^2) (1/100)
+  r_safe^(n+1) / denom
+
+/-- Remainder bound for atan is nonnegative -/
+theorem atanRemainderBound_nonneg (domain : IntervalRat) (n : ℕ) :
+    0 ≤ atanRemainderBound domain n := by
+  unfold atanRemainderBound
+  simp only
+  apply div_nonneg
+  · apply pow_nonneg
+    apply le_min
+    · exact le_max_of_le_left (abs_nonneg _)
+    · norm_num
+  · apply le_max_of_le_right; norm_num
+
+/-! ### atanh Taylor polynomial
+
+atanh(x) = x + x³/3 + x⁵/5 + ... = ∑_{k=0}^∞ x^{2k+1} / (2k+1)
+
+Converges for |x| < 1.
+-/
+
+/-- Taylor polynomial coefficients for atanh at center 0 -/
+noncomputable def atanhTaylorCoeffs (n : ℕ) : ℕ → ℚ := fun i =>
+  if i ≤ n then
+    if i % 2 = 1 then  -- odd terms only
+      let k := (i - 1) / 2
+      1 / (2 * k + 1 : ℚ)
+    else 0
+  else 0
+
+/-- Taylor polynomial for atanh of degree n -/
+noncomputable def atanhTaylorPoly (n : ℕ) : Polynomial ℚ :=
+  ∑ i ∈ Finset.range (n + 1), Polynomial.C (atanhTaylorCoeffs n i) * Polynomial.X ^ i
+
+/-- Remainder bound for atanh -/
+noncomputable def atanhRemainderBound (domain : IntervalRat) (n : ℕ) : ℚ :=
+  let r := max (|domain.lo|) (|domain.hi|)
+  let r_safe := min r (99/100)
+  let denom := max (1 - r_safe^2) (1/100)
+  r_safe^(n+1) / denom
+
+/-- Remainder bound for atanh is nonnegative -/
+theorem atanhRemainderBound_nonneg (domain : IntervalRat) (n : ℕ) :
+    0 ≤ atanhRemainderBound domain n := by
+  unfold atanhRemainderBound
+  simp only
+  apply div_nonneg
+  · apply pow_nonneg
+    apply le_min
+    · exact le_max_of_le_left (abs_nonneg _)
+    · norm_num
+  · apply le_max_of_le_right; norm_num
+
+/-! ### asinh Taylor polynomial -/
+
+/-- Taylor polynomial coefficients for asinh at center 0 -/
+noncomputable def asinhTaylorCoeffs (n : ℕ) : ℕ → ℚ := fun i =>
+  if i ≤ n then
+    if i % 2 = 1 then
+      let k := (i - 1) / 2
+      (Ring.choose (- (1 / 2 : ℚ)) k) / (2 * k + 1 : ℚ)
+    else 0
+  else 0
+
+/-- Taylor polynomial for asinh of degree n -/
+noncomputable def asinhTaylorPoly (n : ℕ) : Polynomial ℚ :=
+  ∑ i ∈ Finset.range (n + 1), Polynomial.C (asinhTaylorCoeffs n i) * Polynomial.X ^ i
+
+/-- Supremum of the n-th derivative of arsinh over the interval hull of `domain` and `0`. -/
+noncomputable def asinhDerivSup (domain : IntervalRat) (n : ℕ) : ℝ :=
+  let a := min (domain.lo : ℝ) 0
+  let b := max (domain.hi : ℝ) 0
+  sSup ((fun x : ℝ => ‖iteratedDeriv n Real.arsinh x‖) '' Set.Icc a b)
+
+/-- Remainder bound for asinh -/
+noncomputable def asinhRemainderBound (domain : IntervalRat) (n : ℕ) : ℚ :=
+  let r := max (|domain.lo|) (|domain.hi|)
+  let M := asinhDerivSup domain (n + 1)
+  (Int.ceil M : ℚ) * r ^ (n + 1) / (Nat.factorial (n + 1) : ℚ)
+
+/-- Remainder bound for asinh is nonnegative -/
+theorem asinhRemainderBound_nonneg (domain : IntervalRat) (n : ℕ) :
+    0 ≤ asinhRemainderBound domain n := by
+  unfold asinhRemainderBound
+  apply div_nonneg
+  · apply mul_nonneg
+    · -- Int.ceil M ≥ 0 since M = sSup of norms ≥ 0
+      have hM_nonneg : 0 ≤ asinhDerivSup domain (n + 1) := by
+        unfold asinhDerivSup
+        apply Real.sSup_nonneg
+        intro y hy
+        obtain ⟨x, _, rfl⟩ := hy
+        exact norm_nonneg _
+      have hceil_nonneg : (0 : ℤ) ≤ Int.ceil (asinhDerivSup domain (n + 1)) :=
+        Int.ceil_nonneg hM_nonneg
+      exact_mod_cast hceil_nonneg
+    · -- r ^ (n + 1) ≥ 0 since r = max of abs values ≥ 0
+      apply pow_nonneg
+      exact le_max_of_le_left (abs_nonneg _)
+  · exact Nat.cast_nonneg _
+
+/-! ### Function-level Taylor models -/
+
+/-- Taylor model for sinh z on domain J, centered at 0, degree n. -/
+noncomputable def tmSinh (J : IntervalRat) (n : ℕ) : TaylorModel :=
+  { poly := sinhTaylorPoly n
+    remainder := ⟨-sinhRemainderBound J n, sinhRemainderBound J n,
+      by linarith [sinhRemainderBound_nonneg J n]⟩
+    center := 0
+    domain := J }
+
+/-- Taylor model for cosh z on domain J, centered at 0, degree n. -/
+noncomputable def tmCosh (J : IntervalRat) (n : ℕ) : TaylorModel :=
+  { poly := coshTaylorPoly n
+    remainder := ⟨-coshRemainderBound J n, coshRemainderBound J n,
+      by linarith [coshRemainderBound_nonneg J n]⟩
+    center := 0
+    domain := J }
+
+/-- Function-level Taylor model for tanh at center 0.
+    Uses tanh = sinh / cosh with the fact that cosh(x) ≥ 1 > 0 for all x. -/
+noncomputable def tmTanh (J : IntervalRat) (n : ℕ) : TaylorModel :=
+  let tmS := tmSinh J n
+  let tmC := tmCosh J n
+  if h : IntervalRat.containsZero tmC.bound then
+    -- Fallback: tanh ∈ [-1, 1] always
+    { poly := 0
+      remainder := ⟨-1, 1, by norm_num⟩
+      center := 0
+      domain := J }
+  else
+    -- Safe to divide: compute sinh / cosh
+    let tmInvC := TaylorModel.inv tmC h
+    TaylorModel.mul tmS tmInvC n
+
+/-- Taylor model for atan z on domain J, centered at 0, degree n.
+    Valid for |z| ≤ 1. -/
+noncomputable def tmAtan (J : IntervalRat) (n : ℕ) : TaylorModel :=
+  { poly := atanTaylorPoly n
+    remainder := ⟨-atanRemainderBound J n, atanRemainderBound J n,
+      by linarith [atanRemainderBound_nonneg J n]⟩
+    center := 0
+    domain := J }
+
+/-- Taylor model for atanh z on domain J, centered at 0, degree n.
+    Valid for |z| < 1. -/
+noncomputable def tmAtanh (J : IntervalRat) (n : ℕ) : TaylorModel :=
+  { poly := atanhTaylorPoly n
+    remainder := ⟨-atanhRemainderBound J n, atanhRemainderBound J n,
+      by linarith [atanhRemainderBound_nonneg J n]⟩
+    center := 0
+    domain := J }
+
+/-- Taylor model for asinh z on domain J, centered at 0, degree n. -/
+noncomputable def tmAsinh (J : IntervalRat) (n : ℕ) : TaylorModel :=
+  { poly := asinhTaylorPoly n
+    remainder := ⟨-asinhRemainderBound J n, asinhRemainderBound J n,
+      by linarith [asinhRemainderBound_nonneg J n]⟩
+    center := 0
+    domain := J }
+
+/-! ### Helper lemmas -/
+
+/-- Helper: |z| ≤ radius of interval J for z ∈ J -/
+private theorem abs_le_interval_radius' {z : ℝ} {J : IntervalRat} (hz : z ∈ J) :
+    |z| ≤ max (|(J.lo : ℝ)|) (|(J.hi : ℝ)|) := by
+  simp only [IntervalRat.mem_def] at hz
+  rw [abs_le]
+  constructor
+  · have h1 : -|(J.lo : ℝ)| ≤ J.lo := neg_abs_le _
+    have h2 : -(max (|(J.lo : ℝ)|) (|(J.hi : ℝ)|)) ≤ -|(J.lo : ℝ)| := by
+      simp only [neg_le_neg_iff]; exact le_max_left _ _
+    linarith
+  · have h1 : (J.hi : ℝ) ≤ |(J.hi : ℝ)| := le_abs_self _
+    have h2 : |(J.hi : ℝ)| ≤ max (|(J.lo : ℝ)|) (|(J.hi : ℝ)|) := le_max_right _ _
+    linarith
+
+/-- Helper: z ∈ J means z ∈ [J.lo, J.hi] as real numbers -/
+private theorem mem_Icc_of_mem_interval {z : ℝ} {J : IntervalRat} (hz : z ∈ J) :
+    z ∈ Set.Icc (J.lo : ℝ) (J.hi : ℝ) := by
+  simp only [IntervalRat.mem_def] at hz
+  exact ⟨hz.1, hz.2⟩
+
+/-- Helper: |z| ≤ radius of interval J for z ∈ J (duplicate for consistency) -/
+private theorem abs_le_interval_radius {z : ℝ} {J : IntervalRat} (hz : z ∈ J) :
+    |z| ≤ max (|(J.lo : ℝ)|) (|(J.hi : ℝ)|) := abs_le_interval_radius' hz
+
+/-! ### Helper lemmas for iterated derivatives -/
+
+/-- iteratedDeriv for sinh and cosh at 0, proved together.
+    sinh: even n → 0, odd n → 1
+    cosh: even n → 1, odd n → 0 -/
+theorem iteratedDeriv_sinh_cosh_zero (n : ℕ) :
+    iteratedDeriv n Real.sinh 0 = (if n % 2 = 0 then 0 else 1) ∧
+    iteratedDeriv n Real.cosh 0 = (if n % 2 = 0 then 1 else 0) := by
+  induction n with
+  | zero =>
+    simp only [iteratedDeriv_zero, Real.sinh_zero, Real.cosh_zero, Nat.zero_mod, ↓reduceIte]
+    trivial
+  | succ n ih =>
+    have hmod : n % 2 = 0 ∨ n % 2 = 1 := by omega
+    constructor
+    · -- sinh case: deriv sinh = cosh
+      rw [iteratedDeriv_succ', Real.deriv_sinh, ih.2]
+      rcases hmod with h | h <;> simp [h, Nat.succ_mod_two_eq_zero_iff]
+    · -- cosh case: deriv cosh = sinh
+      rw [iteratedDeriv_succ', Real.deriv_cosh, ih.1]
+      rcases hmod with h | h <;> simp [h, Nat.succ_mod_two_eq_zero_iff]
+
+/-- iteratedDeriv n sinh at 0 -/
+theorem iteratedDeriv_sinh_zero (n : ℕ) :
+    iteratedDeriv n Real.sinh 0 = if n % 2 = 0 then 0 else 1 :=
+  (iteratedDeriv_sinh_cosh_zero n).1
+
+/-- iteratedDeriv n cosh at 0 -/
+theorem iteratedDeriv_cosh_zero (n : ℕ) :
+    iteratedDeriv n Real.cosh 0 = if n % 2 = 0 then 1 else 0 :=
+  (iteratedDeriv_sinh_cosh_zero n).2
+
+/-! ### arsinh series helpers -/
+
+/-- Odd derivatives of even functions at 0 vanish.
+    Uses iteratedDeriv_comp_neg: iteratedDeriv n (fun x => f(-x)) a = (-1)^n * iteratedDeriv n f (-a)
+    For even f where f(-x) = f(x), at a = 0 we get iteratedDeriv n f 0 = (-1)^n * iteratedDeriv n f 0
+    For odd n, this means d = -d, hence d = 0. -/
+private lemma iteratedDeriv_even_odd_zero {f : ℝ → ℝ} (heven : ∀ x, f (-x) = f x)
+    {n : ℕ} (hodd : n % 2 = 1) : iteratedDeriv n f 0 = 0 := by
+  -- Key insight: f(-x) = f(x) implies iteratedDeriv n f 0 = (-1)^n * iteratedDeriv n f 0
+  have h1 : ∀ a, iteratedDeriv n (fun x => f (-x)) a = (-1 : ℝ) ^ n • iteratedDeriv n f (-a) :=
+    fun a => iteratedDeriv_comp_neg n f a
+  -- Since f(-x) = f(x), we have (fun x => f(-x)) = f
+  have h2 : (fun x => f (-x)) = f := funext heven
+  -- At a = 0: iteratedDeriv n f 0 = (-1)^n * iteratedDeriv n f 0
+  have h3 : iteratedDeriv n f 0 = (-1 : ℝ) ^ n • iteratedDeriv n f 0 := by
+    calc iteratedDeriv n f 0
+        = iteratedDeriv n (fun x => f (-x)) 0 := by rw [h2]
+      _ = (-1 : ℝ) ^ n • iteratedDeriv n f (-0) := h1 0
+      _ = (-1 : ℝ) ^ n • iteratedDeriv n f 0 := by simp
+  -- For odd n: (-1)^n = -1
+  have hneg : (-1 : ℝ) ^ n = -1 := Odd.neg_one_pow (Nat.odd_iff.mpr hodd)
+  -- So d = -d, hence d = 0
+  simp only [hneg, neg_smul, one_smul] at h3
+  linarith
+
+/-- Even derivatives of odd functions at 0 vanish.
+    For odd f where f(-x) = -f(x), at a = 0 we get (-1)^n * d = -d.
+    For even n, this means d = -d, hence d = 0. -/
+private lemma iteratedDeriv_odd_even_zero {f : ℝ → ℝ} (hodd : ∀ x, f (-x) = -f x)
+    {n : ℕ} (heven : n % 2 = 0) : iteratedDeriv n f 0 = 0 := by
+  have h1 : ∀ a, iteratedDeriv n (fun x => f (-x)) a = (-1 : ℝ) ^ n • iteratedDeriv n f (-a) :=
+    fun a => iteratedDeriv_comp_neg n f a
+  have h2 : (fun x => f (-x)) = -f := by ext x; simp [hodd]
+  have h3 : (-1 : ℝ) ^ n • iteratedDeriv n f 0 = -iteratedDeriv n f 0 := by
+    calc (-1 : ℝ) ^ n • iteratedDeriv n f 0
+        = iteratedDeriv n (fun x => f (-x)) 0 := by rw [h1 0]; simp
+      _ = iteratedDeriv n (-f) 0 := by rw [h2]
+      _ = -iteratedDeriv n f 0 := iteratedDeriv_neg n f 0
+  have hpos : (-1 : ℝ) ^ n = 1 := Even.neg_one_pow (Nat.even_iff.mpr heven)
+  simp only [hpos, one_smul] at h3
+  linarith
+
+/-- deriv arsinh x = (1 + x²)^(-1/2) -/
+private lemma arsinh_continuous_iteratedDeriv (n : ℕ) :
+    Continuous (iteratedDeriv n Real.arsinh) := by
+  have h : ContDiff ℝ (n : ℕ∞) Real.arsinh := Real.contDiff_arsinh
+  exact h.continuous_iteratedDeriv n le_rfl
+
+private lemma deriv_arsinh_eq (x : ℝ) : deriv Real.arsinh x = (1 + x ^ 2) ^ (-(1/2 : ℝ)) := by
+  have h : 1 + x^2 > 0 := by nlinarith [sq_nonneg x]
+  have hd := Real.hasDerivAt_arsinh x
+  rw [hd.deriv]
+  rw [Real.sqrt_eq_rpow, ← Real.rpow_neg (le_of_lt h)]
+
+private lemma deriv_arsinh : deriv Real.arsinh = fun x => (1 + x ^ 2) ^ (-(1/2 : ℝ)) := by
+  ext x; exact deriv_arsinh_eq x
+
+/-- Key relationship: iteratedDeriv (n+1) arsinh = iteratedDeriv n ((1+x²)^(-1/2)) -/
+private lemma iteratedDeriv_arsinh_succ (n : ℕ) :
+    iteratedDeriv (n + 1) Real.arsinh = iteratedDeriv n (fun x => (1 + x ^ 2) ^ (-(1/2 : ℝ))) := by
+  rw [iteratedDeriv_succ']
+  congr 1
+  exact deriv_arsinh
+
+private noncomputable def sqSeries : FormalMultilinearSeries ℝ ℝ ℝ :=
+  FormalMultilinearSeries.ofScalars ℝ (fun n => if n = 2 then (1 : ℝ) else 0)
+
+private lemma sqSeries_apply_const (n : ℕ) (x : ℝ) :
+    sqSeries n (fun _ => x) = if n = 2 then x ^ 2 else 0 := by
+  by_cases h : n = 2
+  · subst h
+    simp [sqSeries]
+  · simp [sqSeries, h]
+
+private lemma iteratedDeriv_one_add_rpow_zero (a : ℝ) (n : ℕ) :
+    iteratedDeriv n (fun x : ℝ => (1 + x) ^ a) 0 =
+      (Nat.factorial n : ℝ) * Ring.choose a n := by
+  -- Compare the binomial series with the canonical Taylor series at 0.
+  have h_series :
+      HasFPowerSeriesAt (fun x : ℝ => (1 + x) ^ a) (binomialSeries ℝ a) 0 :=
+    Real.one_add_rpow_hasFPowerSeriesAt_zero (a := a)
+  have h_taylor :
+      HasFPowerSeriesAt (fun x : ℝ => (1 + x) ^ a)
+        (FormalMultilinearSeries.ofScalars ℝ
+          (fun n => iteratedDeriv n (fun x : ℝ => (1 + x) ^ a) 0 / n.factorial)) 0 :=
+    (AnalyticAt.hasFPowerSeriesAt (h_series.analyticAt))
+  have h_eq := HasFPowerSeriesAt.eq_formalMultilinearSeries h_series h_taylor
+  have hcoeff := congrArg (fun p => p.coeff n) h_eq
+  -- `binomialSeries` is `ofScalars` with coefficients `Ring.choose a n`.
+  simp [binomialSeries, FormalMultilinearSeries.coeff, FormalMultilinearSeries.ofScalars,
+    List.prod_ofFn] at hcoeff
+  have hfact : (n.factorial : ℝ) ≠ 0 := by
+    exact_mod_cast Nat.factorial_ne_zero n
+  -- Rearrange the coefficient identity.
+  field_simp [hfact] at hcoeff
+  simpa [mul_comm] using hcoeff.symm
+
+-- The composition of all 2s for even n = 2k
+private def twosComposition (k : ℕ) : Composition (2 * k) where
+  blocks := List.replicate k 2
+  blocks_pos := by intro i hi; simp [List.mem_replicate] at hi; omega
+  blocks_sum := by simp [List.sum_replicate]; ring
+
+private lemma twosComposition_length (k : ℕ) : (twosComposition k).length = k := by
+  simp [twosComposition, Composition.length]
+
+private lemma twosComposition_blocksFun (k : ℕ) (i : Fin (twosComposition k).length) :
+    (twosComposition k).blocksFun i = 2 := by
+  unfold Composition.blocksFun
+  change (List.replicate k 2)[i.val] = 2
+  exact List.getElem_replicate (by simpa [twosComposition_length] using i.isLt)
+
+private lemma twosComposition_unique (k : ℕ) (comp : Composition (2 * k))
+    (hall : ∀ i, comp.blocksFun i = 2) : comp = twosComposition k := by
+  ext1
+  have hblocks : comp.blocks = List.replicate comp.length 2 := by
+    apply List.ext_getElem
+    · simp [Composition.blocks_length]
+    · intro n h1 h2
+      rw [List.getElem_replicate h2]
+      have hi : n < comp.length := by rwa [← Composition.blocks_length]
+      exact hall ⟨n, hi⟩
+  have hlength : comp.length = k := by
+    have hsum := comp.blocks_sum
+    rw [hblocks] at hsum
+    simp [List.sum_replicate] at hsum
+    omega
+  rw [hblocks, hlength]
+  simp [twosComposition]
+
+private lemma blocks_all_two_implies {n : ℕ} (comp : Composition n)
+    (h : ∀ i, comp.blocksFun i = 2) : n = 2 * comp.length := by
+  have hsum : ∑ i, comp.blocksFun i = n := Composition.sum_blocksFun comp
+  calc n = ∑ i : Fin comp.length, comp.blocksFun i := hsum.symm
+    _ = ∑ i : Fin comp.length, 2 := Finset.sum_congr rfl (fun i _ => h i)
+    _ = 2 * comp.length := by simp [Finset.sum_const]; ring
+
+private lemma odd_composition_has_non_two_block {n : ℕ} (hn : n % 2 = 1) (comp : Composition n) :
+    ∃ i, comp.blocksFun i ≠ 2 := by
+  by_contra! h_all
+  have := blocks_all_two_implies comp h_all
+  omega
+
+private lemma ofScalars_apply_prod (c : ℕ → ℝ) (k : ℕ) (v : Fin k → ℝ) :
+    (FormalMultilinearSeries.ofScalars ℝ c k) v = c k * ∏ i, v i := by
+  simp only [FormalMultilinearSeries.ofScalars]
+  simp only [smul_apply, smul_eq_mul]
+  congr 1
+  rw [ContinuousMultilinearMap.mkPiAlgebraFin_apply]
+  simp [List.prod_ofFn]
+
+private lemma sqSeries_const_one (k : ℕ) :
+    sqSeries k (fun _ : Fin k => (1 : ℝ)) = if k = 2 then 1 else 0 := by
+  rw [sqSeries, ofScalars_apply_prod]
+  split_ifs with h <;> simp
+
+private lemma sqSeries_applyComposition_one_i {n : ℕ} (comp : Composition n) (i : Fin comp.length) :
+    sqSeries.applyComposition comp (1 : Fin n → ℝ) i =
+      if comp.blocksFun i = 2 then 1 else 0 := by
+  simp only [FormalMultilinearSeries.applyComposition]
+  have : (1 : Fin n → ℝ) ∘ comp.embedding i = 1 := by ext; simp
+  rw [this]
+  exact sqSeries_const_one (comp.blocksFun i)
+
+private lemma prod_sqSeries_applyComposition {n : ℕ} (comp : Composition n) :
+    ∏ i, sqSeries.applyComposition comp (1 : Fin n → ℝ) i =
+      if ∀ i, comp.blocksFun i = 2 then 1 else 0 := by
+  by_cases hall : ∀ i, comp.blocksFun i = 2
+  · rw [if_pos hall]
+    apply Finset.prod_eq_one
+    intro i _
+    rw [sqSeries_applyComposition_one_i, if_pos (hall i)]
+  · rw [if_neg hall]
+    push Not at hall
+    obtain ⟨j, hj⟩ := hall
+    apply Finset.prod_eq_zero (Finset.mem_univ j)
+    rw [sqSeries_applyComposition_one_i, if_neg hj]
+
+-- Coefficient of composed series: composing (ofScalars c) with sqSeries
+-- For odd n: 0 (no composition with all blocks of size 2)
+-- For even n = 2k: c(k) (unique composition [2,2,...,2] with k blocks)
+--
+-- Mathematical justification:
+-- The composition (q.comp p) n = Σ_{c : Composition n} q.compAlongComposition p c
+-- For sqSeries, p k = 0 unless k = 2, so only compositions with all blocks = 2 contribute.
+-- For odd n, no such composition exists, so the sum is 0.
+-- For even n = 2k, the unique such composition has k blocks of size 2, giving c(k).
+private lemma coeff_comp_sq_ofScalars (c : ℕ → ℝ) (n : ℕ) :
+    ((FormalMultilinearSeries.ofScalars ℝ c).comp sqSeries).coeff n =
+      if n % 2 = 0 then c (n / 2) else 0 := by
+  simp only [FormalMultilinearSeries.coeff, FormalMultilinearSeries.comp,
+    sum_apply]
+  by_cases hn : n % 2 = 0
+  case neg =>
+    rw [if_neg hn]
+    apply Finset.sum_eq_zero
+    intro comp _
+    simp only [FormalMultilinearSeries.compAlongComposition_apply]
+    rw [ofScalars_apply_prod, prod_sqSeries_applyComposition]
+    have hodd : n % 2 = 1 := by omega
+    have hne := odd_composition_has_non_two_block hodd comp
+    have hne' : ¬∀ i, comp.blocksFun i = 2 := fun h => hne.elim fun i hi => hi (h i)
+    rw [if_neg hne']
+    ring
+  case pos =>
+    rw [if_pos hn]
+    -- n is even, write n = 2 * k
+    obtain ⟨k, hk⟩ : ∃ k, n = 2 * k := ⟨n / 2, by omega⟩
+    subst hk
+    -- The only non-zero term is twosComposition k
+    have hsplit : ∀ comp : Composition (2 * k),
+        (FormalMultilinearSeries.ofScalars ℝ c).compAlongComposition sqSeries comp
+          (1 : Fin (2 * k) → ℝ) =
+          if ∀ i, comp.blocksFun i = 2 then c k else 0 := by
+      intro comp
+      simp only [FormalMultilinearSeries.compAlongComposition_apply]
+      rw [ofScalars_apply_prod, prod_sqSeries_applyComposition]
+      by_cases hall : ∀ i, comp.blocksFun i = 2
+      · rw [if_pos hall, if_pos hall]
+        have hlength : comp.length = k := by
+          have := blocks_all_two_implies comp hall
+          omega
+        simp [hlength]
+      · rw [if_neg hall, if_neg hall]
+        ring
+    simp_rw [hsplit]
+    -- Sum of (if condition then c k else 0) over all compositions
+    -- Only the twosComposition k satisfies the condition
+    have hall_twos : ∀ i, (twosComposition k).blocksFun i = 2 := twosComposition_blocksFun k
+    rw [Finset.sum_eq_single (twosComposition k)]
+    · rw [if_pos hall_twos]
+      simp
+    · intro comp _ hne
+      by_cases hall : ∀ i, comp.blocksFun i = 2
+      · exfalso
+        exact hne (twosComposition_unique k comp hall)
+      · rw [if_neg hall]
+    · intro hnot
+      exfalso
+      exact hnot (Finset.mem_univ _)
+
+-- The power series for x² at 0
+private lemma sqSeries_hasFPowerSeriesAt_zero :
+    HasFPowerSeriesAt (fun x : ℝ => x ^ 2) sqSeries 0 := by
+  rw [hasFPowerSeriesAt_iff]
+  filter_upwards [Filter.univ_mem] with z _
+  -- sqSeries.coeff n = if n = 2 then 1 else 0
+  -- So the series is just z^2 • 1 = z^2 at n=2, and 0 elsewhere
+  have hcoeff : ∀ n, sqSeries.coeff n = if n = 2 then 1 else 0 := by
+    intro n
+    simp only [sqSeries, FormalMultilinearSeries.coeff_ofScalars]
+  simp only [zero_add]
+  -- The sum ∑ z^n • (if n = 2 then 1 else 0) = z^2
+  convert hasSum_single 2 (fun n hn => ?_)
+  · simp only [hcoeff, ↓reduceIte, smul_eq_mul, mul_one]
+  · simp only [hcoeff, hn, ↓reduceIte, smul_eq_mul, mul_zero]
+
+-- The n-th derivative of (1+x²)^a at 0
+-- Odd derivatives vanish (function is even), even derivatives come from binomial series
+--
+-- Mathematical justification:
+-- 1. f(x) = (1+x²)^a is even: f(-x) = f(x), so all odd derivatives at 0 vanish.
+-- 2. The Taylor series is (1+x²)^a = Σ_{k=0}^∞ Ring.choose(a,k) * x^(2k)
+--    (composition of binomial series with x²).
+-- 3. So iteratedDeriv (2k) f 0 = (2k)! * Ring.choose(a,k).
+private lemma iteratedDeriv_one_add_sq_rpow_zero (a : ℝ) (n : ℕ) :
+    iteratedDeriv n (fun x : ℝ => (1 + x ^ 2) ^ a) 0 =
+      (Nat.factorial n : ℝ) * (if n % 2 = 0 then Ring.choose a (n / 2) else 0) := by
+  by_cases hparity : n % 2 = 0
+  case neg =>
+    -- Odd n: the function is even, so odd derivatives at 0 vanish
+    have hodd : n % 2 = 1 := by omega
+    have heven_func : ∀ x : ℝ, (1 + (-x) ^ 2) ^ a = (1 + x ^ 2) ^ a := by
+      intro x; congr 1; ring
+    rw [iteratedDeriv_even_odd_zero heven_func hodd]
+    simp [hparity]
+  case pos =>
+    -- Even n = 2k: use power series composition
+    -- (1 + x²)^a = (1 + x)^a composed with x², so Taylor coeff at n is Ring.choose a (n/2)
+    simp only [hparity, ↓reduceIte]
+    -- Use that f has power series (binomialSeries ℝ a).comp sqSeries
+    -- First, establish that (1+x)^a has binomial series at 0
+    have h_binom : HasFPowerSeriesAt (fun y : ℝ => (1 + y) ^ a) (binomialSeries ℝ a) 0 :=
+      Real.one_add_rpow_hasFPowerSeriesAt_zero
+    -- sqSeries gives x² its power series at 0
+    have hsq : HasFPowerSeriesAt (fun x : ℝ => x ^ 2) sqSeries 0 := sqSeries_hasFPowerSeriesAt_zero
+    -- At x = 0, x² = 0, so we can use composition
+    have h_comp : HasFPowerSeriesAt ((fun y : ℝ => (1 + y) ^ a) ∘ (fun x : ℝ => x ^ 2))
+        ((binomialSeries ℝ a).comp sqSeries) 0 := by
+      apply HasFPowerSeriesAt.comp
+      · convert! h_binom using 1; simp
+      · exact hsq
+    -- Simplify the composed function
+    have h_comp' : HasFPowerSeriesAt (fun x : ℝ => (1 + x ^ 2) ^ a)
+        ((binomialSeries ℝ a).comp sqSeries) 0 := by
+      convert! h_comp using 1
+    -- The canonical Taylor series has coefficients iteratedDeriv k f 0 / k!
+    have h_taylor : HasFPowerSeriesAt (fun x : ℝ => (1 + x ^ 2) ^ a)
+        (FormalMultilinearSeries.ofScalars ℝ
+          (fun k => iteratedDeriv k (fun x : ℝ => (1 + x ^ 2) ^ a) 0 / (k.factorial : ℝ))) 0 :=
+      h_comp'.analyticAt.hasFPowerSeriesAt
+    -- Uniqueness: comp series = Taylor series
+    have h_eq := HasFPowerSeriesAt.eq_formalMultilinearSeries h_comp' h_taylor
+    -- Extract coefficient at n
+    have hcoeff := congrArg (fun p => p.coeff n) h_eq
+    -- binomialSeries ℝ a = ofScalars ℝ (fun k => Ring.choose a k)
+    simp only [binomialSeries] at hcoeff
+    -- Use coeff_comp_sq_ofScalars to simplify
+    rw [coeff_comp_sq_ofScalars] at hcoeff
+    simp only [hparity, ↓reduceIte, FormalMultilinearSeries.coeff_ofScalars] at hcoeff
+    -- Rearrange to get the desired form
+    have hfact : (n.factorial : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (Nat.factorial_ne_zero n)
+    field_simp [hfact] at hcoeff
+    linarith
+
+/-- The sinhTaylorCoeffs match the Mathlib Taylor coefficients for sinh at 0 -/
+theorem sinhTaylorCoeffs_eq_iteratedDeriv (n i : ℕ) (hi : i ≤ n) :
+    (sinhTaylorCoeffs n i : ℝ) = iteratedDeriv i Real.sinh 0 / i.factorial := by
+  simp only [sinhTaylorCoeffs, hi, ↓reduceIte]
+  by_cases hodd : i % 2 = 1
+  · have hne : i % 2 ≠ 0 := by omega
+    simp only [hodd, ↓reduceIte]
+    rw [iteratedDeriv_sinh_zero]
+    simp only [hne, ↓reduceIte, Rat.cast_div, Rat.cast_one, Rat.cast_natCast]
+  · have heven : i % 2 = 0 := by omega
+    simp only [hodd]; norm_num
+    rw [iteratedDeriv_sinh_zero]
+    simp only [heven, ↓reduceIte, zero_div]
+
+/-- The coshTaylorCoeffs match the Mathlib Taylor coefficients for cosh at 0 -/
+theorem coshTaylorCoeffs_eq_iteratedDeriv (n i : ℕ) (hi : i ≤ n) :
+    (coshTaylorCoeffs n i : ℝ) = iteratedDeriv i Real.cosh 0 / i.factorial := by
+  simp only [coshTaylorCoeffs, hi, ↓reduceIte]
+  by_cases heven : i % 2 = 0
+  · simp only [heven, ↓reduceIte]
+    rw [iteratedDeriv_cosh_zero]
+    simp only [heven, ↓reduceIte, Rat.cast_div, Rat.cast_one, Rat.cast_natCast]
+  · have hodd : i % 2 = 1 := by omega
+    simp only [heven]; norm_num
+    rw [iteratedDeriv_cosh_zero]
+    simp only [heven, ↓reduceIte, zero_div]
+
+/-! ### Polynomial evaluation lemmas -/
+
+/-- sinhTaylorPoly evaluates to the standard Taylor sum for sinh at 0. -/
+theorem sinhTaylorPoly_aeval_eq (n : ℕ) (z : ℝ) :
+    (Polynomial.aeval z (sinhTaylorPoly n) : ℝ) =
+      ∑ i ∈ Finset.range (n + 1), (iteratedDeriv i Real.sinh 0 / i.factorial) * z ^ i := by
+  simp only [sinhTaylorPoly, map_sum, Polynomial.aeval_mul, Polynomial.aeval_C,
+    Polynomial.aeval_X_pow]
+  apply Finset.sum_congr rfl
+  intro i hi
+  have hi_le : i ≤ n := Finset.mem_range_succ_iff.mp hi
+  have h := sinhTaylorCoeffs_eq_iteratedDeriv n i hi_le
+  change (sinhTaylorCoeffs n i : ℝ) * z ^ i = _
+  rw [h]
+
+/-- coshTaylorPoly evaluates to the standard Taylor sum for cosh at 0. -/
+theorem coshTaylorPoly_aeval_eq (n : ℕ) (z : ℝ) :
+    (Polynomial.aeval z (coshTaylorPoly n) : ℝ) =
+      ∑ i ∈ Finset.range (n + 1), (iteratedDeriv i Real.cosh 0 / i.factorial) * z ^ i := by
+  simp only [coshTaylorPoly, map_sum, Polynomial.aeval_mul, Polynomial.aeval_C,
+    Polynomial.aeval_X_pow]
+  apply Finset.sum_congr rfl
+  intro i hi
+  have hi_le : i ≤ n := Finset.mem_range_succ_iff.mp hi
+  have h := coshTaylorCoeffs_eq_iteratedDeriv n i hi_le
+  change (coshTaylorCoeffs n i : ℝ) * z ^ i = _
+  rw [h]
+
+/-! ### atanh correctness helper -/
+
+/-- The atanh series representation: atanh(x) = Σ x^(2k+1)/(2k+1) for |x| < 1.
+    Derived from Mathlib's hasSum_log_sub_log_of_abs_lt_one. -/
+theorem Real.atanh_hasSum {x : ℝ} (hx : |x| < 1) :
+    HasSum (fun k : ℕ => x ^ (2 * k + 1) / (2 * k + 1)) (Real.atanh x) := by
+  have hlog := Real.hasSum_log_sub_log_of_abs_lt_one hx
+  -- log(1+x) - log(1-x) = Σ 2 * x^(2k+1) / (2k+1)
+  -- atanh(x) = (1/2)(log(1+x) - log(1-x)) = Σ x^(2k+1) / (2k+1)
+  have h1 : 0 < 1 + x := by linarith [(abs_lt.mp hx).1]
+  have h2 : 0 < 1 - x := by linarith [(abs_lt.mp hx).2]
+  have h_eq : Real.atanh x = (1 / 2) * (Real.log (1 + x) - Real.log (1 - x)) := by
+    rw [Real.atanh, Real.log_div (ne_of_gt h1) (ne_of_gt h2)]
+  rw [h_eq]
+  -- Need: HasSum (fun k => x^(2k+1)/(2k+1)) ((1/2) * (log(1+x) - log(1-x)))
+  convert! hlog.mul_left (1 / 2) using 1
+  funext k
+  field_simp
+
+/-- atanhTaylorPoly evaluates to the standard sum. -/
+theorem atanhTaylorPoly_aeval_eq (n : ℕ) (z : ℝ) :
+    (Polynomial.aeval z (atanhTaylorPoly n) : ℝ) =
+      ∑ k ∈ Finset.range (n + 1), (atanhTaylorCoeffs n k : ℝ) * z ^ k := by
+  simp only [atanhTaylorPoly, map_sum, Polynomial.aeval_mul, Polynomial.aeval_C,
+    Polynomial.aeval_X_pow]
+  apply Finset.sum_congr rfl
+  intro k _
+  simp only [eq_ratCast]
+
+/-- Remainder bound for the atanh series: for |z| < 1, the tail after degree n is bounded.
+    Uses the geometric series bound on the tail.
+
+    Proof sketch:
+    1. atanh(z) = Σ_{k=0}^∞ z^(2k+1)/(2k+1) by Real.atanh_hasSum
+    2. The polynomial computes partial sum of odd terms up to degree n
+    3. Remainder = tail = Σ_{k: 2k+1 > n} z^(2k+1)/(2k+1)
+    4. |tail| ≤ Σ_{k: 2k+1 > n} |z|^(2k+1) ≤ |z|^(n+1)/(1-z²) by geometric series -/
+theorem atanh_series_remainder_bound {z : ℝ} (hz : |z| < 1) (n : ℕ) :
+    |Real.atanh z - ∑ k ∈ Finset.range (n + 1), (atanhTaylorCoeffs n k : ℝ) * z ^ k| ≤
+    |z| ^ (n + 1) / (1 - z ^ 2) := by
+  -- Get the series representation
+  have hseries := Real.atanh_hasSum hz
+  -- Key facts about z
+  have hz_sq : z ^ 2 < 1 := (sq_lt_one_iff_abs_lt_one z).mpr hz
+  have h_denom_pos : 0 < 1 - z ^ 2 := by linarith
+  have hz_abs_sq : |z| ^ 2 < 1 := by rwa [sq_abs]
+  have hz_abs_nonneg : 0 ≤ |z| := abs_nonneg z
+  have hz_abs_le : |z| ≤ 1 := le_of_lt hz
+
+  -- Define the series term and the split point m
+  let term := fun k : ℕ => z ^ (2 * k + 1) / (2 * k + 1)
+  -- m = number of terms with 2k+1 ≤ n, i.e., k ≤ (n-1)/2
+  let m := (n + 1) / 2
+
+  -- Key: 2m ≥ n (so 2m+1 ≥ n+1)
+  have hm_bound : 2 * m ≥ n := by
+    simp only [m]
+    omega
+
+  -- Step 1: Show polynomial sum equals partial series sum up to m terms
+  have h_poly_eq_partial :
+      ∑ i ∈ Finset.range (n + 1), (atanhTaylorCoeffs n i : ℝ) * z ^ i =
+      ∑ k ∈ Finset.range m, term k := by
+    -- The polynomial has nonzero coefficients only at odd indices 2k+1 ≤ n
+    -- which corresponds to k < m = (n+1)/2
+    -- We rewrite LHS by filtering to odd terms and reindexing
+    have h_even_zero : ∀ i ∈ Finset.range (n + 1), ¬(i % 2 = 1) →
+        (atanhTaylorCoeffs n i : ℝ) * z ^ i = 0 := by
+      intro i hi hi_not_odd
+      have hi_range : i < n + 1 := Finset.mem_range.mp hi
+      unfold atanhTaylorCoeffs
+      have h_le : i ≤ n := Nat.lt_succ_iff.mp hi_range
+      simp only [h_le, ite_true]
+      simp only [hi_not_odd, ite_false, Rat.cast_zero, zero_mul]
+    -- Split sum into even and odd parts
+    conv_lhs =>
+      rw [← Finset.sum_filter_add_sum_filter_not (Finset.range (n + 1)) (fun i => i % 2 = 1)]
+    simp only [Finset.sum_eq_zero (fun i hi => h_even_zero i (Finset.mem_filter.mp hi).1
+      (Finset.mem_filter.mp hi).2), add_zero]
+    -- Reindex: odd i in [0, n] correspond to k in [0, m) where k = (i-1)/2, i = 2k+1
+    -- The bijection shows the polynomial sum equals the partial series sum
+    symm
+    apply Finset.sum_bij (i := fun k _ => 2 * k + 1)
+    -- hi: 2k+1 is in filter
+    case hi => intro k hk
+               simp only [Finset.mem_filter, Finset.mem_range] at hk ⊢
+               exact ⟨by omega, by omega⟩
+    -- h: terms match
+    case h => intro k hk
+              simp only [Finset.mem_range] at hk
+              have h_odd : (2 * k + 1) % 2 = 1 := by omega
+              have h_le : 2 * k + 1 ≤ n := by omega
+              unfold atanhTaylorCoeffs
+              have h_div : (2 * k + 1 - 1) / 2 = k := by omega
+              simp only [h_le, ite_true, h_odd, Nat.add_sub_cancel]
+              push_cast
+              have h_ne : (2 * (k : ℝ) + 1) ≠ 0 := by positivity
+              simp only [term]
+              field_simp
+              grind
+    -- i_inj: injective
+    case i_inj => intro k₁ _ k₂ _ h; omega
+    -- i_surj: surjective
+    case i_surj => intro i hi
+                   simp only [Finset.mem_filter, Finset.mem_range] at hi
+                   exact ⟨(i - 1) / 2, Finset.mem_range.mpr (by omega), by omega⟩
+
+  -- Step 2: The remainder is the tail of the series starting at m
+  have h_summable := hseries.summable
+  have h_tail_summable : Summable fun k => term (k + m) := (summable_nat_add_iff m).mpr h_summable
+  have h_tail_eq : Real.atanh z - ∑ k ∈ Finset.range m, term k = ∑' k, term (k + m) := by
+    have h_split := h_summable.sum_add_tsum_nat_add m
+    -- h_split : (∑ i ∈ range m, term i) + ∑' i, term (i + m) = ∑' i, term i
+    have h_tsum_eq : ∑' i, term i = Real.atanh z := hseries.tsum_eq
+    linarith [h_split, h_tsum_eq]
+
+  rw [h_poly_eq_partial, h_tail_eq]
+
+  -- Step 3: Bound the tail by geometric series
+  -- |term (k + m)| = |z|^(2(k+m)+1) / (2(k+m)+1) ≤ |z|^(2(k+m)+1) ≤ |z|^(2m+1) * |z|^(2k)
+  let geo_term := fun k : ℕ => |z| ^ (2 * m + 1) * (|z| ^ 2) ^ k
+
+  have h_geo_summable : Summable geo_term := by
+    apply Summable.mul_left
+    exact summable_geometric_of_lt_one (sq_nonneg _) hz_abs_sq
+
+  have h_term_bound : ∀ k, |term (k + m)| ≤ geo_term k := by
+    intro k
+    simp only [term, geo_term]
+    rw [abs_div, abs_pow]
+    have h_pow_eq : |z| ^ (2 * (k + m) + 1) = |z| ^ (2 * m + 1) * (|z| ^ 2) ^ k := by
+      have : 2 * (k + m) + 1 = 2 * m + 1 + 2 * k := by ring
+      rw [this, pow_add, pow_mul]
+    rw [h_pow_eq]
+    -- The denominator |2*(k+m)+1| ≥ 1, so dividing makes the numerator smaller
+    have h_denom_pos' : (0 : ℝ) < 2 * (k + m : ℕ) + 1 := by positivity
+    have h_denom_ge_one : (1 : ℝ) ≤ |(2 : ℝ) * (k + m : ℕ) + 1| := by
+      rw [abs_of_pos h_denom_pos']
+      have hk : (0 : ℝ) ≤ k := Nat.cast_nonneg k
+      have hm : (0 : ℝ) ≤ m := Nat.cast_nonneg m
+      push_cast
+      linarith
+    calc |z| ^ (2 * m + 1) * (|z| ^ 2) ^ k / |(2 : ℝ) * (k + m : ℕ) + 1|
+        ≤ |z| ^ (2 * m + 1) * (|z| ^ 2) ^ k / 1 := by
+          apply div_le_div_of_nonneg_left _ (by positivity) h_denom_ge_one
+          positivity
+      _ = |z| ^ (2 * m + 1) * (|z| ^ 2) ^ k := by ring
+
+  -- Apply the bound
+  have h_norm_sum : ‖∑' k, term (k + m)‖ ≤ ∑' k, ‖term (k + m)‖ :=
+    norm_tsum_le_tsum_norm h_tail_summable.norm
+  simp only [Real.norm_eq_abs] at h_norm_sum
+  calc |∑' k, term (k + m)|
+      ≤ ∑' k, |term (k + m)| := h_norm_sum
+    _ ≤ ∑' k, geo_term k := h_tail_summable.abs.tsum_le_tsum h_term_bound h_geo_summable
+    _ = |z| ^ (2 * m + 1) * ∑' k, (|z| ^ 2) ^ k := by
+        simp only [geo_term]
+        rw [tsum_mul_left]
+    _ = |z| ^ (2 * m + 1) / (1 - |z| ^ 2) := by
+        rw [tsum_geometric_of_lt_one (sq_nonneg _) hz_abs_sq]
+        ring
+    _ = |z| ^ (2 * m + 1) / (1 - z ^ 2) := by rw [sq_abs]
+    _ ≤ |z| ^ (n + 1) / (1 - z ^ 2) := by
+        -- 2m + 1 ≥ n + 1 since 2m ≥ n (from hm_bound)
+        -- For 0 ≤ |z| ≤ 1, larger exponent means smaller value
+        have h_exp_le : n + 1 ≤ 2 * m + 1 := by omega
+        have h_pow_le : |z| ^ (2 * m + 1) ≤ |z| ^ (n + 1) :=
+          pow_le_pow_of_le_one hz_abs_nonneg hz_abs_le h_exp_le
+        exact div_le_div_of_nonneg_right h_pow_le (by linarith)
+
+/-! ### Correctness theorems -/
+
+/-- atanh z ∈ (tmAtanh J n).evalSet z for all z in J with |z| < 1.
+    Precondition: The domain radius must be ≤ 99/100. -/
+theorem tmAtanh_correct (J : IntervalRat) (n : ℕ)
+    (hJ_radius : max (|J.lo|) (|J.hi|) ≤ 99/100) :
+    ∀ z : ℝ, z ∈ J → |z| < 1 → Real.atanh z ∈ (tmAtanh J n).evalSet z := by
+  intro z hz hz_bound
+  simp only [tmAtanh, evalSet, Set.mem_ofPred_eq]
+  set r := Real.atanh z - Polynomial.aeval (z - 0) (atanhTaylorPoly n) with hr_def
+  refine ⟨r, ?_, ?_⟩
+  · simp only [IntervalRat.mem_def, Rat.cast_neg]
+    have hpoly_eq := atanhTaylorPoly_aeval_eq n z
+    simp only [sub_zero] at hr_def hpoly_eq
+    have hr_rewrite : r = Real.atanh z -
+        ∑ k ∈ Finset.range (n + 1), (atanhTaylorCoeffs n k : ℝ) * z ^ k := by
+      rw [hr_def, hpoly_eq]
+    have hrem := atanh_series_remainder_bound hz_bound n
+    rw [← hr_rewrite] at hrem
+    have habs_le : |r| ≤ (atanhRemainderBound J n : ℝ) := by
+      calc |r| ≤ |z| ^ (n + 1) / (1 - z ^ 2) := hrem
+        _ ≤ (atanhRemainderBound J n : ℝ) := by
+          have hz_le_radius : |z| ≤ max (|(J.lo : ℝ)|) (|(J.hi : ℝ)|) :=
+            abs_le_interval_radius' hz
+          have hradius_real : max (|(J.lo : ℝ)|) (|(J.hi : ℝ)|) =
+              (max (|J.lo|) (|J.hi|) : ℚ) := by simp [Rat.cast_max, Rat.cast_abs]
+          set radius : ℚ := max (|J.lo|) (|J.hi|) with hradius_def
+          have hr_safe_eq : min radius (99/100) = radius := min_eq_left hJ_radius
+          have hradius_le : (radius : ℝ) ≤ 99/100 := by
+            calc (radius : ℝ) ≤ ((99/100 : ℚ) : ℝ) := by exact_mod_cast hJ_radius
+              _ = 99/100 := by norm_num
+          have hradius_lt_one : (radius : ℝ) < 1 := by linarith
+          have hrad_nonneg : 0 ≤ (radius : ℝ) := by
+            calc (0 : ℝ) ≤ |z| := abs_nonneg z
+              _ ≤ max (|(J.lo : ℝ)|) (|(J.hi : ℝ)|) := hz_le_radius
+              _ = (radius : ℝ) := hradius_real
+          have hz_le_rad : |z| ≤ (radius : ℝ) := by rw [hradius_real] at hz_le_radius; exact hz_le_radius
+          have hz_sq_le : z ^ 2 ≤ (radius : ℝ) ^ 2 := by
+            have h1 : |z| ^ 2 ≤ (radius : ℝ) ^ 2 := by
+              apply sq_le_sq'
+              · calc -(radius : ℝ) ≤ 0 := by linarith
+                  _ ≤ |z| := abs_nonneg z
+              · exact hz_le_rad
+            rwa [sq_abs] at h1
+          have h1_minus_z_ge : 1 - z ^ 2 ≥ 1 - (radius : ℝ) ^ 2 := by linarith
+          have h1_minus_z_pos : 0 < 1 - z ^ 2 := by nlinarith [sq_nonneg z, sq_abs z]
+          have h1_minus_rad_pos : 0 < 1 - (radius : ℝ) ^ 2 := by nlinarith [sq_nonneg (radius : ℝ)]
+          have hpow_le : |z| ^ (n + 1) ≤ (radius : ℝ) ^ (n + 1) :=
+            pow_le_pow_left₀ (abs_nonneg z) hz_le_rad (n + 1)
+          have hpow_nonneg : 0 ≤ |z| ^ (n + 1) := pow_nonneg (abs_nonneg z) _
+          have hbound1 : |z| ^ (n + 1) / (1 - z ^ 2) ≤ (radius : ℝ) ^ (n + 1) / (1 - (radius : ℝ) ^ 2) := by
+            gcongr
+          have hdenom_eq : max (1 - radius ^ 2) (1/100 : ℚ) = 1 - radius ^ 2 := by
+            apply max_eq_left
+            have h1 : radius ^ 2 ≤ (99/100 : ℚ) ^ 2 := by
+              have hr_nonneg : 0 ≤ radius := le_trans (abs_nonneg J.lo) (le_max_left _ _)
+              nlinarith [sq_nonneg radius]
+            have h2 : (99/100 : ℚ) ^ 2 = 9801/10000 := by norm_num
+            have h3 : 1 - (9801/10000 : ℚ) = 199/10000 := by norm_num
+            have h4 : (199/10000 : ℚ) ≥ 1/100 := by norm_num
+            linarith
+          have hbound_val : atanhRemainderBound J n = radius ^ (n + 1) / (1 - radius ^ 2) := by
+            unfold atanhRemainderBound
+            simp only [← hradius_def, hr_safe_eq, hdenom_eq]
+          have hdenom_pos : 0 < (1 - radius ^ 2 : ℚ) := by
+            have h1 : radius ^ 2 ≤ (99/100 : ℚ) ^ 2 := by
+              have hr_nonneg : 0 ≤ radius := le_trans (abs_nonneg J.lo) (le_max_left _ _)
+              nlinarith [sq_nonneg radius]
+            have h2 : (99/100 : ℚ) ^ 2 < 1 := by norm_num
+            linarith
+          calc |z| ^ (n + 1) / (1 - z ^ 2)
+              ≤ (radius : ℝ) ^ (n + 1) / (1 - (radius : ℝ) ^ 2) := hbound1
+            _ = (atanhRemainderBound J n : ℝ) := by
+                rw [hbound_val]
+                simp only [Rat.cast_div, Rat.cast_pow, Rat.cast_sub, Rat.cast_one]
+    constructor
+    · calc -(atanhRemainderBound J n : ℝ) ≤ -|r| := by linarith [abs_nonneg r]
+        _ ≤ r := neg_abs_le r
+    · calc r ≤ |r| := le_abs_self r
+        _ ≤ (atanhRemainderBound J n : ℝ) := habs_le
+  · simp only [hr_def, sub_zero]; ring_nf
+
+/-- sinh z ∈ (tmSinh J n).evalSet z for all z in J.
+    Uses taylor_remainder_bound with f = Real.sinh. -/
+theorem tmSinh_correct (J : IntervalRat) (n : ℕ) :
+    ∀ z : ℝ, z ∈ J → Real.sinh z ∈ (tmSinh J n).evalSet z := by
+  intro z hz
+  simp only [tmSinh, evalSet, Set.mem_ofPred_eq]
+  set r := Real.sinh z - Polynomial.aeval (z - 0) (sinhTaylorPoly n) with hr_def
+  refine ⟨r, ?_, ?_⟩
+  · simp only [IntervalRat.mem_def, Rat.cast_neg]
+    have hpoly_eq := sinhTaylorPoly_aeval_eq n z
+    simp only [sub_zero] at hr_def hpoly_eq
+    have hr_rewrite : r = Real.sinh z - ∑ i ∈ Finset.range (n + 1),
+        (iteratedDeriv i Real.sinh 0 / i.factorial) * z ^ i := by
+      rw [hr_def, hpoly_eq]
+    set a := min (J.lo : ℝ) 0 with ha_def
+    set b := max (J.hi : ℝ) 0 with hb_def
+    have hab : a ≤ b := by simp only [ha_def, hb_def]; exact le_trans (min_le_of_right_le (le_refl 0)) (le_max_right _ _)
+    have hca : a ≤ 0 := min_le_right _ _
+    have hcb : 0 ≤ b := le_max_right _ _
+    have hz_ab : z ∈ Set.Icc a b := by
+      simp only [Set.mem_Icc, ha_def, hb_def]
+      have hmem := mem_Icc_of_mem_interval hz
+      constructor
+      · exact le_trans (min_le_left _ _) hmem.1
+      · exact le_trans hmem.2 (le_max_left _ _)
+    set M := Real.exp (max (|a|) (|b|)) with hM_def
+    have hM_pos : 0 ≤ M := le_of_lt (Real.exp_pos _)
+    have hM : ∀ x ∈ Set.Icc a b, ‖iteratedDeriv (n + 1) Real.sinh x‖ ≤ M := by
+      intro x hx
+      exact (LeanCert.Core.sinh_cosh_deriv_bound hab (n + 1) x hx).1
+    have hf : ContDiff ℝ (n + 1) Real.sinh := Real.contDiff_sinh.of_le le_top
+    have hTaylor := LeanCert.Core.taylor_remainder_bound hab hca hcb hf hM hM_pos z hz_ab
+    simp only [sub_zero] at hTaylor
+    have hr_bound : ‖r‖ ≤ M * |z| ^ (n + 1) / (n + 1).factorial := by
+      rw [hr_rewrite]
+      exact hTaylor
+    rw [Real.norm_eq_abs] at hr_bound
+    have habs_z_le : |z| ≤ max (|(J.lo : ℝ)|) (|(J.hi : ℝ)|) := abs_le_interval_radius hz
+    set radius : ℚ := max (|J.lo|) (|J.hi|) with hradius_def
+    have hradius_real : (radius : ℝ) = max (|(J.lo : ℝ)|) (|(J.hi : ℝ)|) := by
+      simp only [hradius_def, Rat.cast_max, Rat.cast_abs]
+    have hab_le_radius : max (|a|) (|b|) ≤ radius := by
+      simp only [ha_def, hb_def, hradius_real]
+      apply max_le
+      · calc |min (J.lo : ℝ) 0| ≤ max |(J.lo : ℝ)| |(0 : ℝ)| := abs_min_le_max_abs_abs
+          _ = max |(J.lo : ℝ)| 0 := by simp
+          _ ≤ max |(J.lo : ℝ)| |(J.hi : ℝ)| := max_le_max_left _ (abs_nonneg _)
+      · calc |max (J.hi : ℝ) 0| ≤ max |(J.hi : ℝ)| |(0 : ℝ)| := abs_max_le_max_abs_abs
+          _ = max |(J.hi : ℝ)| 0 := by simp
+          _ ≤ max |(J.lo : ℝ)| |(J.hi : ℝ)| := max_le (le_max_right _ _) (le_max_of_le_left (abs_nonneg _))
+    have hM_le : M ≤ Real.exp radius := Real.exp_le_exp.mpr hab_le_radius
+    have hradius_nn : 0 ≤ (radius : ℝ) := by
+      rw [hradius_real]; exact le_max_of_le_left (abs_nonneg _)
+    have hpow_le : |z| ^ (n + 1) ≤ (radius : ℝ) ^ (n + 1) := by
+      apply pow_le_pow_left₀ (abs_nonneg z)
+      rw [hradius_real]; exact habs_z_le
+    have hfact_pos : (0 : ℝ) < ((n + 1).factorial : ℝ) := Nat.cast_pos.mpr (Nat.factorial_pos _)
+    have hexp_le_three_pow : Real.exp (radius : ℝ) ≤ (3 : ℝ) ^ (Nat.ceil radius + 1) := by
+      have he_le_3 : Real.exp 1 ≤ 3 := by have h := Real.exp_one_lt_d9; linarith
+      calc Real.exp (radius : ℝ)
+          ≤ Real.exp (Nat.ceil radius : ℝ) := Real.exp_le_exp.mpr (by exact_mod_cast Nat.le_ceil radius)
+        _ = Real.exp 1 ^ (Nat.ceil radius) := by rw [← Real.exp_nat_mul, mul_one]
+        _ ≤ 3 ^ (Nat.ceil radius) := by
+            apply pow_le_pow_left₀ (le_of_lt (Real.exp_pos 1))
+            exact he_le_3
+        _ ≤ 3 ^ (Nat.ceil radius + 1) := pow_le_pow_right₀ (by norm_num : (1 : ℝ) ≤ 3) (Nat.le_succ _)
+    have hM_bound : M ≤ (3 : ℝ) ^ (Nat.ceil radius + 1) := le_trans hM_le hexp_le_three_pow
+    have hrem_ge : (sinhRemainderBound J n : ℝ) ≥ M * |z| ^ (n + 1) / (n + 1).factorial := by
+      have h1 : M * |z| ^ (n + 1) ≤ (3 : ℝ) ^ (Nat.ceil radius + 1) * (radius : ℝ) ^ (n + 1) :=
+        mul_le_mul hM_bound hpow_le (pow_nonneg (abs_nonneg z) _) (by linarith)
+      calc (sinhRemainderBound J n : ℝ)
+          = (3 : ℝ) ^ (Nat.ceil radius + 1) * (radius : ℝ) ^ (n + 1) / (n + 1).factorial := by
+            simp only [sinhRemainderBound, hradius_def, Rat.cast_div, Rat.cast_mul, Rat.cast_pow,
+              Rat.cast_natCast, Rat.cast_ofNat]
+        _ ≥ M * |z| ^ (n + 1) / (n + 1).factorial :=
+            div_le_div_of_nonneg_right h1 (le_of_lt hfact_pos)
+    have hr_le_rem : |r| ≤ sinhRemainderBound J n := le_trans hr_bound hrem_ge
+    constructor
+    · have := neg_abs_le r; linarith
+    · exact le_trans (le_abs_self r) hr_le_rem
+  · simp only [hr_def, sub_zero]; ring_nf
+
+/-- cosh z ∈ (tmCosh J n).evalSet z for all z in J. -/
+theorem tmCosh_correct (J : IntervalRat) (n : ℕ) :
+    ∀ z : ℝ, z ∈ J → Real.cosh z ∈ (tmCosh J n).evalSet z := by
+  intro z hz
+  simp only [tmCosh, evalSet, Set.mem_ofPred_eq]
+  set r := Real.cosh z - Polynomial.aeval (z - 0) (coshTaylorPoly n) with hr_def
+  refine ⟨r, ?_, ?_⟩
+  · simp only [IntervalRat.mem_def, Rat.cast_neg]
+    have hpoly_eq := coshTaylorPoly_aeval_eq n z
+    simp only [sub_zero] at hr_def hpoly_eq
+    have hr_rewrite : r = Real.cosh z - ∑ i ∈ Finset.range (n + 1),
+        (iteratedDeriv i Real.cosh 0 / i.factorial) * z ^ i := by
+      rw [hr_def, hpoly_eq]
+    set a := min (J.lo : ℝ) 0 with ha_def
+    set b := max (J.hi : ℝ) 0 with hb_def
+    have hab : a ≤ b := by simp only [ha_def, hb_def]; exact le_trans (min_le_of_right_le (le_refl 0)) (le_max_right _ _)
+    have hca : a ≤ 0 := min_le_right _ _
+    have hcb : 0 ≤ b := le_max_right _ _
+    have hz_ab : z ∈ Set.Icc a b := by
+      simp only [Set.mem_Icc, ha_def, hb_def]
+      have hmem := mem_Icc_of_mem_interval hz
+      constructor
+      · exact le_trans (min_le_left _ _) hmem.1
+      · exact le_trans hmem.2 (le_max_left _ _)
+    set M := Real.exp (max (|a|) (|b|)) with hM_def
+    have hM_pos : 0 ≤ M := le_of_lt (Real.exp_pos _)
+    have hM : ∀ x ∈ Set.Icc a b, ‖iteratedDeriv (n + 1) Real.cosh x‖ ≤ M := by
+      intro x hx
+      exact (LeanCert.Core.sinh_cosh_deriv_bound hab (n + 1) x hx).2
+    have hf : ContDiff ℝ (n + 1) Real.cosh := Real.contDiff_cosh.of_le le_top
+    have hTaylor := LeanCert.Core.taylor_remainder_bound hab hca hcb hf hM hM_pos z hz_ab
+    simp only [sub_zero] at hTaylor
+    have hr_bound : ‖r‖ ≤ M * |z| ^ (n + 1) / (n + 1).factorial := by
+      rw [hr_rewrite]
+      exact hTaylor
+    rw [Real.norm_eq_abs] at hr_bound
+    have habs_z_le : |z| ≤ max (|(J.lo : ℝ)|) (|(J.hi : ℝ)|) := abs_le_interval_radius hz
+    set radius : ℚ := max (|J.lo|) (|J.hi|) with hradius_def
+    have hradius_real : (radius : ℝ) = max (|(J.lo : ℝ)|) (|(J.hi : ℝ)|) := by
+      simp only [hradius_def, Rat.cast_max, Rat.cast_abs]
+    have hab_le_radius : max (|a|) (|b|) ≤ radius := by
+      simp only [ha_def, hb_def, hradius_real]
+      apply max_le
+      · calc |min (J.lo : ℝ) 0| ≤ max |(J.lo : ℝ)| |(0 : ℝ)| := abs_min_le_max_abs_abs
+          _ = max |(J.lo : ℝ)| 0 := by simp
+          _ ≤ max |(J.lo : ℝ)| |(J.hi : ℝ)| := max_le_max_left _ (abs_nonneg _)
+      · calc |max (J.hi : ℝ) 0| ≤ max |(J.hi : ℝ)| |(0 : ℝ)| := abs_max_le_max_abs_abs
+          _ = max |(J.hi : ℝ)| 0 := by simp
+          _ ≤ max |(J.lo : ℝ)| |(J.hi : ℝ)| := max_le (le_max_right _ _) (le_max_of_le_left (abs_nonneg _))
+    have hM_le : M ≤ Real.exp radius := Real.exp_le_exp.mpr hab_le_radius
+    have hradius_nn : 0 ≤ (radius : ℝ) := by
+      rw [hradius_real]; exact le_max_of_le_left (abs_nonneg _)
+    have hpow_le : |z| ^ (n + 1) ≤ (radius : ℝ) ^ (n + 1) := by
+      apply pow_le_pow_left₀ (abs_nonneg z)
+      rw [hradius_real]; exact habs_z_le
+    have hfact_pos : (0 : ℝ) < ((n + 1).factorial : ℝ) := Nat.cast_pos.mpr (Nat.factorial_pos _)
+    have hexp_le_three_pow : Real.exp (radius : ℝ) ≤ (3 : ℝ) ^ (Nat.ceil radius + 1) := by
+      have he_le_3 : Real.exp 1 ≤ 3 := by have h := Real.exp_one_lt_d9; linarith
+      calc Real.exp (radius : ℝ)
+          ≤ Real.exp (Nat.ceil radius : ℝ) := Real.exp_le_exp.mpr (by exact_mod_cast Nat.le_ceil radius)
+        _ = Real.exp 1 ^ (Nat.ceil radius) := by rw [← Real.exp_nat_mul, mul_one]
+        _ ≤ 3 ^ (Nat.ceil radius) := by
+            apply pow_le_pow_left₀ (le_of_lt (Real.exp_pos 1))
+            exact he_le_3
+        _ ≤ 3 ^ (Nat.ceil radius + 1) := pow_le_pow_right₀ (by norm_num : (1 : ℝ) ≤ 3) (Nat.le_succ _)
+    have hM_bound : M ≤ (3 : ℝ) ^ (Nat.ceil radius + 1) := le_trans hM_le hexp_le_three_pow
+    have hrem_ge : (coshRemainderBound J n : ℝ) ≥ M * |z| ^ (n + 1) / (n + 1).factorial := by
+      have h1 : M * |z| ^ (n + 1) ≤ (3 : ℝ) ^ (Nat.ceil radius + 1) * (radius : ℝ) ^ (n + 1) :=
+        mul_le_mul hM_bound hpow_le (pow_nonneg (abs_nonneg z) _) (by linarith)
+      calc (coshRemainderBound J n : ℝ)
+          = (3 : ℝ) ^ (Nat.ceil radius + 1) * (radius : ℝ) ^ (n + 1) / (n + 1).factorial := by
+            simp only [coshRemainderBound, hradius_def, Rat.cast_div, Rat.cast_mul, Rat.cast_pow,
+              Rat.cast_natCast, Rat.cast_ofNat]
+        _ ≥ M * |z| ^ (n + 1) / (n + 1).factorial :=
+            div_le_div_of_nonneg_right h1 (le_of_lt hfact_pos)
+    have hr_le_rem : |r| ≤ coshRemainderBound J n := le_trans hr_bound hrem_ge
+    constructor
+    · have := neg_abs_le r; linarith
+    · exact le_trans (le_abs_self r) hr_le_rem
+  · simp only [hr_def, sub_zero]; ring_nf
+
+/-! ### asinh correctness infrastructure -/
+
+/-- The n-th derivative of arsinh at 0 follows the pattern:
+    - For even n: 0
+    - For odd n = 2k+1: (2k)! * Ring.choose (-1/2) k
+
+    This matches the coefficients in asinhTaylorCoeffs times n!.
+
+    Note: This is proved using the known series expansion of arsinh,
+    which satisfies arsinh(x) = Σ_{k=0}^∞ a_k x^(2k+1) where
+    a_k = Ring.choose (-1/2) k / (2k+1). -/
+theorem iteratedDeriv_arsinh_zero (n : ℕ) :
+    iteratedDeriv n Real.arsinh 0 =
+      if n % 2 = 0 then 0 else
+        (Nat.factorial (n - 1) : ℝ) * Ring.choose (- (1 / 2 : ℝ)) ((n - 1) / 2) := by
+  rcases n with _ | m
+  -- Case n = 0
+  · simp [Real.arsinh_zero]
+  -- Case n = m + 1 ≥ 1
+  · -- iteratedDeriv (m+1) arsinh 0 = iteratedDeriv m ((1+x²)^(-1/2)) 0
+    rw [iteratedDeriv_arsinh_succ]
+    -- Use iteratedDeriv_one_add_sq_rpow_zero with a = -1/2
+    rw [iteratedDeriv_one_add_sq_rpow_zero (-(1/2 : ℝ)) m]
+    -- Now simplify based on parity
+    by_cases hm : m % 2 = 0
+    · -- m is even, so m+1 is odd
+      have hodd : (m + 1) % 2 = 1 := by omega
+      simp only [hm, hodd, ↓reduceIte]
+      -- (m+1-1) = m, (m+1-1)/2 = m/2
+      congr 1
+    · -- m is odd, so m+1 is even
+      have heven : (m + 1) % 2 = 0 := by omega
+      simp only [hm, heven, ↓reduceIte, mul_zero]
+
+/-- The asinhTaylorCoeffs match the Mathlib Taylor coefficients for arsinh at 0 -/
+theorem asinhTaylorCoeffs_eq_iteratedDeriv (n i : ℕ) (hi : i ≤ n) :
+    (asinhTaylorCoeffs n i : ℝ) = iteratedDeriv i Real.arsinh 0 / i.factorial := by
+  simp only [asinhTaylorCoeffs, hi, ↓reduceIte]
+  rw [iteratedDeriv_arsinh_zero]
+  by_cases hodd : i % 2 = 1
+  · -- Odd i = 2k+1: coefficient is Ring.choose(-1/2, k) / (2k+1) where k = (i-1)/2
+    simp only [hodd, ↓reduceIte]
+    -- Set k = (i-1)/2, so i = 2k+1 and i-1 = 2k
+    set k := (i - 1) / 2 with hk_def
+    have hk : i = 2 * k + 1 := by omega
+    have hk' : i - 1 = 2 * k := by omega
+    -- LHS: Ring.choose(-1/2, k) / (2k+1) : ℚ cast to ℝ
+    -- RHS: ((2k)! * Ring.choose(-1/2, k)) / (2k+1)!
+    -- Use: (2k+1)! = (2k+1) * (2k)!
+    have hfact : i.factorial = (2 * k + 1) * (2 * k).factorial := by
+      rw [hk]
+      exact Nat.factorial_succ (2 * k)
+    rw [hk', hfact]
+    push_cast
+    have hne : (2 * (k : ℝ) + 1) ≠ 0 := by linarith
+    have hfact_ne : ((2 * k).factorial : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (Nat.factorial_ne_zero _)
+    -- Convert Ring.choose from ℚ to ℝ using Ring.map_choose
+    have h_choose_cast : ((Ring.choose (-(1 / 2 : ℚ)) k : ℚ) : ℝ) = Ring.choose (-(1 / 2 : ℝ)) k := by
+      have h := Ring.map_choose (algebraMap ℚ ℝ) (-(1/2 : ℚ)) k
+      simp only [map_neg, map_div₀, map_one, map_ofNat] at h
+      exact h
+    rw [h_choose_cast]
+    field_simp
+  · -- Even i: coefficient is 0
+    have heven : i % 2 = 0 := by omega
+    simp only [heven, ↓reduceIte, zero_div]
+    norm_cast
+
+/-- asinhTaylorPoly evaluates to the standard Taylor sum for arsinh at 0. -/
+theorem asinhTaylorPoly_aeval_eq (n : ℕ) (z : ℝ) :
+    (Polynomial.aeval z (asinhTaylorPoly n) : ℝ) =
+      ∑ i ∈ Finset.range (n + 1), (iteratedDeriv i Real.arsinh 0 / i.factorial) * z ^ i := by
+  simp only [asinhTaylorPoly, map_sum, Polynomial.aeval_mul, Polynomial.aeval_C,
+    Polynomial.aeval_X_pow]
+  apply Finset.sum_congr rfl
+  intro i hi
+  have hi_le : i ≤ n := Finset.mem_range_succ_iff.mp hi
+  have h := asinhTaylorCoeffs_eq_iteratedDeriv n i hi_le
+  change (asinhTaylorCoeffs n i : ℝ) * z ^ i = _
+  rw [h]
+
+/-- Bound on the n-th derivative of arsinh on the interval hull of `domain` and `0`. -/
+theorem arsinh_deriv_bound (domain : IntervalRat) (n : ℕ) :
+    ∀ x ∈ Set.Icc (min (domain.lo : ℝ) 0) (max (domain.hi : ℝ) 0),
+      ‖iteratedDeriv n Real.arsinh x‖ ≤ asinhDerivSup domain n := by
+  intro x hx
+  unfold asinhDerivSup
+  apply le_csSup
+  · -- BddAbove: the image is bounded because the function is continuous on a compact set
+    have hcompact : IsCompact (Set.Icc (min (domain.lo : ℝ) 0) (max (domain.hi : ℝ) 0)) := isCompact_Icc
+    have hcont : ContinuousOn (fun x => ‖iteratedDeriv n Real.arsinh x‖)
+        (Set.Icc (min (domain.lo : ℝ) 0) (max (domain.hi : ℝ) 0)) := by
+      apply Continuous.continuousOn
+      exact continuous_norm.comp (arsinh_continuous_iteratedDeriv n)
+    exact hcompact.bddAbove_image hcont
+  · -- x is in the image
+    exact Set.mem_image_of_mem _ hx
+
+/-- arsinh z ∈ (tmAsinh J n).evalSet z for all z in J.
+    Uses taylor_remainder_bound with f = Real.arsinh, M = asinhDerivSup J (n+1). -/
+theorem tmAsinh_correct (J : IntervalRat) (n : ℕ) :
+    ∀ z : ℝ, z ∈ J → Real.arsinh z ∈ (tmAsinh J n).evalSet z := by
+  intro z hz
+  simp only [tmAsinh, evalSet, Set.mem_ofPred_eq]
+  set r := Real.arsinh z - Polynomial.aeval (z - 0) (asinhTaylorPoly n) with hr_def
+  refine ⟨r, ?_, ?_⟩
+  · simp only [IntervalRat.mem_def, Rat.cast_neg]
+    have hpoly_eq := asinhTaylorPoly_aeval_eq n z
+    simp only [sub_zero] at hr_def hpoly_eq
+    have hr_rewrite : r = Real.arsinh z - ∑ i ∈ Finset.range (n + 1),
+        (iteratedDeriv i Real.arsinh 0 / i.factorial) * z ^ i := by
+      rw [hr_def, hpoly_eq]
+    set a := min (J.lo : ℝ) 0 with ha_def
+    set b := max (J.hi : ℝ) 0 with hb_def
+    have hab : a ≤ b := by simp only [ha_def, hb_def]; exact le_trans (min_le_of_right_le (le_refl 0)) (le_max_right _ _)
+    have hca : a ≤ 0 := min_le_right _ _
+    have hcb : 0 ≤ b := le_max_right _ _
+    have hz_ab : z ∈ Set.Icc a b := by
+      simp only [Set.mem_Icc, ha_def, hb_def]
+      have hmem := mem_Icc_of_mem_interval hz
+      constructor
+      · exact le_trans (min_le_left _ _) hmem.1
+      · exact le_trans hmem.2 (le_max_left _ _)
+    set M := asinhDerivSup J (n + 1) with hM_def
+    have hM_nonneg : 0 ≤ M := by
+      rw [hM_def]
+      unfold asinhDerivSup
+      apply Real.sSup_nonneg
+      intro y hy
+      obtain ⟨x, _, rfl⟩ := hy
+      exact norm_nonneg _
+    have hM : ∀ x ∈ Set.Icc a b, ‖iteratedDeriv (n + 1) Real.arsinh x‖ ≤ M := by
+      intro x hx
+      exact arsinh_deriv_bound J (n + 1) x hx
+    have hf : ContDiff ℝ (n + 1) Real.arsinh := by
+      have h : ContDiff ℝ ((n + 1) : ℕ∞) Real.arsinh := Real.contDiff_arsinh
+      exact h
+    have hTaylor := LeanCert.Core.taylor_remainder_bound hab hca hcb hf hM hM_nonneg z hz_ab
+    simp only [sub_zero] at hTaylor
+    have hr_bound : ‖r‖ ≤ M * |z| ^ (n + 1) / (n + 1).factorial := by
+      rw [hr_rewrite]
+      exact hTaylor
+    rw [Real.norm_eq_abs] at hr_bound
+    have habs_z_le : |z| ≤ max (|(J.lo : ℝ)|) (|(J.hi : ℝ)|) := abs_le_interval_radius hz
+    set radius : ℚ := max (|J.lo|) (|J.hi|) with hradius_def
+    have hradius_real : (radius : ℝ) = max (|(J.lo : ℝ)|) (|(J.hi : ℝ)|) := by
+      simp only [hradius_def, Rat.cast_max, Rat.cast_abs]
+    have hpow_le : |z| ^ (n + 1) ≤ (radius : ℝ) ^ (n + 1) := by
+      apply pow_le_pow_left₀ (abs_nonneg z)
+      rw [hradius_real]; exact habs_z_le
+    have hfact_pos : (0 : ℝ) < ((n + 1).factorial : ℝ) := Nat.cast_pos.mpr (Nat.factorial_pos _)
+    -- M ≤ ceil(M)
+    have hM_ceil : M ≤ Int.ceil M := Int.le_ceil M
+    have hceil_nonneg : 0 ≤ (Int.ceil M : ℝ) := by
+      have hceil_int : (0 : ℤ) ≤ Int.ceil M := Int.ceil_nonneg hM_nonneg
+      exact_mod_cast hceil_int
+    have hrem_ge : (asinhRemainderBound J n : ℝ) ≥ M * |z| ^ (n + 1) / (n + 1).factorial := by
+      have h1 : M * |z| ^ (n + 1) ≤ (Int.ceil M : ℝ) * (radius : ℝ) ^ (n + 1) :=
+        mul_le_mul hM_ceil hpow_le (pow_nonneg (abs_nonneg z) _) hceil_nonneg
+      calc (asinhRemainderBound J n : ℝ)
+          = (Int.ceil M : ℝ) * (radius : ℝ) ^ (n + 1) / (n + 1).factorial := by
+            simp only [asinhRemainderBound, hM_def, hradius_def, Rat.cast_div, Rat.cast_mul,
+              Rat.cast_pow, Rat.cast_natCast, Rat.cast_intCast]
+        _ ≥ M * |z| ^ (n + 1) / (n + 1).factorial :=
+            div_le_div_of_nonneg_right h1 (le_of_lt hfact_pos)
+    have hr_le_rem : |r| ≤ asinhRemainderBound J n := le_trans hr_bound hrem_ge
+    constructor
+    · have := neg_abs_le r; linarith
+    · exact le_trans (le_abs_self r) hr_le_rem
+  · simp only [hr_def, sub_zero]; ring_nf
+
+end TaylorModel
+
+end LeanCert.Engine

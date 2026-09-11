@@ -10,7 +10,9 @@ project:
     development also proves the restriction to colossally abundant integers,
     reconstructs the Nicolas--Landau oscillation argument used for the
     converse implication, and checks the finite ranges with exact Lean
-    certificates.  This is a formalization of an equivalence criterion; it
+    certificates.  It also formalizes Lagarias's 2001 elementary
+    harmonic-number criterion and its equivalence to the Riemann hypothesis.
+    This is a formalization of equivalence criteria; it
     does not prove the Riemann hypothesis.
   authors:
     - "Jonas Whidden"
@@ -37,6 +39,17 @@ sources:
       Primary source for the advertised equivalence, the reduction through
       colossally abundant integers, the analytic implication under RH, and the
       finite-exception boundary.
+  - title: "An Elementary Problem Equivalent to the Riemann Hypothesis"
+    authors:
+      - "Jeffrey C. Lagarias"
+    id: "https://doi.org/10.1080/00029890.2002.11919883"
+    type: "paper"
+    location: "American Mathematical Monthly 109 (2002), no. 6, 534--543"
+    relationship: "formalizes"
+    note: >-
+      Source of the harmonic-number divisor-sum criterion, its two elementary
+      comparison lemmas, the finite verification through 5040, and the
+      equivalence proof built on Robin's theorem.
   - title: "Petites valeurs de la fonction d'Euler"
     authors:
       - "Jean-Louis Nicolas"
@@ -112,6 +125,10 @@ status:
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
+    - declaration: "Robin1984.riemannHypothesis_iff_lagariasElementaryCriterion"
+      file: "Robin1984/Lagarias/Theorem.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
 
 automation:
   methods:
@@ -183,6 +200,14 @@ alignment:
       note: >-
         The parameterized definition states that n maximizes
         sigma(k)/k^(1+eps) for eps > 0 and all integers k > 1.
+    - source: "Lagarias (2001), Theorem 1.1"
+      lean: "Robin1984.riemannHypothesis_iff_lagariasElementaryCriterion"
+      module: "Robin1984.Lagarias.Theorem"
+      status: "proved"
+      note: >-
+        The Lean statement matches the harmonic-number divisor-sum criterion;
+        the finite range is represented by closed kernel certificates and the
+        converse reuses the proved Robin--Nicolas--Landau oscillation.
 
 acknowledgements: >-
   The project builds on Lean, Mathlib, PrimeNumberTheoremAnd, leancert,

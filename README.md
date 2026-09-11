@@ -15,6 +15,10 @@ repository also reconstructs the Nicolas--Landau oscillation argument used in
 the converse implication and discharges the finite ranges with exact,
 kernel-checked certificates.
 
+It also formalizes Lagarias's 2001 elementary criterion, proving that the
+Riemann hypothesis is equivalent to
+`sigma(n) <= H_n + exp(H_n) * log(H_n)` for every positive integer `n`.
+
 This is a formalization of an equivalence criterion. It does **not** prove the
 Riemann hypothesis.
 
@@ -30,6 +34,8 @@ Comparator checks the corresponding proved declarations in
 - `Robin1984.riemannHypothesis_iff_colossallyAbundant_robin` proves that it is
   equivalent to verify the same inequality on colossally abundant integers
   above `5040`.
+- `Robin1984.riemannHypothesis_iff_lagariasElementaryCriterion` formalizes
+  Lagarias's elementary criterion in terms of harmonic numbers.
 
 The Challenge definitions use Mathlib's divisor sum, Euler--Mascheroni
 constant, real logarithm and real power, and `RiemannHypothesis` predicate.
@@ -45,6 +51,8 @@ The proof development is organized by mathematical role:
   colossally abundant threshold profiles, and the reduction to CA integers.
 - `Robin1984/Finite/` contains the exact startup proof, rational tangent rows,
   and kernel-checked finite certificates.
+- `Robin1984/Lagarias/` proves the harmonic comparison, finite range, and the
+  forward and converse bridges for Lagarias's elementary criterion.
 - `Robin1984/Analytic/` proves the explicit Mertens, prime-power and
   large-height estimates used under RH.
 - `Robin1984/NicolasLandau/` reconstructs Nicolas's oscillation argument and
@@ -104,6 +112,9 @@ filename or keyword matching.
 
 Primary mathematical references include:
 
+- Jeffrey C. Lagarias, [*An Elementary Problem Equivalent to the Riemann
+  Hypothesis*](https://doi.org/10.1080/00029890.2002.11919883), American
+  Mathematical Monthly 109 (2002), 534--543; submitted in 2001.
 - Guy Robin, *Grandes valeurs de la fonction somme des diviseurs et hypothese
   de Riemann*, Journal de Mathematiques Pures et Appliquees 63 (1984),
   187--213.

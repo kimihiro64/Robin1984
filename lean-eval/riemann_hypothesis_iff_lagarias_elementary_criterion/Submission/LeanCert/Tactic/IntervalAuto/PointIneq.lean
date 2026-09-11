@@ -1,0 +1,998 @@
+/-
+Copyright (c) 2024 LeanCert Contributors. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: LeanCert Contributors
+-/
+import Submission.LeanCert.Tactic.IntervalAuto.Basic
+import Submission.LeanCert.Tactic.IntervalAuto.Bound
+import Submission.LeanCert.Tactic.Verification
+import Submission.LeanCert.Validity.Bounds
+import Submission.LeanCert.Validity.DyadicBounds
+import Submission.LeanCert.Engine.Optimization.BoundVerify
+
+/-!
+# Point Inequality Tactic (interval_decide)
+
+The `interval_decide` tactic proves point inequalities like `Real.exp 1 ≤ 3`.
+-/
+
+open Lean Meta Elab Tactic Term
+
+namespace LeanCert.Tactic.Auto
+
+open LeanCert.Meta
+open LeanCert.Core
+open LeanCert.Engine
+open LeanCert.Validity
+
+/-- Runtime facts from a retained point-inequality certificate. -/
+structure PointInequalityOutcome where
+  checker : Name
+  verifier : Name
+  verification : LeanCert.Tactic.VerificationUsage
+  dyadic : Bool
+  precision : Option Int := none
+  taylorDepth : Nat
+  deriving Inhabited
+
+/-- Expected non-successes from the direct point solver. Transport failures are
+kept distinct because the router treats them as implementation errors rather
+than numerical rejection. -/
+inductive PointInequalityFailure where
+  | unsupported (expression detail : String)
+  | rejected (detail : String)
+  | inconclusive (detail : String)
+  | transportFailure (detail : String)
+  | internalFailure (detail : String)
+  deriving Inhabited
+
+/-- Try to prove a closed expression bound directly using certificate verification. -/
+def proveClosedExpressionBoundTyped (goal : MVarId) (goalType : Lean.Expr)
+    (taylorDepth : Nat) (precision : Int := -80)
+    (rationalFallback : Bool := true) :
+    TacticM (Except PointInequalityFailure PointInequalityOutcome) := do
+  trace[interval_decide] "typed point bound: starting with goal {goalType}"
+  goal.withContext do
+    -- Parse the inequality
+    let some (lhs, rhs, isStrict, isReversedOrig) ← parsePointIneq goalType
+      | return .error <| .unsupported (toString goalType)
+          "expected a closed point inequality"
+    trace[interval_decide] "Parsed: lhs={lhs}, rhs={rhs}, isStrict={isStrict}, isReversedOrig={isReversedOrig}"
+
+    -- Determine which side has the function by checking if it converts to rational
+    -- (same logic as intervalDecideCore for consistency)
+    let lhsIsConst ← toRat? lhs
+    let rhsIsConst ← toRat? rhs
+    let lhsConsts ← collectConstants lhs
+    let rhsConsts ← collectConstants rhs
+
+    let (funcExpr, boundExpr, needsFlip) :=
+      if lhsIsConst.isSome && rhsIsConst.isNone then
+        -- LHS is a rational constant, RHS is the function
+        (rhs, lhs, true)
+      else if rhsIsConst.isSome && lhsIsConst.isNone then
+        -- RHS is a rational constant, LHS is the function
+        (lhs, rhs, false)
+      else if lhsConsts.isEmpty && !rhsConsts.isEmpty then
+        (lhs, rhs, false)
+      else if rhsConsts.isEmpty && !lhsConsts.isEmpty then
+        (rhs, lhs, true)
+      else
+        if isReversedOrig then (rhs, lhs, false) else (lhs, rhs, false)
+
+    let isReversed := isReversedOrig != needsFlip
+    trace[interval_decide] "funcExpr={funcExpr}, boundExpr={boundExpr}, needsFlip={needsFlip}, isReversed={isReversed}"
+
+    -- Try to extract the bound as a rational
+    let boundRat? ← extractRatFromReal boundExpr
+
+    -- If bound is not a rational, we have two transcendental expressions
+    if boundRat?.isNone then
+      trace[interval_decide] "Bound is not rational, trying difference approach"
+      let diffExpr ←
+        if isStrict then
+          if isReversed then
+            mkAppM ``HSub.hSub #[boundExpr, funcExpr]
+          else
+            mkAppM ``HSub.hSub #[boundExpr, funcExpr]
+        else
+          if isReversed then
+            mkAppM ``HSub.hSub #[boundExpr, funcExpr]
+          else
+            mkAppM ``HSub.hSub #[boundExpr, funcExpr]
+
+      trace[interval_decide] "diffExpr = {diffExpr}"
+
+      let diffAst ←
+        try
+          pure (← reifyWithReport diffExpr).expr
+        catch e =>
+          return .error <| .unsupported (toString diffExpr)
+            (← e.toMessageData.toString)
+      let supportProof ←
+        try mkSupportedCoreProof diffAst
+        catch e =>
+          return .error <| .unsupported (toString diffExpr)
+            (← e.toMessageData.toString)
+      let cfgExpr ← mkAppM ``EvalConfig.mk #[toExpr taylorDepth]
+
+      let zeroRat : ℚ := 0
+      let leProof ← mkAppM ``le_refl #[toExpr zeroRat]
+      let intervalExpr ← mkAppM ``IntervalRat.mk #[toExpr zeroRat, toExpr zeroRat, leProof]
+
+      let theoremName := if isStrict then ``verify_strict_lower_bound else ``verify_lower_bound
+      let checkName := if isStrict then ``LeanCert.Validity.checkStrictLowerBound
+                       else ``LeanCert.Validity.checkLowerBound
+
+      let checkExpr ← mkAppM checkName #[diffAst, intervalExpr, toExpr zeroRat, cfgExpr]
+      let certTy ← mkAppM ``Eq #[checkExpr, mkConst ``Bool.true]
+      let certGoal ← mkFreshExprMVar certTy
+      let certGoalId := certGoal.mvarId!
+      let event ←
+        match ← closeCertificateGoalTyped (← VerificationConfig.current) certGoalId
+            (tacticName := "interval_decide") with
+        | .accepted event => pure event
+        | .rejected =>
+            return .error <| .rejected
+              "the Rational point checker evaluated to false"
+        | .failed failure =>
+            return .error <| .internalFailure
+              (failure.message "interval_decide")
+
+      let proof ← mkAppM theoremName #[diffAst, supportProof, intervalExpr, toExpr zeroRat, cfgExpr, certGoal]
+
+      let zeroRatAsReal ← mkAppOptM ``Rat.cast #[mkConst ``Real, none, toExpr (0 : ℚ)]
+      let h1 ← mkAppM ``le_refl #[zeroRatAsReal]
+      let h2 ← mkAppM ``le_refl #[zeroRatAsReal]
+      let memProof ← mkAppM ``And.intro #[h1, h2]
+      let proofAtZero := Lean.mkApp2 proof zeroRatAsReal memProof
+
+      let proofType ← inferType proofAtZero
+      trace[interval_decide] "Difference proof type: {proofType}"
+
+      setGoals [goal]
+      let proofStx ← Term.exprToSyntax proofAtZero
+
+      try
+        evalTactic (← `(tactic| (
+          have h0 := $proofStx;
+          simp only [LeanCert.Core.Expr.eval, LeanCert.Core.Expr.eval_namedConst,
+                     LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_sqrt,
+                     LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_sub,
+                     LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg,
+                     LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_log,
+                     LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos,
+                     ← LeanCert.Core.Expr.sqrt_mul_self_eq_abs,
+                     Rat.cast_ofNat, Rat.cast_intCast, Rat.cast_natCast,
+                     Rat.cast_zero, sub_zero, zero_sub, neg_neg] at h0
+        )))
+
+        let hyps ← getLCtx
+        for d in hyps do
+          if d.userName.toString.startsWith "h0" then
+            trace[interval_decide] "After first simp, h0 type: {← inferType d.toExpr}"
+
+        evalTactic (← `(tactic| norm_num at h0))
+
+        let hyps2 ← getLCtx
+        for d in hyps2 do
+          if d.userName.toString.startsWith "h0" then
+            trace[interval_decide] "After norm_num, h0 type: {← inferType d.toExpr}"
+
+        evalTactic (← `(tactic| (
+          first
+          | linarith
+          | (simp only [Rat.divInt_eq_div, Rat.cast_div, Rat.cast_intCast, Rat.cast_natCast] at h0; linarith)
+          | (norm_cast at h0; linarith)
+          | (simp only [← sub_eq_add_neg] at h0; exact sub_pos.mp h0)
+          | (simp only [← sub_eq_add_neg, sub_pos] at h0; exact h0)
+          | (have h1 := lt_add_of_neg_add_lt_first h0; simp at h1; exact h1)
+          | (have h1 := h0; ring_nf at h1; linarith)
+        )))
+        let remainingGoals ← getGoals
+        if !remainingGoals.isEmpty then
+          return .error <| .transportFailure
+            "goal not closed after the certified difference proof"
+        return .ok {
+          checker := checkName
+          verifier := theoremName
+          verification := event.toUsage
+          dyadic := false
+          taylorDepth := taylorDepth
+        }
+      catch e =>
+        trace[interval_decide] "Difference approach error: {e.toMessageData}"
+        return .error <| .transportFailure (← e.toMessageData.toString)
+
+    let some boundRat := boundRat?
+      | return .error <| .unsupported (toString boundExpr)
+          "could not extract a rational comparison bound"
+
+    trace[interval_decide] "boundRat extracted: {boundRat}"
+
+    let ast ←
+      try
+        pure (← reifyWithReport funcExpr).expr
+      catch e =>
+        return .error <| .unsupported (toString funcExpr)
+          (← e.toMessageData.toString)
+    trace[interval_decide] "ast reified"
+
+    -- Helper: try to close the goal given a proof term for the bound
+    let tryCloseWith (proofStx : TSyntax `term) : TacticM Bool := do
+      -- Approach 1: Direct simp + exact
+      try
+        setGoals [goal]
+        evalTactic (← `(tactic| have h0 := $proofStx))
+        evalTactic (← `(tactic| (
+          simp only [LeanCert.Core.Expr.eval, LeanCert.Core.Expr.eval_namedConst,
+                     LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_sqrt,
+                     LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_sub,
+                     LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg,
+                     LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_log,
+                     LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos,
+                     ← LeanCert.Core.Expr.sqrt_mul_self_eq_abs,
+                     Rat.cast_ofNat, Rat.cast_intCast, Rat.cast_natCast] at h0
+        )))
+        evalTactic (← `(tactic| exact h0))
+        return true
+      catch _ => pure ()
+
+      -- Approach 2: convert with norm_num
+      setGoals [goal]
+      try
+        evalTactic (← `(tactic| (
+          have h0 := $proofStx;
+          simp only [LeanCert.Core.Expr.eval, LeanCert.Core.Expr.eval_namedConst,
+                     LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_sqrt,
+                     LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_sub,
+                     LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg,
+                     LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_log,
+                     LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos,
+                     ← LeanCert.Core.Expr.sqrt_mul_self_eq_abs,
+                     Rat.cast_ofNat, Rat.cast_intCast, Rat.cast_natCast,
+                     Rat.divInt_eq_div] at h0;
+          convert! h0 using 1 <;> norm_num
+        )))
+        return true
+      catch e2 =>
+        trace[interval_decide] "Approach 2 failed: {e2.toMessageData}"
+
+      -- Approach 3: Normalize goal bound first
+      setGoals [goal]
+      let boundRatStx ← Term.exprToSyntax (toExpr boundRat)
+      try
+        evalTactic (← `(tactic| (
+          show $(← Term.exprToSyntax funcExpr) ≤ ↑($boundRatStx : ℚ)
+        )))
+        evalTactic (← `(tactic| (
+          have h0 := $proofStx;
+          simp only [LeanCert.Core.Expr.eval, LeanCert.Core.Expr.eval_namedConst,
+                     LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_sqrt,
+                     LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_sub,
+                     LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg,
+                     LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_log,
+                     LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos,
+                     ← LeanCert.Core.Expr.sqrt_mul_self_eq_abs,
+                     Rat.cast_ofNat, Rat.cast_intCast, Rat.cast_natCast,
+                     Rat.divInt_eq_div] at h0;
+          exact h0
+        )))
+        return true
+      catch e3 =>
+        trace[interval_decide] "Approach 3 failed: {e3.toMessageData}"
+
+      -- Approach 4: Use refine with explicit type cast
+      setGoals [goal]
+      try
+        evalTactic (← `(tactic| (
+          refine ?_;
+          have h0 := $proofStx;
+          simp only [LeanCert.Core.Expr.eval, LeanCert.Core.Expr.eval_namedConst,
+                     LeanCert.Core.Expr.eval_const, LeanCert.Core.Expr.eval_sqrt,
+                     LeanCert.Core.Expr.eval_add, LeanCert.Core.Expr.eval_sub,
+                     LeanCert.Core.Expr.eval_mul, LeanCert.Core.Expr.eval_neg,
+                     LeanCert.Core.Expr.eval_exp, LeanCert.Core.Expr.eval_log,
+                     LeanCert.Core.Expr.eval_sin, LeanCert.Core.Expr.eval_cos,
+                     ← LeanCert.Core.Expr.sqrt_mul_self_eq_abs,
+                     Rat.cast_ofNat, Rat.cast_intCast, Rat.cast_natCast,
+                     Rat.divInt_eq_div] at h0;
+          exact_mod_cast h0
+        )))
+        return true
+      catch e4 =>
+        trace[interval_decide] "Approach 4 failed: {e4.toMessageData}"
+
+      return false
+
+    -- Try Dyadic first. Only a failed certificate check falls through to
+    -- Rational; construction and transport exceptions remain implementation
+    -- errors and escape this typed core.
+    let dyadicSaved ← saveState
+    let tryDyadic : TacticM (Except PointInequalityFailure
+        (Option PointInequalityOutcome)) := do
+      let prec := precision
+      let precExpr := toExpr prec
+      let depthExpr := toExpr taylorDepth
+      let precLeZeroTy ← mkAppM ``LE.le #[precExpr, toExpr (0 : Int)]
+      let precLeZeroProof ← mkDecideProof precLeZeroTy
+
+      let zeroRat : ℚ := 0
+      let leProof ← mkAppM ``le_refl #[toExpr zeroRat]
+
+      let (dyadicTheoremName, dyadicCheckName) :=
+        match isStrict, isReversed with
+        | false, false => (``LeanCert.Validity.verify_upper_bound_dyadic_checked, ``LeanCert.Validity.checkUpperBoundDyadicChecked)
+        | false, true  => (``LeanCert.Validity.verify_lower_bound_dyadic_checked, ``LeanCert.Validity.checkLowerBoundDyadicChecked)
+        | true,  false => (``LeanCert.Validity.verify_strict_upper_bound_dyadic_checked, ``LeanCert.Validity.checkStrictUpperBoundDyadicChecked)
+        | true,  true  => (``LeanCert.Validity.verify_strict_lower_bound_dyadic_checked, ``LeanCert.Validity.checkStrictLowerBoundDyadicChecked)
+
+      trace[interval_decide] "Building dyadic certificate check"
+      let dyadicCheckExpr ← mkAppM dyadicCheckName
+        #[ast, toExpr zeroRat, toExpr zeroRat, leProof, toExpr boundRat, precExpr, depthExpr]
+      let dyadicCertTy ← mkAppM ``Eq #[dyadicCheckExpr, mkConst ``Bool.true]
+      let dyadicCertGoal ← mkFreshExprMVar dyadicCertTy
+      let dyadicCertGoalId := dyadicCertGoal.mvarId!
+      trace[interval_decide] "Verifying dyadic certificate"
+      let event ←
+        match ← closeCertificateGoalTyped (← VerificationConfig.current)
+            dyadicCertGoalId (tacticName := "interval_decide") with
+        | .accepted event => pure event
+        | .rejected =>
+            trace[interval_decide] "Dyadic certificate rejected"
+            dyadicSaved.restore
+            return .ok none
+        | .failed failure =>
+            dyadicSaved.restore
+            return .error <| .internalFailure
+              (failure.message "interval_decide")
+      trace[interval_decide] "Dyadic certificate verified"
+
+      let dyadicProof ← mkAppM dyadicTheoremName
+        #[ast, toExpr zeroRat, toExpr zeroRat, leProof, toExpr boundRat,
+          precExpr, depthExpr, precLeZeroProof, dyadicCertGoal]
+
+      let zeroRatAsReal ← mkAppOptM ``Rat.cast #[mkConst ``Real, none, toExpr (0 : ℚ)]
+      let h1 ← mkAppM ``le_refl #[zeroRatAsReal]
+      let h2 ← mkAppM ``le_refl #[zeroRatAsReal]
+      let memProof ← mkAppM ``And.intro #[h1, h2]
+      let dyadicProofAtZero := Lean.mkApp2 dyadicProof zeroRatAsReal memProof
+
+      let dyadicProofStxRaw ← Term.exprToSyntax dyadicProofAtZero
+      let dyadicProofStx : TSyntax `term := ⟨dyadicProofStxRaw⟩
+      let closed ← tryCloseWith dyadicProofStx
+      if closed then
+        pure <| .ok <| some {
+          checker := dyadicCheckName
+          verifier := dyadicTheoremName
+          verification := event.toUsage
+          dyadic := true
+          precision := some prec
+          taylorDepth := taylorDepth
+        }
+      else
+        dyadicSaved.restore
+        pure <| .error <| .transportFailure
+          "certified Dyadic proof did not close the original point inequality"
+    let dyadicResult ← tryDyadic
+    match dyadicResult with
+    | .ok (some outcome) => return .ok outcome
+    | .ok none =>
+        if !rationalFallback then
+          return .error <| .inconclusive
+            s!"The Dyadic point checker was inconclusive at precision \
+              {precision} and Taylor depth {taylorDepth}."
+    | .error failure => return .error failure
+
+    let supportProof ←
+      try mkSupportedCoreProof ast
+      catch e =>
+        return .error <| .unsupported (toString funcExpr)
+          (← e.toMessageData.toString)
+    trace[interval_decide] "supportProof generated"
+
+    let cfgExpr ← mkAppM ``EvalConfig.mk #[toExpr taylorDepth]
+
+    let zeroRat : ℚ := 0
+    let leProof ← mkAppM ``le_refl #[toExpr zeroRat]
+    let intervalExpr ← mkAppM ``IntervalRat.mk #[toExpr zeroRat, toExpr zeroRat, leProof]
+
+    let theoremName :=
+      if isStrict then
+        if isReversed then ``verify_strict_lower_bound else ``verify_strict_upper_bound
+      else
+        if isReversed then ``verify_lower_bound else ``verify_upper_bound
+
+    let checkName :=
+      if isStrict then
+        if isReversed then ``LeanCert.Validity.checkStrictLowerBound
+        else ``LeanCert.Validity.checkStrictUpperBound
+      else
+        if isReversed then ``LeanCert.Validity.checkLowerBound
+        else ``LeanCert.Validity.checkUpperBound
+
+    trace[interval_decide] "Building certificate check"
+    let checkExpr ← mkAppM checkName #[ast, intervalExpr, toExpr boundRat, cfgExpr]
+    trace[interval_decide] "checkExpr built"
+    let certTy ← mkAppM ``Eq #[checkExpr, mkConst ``Bool.true]
+    let certGoal ← mkFreshExprMVar certTy
+    let certGoalId := certGoal.mvarId!
+    trace[interval_decide] "Verifying rational certificate"
+    let event ←
+      match ← closeCertificateGoalTyped (← VerificationConfig.current) certGoalId
+          (tacticName := "interval_decide") with
+      | .accepted event => pure event
+      | .rejected =>
+          return .error <| .rejected
+            "the Rational point checker evaluated to false"
+      | .failed failure =>
+          return .error <| .internalFailure
+            (failure.message "interval_decide")
+    trace[interval_decide] "Certificate verified"
+
+    let proof ← mkAppM theoremName #[ast, supportProof, intervalExpr, toExpr boundRat, cfgExpr, certGoal]
+
+    let zeroRatAsReal ← mkAppOptM ``Rat.cast #[mkConst ``Real, none, toExpr (0 : ℚ)]
+    let h1 ← mkAppM ``le_refl #[zeroRatAsReal]
+    let h2 ← mkAppM ``le_refl #[zeroRatAsReal]
+    let memProof ← mkAppM ``And.intro #[h1, h2]
+    let proofAtZero := Lean.mkApp2 proof zeroRatAsReal memProof
+
+    setGoals [goal]
+
+    let proofStxRaw ← Term.exprToSyntax proofAtZero
+    let proofStx : TSyntax `term := ⟨proofStxRaw⟩
+
+    let proofType ← inferType proofAtZero
+    trace[interval_decide] "Proof type: {proofType}"
+    trace[interval_decide] "Goal type: {goalType}"
+
+    let closed ← tryCloseWith proofStx
+    if closed then
+      return .ok {
+        checker := checkName
+        verifier := theoremName
+        verification := event.toUsage
+        dyadic := false
+        taylorDepth := taylorDepth
+      }
+    return .error <| .transportFailure
+      "certified Rational proof did not close the original point inequality"
+
+/-- Coordinate Dyadic precision and Taylor depth for a closed point
+inequality. The Rational fallback runs only in the final stage. -/
+def proveClosedExpressionBoundAdaptiveTyped (goal : MVarId)
+    (goalType : Lean.Expr) (policy : NumericalRefinementPolicy) :
+    TacticM (Except PointInequalityFailure PointInequalityOutcome) := do
+  let original ← saveState
+  let mut lastFailure : Option PointInequalityFailure := none
+  for stage in policy.stages do
+    original.restore
+    let isFinal := stage.index + 1 == policy.stageCount
+    match ← proveClosedExpressionBoundTyped goal goalType stage.taylorDepth
+        stage.dyadicPrecision isFinal with
+    | .ok outcome => return .ok outcome
+    | .error failure@(.inconclusive ..) => lastFailure := some failure
+    | .error failure@(.rejected ..) => lastFailure := some failure
+    | .error failure =>
+        original.restore
+        return .error failure
+  original.restore
+  return .error <| lastFailure.getD <|
+    .inconclusive "the numerical refinement policy contains no stages"
+
+private def proveClosedExpressionBoundAdaptiveOrThrow (goal : MVarId)
+    (goalType : Lean.Expr) (policy : NumericalRefinementPolicy) : TacticM Unit := do
+  match ← proveClosedExpressionBoundAdaptiveTyped goal goalType policy with
+  | .ok _ => pure ()
+  | .error (.unsupported expression detail) =>
+      throwError "interval_decide: unsupported expression {expression}:\n{detail}"
+  | .error (.rejected detail) =>
+      throwError "interval_decide: certificate rejected:\n{detail}"
+  | .error (.inconclusive detail) =>
+      throwError "interval_decide: inconclusive:\n{detail}"
+  | .error (.transportFailure detail) =>
+      throwError "interval_decide: proof transport failed:\n{detail}"
+  | .error (.internalFailure detail) =>
+      throwError "interval_decide: certificate verification failed:\n{detail}"
+
+/-- Point-inequality implementation under one coordinated refinement policy. -/
+def intervalDecideCoreWithPolicy (policy : NumericalRefinementPolicy) : TacticM Unit := do
+  let taylorDepth := policy.initialTaylorDepth
+  intervalNormCore
+  let goal ← getMainGoal
+  let goalType ← goal.getType
+  trace[interval_decide] "intervalDecideCore: goal type = {goalType}"
+
+  let some (lhs, rhs, _isStrict, isReversed) ← parsePointIneq goalType
+    | let diagReport ← mkDiagnosticReport "interval_decide" goalType "parse"
+        (some m!"Expected a point inequality of form:\n\
+                 • expr ≤ bound  (or <, ≥, >)\n\
+                 • e.g., Real.exp 1 ≤ 3\n\n\
+                 For universally quantified goals, use `certify_bound` instead.")
+      throwError "interval_decide: Could not parse as point inequality.\n\n{diagReport}"
+
+  let lhsIsConst ← toRat? lhs
+  let rhsIsConst ← toRat? rhs
+  let lhsConsts ← collectConstants lhs
+  let rhsConsts ← collectConstants rhs
+
+  let (funcExpr, boundExpr, needsFlip) :=
+    if lhsIsConst.isSome && rhsIsConst.isNone then
+      (rhs, lhs, true)
+    else if rhsIsConst.isSome && lhsIsConst.isNone then
+      (lhs, rhs, false)
+    else if lhsConsts.isEmpty && !rhsConsts.isEmpty then
+      (lhs, rhs, false)
+    else if rhsConsts.isEmpty && !lhsConsts.isEmpty then
+      (rhs, lhs, true)
+    else
+      if isReversed then (rhs, lhs, false) else (lhs, rhs, false)
+
+  let actualIsReversed := isReversed != needsFlip
+  trace[interval_decide] "funcExpr = {funcExpr}, boundExpr = {boundExpr}, needsFlip = {needsFlip}, actualIsReversed = {actualIsReversed}"
+
+  let consts ← collectConstants funcExpr
+  trace[interval_decide] "consts = {consts}"
+
+  let hasFreeVars := funcExpr.hasFVar
+  trace[interval_decide] "hasFreeVars = {hasFreeVars}"
+
+  let c : ℚ ←
+    if !hasFreeVars then
+      trace[interval_decide] "No free variables, trying closed expression path"
+      try
+        proveClosedExpressionBoundAdaptiveOrThrow goal goalType policy
+        return
+      catch e =>
+        trace[interval_decide] "Closed expression path on original goal failed: {e.toMessageData}"
+      let mut currentGoal := goal
+      let mut currentGoalType := goalType
+      try
+        evalTactic (← `(tactic| norm_num))
+        let remainingGoals ← getGoals
+        if remainingGoals.isEmpty then
+          return
+        else
+          let isAssignedAfter ← goal.isAssigned
+          if isAssignedAfter && !remainingGoals.isEmpty then
+            currentGoal := remainingGoals.head!
+            currentGoalType ← currentGoal.getType
+      catch _ => pure ()
+
+      try
+        proveClosedExpressionBoundAdaptiveOrThrow currentGoal currentGoalType policy
+        return
+      catch _ => pure ()
+
+      trace[interval_decide] "Falling through to fallback"
+      if consts.isEmpty then pure 0 else pure consts.head!
+    else
+      if consts.isEmpty then pure 0 else pure consts.head!
+
+  let goalsBefore ← getGoals
+  try
+    evalTactic (← `(tactic| norm_num))
+    let goalsAfter ← getGoals
+    if goalsAfter.isEmpty || goalsAfter.length < goalsBefore.length then
+      return
+  catch _ => pure ()
+
+  let cStx : Lean.Term ←
+    if c.den == 1 then
+      if c.num >= 0 then
+        pure ⟨Syntax.mkNumLit (toString c.num)⟩
+      else
+        `(- $(Syntax.mkNumLit (toString (-c.num))))
+    else
+      if c.num >= 0 then
+        `($(Syntax.mkNumLit (toString c.num)) / $(Syntax.mkNumLit (toString c.den)))
+      else
+        `(- ($(Syntax.mkNumLit (toString (-c.num))) / $(Syntax.mkNumLit (toString c.den))))
+
+  let depthStx := Syntax.mkNumLit (toString taylorDepth)
+
+  try
+    evalTactic (← `(tactic|
+      (have h : ∀ x ∈ Set.Icc ($cStx : ℝ) $cStx, _ := by certify_bound $depthStx) <;>
+      exact h $cStx ⟨le_refl $cStx, le_refl $cStx⟩
+    ))
+    return
+  catch _ => pure ()
+
+  let cStr := if c.den == 1 then s!"{c.num}" else s!"{c.num}/{c.den}"
+  let funcStr ← Meta.ppExpr funcExpr
+  let boundStr ← Meta.ppExpr boundExpr
+  throwError "interval_decide: Could not automatically prove this inequality.\n\n\
+              Detected:\n\
+              • Function: {funcStr}\n\
+              • Bound: {boundStr}\n\
+              • Evaluation point: {cStr}\n\n\
+              Suggestions:\n\
+              • Try increasing depth: `interval_decide 30`\n\
+              • Check if the bound is mathematically correct\n\n\
+              Manual workaround pattern:\n\
+              ```lean\n\
+              have h : ∀ x ∈ Set.Icc ({cStr}:ℝ) {cStr}, f x ≤ bound := by certify_bound\n\
+              exact h {cStr} ⟨le_refl {cStr}, le_refl {cStr}⟩\n\
+              ```\n\
+              Replace `f x` with your expression (using `x` instead of `{cStr}`)."
+
+/-- Compatibility entry point with fixed Taylor depth and adaptive Dyadic
+precision. -/
+def intervalDecideCore (taylorDepth : Nat) : TacticM Unit :=
+  intervalDecideCoreWithPolicy
+    (NumericalRefinementPolicy.fixedTaylor taylorDepth 0)
+
+/-! ### Depth estimation helpers -/
+
+/-- Compute `ceil(|q|)` for a rational `q` as a `Nat`. -/
+private def ratCeilAbs (q : ℚ) : Nat :=
+  let a := q.num.natAbs
+  let d := q.den
+  (a + d - 1) / d
+
+/-- Heuristic reduction factor for exp (mirrors `IntervalRat.expReduceK`). -/
+private def expReduceKMeta (q : ℚ) : Nat :=
+  Nat.log2 (ratCeilAbs q + 1)
+
+private def isConstNameIn (n : Lean.Name) (names : List Lean.Name) : Bool :=
+  names.any (fun m => n == m)
+
+/-- Heuristic exp depth estimate using argument reduction.
+    We approximate the required depth based on |q/2^k|, where k = log2(ceil|q|+1). -/
+private def expDepthEstimate (q : ℚ) : Nat :=
+  let k := expReduceKMeta q
+  let q' : ℚ := q / (2 ^ k : Nat)
+  (q'.num.natAbs * 7 / q'.den).max 10
+
+/-- Estimate the Taylor depth needed based on constants inside transcendental functions.
+    For `exp(c)`, we account for argument reduction and use roughly `7 * |c/2^k|` terms.
+    For `sin(c)`, `cos(c)`, convergence requires roughly `3 * |c|` terms.
+    Returns at least 10. -/
+private partial def estimateTranscendentalDepth (e : Lean.Expr) : MetaM Nat := do
+  let mut maxDepth : Nat := 10
+  let estimate ← go e
+  return Nat.max maxDepth estimate
+where
+  go (e : Lean.Expr) : MetaM Nat := do
+    let e ← instantiateMVars e
+    let fn := e.getAppFn
+    let args := e.getAppArgs
+    -- Check for transcendental functions
+    if fn.isConst then
+      let name := fn.constName!
+      -- exp, sinh, cosh need ~7x the argument magnitude (with exp reduction)
+      if isConstNameIn name [``Real.exp, ``Real.sinh, ``Real.cosh] then
+        if args.size > 0 then
+          let arg := args.back!
+          if let some q ← extractRatFromReal arg then
+            let mag := expDepthEstimate q
+            let childDepth ← go arg
+            return Nat.max mag childDepth
+          else
+            -- Recurse into the argument to find nested constants
+            let childDepth ← go arg
+            return childDepth
+      -- sin, cos need ~3x the argument magnitude
+      if isConstNameIn name [``Real.sin, ``Real.cos] then
+        if args.size > 0 then
+          let arg := args.back!
+          if let some q ← extractRatFromReal arg then
+            let mag := (q.num.natAbs * 3 / q.den).max 10
+            let childDepth ← go arg
+            return Nat.max mag childDepth
+          else
+            let childDepth ← go arg
+            return childDepth
+      -- log needs ~3x for large arguments
+      if name == ``Real.log then
+        if args.size > 0 then
+          let arg := args.back!
+          if let some q ← extractRatFromReal arg then
+            let mag := (q.num.natAbs * 3 / q.den).max 10
+            let childDepth ← go arg
+            return Nat.max mag childDepth
+          else
+            let childDepth ← go arg
+            return childDepth
+    -- For binary ops (add, mul, sub, div), recurse into both sides
+    if fn.isConst then
+      let name := fn.constName!
+      if name == ``HAdd.hAdd || name == ``HSub.hSub ||
+         name == ``HMul.hMul || name == ``HDiv.hDiv then
+        if args.size >= 6 then
+          let d1 ← go args[4]!
+          let d2 ← go args[5]!
+          return Nat.max d1 d2
+      if name == ``Neg.neg && args.size >= 3 then
+        return ← go args[2]!
+    return 10
+
+/-- Flatten a real-valued addition expression into its summand terms. -/
+private partial def flattenAdd (e : Lean.Expr) : List Lean.Expr :=
+  let fn := e.getAppFn
+  let args := e.getAppArgs
+  if fn.isConst && fn.constName! == ``HAdd.hAdd && args.size >= 6 then
+    flattenAdd args[4]! ++ flattenAdd args[5]!
+  else
+    [e]
+
+/-- Rebuild a real-valued sum expression from a list of terms. -/
+private def rebuildSum (terms : List Lean.Expr) : MetaM Lean.Expr := do
+  match terms with
+  | [] => throwError "rebuildSum: empty list"
+  | [t] => pure t
+  | t :: rest => do
+    let acc ← rebuildSum rest
+    mkAppM ``HAdd.hAdd #[t, acc]
+
+/-- Compute an upper bound for a real expression by reifying it and evaluating the interval.
+    Returns the `.hi` of the interval as a rational number, cast to ℝ syntax. -/
+private def computeUpperBoundExpr (e : Lean.Expr) (taylorDepth : Nat) : MetaM Lean.Expr := do
+  -- Reify the expression to a LeanCert.Core.Expr
+  let ast := (← reifyWithReport e).expr
+  let cfgExpr ← mkAppM ``EvalConfig.mk #[toExpr taylorDepth]
+  let zeroRat : ℚ := 0
+  let leProof ← mkAppM ``le_refl #[toExpr zeroRat]
+  let intervalExpr ← mkAppM ``IntervalRat.mk #[toExpr zeroRat, toExpr zeroRat, leProof]
+  -- Build: (LeanCert.Internal.Rational.evalTotalCore1 ast interval cfg).hi
+  let evalResult ← mkAppM ``LeanCert.Internal.Rational.evalTotalCore1 #[ast, intervalExpr, cfgExpr]
+  let hiExpr ← mkAppM ``IntervalRat.hi #[evalResult]
+  -- Reduce to a concrete rational value
+  let hiReduced ← withTransparency TransparencyMode.all <| reduce hiExpr
+  -- Return as ↑(q : ℚ) : ℝ
+  mkAppOptM ``Rat.cast #[mkConst ``Real, none, hiReduced]
+
+/-- Try to prove a point inequality by splitting large sums into smaller groups.
+    Each group is proved separately via `interval_decide`, then combined with `linarith`.
+    Returns `true` if the goal was closed. -/
+private def trySumSplitting (taylorDepth : Nat) (groupSize : Nat := 10) : TacticM Bool := do
+  let goal ← getMainGoal
+  let goalType ← goal.getType
+  -- Parse as point inequality
+  let some (lhs, _rhs, isStrict, _isReversed) ← parsePointIneq goalType
+    | return false
+  -- Only handle non-strict ≤ for now
+  if isStrict then return false
+  -- The function side should be a sum (any size, we'll try direct proof first)
+  let terms := flattenAdd lhs
+  -- Skip single terms (not a sum) but allow small sums (≥2 terms)
+  if terms.length < 2 then return false
+  trace[interval_decide] "Sum splitting: found {terms.length} terms, splitting into groups of {groupSize}"
+  -- Partition into groups
+  let mut groups : Array (List Lean.Expr) := #[]
+  let termsArr := terms.toArray
+  let mut i := 0
+  while i < termsArr.size do
+    let endIdx := min (i + groupSize) termsArr.size
+    groups := groups.push (termsArr.toList.drop i |>.take (endIdx - i))
+    i := endIdx
+  -- For each group, compute its interval upper bound and prove the sub-inequality
+  for (group, idx) in groups.toList.zip (List.range groups.size) do
+    let groupExpr ← rebuildSum group
+    -- Compute the upper bound for this group via interval evaluation
+    let boundExpr ← try
+      computeUpperBoundExpr groupExpr taylorDepth
+    catch _ =>
+      trace[interval_decide] "Sum splitting: failed to compute bound for group {idx}"
+      return false
+    let boundStx ← Term.exprToSyntax boundExpr
+    let groupStx ← Term.exprToSyntax groupExpr
+    let haveNameId := mkIdent (Name.mkSimple s!"h_group_{idx}")
+    try
+      -- Create the have goal and prove it with intervalDecideCore
+      evalTactic (← `(tactic|
+        have $haveNameId : $groupStx ≤ $boundStx := by skip
+      ))
+      -- The new goal from `skip` is `groupExpr ≤ boundExpr`
+      intervalDecideCore taylorDepth
+    catch _ =>
+      trace[interval_decide] "Sum splitting: failed to prove group {idx}"
+      return false
+  -- Close the original goal with linarith using all the group bounds
+  try
+    evalTactic (← `(tactic| linarith))
+    return true
+  catch _ =>
+    trace[interval_decide] "Sum splitting: linarith failed to combine group bounds"
+    return false
+
+/-! ### Ceiling/Floor Preprocessing
+
+Goals involving `⌈e⌉₊` (Nat.ceil) cannot be reified into the `Expr` AST because
+it has no constructor for ceiling.  Instead we reduce to a pure real inequality:
+
+* `⌈e⌉₊ + k ≤ n`  ⟹  prove `e ≤ ↑(n - k)` by `interval_decide`,
+  then close via `Nat.ceil_le` + `omega`.
+-/
+
+/-- Parse an expression as `⌈e⌉₊ + k`, `k + ⌈e⌉₊`, or just `⌈e⌉₊`.
+    Returns `(ceilApp, innerRealExpr, offset)`. -/
+private def parseCeilPlusOffset (e : Lean.Expr) : MetaM (Option (Lean.Expr × Lean.Expr × ℕ)) := do
+  -- Direct: e = Nat.ceil ... (offset = 0)
+  let eFn := e.getAppFn
+  if eFn.isConstOf ``Nat.ceil && e.getAppArgs.size >= 2 then
+    return some (e, e.getAppArgs.back!, 0)
+  -- Addition: e = a + b
+  let eArgs := e.getAppArgs
+  if eFn.isConstOf ``HAdd.hAdd && eArgs.size >= 6 then
+    let a := eArgs[4]!
+    let b := eArgs[5]!
+    -- a = ⌈inner⌉₊, b = k
+    let aFn := a.getAppFn
+    if aFn.isConstOf ``Nat.ceil && a.getAppArgs.size >= 2 then
+      let bRed ← withTransparency TransparencyMode.all <| reduce b
+      if let some k := bRed.rawNatLit? then
+        return some (a, a.getAppArgs.back!, k)
+    -- b = ⌈inner⌉₊, a = k
+    let bFn := b.getAppFn
+    if bFn.isConstOf ``Nat.ceil && b.getAppArgs.size >= 2 then
+      let aRed ← withTransparency TransparencyMode.all <| reduce a
+      if let some k := aRed.rawNatLit? then
+        return some (b, b.getAppArgs.back!, k)
+  return none
+
+/-- Try to close a goal of the form `⌈e⌉₊ + k ≤ n` (or `⌈e⌉₊ ≤ n`, `n ≥ ⌈e⌉₊ + k`, …)
+    by proving a sufficient real-valued inequality.
+
+    Strategy:
+    1. Create a sub-goal `innerExpr ≤ ↑(n − k)` and prove it with `intervalDecideCore`
+    2. Derive `⌈innerExpr⌉₊ ≤ n − k` via `Nat.ceil_le`
+    3. Close the original goal with `omega`
+
+    Returns `true` if the goal was closed. -/
+private def tryCeilPreprocess (taylorDepth : Nat) : TacticM Bool := do
+  let goal ← getMainGoal
+  let goalType ← goal.getType
+  let goalTypeW ← whnf goalType
+  let fn := goalTypeW.getAppFn
+  let args := goalTypeW.getAppArgs
+  -- Must be an inequality on ℕ.  After whnf it might be:
+  --   LE.le  ℕ inst lhs rhs  (4 args)
+  --   Nat.le lhs rhs          (2 args, whnf-reduced)
+  --   GE.ge  ℕ inst lhs rhs  (4 args)
+  let (lhs, rhs, isGe) ←
+    if fn.isConstOf ``LE.le && args.size >= 4 then
+      let ty ← whnf args[0]!
+      unless ty.isConstOf ``Nat do return false
+      pure (args[2]!, args[3]!, false)
+    else if fn.isConstOf ``Nat.le && args.size >= 2 then
+      pure (args[0]!, args[1]!, false)
+    else if fn.isConstOf ``GE.ge && args.size >= 4 then
+      let ty ← whnf args[0]!
+      unless ty.isConstOf ``Nat do return false
+      pure (args[2]!, args[3]!, true)
+    else return false
+  -- Orient so that the ceil is on the "small" side: ceil_side ≤ bound_side
+  let (ceilSide, boundSide) := if isGe then (rhs, lhs) else (lhs, rhs)
+  -- Find Nat.ceil in the ceil side
+  let some (_ceilApp, innerExpr, offset) ← parseCeilPlusOffset ceilSide | return false
+  trace[interval_decide] "Ceil preprocessing: inner = {innerExpr}, offset = {offset}"
+  -- Evaluate RHS to a concrete ℕ
+  let boundRed ← withTransparency TransparencyMode.all <| reduce boundSide
+  let some boundVal := boundRed.rawNatLit? | return false
+  -- Compute the target: n − k (in ℕ)
+  if offset > boundVal then return false
+  let targetVal := boundVal - offset
+  trace[interval_decide] "Ceil preprocessing: proving {innerExpr} ≤ ({targetVal} : ℝ)"
+  try
+    -- Build  (targetVal : ℝ)  as  @OfNat.ofNat ℝ targetVal inst
+    let realTy := Lean.mkConst ``Real
+    let targetNatLit := mkNatLit targetVal
+    let targetRealExpr ← mkAppOptM ``OfNat.ofNat #[some realTy, some targetNatLit, none]
+    -- Build the real inequality type:  innerExpr ≤ (targetVal : ℝ)
+    let realIneqType ← mkAppM ``LE.le #[innerExpr, targetRealExpr]
+    -- Create a fresh metavariable for the proof
+    let realProofMVar ← mkFreshExprMVar (some realIneqType) .natural `h_real_bound
+    let realGoalId := realProofMVar.mvarId!
+    -- Save original goals, focus on the real sub-goal
+    let origGoals ← getGoals
+    setGoals [realGoalId]
+    -- Prove the real inequality with intervalDecideCore
+    intervalDecideCore taylorDepth
+    trace[interval_decide] "Ceil preprocessing: real inequality proved"
+    -- Now build  ⌈innerExpr⌉₊ ≤ targetVal  via Nat.ceil_le.mpr
+    -- Nat.ceil_le has type: ⌈a⌉₊ ≤ n ↔ a ≤ ↑n
+    -- The RHS of the iff is  a ≤ ↑n  where ↑n = @Nat.cast ℝ _ n
+    -- Our proof is  a ≤ (targetVal : ℝ)  which uses OfNat, not Nat.cast.
+    -- These should be definitionally equal.  Use `Iff.mpr` with the proof.
+    let ceilLeIff ← mkAppOptM ``Nat.ceil_le
+      #[some realTy, none, none, none, some innerExpr, some targetNatLit]
+    let ceilLeProof ← mkAppM ``Iff.mpr #[ceilLeIff, realProofMVar]
+    let ceilIneqType ← inferType ceilLeProof
+    -- Restore original goal and add h_ceil_bound as hypothesis, then omega
+    setGoals origGoals
+    let mainGoal ← getMainGoal
+    let newGoal ← mainGoal.assert `h_ceil_bound ceilIneqType ceilLeProof
+    let (_, newGoal) ← newGoal.intro `h_ceil_bound
+    replaceMainGoal [newGoal]
+    evalTactic (← `(tactic| omega))
+    return true
+  catch e =>
+    trace[interval_decide] "Ceil preprocessing failed: {e.toMessageData}"
+    return false
+
+/-- Run interval_decide on a single goal (non-conjunction) -/
+private def intervalDecideSingle (depth : Option Nat) : TacticM Unit := do
+  -- Try ceiling/floor preprocessing first (for goals like ⌈e⌉₊ + k ≤ n).
+  -- We estimate the Taylor depth from the inner real expression and try a few depths.
+  let goalType ← getMainTarget
+  let est ← estimateTranscendentalDepth goalType
+  let ceilDepths : List Nat := match depth with
+    | some d => [d]
+    | none => if est > 10 then [est, est + 10, est + 20] else [10, 15, 20, 25, 30]
+  let goalState ← saveState
+  for d in ceilDepths do
+    try
+      restoreState goalState
+      if ← tryCeilPreprocess d then return
+    catch _ => continue
+  restoreState goalState
+  match depth with
+  | some n =>
+    let goalState ← saveState
+    try
+      intervalDecideCore n
+      return
+    catch e =>
+      restoreState goalState
+      let splitSuccess ← trySumSplitting n
+      if splitSuccess then return
+      throw e
+  | none =>
+    let goalType ← getMainTarget
+    let est ← estimateTranscendentalDepth goalType
+    let initialDepth := if est > 10 then est else 10
+    let policy := NumericalRefinementPolicy.adaptive initialDepth 0
+    trace[interval_decide] "Estimated depth: {est}, refinement stages: {repr policy.stages}"
+    let goalState ← saveState
+    try
+      intervalDecideCoreWithPolicy policy
+      return
+    catch e =>
+      restoreState goalState
+      let finalDepth := initialDepth + 2 * policy.taylorDepthStep
+      let splitSuccess ← trySumSplitting finalDepth
+      if splitSuccess then return
+      throw e
+
+/-- Recursively handle conjunctions and disjunctions, then apply intervalDecideSingle -/
+partial def intervalDecideWithConnectives (depth : Option Nat) : TacticM Unit := do
+  intervalNormCore
+  let goal ← getMainTarget
+  if goal.isAppOfArity ``And 2 then
+    evalTactic (← `(tactic| constructor))
+    let goals ← getGoals
+    match goals with
+    | g1 :: g2 :: rest =>
+      setGoals [g1]
+      intervalDecideWithConnectives depth
+      setGoals [g2]
+      intervalDecideWithConnectives depth
+      setGoals rest
+    | [g1] =>
+      setGoals [g1]
+      intervalDecideWithConnectives depth
+    | [] =>
+      pure ()
+  else if goal.isAppOfArity ``Or 2 then
+    let savedState ← saveState
+    try
+      evalTactic (← `(tactic| left))
+      intervalDecideWithConnectives depth
+    catch _ =>
+      savedState.restore
+      evalTactic (← `(tactic| right))
+      intervalDecideWithConnectives depth
+  else
+    intervalDecideSingle depth
+
+elab "interval_decide" depth:(num)? t:(leancertTrustItem)? : tactic => do
+  -- Validate `leancert.trust` up front so a bad value surfaces as its own
+  -- error rather than as a generic tactic failure inside the proof cascade.
+  discard <| VerificationConfig.current
+  withTrustMode (← elabTrustItem? t) do
+    intervalDecideWithConnectives (depth.map (·.getNat))
+
+end LeanCert.Tactic.Auto
