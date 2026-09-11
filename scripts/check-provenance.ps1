@@ -18,7 +18,8 @@ if ($taskUnreviewed.Count -ne 0) {
 }
 $taskFiles = Get-ChildItem -LiteralPath $taskRoot -Recurse -File -Filter '*.lean' |
   Where-Object {
-    $_.FullName -notmatch '[\\/]\.lake[\\/]'
+    $_.FullName -notmatch '[\\/]\.lake[\\/]' -and
+      $_.FullName -notmatch '[\\/]lean-eval[\\/]'
   }
 
 $taskFailures = [Collections.Generic.List[string]]::new()

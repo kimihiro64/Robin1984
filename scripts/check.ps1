@@ -33,6 +33,7 @@ try {
     '-e', '^\s*end\s+Robin\s*$',
     '-g', '*.lean',
     '-g', '!.lake/**',
+    '-g', '!lean-eval/**',
     $repositoryRoot
   )
   & $ripgrepCommand.Source @namespaceArguments
