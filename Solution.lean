@@ -1,5 +1,6 @@
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Robin1984.Equivalence.Theorem
+import Robin1984.Lagarias.Theorem
 import Robin1984.Public
 
 set_option autoImplicit false
@@ -8,8 +9,8 @@ set_option autoImplicit false
 ## Provenance
 
 - Classification: **Direct source formalization**.
-- Mathematical source: Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).
-- Formalization note: The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.
+- Mathematical source: Guy Robin (1984) and Jeffrey C. Lagarias, An Elementary Problem Equivalent to the Riemann Hypothesis (2001).
+- Formalization note: The retained statements are Robin's and Lagarias's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.
 - PROVENANCE-END
 -/
 
@@ -32,5 +33,9 @@ theorem riemannHypothesis_iff_colossallyAbundant_robin :
       (forall n : Nat, forall eps : Real, 5040 < n ->
         IsColossallyAbundantWith n eps -> robinInequality n) := by
   exact riemannHypothesis_iff_colossallyAbundantRobin
+
+theorem riemann_hypothesis_iff_lagarias_elementary_criterion :
+    RiemannHypothesis <-> LagariasElementaryCriterion := by
+  exact riemannHypothesis_iff_lagariasElementaryCriterion
 
 end Robin1984

@@ -34,12 +34,13 @@ Comparator checks the corresponding proved declarations in
 - `Robin1984.riemannHypothesis_iff_colossallyAbundant_robin` proves that it is
   equivalent to verify the same inequality on colossally abundant integers
   above `5040`.
-- `Robin1984.riemannHypothesis_iff_lagariasElementaryCriterion` formalizes
+- `Robin1984.riemann_hypothesis_iff_lagarias_elementary_criterion` formalizes
   Lagarias's elementary criterion in terms of harmonic numbers.
 
 The Challenge definitions use Mathlib's divisor sum, Euler--Mascheroni
-constant, real logarithm and real power, and `RiemannHypothesis` predicate.
-There are no hidden hypotheses in either compared theorem.
+constant, harmonic numbers, real logarithm and real power, and
+`RiemannHypothesis` predicate. There are no hidden hypotheses in any of the
+three compared theorems.
 
 ## Mathematical organization
 
@@ -135,10 +136,10 @@ proof, theorem-by-theorem correspondence, and original references.
 
 ## Trust and proof surface
 
-The completed kernel axiom audit of both proved `Solution` declarations
+The completed kernel axiom audit of the three proved `Solution` declarations
 returned exactly Lean's standard principles `propext`, `Classical.choice`,
 and `Quot.sound`. Project proof sources contain no custom axiom declarations,
-`sorry`, `admit`, or `native_decide`. The two deliberate `sorry`s in
+`sorry`, `admit`, or `native_decide`. The three deliberate `sorry`s in
 `Challenge.lean` are statement holes required by the Challenge/Solution
 comparison and are excluded from proof-status counts.
 

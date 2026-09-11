@@ -1693,7 +1693,7 @@ They are named
 \small
 \path{Robin1984.robin_inequality_iff_riemannHypothesis}\\
 \path{Robin1984.riemannHypothesis_iff_colossallyAbundant_robin}\\
-\path{Robin1984.riemannHypothesis_iff_lagariasElementaryCriterion}.
+\path{Robin1984.riemann_hypothesis_iff_lagarias_elementary_criterion}.
 \end{center}
 All three statement boundaries use Mathlib primitives.  The corresponding
 solution files supply the proof terms, so statement comparison is independent
@@ -1750,7 +1750,7 @@ Thus the full biconditional does not emerge from one opaque analytic theorem:
 the finite and large-height forward branches meet only in the final
 case split, and the converse is a separate contradiction branch.
 
-The two advertised biconditionals also have different quantifier surfaces
+The two Robin biconditionals also have different quantifier surfaces
 but no gap between them.  From $\RH$, Theorem~\ref{thm:main} immediately
 specializes to every colossally abundant integer.  Conversely, the CA
 hypothesis and Proposition~\ref{prop:ca-reduction} extend the inequality from
@@ -2089,10 +2089,10 @@ It would therefore be incorrect to describe every dependency as proved from
 scratch in repository-owned modules.  Mathlib and the pinned PNTAnd revision
 supply a large body of foundational and explicit analytic number theory.
 The project-local claim is narrower and checkable: the source-specific chain
-from those imported results to Robin's two advertised biconditionals,
-including the weighted endpoint, Nicolas--Landau continuation, LCM transfer,
-CA reduction, and finite certificates, is proved here without adding a new
-axiom.
+from those imported results to the three advertised biconditionals, including
+the weighted endpoint, Nicolas--Landau continuation, LCM transfer, CA
+reduction, Lagarias harmonic comparisons, and finite certificates, is proved
+here without adding a new axiom.
 
 In particular, Lemma~\ref{lem:weighted-ef} and
 Proposition~\ref{prop:nicolas-landau} are not assumptions imported as opaque
@@ -2153,11 +2153,12 @@ risk: a purported solution might prove an easier proposition with the same
 informal description, or redefine a symbol occurring in the target.
 
 The trusted \codelink{Challenge.lean}{Challenge} module imports only four
-narrow Mathlib modules.  It defines the divisor sum, Robin inequality, and CA
-predicate directly, and states the two advertised theorems with deliberate
-proof holes.  The \codelink{Solution.lean}{Solution} module imports the project
-and supplies the actual proofs.  The checked
-\codelink{comparator.json}{Comparator configuration} names exactly those two
+narrow Mathlib modules.  It defines the divisor sum, Robin inequality, CA
+predicate, and Lagarias criterion directly, and states the three advertised
+theorems with deliberate proof holes.  The
+\codelink{Solution.lean}{Solution} module imports the project and supplies the
+actual proofs.  The checked
+\codelink{comparator.json}{Comparator configuration} names exactly those three
 theorems, permits only
 \leanname{propext}, \leanname{Quot.sound}, and
 \leanname{Classical.choice}, requires NanoDa, and declares no definition
@@ -2168,7 +2169,8 @@ The complete semantic policy is short enough to display:
 \begin{verbatim}
 "theorem_names": [
   "Robin1984.robin_inequality_iff_riemannHypothesis",
-  "Robin1984.riemannHypothesis_iff_colossallyAbundant_robin"
+  "Robin1984.riemannHypothesis_iff_colossallyAbundant_robin",
+  "Robin1984.riemann_hypothesis_iff_lagarias_elementary_criterion"
 ],
 "definition_names": [],
 "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
@@ -2212,7 +2214,7 @@ advertised declarations returned exactly the standard principles
   \leanname{Classical.choice},\qquad
   \leanname{Quot.sound}.
 \]
-This audit follows the proof terms of the two advertised declarations through
+This audit follows the proof terms of the three advertised declarations through
 their actual transitive closure.  It therefore distinguishes library files
 that are merely present in a dependency checkout from declarations genuinely
 used by this proof: an unused theorem elsewhere cannot enter the result's

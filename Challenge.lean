@@ -9,8 +9,8 @@ set_option autoImplicit false
 ## Provenance
 
 - Classification: **Direct source formalization**.
-- Mathematical source: Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).
-- Formalization note: The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.
+- Mathematical source: Guy Robin (1984) and Jeffrey C. Lagarias, An Elementary Problem Equivalent to the Riemann Hypothesis (2001).
+- Formalization note: The retained statements are Robin's and Lagarias's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.
 - PROVENANCE-END
 -/
 
@@ -19,9 +19,10 @@ set_option autoImplicit false
 
 This is the small statement surface audited by Palomar Comparator.  The first
 theorem is Robin's published equivalence.  The second records the classical
-reduction to colossally abundant integers.  The ordinary number-theoretic
-definitions below depend only on Mathlib so that Palomar can audit the
-challenge independently of the submitted solution.
+reduction to colossally abundant integers.  The third is Lagarias's elementary
+criterion.  The ordinary number-theoretic definitions below depend only on
+Mathlib so that Palomar can audit the challenge independently of the submitted
+solution.
 -/
 
 namespace Robin1984
@@ -48,6 +49,14 @@ noncomputable def IsColossallyAbundantWith (n : Nat) (eps : Real) : Prop :=
   0 < eps ∧ 1 < n ∧
     forall k : Nat, 1 < k -> caObjective eps k <= caObjective eps n
 
+/-- Lagarias's elementary divisor-sum criterion. -/
+def LagariasElementaryCriterion : Prop :=
+  forall n : Nat,
+    0 < n ->
+      ((ArithmeticFunction.sigma 1 n : Nat) : Real) <=
+        (harmonic n : Real) +
+          Real.exp (harmonic n : Real) * Real.log (harmonic n : Real)
+
 /-- Robin's 1984 theorem: the strict divisor-sum inequality above `5040` is
 equivalent to Mathlib's Riemann-hypothesis predicate. -/
 theorem robin_inequality_iff_riemannHypothesis :
@@ -61,6 +70,11 @@ theorem riemannHypothesis_iff_colossallyAbundant_robin :
     RiemannHypothesis <->
       (forall n : Nat, forall eps : Real, 5040 < n ->
         IsColossallyAbundantWith n eps -> robinInequality n) := by
+  sorry
+
+/-- Lagarias's elementary criterion is equivalent to the Riemann hypothesis. -/
+theorem riemann_hypothesis_iff_lagarias_elementary_criterion :
+    RiemannHypothesis <-> LagariasElementaryCriterion := by
   sorry
 
 end Robin1984

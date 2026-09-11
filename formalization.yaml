@@ -105,12 +105,13 @@ related_formalizations: []
 
 status:
   scope: >-
-    The two advertised declarations prove Robin's full 1984 biconditional in
-    Mathlib's RiemannHypothesis formulation and the equivalent restriction to
-    colossally abundant integers above 5040.  The proof development excludes
-    the deliberate statement holes in Challenge.lean from its counts.  It
-    does not establish either side of the biconditional unconditionally and
-    therefore does not prove the Riemann hypothesis.
+    The three advertised declarations prove Robin's full 1984 biconditional
+    in Mathlib's RiemannHypothesis formulation, the equivalent restriction to
+    colossally abundant integers above 5040, and Lagarias's elementary
+    criterion.  The proof development excludes the deliberate statement holes
+    in Challenge.lean from its counts.  It does not establish either side of
+    the biconditionals unconditionally and therefore does not prove the
+    Riemann hypothesis.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Quot.sound", "Classical.choice"]
@@ -125,10 +126,11 @@ status:
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
-    - declaration: "Robin1984.riemannHypothesis_iff_lagariasElementaryCriterion"
-      file: "Robin1984/Lagarias/Theorem.lean"
+    - declaration: "Robin1984.riemann_hypothesis_iff_lagarias_elementary_criterion"
+      file: "Solution.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
 
 automation:
   methods:

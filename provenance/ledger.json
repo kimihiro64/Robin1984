@@ -5,9 +5,9 @@
     {
       "path": "Challenge.lean",
       "classification": "Direct source formalization",
-      "mathematical_source": "Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).",
-      "formalization_note": "The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
-      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include is, sigmaOneNat, robinInequality, caObjective, IsColossallyAbundantWith, robin_inequality_iff_riemannHypothesis, riemannHypothesis_iff_colossallyAbundant_robin.",
+      "mathematical_source": "Guy Robin (1984) and Jeffrey C. Lagarias, An Elementary Problem Equivalent to the Riemann Hypothesis (2001).",
+      "formalization_note": "The retained statements are Robin's and Lagarias's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include is, sigmaOneNat, robinInequality, caObjective, IsColossallyAbundantWith, LagariasElementaryCriterion, robin_inequality_iff_riemannHypothesis, riemannHypothesis_iff_colossallyAbundant_robin, riemann_hypothesis_iff_lagarias_elementary_criterion.",
       "dependency_status": "documented Palomar or convenience exception",
       "reviewed": true
     },
@@ -1526,9 +1526,9 @@
     {
       "path": "Solution.lean",
       "classification": "Direct source formalization",
-      "mathematical_source": "Guy Robin, Grandes valeurs de la fonction somme des diviseurs et hypothese de Riemann (1984).",
-      "formalization_note": "The retained statement or source-level argument is Robin's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
-      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_inequality_iff_riemannHypothesis, riemannHypothesis_iff_colossallyAbundant_robin.",
+      "mathematical_source": "Guy Robin (1984) and Jeffrey C. Lagarias, An Elementary Problem Equivalent to the Riemann Hypothesis (2001).",
+      "formalization_note": "The retained statements are Robin's and Lagarias's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
+      "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_inequality_iff_riemannHypothesis, riemannHypothesis_iff_colossallyAbundant_robin, riemann_hypothesis_iff_lagarias_elementary_criterion.",
       "dependency_status": "advertised theorem dependency graph",
       "reviewed": true
     },

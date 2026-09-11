@@ -3,7 +3,8 @@
   "solution_module": "Solution",
   "theorem_names": [
     "Robin1984.robin_inequality_iff_riemannHypothesis",
-    "Robin1984.riemannHypothesis_iff_colossallyAbundant_robin"
+    "Robin1984.riemannHypothesis_iff_colossallyAbundant_robin",
+    "Robin1984.riemann_hypothesis_iff_lagarias_elementary_criterion"
   ],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
