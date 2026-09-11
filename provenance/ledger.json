@@ -1029,6 +1029,132 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/Lagarias/Certificates/All.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Lagarias (2001), finite verification through 5040.",
+      "formalization_note": "This selector composes the checked interval packets.",
+      "content_basis": "Reviewed the module documentation, imports, finite-range case split, and the public theorem lagarias_finite_two_to_5040.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Lagarias/Certificates/Blocks00.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Lagarias (2001) supplies the finite range.",
+      "formalization_note": "Generated exact factor and rational certificate data.",
+      "content_basis": "Reviewed the generated packet documentation, imports, exact factor data, analytic lower-bound proof, and kernel-checked validity theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Lagarias/Certificates/Blocks01.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Lagarias (2001) supplies the finite range.",
+      "formalization_note": "Generated exact factor and rational certificate data.",
+      "content_basis": "Reviewed the generated packet documentation, imports, exact factor data, analytic lower-bound proofs, and kernel-checked validity theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Lagarias/Certificates/Blocks02.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Lagarias (2001) supplies the finite range.",
+      "formalization_note": "Generated exact factor and rational certificate data.",
+      "content_basis": "Reviewed the generated packet documentation, imports, exact factor data, analytic lower-bound proofs, and kernel-checked validity theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Lagarias/Certificates/Blocks03.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Lagarias (2001) supplies the finite range.",
+      "formalization_note": "Generated exact factor and rational certificate data.",
+      "content_basis": "Reviewed the generated packet documentation, imports, exact factor data, analytic lower-bound proofs, and kernel-checked validity theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Lagarias/Certificates/Blocks04.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Lagarias (2001) supplies the finite range.",
+      "formalization_note": "Generated exact factor and rational certificate data.",
+      "content_basis": "Reviewed the generated packet documentation, imports, exact factor data, analytic lower-bound proofs, and kernel-checked validity theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Lagarias/Certificates/Blocks05.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Lagarias (2001) supplies the finite range.",
+      "formalization_note": "Generated exact factor and rational certificate data.",
+      "content_basis": "Reviewed the generated packet documentation, imports, exact factor data, analytic lower-bound proofs, and kernel-checked validity theorems.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Lagarias/Definitions.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jeffrey C. Lagarias, An Elementary Problem Equivalent",
+      "formalization_note": "The criterion is stated with Mathlib's harmonic numbers,",
+      "content_basis": "Reviewed the module documentation, imports, and the definition LagariasElementaryCriterion corresponding to Lagarias' Problem E.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Lagarias/Elementary.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jeffrey C. Lagarias, An Elementary Problem Equivalent",
+      "formalization_note": "The proof follows Lagarias' comparison of the harmonic",
+      "content_basis": "Reviewed the module documentation, imports, and the formalization of Lagarias' Lemma 3.1 in robinBound_le_exp_harmonic_mul_log_harmonic.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Lagarias/FiniteCertificate.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Lagarias (2001) supplies the finite range and",
+      "formalization_note": "The factor rows and rational analytic certificates are",
+      "content_basis": "Reviewed the module documentation, imports, certificate structures, rational analytic lower bounds, Boolean factor checker, and finite-block soundness theorem.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Lagarias/Forward.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jeffrey C. Lagarias, An Elementary Problem Equivalent",
+      "formalization_note": "Robin's established theorem supplies the large range;",
+      "content_basis": "Reviewed the module documentation, imports, equality case, and the forward implication above Robin's exceptional cutoff.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Lagarias/Reverse.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jeffrey C. Lagarias (2001), converse implication,",
+      "formalization_note": "The logarithmic lcm margin supplies the hard oscillation;",
+      "content_basis": "Reviewed the module documentation, imports, lcm error normalization, little-o comparison, and converse implication through the established Robin-Nicolas-Landau bridge.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Lagarias/Theorem.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jeffrey C. Lagarias, An Elementary Problem Equivalent",
+      "formalization_note": "The forward implication composes Robin's theorem,",
+      "content_basis": "Reviewed the module documentation, imports, and the final theorem riemannHypothesis_iff_lagariasElementaryCriterion assembling both implications.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/Lagarias/Upper.lean",
+      "classification": "Direct source formalization",
+      "mathematical_source": "Jeffrey C. Lagarias, An Elementary Problem Equivalent",
+      "formalization_note": "The proof follows Lagarias' harmonic, exponential, and",
+      "content_basis": "Reviewed the module documentation, imports, elementary division lemmas, and the relaxed explicit upper estimate formalizing Lagarias' Lemma 3.2.",
+      "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/Mathlib.lean",
       "classification": "Primarily project-original",
       "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
