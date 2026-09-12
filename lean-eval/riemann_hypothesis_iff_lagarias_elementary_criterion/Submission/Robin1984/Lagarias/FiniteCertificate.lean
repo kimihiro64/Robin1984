@@ -83,7 +83,7 @@ theorem lagariasSigmaRangeValidBool_add
       have hParts := (Bool.and_eq_true _ _).mp hLeft
       rw [hParts.1, Bool.true_and]
       apply ih (first := first + 1) hParts.2
-      convert hRight using 1 <;> omega
+      simpa only [Nat.add_succ, Nat.add_one, Nat.succ_add] using hRight
 
 /-- Soundness of the direct divisor-sum range checker. -/
 theorem sigmaOneNat_le_of_lagariasSigmaRangeValidBool
