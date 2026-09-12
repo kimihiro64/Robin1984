@@ -1,4 +1,3 @@
-import Robin1984.Finite.Certificates.AllRows
 import Robin1984.Finite.RobinFiniteStartupComplete
 import Robin1984.Finite.RobinTangentExplicitCutoff
 /-!

@@ -1,18 +1,5 @@
-import Robin1984.Equivalence.ReducedProductChecks
-import Robin1984.Finite.Certificates.PrimeBlocks00
-import Robin1984.Finite.Certificates.PrimeBlocks01
-import Robin1984.Finite.Certificates.PrimeBlocks02
-import Robin1984.Finite.Certificates.PrimeBlocks03
-import Robin1984.Finite.Certificates.PrimeBlocks04
-import Robin1984.Finite.Certificates.PrimeBlocks05
-import Robin1984.Finite.Certificates.PrimeBlocks06
-import Robin1984.Finite.Certificates.PrimeBlocks07
-import Robin1984.Finite.Certificates.PrimeBlocks08
-import Robin1984.Finite.Certificates.PrimeBlocks09
-import Robin1984.Finite.Certificates.PrimeBlocks10
-import Robin1984.Finite.Certificates.PrimeBlocks11
-import Robin1984.Finite.Certificates.PrimeBlocks12
 import Robin1984.Finite.Certificates.PrimeBlocks13
+import Robin1984.Finite.Certificates.Row34
 /-!
 ## Provenance
 

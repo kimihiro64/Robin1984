@@ -1,8 +1,4 @@
-import Submission.Robin1984.Equivalence.ReducedProductChecks
-import Submission.Robin1984.Finite.Certificates.PrimeBlocks00
-import Submission.Robin1984.Finite.Certificates.PrimeBlocks01
-import Submission.Robin1984.Finite.Certificates.PrimeBlocks02
-import Submission.Robin1984.Finite.Certificates.PrimeBlocks03
+import Submission.Robin1984.Finite.Certificates.Row19
 /-!
 ## Provenance
 

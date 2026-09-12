@@ -1,6 +1,6 @@
 import Mathlib.Tactic.NormNum.GCD
 import Mathlib.Tactic.NormNum.Parity
-import Mathlib.Tactic.NormNum.Prime
+import Submission.Robin1984.Finite.Certificates.AllRows
 import Submission.Robin1984.Finite.RobinFiniteStartupFactorCertificateCore
 
 /-!

@@ -1,3 +1,4 @@
+import Robin1984.Finite.FiniteComplete
 import Robin1984.Lagarias.FiniteCertificate
 
 /-!

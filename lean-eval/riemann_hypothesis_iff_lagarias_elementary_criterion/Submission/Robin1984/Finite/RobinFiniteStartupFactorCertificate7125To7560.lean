@@ -1,7 +1,4 @@
-import Mathlib.Tactic.NormNum.GCD
-import Mathlib.Tactic.NormNum.Parity
-import Mathlib.Tactic.NormNum.Prime
-import Submission.Robin1984.Finite.RobinFiniteStartupFactorCertificateCore
+import Submission.Robin1984.Finite.RobinFiniteStartupFactorCertificate6101To7125
 
 /-!
 ## Provenance
