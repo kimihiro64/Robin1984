@@ -67,6 +67,24 @@ noncomputable def lagariasSigmaRangeValidBool (first bound : Nat) : Nat -> Bool
       decide (Robin1984.Core.sigmaOneNat first <= bound) &&
         lagariasSigmaRangeValidBool (first + 1) bound count
 
+/-- Consecutive valid ranges concatenate. -/
+theorem lagariasSigmaRangeValidBool_add
+    (first bound left right : Nat)
+    (hLeft : lagariasSigmaRangeValidBool first bound left = true)
+    (hRight :
+      lagariasSigmaRangeValidBool (first + left) bound right = true) :
+    lagariasSigmaRangeValidBool first bound (left + right) = true := by
+  induction left generalizing first with
+  | zero =>
+      simpa using hRight
+  | succ left ih =>
+      rw [Nat.succ_add, lagariasSigmaRangeValidBool]
+      rw [lagariasSigmaRangeValidBool] at hLeft
+      have hParts := (Bool.and_eq_true _ _).mp hLeft
+      rw [hParts.1, Bool.true_and]
+      apply ih (first := first + 1) hParts.2
+      convert hRight using 1 <;> omega
+
 /-- Soundness of the direct divisor-sum range checker. -/
 theorem sigmaOneNat_le_of_lagariasSigmaRangeValidBool
     {first bound count n : Nat}

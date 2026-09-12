@@ -897,11 +897,29 @@ theorem lagariasFiniteBlock22_analyticValid : lagariasFiniteBlock22.AnalyticVali
 
 set_option maxRecDepth 100000 in
 set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock22_rangeChunk00 :
+    lagariasSigmaRangeValidBool
+      240 744 30 = true := by
+  decide +kernel
+
+set_option maxRecDepth 100000 in
+set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock22_rangeChunk01 :
+    lagariasSigmaRangeValidBool
+      270 744 18 = true := by
+  decide +kernel
+
 theorem lagariasFiniteBlock22_rangeValid :
     lagariasSigmaRangeValidBool lagariasFiniteBlock22.first lagariasFiniteBlock22.sigmaBound
         lagariasFiniteBlock22.count = true := by
   unfold lagariasFiniteBlock22
-  decide +kernel
+  have hRange00 :
+      lagariasSigmaRangeValidBool
+        240 744 48 = true :=
+    lagariasSigmaRangeValidBool_add
+      240 744 30 18
+      lagariasFiniteBlock22_rangeChunk00 lagariasFiniteBlock22_rangeChunk01
+  exact hRange00
 
 theorem lagariasFiniteBlock22_valid : lagariasFiniteBlock22.Valid :=
   And.intro lagariasFiniteBlock22_analyticValid lagariasFiniteBlock22_rangeValid
@@ -948,11 +966,29 @@ theorem lagariasFiniteBlock23_analyticValid : lagariasFiniteBlock23.AnalyticVali
 
 set_option maxRecDepth 100000 in
 set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock23_rangeChunk00 :
+    lagariasSigmaRangeValidBool
+      288 868 30 = true := by
+  decide +kernel
+
+set_option maxRecDepth 100000 in
+set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock23_rangeChunk01 :
+    lagariasSigmaRangeValidBool
+      318 868 18 = true := by
+  decide +kernel
+
 theorem lagariasFiniteBlock23_rangeValid :
     lagariasSigmaRangeValidBool lagariasFiniteBlock23.first lagariasFiniteBlock23.sigmaBound
         lagariasFiniteBlock23.count = true := by
   unfold lagariasFiniteBlock23
-  decide +kernel
+  have hRange00 :
+      lagariasSigmaRangeValidBool
+        288 868 48 = true :=
+    lagariasSigmaRangeValidBool_add
+      288 868 30 18
+      lagariasFiniteBlock23_rangeChunk00 lagariasFiniteBlock23_rangeChunk01
+  exact hRange00
 
 theorem lagariasFiniteBlock23_valid : lagariasFiniteBlock23.Valid :=
   And.intro lagariasFiniteBlock23_analyticValid lagariasFiniteBlock23_rangeValid
@@ -1050,11 +1086,29 @@ theorem lagariasFiniteBlock25_analyticValid : lagariasFiniteBlock25.AnalyticVali
 
 set_option maxRecDepth 100000 in
 set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock25_rangeChunk00 :
+    lagariasSigmaRangeValidBool
+      360 1170 30 = true := by
+  decide +kernel
+
+set_option maxRecDepth 100000 in
+set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock25_rangeChunk01 :
+    lagariasSigmaRangeValidBool
+      390 1170 30 = true := by
+  decide +kernel
+
 theorem lagariasFiniteBlock25_rangeValid :
     lagariasSigmaRangeValidBool lagariasFiniteBlock25.first lagariasFiniteBlock25.sigmaBound
         lagariasFiniteBlock25.count = true := by
   unfold lagariasFiniteBlock25
-  decide +kernel
+  have hRange00 :
+      lagariasSigmaRangeValidBool
+        360 1170 60 = true :=
+    lagariasSigmaRangeValidBool_add
+      360 1170 30 30
+      lagariasFiniteBlock25_rangeChunk00 lagariasFiniteBlock25_rangeChunk01
+  exact hRange00
 
 theorem lagariasFiniteBlock25_valid : lagariasFiniteBlock25.Valid :=
   And.intro lagariasFiniteBlock25_analyticValid lagariasFiniteBlock25_rangeValid
@@ -1101,11 +1155,29 @@ theorem lagariasFiniteBlock26_analyticValid : lagariasFiniteBlock26.AnalyticVali
 
 set_option maxRecDepth 100000 in
 set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock26_rangeChunk00 :
+    lagariasSigmaRangeValidBool
+      420 1344 30 = true := by
+  decide +kernel
+
+set_option maxRecDepth 100000 in
+set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock26_rangeChunk01 :
+    lagariasSigmaRangeValidBool
+      450 1344 30 = true := by
+  decide +kernel
+
 theorem lagariasFiniteBlock26_rangeValid :
     lagariasSigmaRangeValidBool lagariasFiniteBlock26.first lagariasFiniteBlock26.sigmaBound
         lagariasFiniteBlock26.count = true := by
   unfold lagariasFiniteBlock26
-  decide +kernel
+  have hRange00 :
+      lagariasSigmaRangeValidBool
+        420 1344 60 = true :=
+    lagariasSigmaRangeValidBool_add
+      420 1344 30 30
+      lagariasFiniteBlock26_rangeChunk00 lagariasFiniteBlock26_rangeChunk01
+  exact hRange00
 
 theorem lagariasFiniteBlock26_valid : lagariasFiniteBlock26.Valid :=
   And.intro lagariasFiniteBlock26_analyticValid lagariasFiniteBlock26_rangeValid
@@ -1152,11 +1224,29 @@ theorem lagariasFiniteBlock27_analyticValid : lagariasFiniteBlock27.AnalyticVali
 
 set_option maxRecDepth 100000 in
 set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock27_rangeChunk00 :
+    lagariasSigmaRangeValidBool
+      480 1560 30 = true := by
+  decide +kernel
+
+set_option maxRecDepth 100000 in
+set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock27_rangeChunk01 :
+    lagariasSigmaRangeValidBool
+      510 1560 30 = true := by
+  decide +kernel
+
 theorem lagariasFiniteBlock27_rangeValid :
     lagariasSigmaRangeValidBool lagariasFiniteBlock27.first lagariasFiniteBlock27.sigmaBound
         lagariasFiniteBlock27.count = true := by
   unfold lagariasFiniteBlock27
-  decide +kernel
+  have hRange00 :
+      lagariasSigmaRangeValidBool
+        480 1560 60 = true :=
+    lagariasSigmaRangeValidBool_add
+      480 1560 30 30
+      lagariasFiniteBlock27_rangeChunk00 lagariasFiniteBlock27_rangeChunk01
+  exact hRange00
 
 theorem lagariasFiniteBlock27_valid : lagariasFiniteBlock27.Valid :=
   And.intro lagariasFiniteBlock27_analyticValid lagariasFiniteBlock27_rangeValid
@@ -1203,11 +1293,42 @@ theorem lagariasFiniteBlock28_analyticValid : lagariasFiniteBlock28.AnalyticVali
 
 set_option maxRecDepth 100000 in
 set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock28_rangeChunk00 :
+    lagariasSigmaRangeValidBool
+      540 1860 30 = true := by
+  decide +kernel
+
+set_option maxRecDepth 100000 in
+set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock28_rangeChunk01 :
+    lagariasSigmaRangeValidBool
+      570 1860 30 = true := by
+  decide +kernel
+
+set_option maxRecDepth 100000 in
+set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock28_rangeChunk02 :
+    lagariasSigmaRangeValidBool
+      600 1860 30 = true := by
+  decide +kernel
+
 theorem lagariasFiniteBlock28_rangeValid :
     lagariasSigmaRangeValidBool lagariasFiniteBlock28.first lagariasFiniteBlock28.sigmaBound
         lagariasFiniteBlock28.count = true := by
   unfold lagariasFiniteBlock28
-  decide +kernel
+  have hRange01 :
+      lagariasSigmaRangeValidBool
+        570 1860 60 = true :=
+    lagariasSigmaRangeValidBool_add
+      570 1860 30 30
+      lagariasFiniteBlock28_rangeChunk01 lagariasFiniteBlock28_rangeChunk02
+  have hRange00 :
+      lagariasSigmaRangeValidBool
+        540 1860 90 = true :=
+    lagariasSigmaRangeValidBool_add
+      540 1860 30 60
+      lagariasFiniteBlock28_rangeChunk00 hRange01
+  exact hRange00
 
 theorem lagariasFiniteBlock28_valid : lagariasFiniteBlock28.Valid :=
   And.intro lagariasFiniteBlock28_analyticValid lagariasFiniteBlock28_rangeValid
@@ -1254,11 +1375,42 @@ theorem lagariasFiniteBlock29_analyticValid : lagariasFiniteBlock29.AnalyticVali
 
 set_option maxRecDepth 100000 in
 set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock29_rangeChunk00 :
+    lagariasSigmaRangeValidBool
+      630 2016 30 = true := by
+  decide +kernel
+
+set_option maxRecDepth 100000 in
+set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock29_rangeChunk01 :
+    lagariasSigmaRangeValidBool
+      660 2016 30 = true := by
+  decide +kernel
+
+set_option maxRecDepth 100000 in
+set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock29_rangeChunk02 :
+    lagariasSigmaRangeValidBool
+      690 2016 30 = true := by
+  decide +kernel
+
 theorem lagariasFiniteBlock29_rangeValid :
     lagariasSigmaRangeValidBool lagariasFiniteBlock29.first lagariasFiniteBlock29.sigmaBound
         lagariasFiniteBlock29.count = true := by
   unfold lagariasFiniteBlock29
-  decide +kernel
+  have hRange01 :
+      lagariasSigmaRangeValidBool
+        660 2016 60 = true :=
+    lagariasSigmaRangeValidBool_add
+      660 2016 30 30
+      lagariasFiniteBlock29_rangeChunk01 lagariasFiniteBlock29_rangeChunk02
+  have hRange00 :
+      lagariasSigmaRangeValidBool
+        630 2016 90 = true :=
+    lagariasSigmaRangeValidBool_add
+      630 2016 30 60
+      lagariasFiniteBlock29_rangeChunk00 hRange01
+  exact hRange00
 
 theorem lagariasFiniteBlock29_valid : lagariasFiniteBlock29.Valid :=
   And.intro lagariasFiniteBlock29_analyticValid lagariasFiniteBlock29_rangeValid
@@ -1305,11 +1457,55 @@ theorem lagariasFiniteBlock30_analyticValid : lagariasFiniteBlock30.AnalyticVali
 
 set_option maxRecDepth 100000 in
 set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock30_rangeChunk00 :
+    lagariasSigmaRangeValidBool
+      720 2418 30 = true := by
+  decide +kernel
+
+set_option maxRecDepth 100000 in
+set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock30_rangeChunk01 :
+    lagariasSigmaRangeValidBool
+      750 2418 30 = true := by
+  decide +kernel
+
+set_option maxRecDepth 100000 in
+set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock30_rangeChunk02 :
+    lagariasSigmaRangeValidBool
+      780 2418 30 = true := by
+  decide +kernel
+
+set_option maxRecDepth 100000 in
+set_option maxHeartbeats 40000000 in
+private theorem lagariasFiniteBlock30_rangeChunk03 :
+    lagariasSigmaRangeValidBool
+      810 2418 30 = true := by
+  decide +kernel
+
 theorem lagariasFiniteBlock30_rangeValid :
     lagariasSigmaRangeValidBool lagariasFiniteBlock30.first lagariasFiniteBlock30.sigmaBound
         lagariasFiniteBlock30.count = true := by
   unfold lagariasFiniteBlock30
-  decide +kernel
+  have hRange02 :
+      lagariasSigmaRangeValidBool
+        780 2418 60 = true :=
+    lagariasSigmaRangeValidBool_add
+      780 2418 30 30
+      lagariasFiniteBlock30_rangeChunk02 lagariasFiniteBlock30_rangeChunk03
+  have hRange01 :
+      lagariasSigmaRangeValidBool
+        750 2418 90 = true :=
+    lagariasSigmaRangeValidBool_add
+      750 2418 30 60
+      lagariasFiniteBlock30_rangeChunk01 hRange02
+  have hRange00 :
+      lagariasSigmaRangeValidBool
+        720 2418 120 = true :=
+    lagariasSigmaRangeValidBool_add
+      720 2418 30 90
+      lagariasFiniteBlock30_rangeChunk00 hRange01
+  exact hRange00
 
 theorem lagariasFiniteBlock30_valid : lagariasFiniteBlock30.Valid :=
   And.intro lagariasFiniteBlock30_analyticValid lagariasFiniteBlock30_rangeValid
