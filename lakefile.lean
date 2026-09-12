@@ -13,17 +13,18 @@ import Lake
 # Lake project configuration
 
 This file pins the external Lean dependencies and defines the repository's
-three libraries. The default `formalization` target reads the complete
-topological module order from `scripts/build-order.txt`, builds one module job
-at a time, and ends at `Solution`; this keeps the largest finite certificates
-from elaborating concurrently. `Challenge` states the Palomar challenge, and
-`Solution` supplies its proved instances from the public equivalence theorem.
+three libraries. The default target is `Solution` and uses Lake's ordinary
+scheduler, so unrelated modules may build concurrently. The memory-intensive
+certificate modules encode their required order through import dependencies.
+Each Lean process still uses one internal task thread. `Challenge` states the
+Palomar challenge, and `Solution` supplies its proved instances from the public
+equivalence theorem.
 -/
 
 open Lake DSL
 
 package Robin1984 where
-  -- Use one Lean worker during memory-intensive certificate elaboration.
+  -- Keep one Lean worker per process; imports serialize heavy certificates.
   weakLeanArgs := #["-j1"]
 
 require PrimeNumberTheoremAnd from git
@@ -36,37 +37,11 @@ require leancert from git
 require mathlib from git
   "https://github.com/leanprover-community/mathlib4.git" @ "v4.33.1"
 
-private def buildModulesSequentially (moduleNames : Array Lean.Name) : FetchM (Job Unit) := do
-  if Not (moduleNames.size = 269) then
-    error s!"Expected 269 modules in the default build order, found {moduleNames.size}."
-  if moduleNames.back? != some `Solution then
-    error "Solution must be the final module in the default build order."
-  let mut seen : Lean.NameSet := {}
-  let mut previous : Job Unit := Job.pure ()
-  for moduleName in moduleNames do
-    if seen.contains moduleName then
-      error s!"Duplicate module in the default build order: {moduleName}"
-    seen := seen.insert moduleName
-    previous <- previous.bindM fun _ => do
-      let some module <- findModule? moduleName
-        | error s!"Module in the default build order was not found: {moduleName}"
-      let moduleJob <- module.olean.fetch
-      return moduleJob.map fun _ => ()
-  return previous
-
-@[default_target]
-target formalization pkg : Unit := do
-  let orderPath := pkg.dir / "scripts" / "build-order.txt"
-  let contents <- IO.FS.readFile orderPath
-  let moduleNames := contents.splitOn "\n" |>.filterMap fun line =>
-    let line := line.trimAscii.toString
-    if line.isEmpty || line.startsWith "#" then none else some line.toName
-  buildModulesSequentially moduleNames.toArray
-
 lean_lib Robin1984 where
 
 lean_lib Challenge where
   roots := #[`Challenge]
 
+@[default_target]
 lean_lib Solution where
   roots := #[`Solution]

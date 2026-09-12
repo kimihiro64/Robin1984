@@ -79,13 +79,11 @@ dependency change must first be committed publicly, replay-checked against its
 recorded upstream base, pinned by full SHA, and verified from a fresh Lake
 checkout.
 
-The default `lake build` target follows `scripts/build-order.txt`: the checked-in
-dependency closure ending in `Solution`. If a source import or
-dependency update changes that closure, update the file in topological order,
-check for missing or duplicate modules, and verify that `Solution` remains the
-last entry. Do not replace the Lake-native sequential target with an
-uncommitted local runner; the submitted repository must impose its own safe
-certificate build order.
+The default `lake build` target is `Solution` and uses Lake's ordinary module
+scheduler. Memory-intensive certificate families must encode their safe order
+as acyclic import-dependency ladders in both the maintained source and any
+submission mirror. Keep each Lean process limited to one internal task thread;
+do not replace these source-level constraints with an uncommitted local runner.
 
 ## Local checks
 

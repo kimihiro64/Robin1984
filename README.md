@@ -184,13 +184,12 @@ lake exe cache get
 lake build
 ```
 
-The bare `lake build` command is the complete submission build. Its Lake-native
-default target reads the checked-in 269-module topological order from
-[`scripts/build-order.txt`](scripts/build-order.txt), schedules one module job
-at a time, and finishes with `Solution`. Each Lean process is additionally
-bounded to one internal task thread (`-j1`). This avoids overlapping the
-largest finite-certificate elaborations without relying on an external build
-runner, bootstrap patch, or machine-local state.
+The bare `lake build` command is the complete submission build. Its default
+target is `Solution` and uses Lake's ordinary scheduler, so unrelated modules
+can build concurrently. The memory-intensive Robin and Lagarias certificate
+modules encode their order as import-dependency ladders, keeping those
+elaborations sequential in both repository and consumer builds. Each Lean
+process is additionally bounded to one internal task thread (`-j1`).
 
 The finite certificates are deliberately substantial, so a fully uncached
 build is dominated by their kernel reductions and can take considerably longer
