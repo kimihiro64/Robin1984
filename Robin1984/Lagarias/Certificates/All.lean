@@ -1,8 +1,3 @@
-import Robin1984.Lagarias.Certificates.Blocks00
-import Robin1984.Lagarias.Certificates.Blocks01
-import Robin1984.Lagarias.Certificates.Blocks02
-import Robin1984.Lagarias.Certificates.Blocks03
-import Robin1984.Lagarias.Certificates.Blocks04
 import Robin1984.Lagarias.Certificates.Blocks05
 
 /-!

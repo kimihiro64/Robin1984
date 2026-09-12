@@ -1,8 +1,3 @@
-import Submission.Robin1984.Lagarias.Certificates.Blocks00
-import Submission.Robin1984.Lagarias.Certificates.Blocks01
-import Submission.Robin1984.Lagarias.Certificates.Blocks02
-import Submission.Robin1984.Lagarias.Certificates.Blocks03
-import Submission.Robin1984.Lagarias.Certificates.Blocks04
 import Submission.Robin1984.Lagarias.Certificates.Blocks05
 
 /-!

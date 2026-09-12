@@ -1,4 +1,4 @@
-import Robin1984.Lagarias.FiniteCertificate
+import Robin1984.Lagarias.Certificates.Blocks01
 
 /-!
 ## Provenance
