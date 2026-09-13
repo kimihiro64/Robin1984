@@ -373,7 +373,7 @@ theorem mem_log {a : AffineForm} {eps : NoiseAssignment} {v : ℝ}
     (hmem : mem_affine a eps v)
     (_hv_pos : 0 < v)
     (hI_pos : 0 < a.toInterval.lo)
-    (_taylorDepth : Nat) :
+    (taylorDepth : Nat) :
     mem_affine (log a taylorDepth) eps (Real.log v) := by
   -- Get v ∈ a.toInterval
   have hv_in_I := mem_toInterval_weak hvalid hmem

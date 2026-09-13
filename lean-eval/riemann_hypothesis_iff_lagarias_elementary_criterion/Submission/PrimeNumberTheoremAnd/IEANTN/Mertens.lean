@@ -14,7 +14,7 @@ import Mathlib.Analysis.SpecialFunctions.Complex.LogBounds
 import Mathlib.Analysis.SpecialFunctions.Log.Summable
 import Mathlib.Algebra.Group.Submonoid.BigOperators
 import Submission.PrimeNumberTheoremAnd.EulerMaclaurin
-import Architect
+import Submission.Architect.Attribute
 
 
 theorem Filter.EventuallyEq.iff_eventually {α : Type _} {β : Type _} {l : Filter α} {f g : α → β} : f =ᶠ[l] g ↔ ∀ᶠ (x : α) in l, f x = g x := by rfl

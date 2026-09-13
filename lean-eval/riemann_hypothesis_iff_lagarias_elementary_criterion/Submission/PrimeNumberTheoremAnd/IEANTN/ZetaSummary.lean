@@ -1,4 +1,4 @@
-import Architect
+import Submission.Architect.Attribute
 import Submission.PrimeNumberTheoremAnd.IEANTN.ZetaDefinitions
 import Submission.PrimeNumberTheoremAnd.IEANTN.KLN
 import Submission.PrimeNumberTheoremAnd.IEANTN.RosserSchoenfeld.RosserSchoenfeldZeta

@@ -1,4 +1,4 @@
-import Architect
+import Submission.Architect.Attribute
 import Mathlib.MeasureTheory.Measure.Stieltjes
 import Submission.PrimeNumberTheoremAnd.MediumPNT
 import Submission.PrimeNumberTheoremAnd.IEANTN.SecondaryDefinitions

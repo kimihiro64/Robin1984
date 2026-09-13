@@ -1,4 +1,4 @@
-import Architect
+import Submission.Architect.Attribute
 import Mathlib.Algebra.Lie.OfAssociative
 import Mathlib.Algebra.Order.Ring.Star
 import Mathlib.Analysis.Complex.AbelLimit

@@ -1,4 +1,4 @@
-import Architect
+import Submission.Architect.Attribute
 import Mathlib.Topology.Order.Basic
 import Mathlib.NumberTheory.PrimeCounting
 import Submission.PrimeNumberTheoremAnd.Consequences

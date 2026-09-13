@@ -1,4 +1,4 @@
-import Architect
+import Submission.Architect.Attribute
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Mathlib.Analysis.Meromorphic.Order
 import Submission.PrimeNumberTheoremAnd.Defs

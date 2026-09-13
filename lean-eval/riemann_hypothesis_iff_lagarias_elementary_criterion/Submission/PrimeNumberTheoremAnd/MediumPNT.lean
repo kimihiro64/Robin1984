@@ -1,4 +1,4 @@
-import Architect
+import Submission.Architect.Attribute
 import Submission.PrimeNumberTheoremAnd.MellinCalculus
 import Submission.PrimeNumberTheoremAnd.ZetaBounds
 import Submission.PrimeNumberTheoremAnd.ZetaConj

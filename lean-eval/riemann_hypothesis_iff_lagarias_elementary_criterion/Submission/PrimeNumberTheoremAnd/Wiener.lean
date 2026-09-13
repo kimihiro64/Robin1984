@@ -1,4 +1,4 @@
-import Architect
+import Submission.Architect.Attribute
 import Mathlib.Analysis.Fourier.RiemannLebesgueLemma
 import Mathlib.Analysis.Normed.Group.Tannery
 import Mathlib.Analysis.SumIntegralComparisons

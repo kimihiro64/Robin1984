@@ -346,6 +346,7 @@ that contains `f(c)`. This allows them to be used with both `newtonStepSimple`
     3. quotient_hi_lower_bound says Q.hi ≥ fc.hi / dI.lo > hw
     4. Contradiction: Q.hi < hw and Q.hi > hw -/
 lemma generic_contraction_absurd_hi
+    {e : Expr}
     (I : IntervalRat)
     (c : ℚ) (fc dI : IntervalRat) (N : IntervalRat)
     (hc_eq : c = I.midpoint)
@@ -385,6 +386,7 @@ lemma generic_contraction_absurd_hi
 
 /-- Generic contradiction for Q.lo case with dI.lo > 0. -/
 lemma generic_contraction_absurd_lo
+    {e : Expr}
     (I : IntervalRat)
     (c : ℚ) (fc dI : IntervalRat) (N : IntervalRat)
     (hc_eq : c = I.midpoint)
@@ -424,6 +426,7 @@ lemma generic_contraction_absurd_lo
 
 /-- Generic contradiction for Q.hi case with dI.hi < 0 (decreasing function). -/
 lemma generic_contraction_absurd_hi_neg
+    {e : Expr}
     (I : IntervalRat)
     (c : ℚ) (fc dI : IntervalRat) (N : IntervalRat)
     (hc_eq : c = I.midpoint)
@@ -467,6 +470,7 @@ lemma generic_contraction_absurd_hi_neg
 
 /-- Generic contradiction for Q.lo case with dI.hi < 0 (decreasing function). -/
 lemma generic_contraction_absurd_lo_neg
+    {e : Expr}
     (I : IntervalRat)
     (c : ℚ) (fc dI : IntervalRat) (N : IntervalRat)
     (hc_eq : c = I.midpoint)

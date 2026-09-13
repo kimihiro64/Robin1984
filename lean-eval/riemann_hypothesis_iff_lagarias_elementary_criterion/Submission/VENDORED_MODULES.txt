@@ -1,3 +1,7 @@
+Architect.Attribute
+Architect.Basic
+Architect.Command
+Architect.Content
 LeanCert.CertifiedBounds.Li2
 LeanCert.Contrib.Sinc
 LeanCert.Core.DerivativeIntervals

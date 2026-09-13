@@ -585,7 +585,8 @@ def elabTrustItem? : Option (TSyntax ``leancertTrustItem) →
     | _ => throwUnsupportedSyntax
 
 /-- Run `act` with `leancert.trust` overridden to `mode?` when provided. -/
-def withTrustMode (mode? : Option VerificationMode) (act : TacticM α) : TacticM α :=
+def withTrustMode {alpha : Type} (mode? : Option VerificationMode)
+    (act : TacticM alpha) : TacticM alpha :=
   match mode? with
   | none => act
   | some m => withOptions (fun o => o.set `leancert.trust m.asString) act

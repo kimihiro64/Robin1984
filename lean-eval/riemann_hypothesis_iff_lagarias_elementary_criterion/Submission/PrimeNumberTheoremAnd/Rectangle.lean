@@ -1,4 +1,4 @@
-import Architect
+import Submission.Architect.Attribute
 import Mathlib.Analysis.Complex.Convex
 import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Analysis.Normed.Order.Lattice

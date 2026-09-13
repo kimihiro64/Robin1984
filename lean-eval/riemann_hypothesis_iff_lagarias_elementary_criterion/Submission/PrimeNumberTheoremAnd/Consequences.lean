@@ -1,4 +1,4 @@
-import Architect
+import Submission.Architect.Attribute
 import Mathlib.NumberTheory.Harmonic.Bounds
 import Submission.PrimeNumberTheoremAnd.Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Submission.PrimeNumberTheoremAnd.Defs

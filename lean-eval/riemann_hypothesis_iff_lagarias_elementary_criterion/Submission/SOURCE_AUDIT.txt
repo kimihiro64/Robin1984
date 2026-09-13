@@ -1,8 +1,12 @@
 Vendored project sources are preserved as UTF-8.
-non_ascii_modules=200
+non_ascii_modules=204
 proof_token_modules=33
 
 [non_ascii_modules]
+Architect.Attribute
+Architect.Basic
+Architect.Command
+Architect.Content
 LeanCert.CertifiedBounds.Li2
 LeanCert.Contrib.Sinc
 LeanCert.Core.DerivativeIntervals

@@ -1,4 +1,4 @@
-import Architect
+import Submission.Architect.Attribute
 import Submission.PrimeNumberTheoremAnd.Fourier
 import Mathlib.NumberTheory.Chebyshev
 

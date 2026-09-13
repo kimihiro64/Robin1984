@@ -1,4 +1,4 @@
-import Architect
+import Submission.Architect.Attribute
 import Mathlib.NumberTheory.ArithmeticFunction.VonMangoldt
 import Mathlib.NumberTheory.Chebyshev
 import Submission.PrimeNumberTheoremAnd.IEANTN.ZetaSummary
@@ -14,4 +14,3 @@ blueprint_comment /--
 In this section we define the basic types of primary estimates we will work with in the project.
 
 -/
-

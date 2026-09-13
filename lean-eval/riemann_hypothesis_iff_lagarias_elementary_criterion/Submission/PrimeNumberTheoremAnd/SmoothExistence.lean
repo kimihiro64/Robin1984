@@ -1,4 +1,4 @@
-import Architect
+import Submission.Architect.Attribute
 import Batteries.Tactic.Lemma
 import Mathlib.Geometry.Manifold.PartitionOfUnity
 import Mathlib.Tactic.Bound

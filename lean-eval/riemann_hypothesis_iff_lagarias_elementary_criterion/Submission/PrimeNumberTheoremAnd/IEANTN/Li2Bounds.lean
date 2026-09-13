@@ -1,4 +1,4 @@
-import Architect
+import Submission.Architect.Attribute
 import Submission.LeanCert.CertifiedBounds.Li2
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 import Mathlib.Topology.Order.Basic

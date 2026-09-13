@@ -1,4 +1,4 @@
-import Architect
+import Submission.Architect.Attribute
 import Batteries.Tactic.Lemma
 import Mathlib.Algebra.GroupWithZero.Units.Basic
 import Mathlib.Analysis.MellinTransform
