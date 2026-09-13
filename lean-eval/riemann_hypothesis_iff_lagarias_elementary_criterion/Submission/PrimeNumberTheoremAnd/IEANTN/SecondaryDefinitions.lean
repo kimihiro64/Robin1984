@@ -5,6 +5,7 @@ import Submission.PrimeNumberTheoremAnd.Consequences
 import Submission.PrimeNumberTheoremAnd.IEANTN.PrimaryDefinitions
 import Submission.PrimeNumberTheoremAnd.IEANTN.Li2Bounds
 import Submission.PrimeNumberTheoremAnd.IEANTN.LiSeries
+import Submission.LeanCert.Tactic.IntervalAuto
 import Submission.PrimeNumberTheoremAnd.EulerMascheroniBounds
 import Submission.PrimeNumberTheoremAnd.IEANTN.LnFactorialSeries
 import Submission.PrimeNumberTheoremAnd.IEANTN.LogTables
