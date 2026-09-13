@@ -185,9 +185,10 @@ lake build
 ```
 
 The bare `lake build` command is the complete submission build. Its default
-target is `Solution` and uses Lake's ordinary scheduler, so unrelated modules
-can build concurrently. The memory-intensive Robin and Lagarias certificate
-modules encode their order as import-dependency ladders, keeping those
+targets are `Challenge` and `Solution`; they use Lake's ordinary scheduler, so
+unrelated modules can build concurrently. The memory-intensive Robin and
+Lagarias certificate modules encode their order as import-dependency ladders,
+keeping those
 elaborations sequential in both repository and consumer builds. Each Lean
 process is additionally bounded to one internal task thread (`-j1`).
 

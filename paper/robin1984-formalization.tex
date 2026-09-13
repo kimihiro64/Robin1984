@@ -2221,9 +2221,10 @@ used by this proof: an unused theorem elsewhere cannot enter the result's
 axiom set.
 
 The ordinary \leanname{lake build} command is the full formalization build.
-Its default target is \leanname{Solution} and uses Lake's ordinary scheduler,
-allowing unrelated modules to build concurrently.  The memory-intensive
-finite-certificate modules encode their order through import dependencies,
+Its default targets are \leanname{Challenge} and \leanname{Solution}; they use
+Lake's ordinary scheduler, allowing unrelated modules to build concurrently.
+The memory-intensive finite-certificate modules encode their order through
+import dependencies,
 while each Lean process is bounded to one internal task thread.  Thus the
 project source controls the expensive certificate order without an external
 runner or local patching step.

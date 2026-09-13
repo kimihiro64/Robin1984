@@ -79,9 +79,10 @@ dependency change must first be committed publicly, replay-checked against its
 recorded upstream base, pinned by full SHA, and verified from a fresh Lake
 checkout.
 
-The default `lake build` target is `Solution` and uses Lake's ordinary module
-scheduler. Memory-intensive certificate families must encode their safe order
-as acyclic import-dependency ladders in both the maintained source and any
+The default `lake build` targets are `Challenge` and `Solution` and use Lake's
+ordinary module scheduler. Memory-intensive certificate families must encode
+their safe order as acyclic import-dependency ladders in both the maintained
+source and any
 submission mirror. Keep each Lean process limited to one internal task thread;
 do not replace these source-level constraints with an uncommitted local runner.
 

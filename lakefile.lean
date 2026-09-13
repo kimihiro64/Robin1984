@@ -13,9 +13,10 @@ import Lake
 # Lake project configuration
 
 This file pins the external Lean dependencies and defines the repository's
-three libraries. The default target is `Solution` and uses Lake's ordinary
-scheduler, so unrelated modules may build concurrently. The memory-intensive
-certificate modules encode their required order through import dependencies.
+three libraries. The default targets are `Challenge` and `Solution` and use
+Lake's ordinary scheduler, so unrelated modules may build concurrently. The
+memory-intensive certificate modules encode their required order through
+import dependencies.
 Each Lean process still uses one internal task thread. `Challenge` states the
 Palomar challenge, and `Solution` supplies its proved instances from the public
 equivalence theorem.
@@ -39,6 +40,7 @@ require mathlib from git
 
 lean_lib Robin1984 where
 
+@[default_target]
 lean_lib Challenge where
   roots := #[`Challenge]
 
