@@ -195,7 +195,7 @@ jobs:
           path: paper/build/robin1984-formalization.pdf
           key: robin1984-paper-${{ hashFiles('paper/robin1984-formalization.tex') }}
       - name: Upload the research paper
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: robin1984-research-paper
           path: paper/build/robin1984-formalization.pdf
@@ -249,7 +249,7 @@ jobs:
           path: .lake/build
           key: robin1984-linux-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', '*.lean', 'Robin1984/**/*.lean') }}
       - name: Upload the built formalization
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: robin1984-linux-build
           path: .lake/build
@@ -304,7 +304,7 @@ jobs:
         with:
           path: docbuild/.lake/build
           key: robin1984-docs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', 'docbuild/lean-toolchain', 'docbuild/lakefile.toml', 'docbuild/lake-manifest.json', '*.lean', 'Robin1984/**/*.lean') }}
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: api-documentation
           path: docbuild/.lake/build/doc
