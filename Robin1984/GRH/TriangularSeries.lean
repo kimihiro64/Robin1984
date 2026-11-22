@@ -23,6 +23,31 @@ open MeasureTheory Set
 
 namespace Robin1984.GRH
 
+/-- Summable integral norms justify a complex-valued countable sum as an
+integrable function. -/
+theorem integrable_tsum_complex_of_norm_integrals {iota : Type*} [Countable iota]
+    {mu : Measure Real} {F : iota -> Real -> Complex}
+    (hF : forall i, Integrable (F i) mu)
+    (hIntSum : Summable (fun i => integral mu (fun x => norm (F i x)))) :
+    Integrable (fun x => tsum (fun i => F i x)) mu := by
+  have hNormSum : tsum (fun i => lintegral mu (fun x => enorm (F i x))) < Top.top := by
+    let I (i : iota) : NNReal := (integral mu (fun x => norm (F i x))).toNNReal
+    have hI (i : iota) : (I i : ENNReal) = lintegral mu (fun x => enorm (F i x)) :=
+      ofReal_integral_norm_eq_lintegral_enorm (hF i)
+    have hISum : Summable (fun i => (I i : Real)) := by
+      convert hIntSum using 1
+      funext i
+      exact Real.coe_toNNReal _ (integral_nonneg (fun x => norm_nonneg (F i x)))
+    simp_rw [<- hI]
+    exact lt_top_iff_ne_top.mpr (ENNReal.tsum_coe_ne_top_iff_summable_coe.mpr hISum)
+  have hIntegralBound :
+      lintegral mu (fun x => enorm (tsum (fun i => F i x))) < Top.top := by
+    refine lt_of_le_of_lt (lintegral_mono (fun _ => enorm_tsum_le_tsum_enorm)) ?_
+    rw [lintegral_tsum (fun i => (hF i).aemeasurable.enorm)]
+    exact hNormSum
+  exact And.intro ((AEMeasurable.tsum fun i => (hF i).aemeasurable).aestronglyMeasurable)
+    (hasFiniteIntegral_iff_enorm.mpr hIntegralBound)
+
 private theorem norm_triangularWeight_le_one {a x : Real} (ha : 0 < a) (hx : a < x) :
     norm ((1 : Complex) - (a : Complex) / (x : Complex)) <= 1 := by
   have hx0 := ha.trans hx
@@ -96,26 +121,9 @@ theorem integrable_integral_tsum_triangularMellin {iota : Type*} [Countable iota
       (fun i => ?_) (hSummable.div_const s.re)
     rw [<- hWIntegral i]
     exact integral_mono ((hF i).norm) (hW i) (hBound i)
-  have hNormSum : tsum (fun i => lintegral volume (fun x => enorm (F i x))) < Top.top := by
-    let I (i : iota) : NNReal := (integral volume (fun x => norm (F i x))).toNNReal
-    have hI (i : iota) : (I i : ENNReal) = lintegral volume (fun x => enorm (F i x)) :=
-      ofReal_integral_norm_eq_lintegral_enorm (hF i)
-    have hISum : Summable (fun i => (I i : Real)) := by
-      convert hIntSum using 1
-      funext i
-      exact Real.coe_toNNReal _ (integral_nonneg (fun x => norm_nonneg (F i x)))
-    simp_rw [<- hI]
-    exact lt_top_iff_ne_top.mpr (ENNReal.tsum_coe_ne_top_iff_summable_coe.mpr hISum)
   change And (Integrable (fun x => tsum (fun i => F i x)) volume)
     (integral volume (fun x => tsum (fun i => F i x)) = _)
-  have hIntegralBound :
-      lintegral volume (fun x => enorm (tsum (fun i => F i x))) < Top.top := by
-    refine lt_of_le_of_lt (lintegral_mono (fun _ => enorm_tsum_le_tsum_enorm)) ?_
-    rw [lintegral_tsum (fun i => (hF i).aemeasurable.enorm)]
-    exact hNormSum
-  refine And.intro (And.intro
-    ((AEMeasurable.tsum fun i => (hF i).aemeasurable).aestronglyMeasurable)
-    (hasFiniteIntegral_iff_enorm.mpr hIntegralBound)) ?_
+  refine And.intro (integrable_tsum_complex_of_norm_integrals hF hIntSum) ?_
   rw [<- integral_tsum_of_summable_integral_norm hF hIntSum, <- tsum_div_const]
   apply tsum_congr
   intro i

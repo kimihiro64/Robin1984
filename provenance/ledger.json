@@ -1032,8 +1032,8 @@
       "path": "Robin1984/GRH.lean",
       "classification": "Primarily project-original",
       "mathematical_source": "The corrected ideal Robin criterion is the project's extension of Guy Robin's divisor-sum criterion to number fields.",
-      "formalization_note": "This module states the fieldwise, cyclotomic-family, and all-field equivalences without supplying proofs.",
-      "content_basis": "Reviewed the finite ideal divisor sum, discriminant correction, analytic continuation predicate, and the fieldwise, cyclotomic, and all-field statement domains.",
+      "formalization_note": "This module states the headline equivalences and proves the continuation uniqueness and Dirichlet level reductions.",
+      "content_basis": "Reviewed the ideal sum and correction, uniqueness of the continuation, the primitive-character factor identity, correction nonvanishing, and the conditional cyclotomic reduction.",
       "dependency_status": "Mathlib definitions of ideals, norms, Dedekind zeta Dirichlet series, cyclotomic fields, and Dirichlet L-functions.",
       "reviewed": true
     },
@@ -1044,6 +1044,33 @@
       "formalization_note": "The ideal-count coefficient estimate supplies the initial Mellin identity for the actual Mathlib Dedekind zeta function.",
       "content_basis": "Reviewed the cardinality of norm fibers, linear growth, absolute convergence, and integral identity on the initial half-plane.",
       "dependency_status": "Mathlib finite sums, analytic or measure-theoretic primitives.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindTailConverse.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Landau's theorem applied to the once-integrated prime-ideal error.",
+      "formalization_note": "The real recovery uses a divided difference at one. A real zero below one contributes its multiplicity divided by the negative factor beta times beta minus one.",
+      "content_basis": "Reviewed the signed limit at an actual real zero, removal of the denominator's singularity at one, and the conditional right-half-plane result.",
+      "dependency_status": "Mathlib removable singularities and the local Mellin comparison and zero-multiplicity proofs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindTailCriterion.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The integrated prime-ideal error in a Dedekind Robin-type converse.",
+      "formalization_note": "A global nonnegative comparison is obtained by increasing the eventual bound's constant on a bounded interval, and its transform is obtained by Fubini.",
+      "content_basis": "Reviewed the global nonnegative density, its Mellin identity, and the limit at one from dominated convergence.",
+      "dependency_status": "The checked Dedekind residue argument, Fubini tail transform, and positive Mellin measure.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/EulerProductSupport.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Euler product limits via dominated convergence for summable series.",
+      "formalization_note": "The finite prime collections are directed by inclusion, so every individual ideal factorization is eventually included with its full support.",
+      "content_basis": "Reviewed the unconditional limit of the finite-support subseries using the summable absolute majorant.",
+      "dependency_status": "Mathlib Tannery theorem and the directed filter of finite subsets.",
       "reviewed": true
     },
     {
@@ -1074,6 +1101,24 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/MellinComparison.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Landau's real convergence boundary and the analytic identity theorem.",
+      "formalization_note": "An isolated removable real point is handled by continuity, so the logarithmic-derivative recovery can divide by a kernel that vanishes there.",
+      "content_basis": "Reviewed the initial open identity, real recovery across one removable point, and complex zero exclusion.",
+      "dependency_status": "The local Landau frontier theorem and Mathlib complex MGF theory.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/MellinUniqueness.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Uniqueness of the Fourier transform of a finite measure after taking the logarithm.",
+      "formalization_note": "The signed integrable Mellin density is split into positive and negative measures, and the logarithmic pushforward is inverted on the positive tail.",
+      "content_basis": "Reviewed the finite signed-density decomposition, characteristic function, and reversal of the log pushforward.",
+      "dependency_status": "Mathlib measure extensionality and Fourier uniqueness of finite measures.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/PositiveMellinMeasure.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Change of measure by a nonnegative density in the Mellin transform.",
@@ -1101,12 +1146,30 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/SmoothedForward.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Mellin uniqueness for the triangular explicit formula and the square-root bound for a summable zero expansion.",
+      "formalization_note": "Equality of the known transforms is converted to an almost-everywhere equality and continuity of the remainder gives the pointwise bound.",
+      "content_basis": "Reviewed the exact canonical Mellin hypothesis, conjugate pairing, norm bound, and continuity step to obtain the pointwise inequality.",
+      "dependency_status": "The project-local triangular zero transform and vertical-line Mellin uniqueness.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/SupportingLine.lean",
       "classification": "Primarily project-original",
       "mathematical_source": "The supporting-line comparison in the project's corrected ideal Robin criterion and its weighted Hecke extension.",
       "formalization_note": "The statements separate finite layer ownership, the logarithmic price, and exact cancellation of the Mertens boundary term.",
       "content_basis": "Reviewed the finite surplus comparison, monotonicity of the logarithmic price, and exact signed error cancellation.",
       "dependency_status": "Mathlib finite sums, analytic or measure-theoretic primitives.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/TailMellin.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Fubini's theorem and the divided-difference formula for the Mellin transform of a tail integral.",
+      "formalization_note": "The lower endpoint is 1, the inner integration is on the strict triangular domain, and the resulting polar denominator is explicit.",
+      "content_basis": "Reviewed integrability on the strict triangular domain and the divided-difference formula.",
+      "dependency_status": "Mathlib Fubini theorem and the interval integrals of complex powers.",
       "reviewed": true
     },
     {
@@ -1143,6 +1206,24 @@
       "formalization_note": "The integral norm of each truncated term is bounded by its absolute Dirichlet coefficient divided by the real part of the transform parameter.",
       "content_basis": "Reviewed the summable norm majorant, total integrability, and equality with the divided Dirichlet series.",
       "dependency_status": "Mathlib dominated integration and the checked single triangular Mellin kernel.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/TriangularZeroTerms.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Bounds for the zero terms in the triangular explicit formula for a genus-one logarithmic derivative.",
+      "formalization_note": "The power term and its normalization are bounded together, with no requirement that all contributing zeros have equal real part.",
+      "content_basis": "Reviewed the individual Mellin terms, their summable L1 majorant, and the exact zero-series transform.",
+      "dependency_status": "Mathlib complex power estimates and local sum-integral interchange.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/ZeroSeriesSymmetry.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Pairing conjugate zeros in the canonical explicit formula.",
+      "formalization_note": "Reality is proved by reindexing the entire multiplicity-aware zero sum, while the Mellin uniqueness argument uses its measurable real part.",
+      "content_basis": "Reviewed measurability of the zero summands and conjugation reindexing of the full series.",
+      "dependency_status": "Mathlib complex conjugation, measurable powers, and unconditional summation.",
       "reviewed": true
     },
     {
