@@ -1029,6 +1029,123 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The corrected ideal Robin criterion is the project's extension of Guy Robin's divisor-sum criterion to number fields.",
+      "formalization_note": "This module states the fieldwise, cyclotomic-family, and all-field equivalences without supplying proofs.",
+      "content_basis": "Reviewed the finite ideal divisor sum, discriminant correction, analytic continuation predicate, and the fieldwise, cyclotomic, and all-field statement domains.",
+      "dependency_status": "Mathlib definitions of ideals, norms, Dedekind zeta Dirichlet series, cyclotomic fields, and Dirichlet L-functions.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindSeries.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Ideal counting in the Dirichlet class number formula and partial summation of an absolutely convergent Dirichlet series.",
+      "formalization_note": "The ideal-count coefficient estimate supplies the initial Mellin identity for the actual Mathlib Dedekind zeta function.",
+      "content_basis": "Reviewed the cardinality of norm fibers, linear growth, absolute convergence, and integral identity on the initial half-plane.",
+      "dependency_status": "Mathlib finite sums, analytic or measure-theoretic primitives.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/LandauFrontier.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Landau's real convergence-abscissa argument for a nonnegative transform.",
+      "formalization_note": "The continuation branch uses the repository's analytic crossing theorem, and the real pole branch uses the sign of the residue.",
+      "content_basis": "Reviewed the downward-closed integrability domain, the supremum argument, and both branches of the convergence proof.",
+      "dependency_status": "Mathlib probability and the project-local analytic continuation theorem.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/LogDerivative.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Local orders of analytic functions, the analytic identity theorem, and the sign of a real Laplace or Mellin transform of a nonnegative function.",
+      "formalization_note": "These lemmas separate the zero and residue obstructions used in the converse to the generalized Robin criteria.",
+      "content_basis": "Reviewed analytic identity propagation, local order of a zero, and right-sided sign of a scaled limit.",
+      "dependency_status": "Mathlib finite sums, analytic or measure-theoretic primitives.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/LogDerivativeResidue.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Factorization of an analytic function at an isolated zero and the residue of its logarithmic derivative.",
+      "formalization_note": "The punctured complex limit yields the positive multiplicity used to compute the real residues of the comparison transforms.",
+      "content_basis": "Reviewed nonzero analytic germ factorization, positivity of the root multiplicity, and the punctured complex limit.",
+      "dependency_status": "Mathlib isolated-zero factorization and logarithmic derivative rules.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/PositiveMellinMeasure.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Change of measure by a nonnegative density in the Mellin transform.",
+      "formalization_note": "The observable is the real logarithm on a restricted measure, so the Mellin exponent is expressed as the moment generating parameter.",
+      "content_basis": "Reviewed the support of the density, its exponential moments, and the real and complex change-of-measure identities.",
+      "dependency_status": "Mathlib change of density, complex powers, and real and complex moment generating functions.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/SmoothedConverse.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Landau's nonnegative transform method applied to the logarithmic derivative with triangular smoothing.",
+      "formalization_note": "An actual zero yields a strictly negative real residue. A holomorphic transform on a half-plane then excludes complex zeros of the pole-removed function.",
+      "content_basis": "Reviewed the sign of the triangular real residue and holomorphy of the moment transform in the required half-plane.",
+      "dependency_status": "Mathlib complex moment analysis and the local logarithmic-derivative residue and nonvanishing lemmas.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/SmoothedCriterion.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Landau's theorem applied to the complement of a one-sided triangular square-root bound.",
+      "formalization_note": "The real arithmetic comparison, its absolute-convergence half-plane, and the logarithmic derivative of the pole-removed function are joined in the same nonvanishing theorem.",
+      "content_basis": "Reviewed the absolute-convergence and local-finiteness hypotheses, the pole cancellation, and transport of the eventual bound into the nonnegative-transform criterion.",
+      "dependency_status": "The checked triangular remainder transform, change of measure, and Landau nonvanishing theorem.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/SupportingLine.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The supporting-line comparison in the project's corrected ideal Robin criterion and its weighted Hecke extension.",
+      "formalization_note": "The statements separate finite layer ownership, the logarithmic price, and exact cancellation of the Mertens boundary term.",
+      "content_basis": "Reviewed the finite surplus comparison, monotonicity of the logarithmic price, and exact signed error cancellation.",
+      "dependency_status": "Mathlib finite sums, analytic or measure-theoretic primitives.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/TriangularConverse.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Landau continuation for a nonnegative Mellin transform and the analytic identity theorem.",
+      "formalization_note": "The initial transform identity continues to the common domain and supplies the real comparison at the convergence boundary.",
+      "content_basis": "Reviewed continuation of the transform identity on the overlap, nonvanishing from the extended logarithmic derivative, and the negative residue at every candidate boundary.",
+      "dependency_status": "The checked Landau frontier and real residue obstructions, with Mathlib analytic uniqueness.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/TriangularMellin.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Mellin kernel for the triangularly smoothed prime-power sum.",
+      "formalization_note": "The integral is evaluated at an arbitrary positive prime-power norm with the full complex convergence condition.",
+      "content_basis": "Reviewed the cutoff domain, absolute integrability of the powers, and the denominator after evaluating the Mellin transform.",
+      "dependency_status": "Mathlib finite sums, analytic or measure-theoretic primitives.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/TriangularRemainder.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The triangular comparison transform is the sum of the elementary main-term transforms and the transformed coefficient series.",
+      "formalization_note": "The comparison function is specified pointwise on the positive real tail, and the transform formula is accompanied by actual integrability.",
+      "content_basis": "Reviewed the finite-cutoff bound for the signed coefficient sum and the exact Mellin transforms and integrability of the linear and square-root terms.",
+      "dependency_status": "Mathlib improper power integrals and the checked termwise triangular transform.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/TriangularSeries.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Termwise integration of the absolutely convergent Dirichlet series for the triangular Mellin transform.",
+      "formalization_note": "The integral norm of each truncated term is bounded by its absolute Dirichlet coefficient divided by the real part of the transform parameter.",
+      "content_basis": "Reviewed the summable norm majorant, total integrability, and equality with the divided Dirichlet series.",
+      "dependency_status": "Mathlib dominated integration and the checked single triangular Mellin kernel.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/Lagarias/Certificates/All.lean",
       "classification": "Primarily project-original",
       "mathematical_source": "Lagarias (2001), finite verification through 5040.",

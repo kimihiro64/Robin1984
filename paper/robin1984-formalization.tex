@@ -74,6 +74,8 @@
 \title[Robin's 1984 criterion]{Robin's 1984 criterion for the Riemann hypothesis:\\
 a formally verified proof}
 \author{Jonas Whidden}
+\thanks{This paper is available under \texttt{Apache-2.0} or
+\texttt{CC-BY-4.0}.}
 \date{September 2026}
 \subjclass[2020]{11M26, 11N37, 03B35}
 \keywords{Riemann hypothesis, sum of divisors, Robin's inequality,
@@ -1670,12 +1672,215 @@ The corresponding Lean declarations are
 forward argument and bounded verification; the converse calls the existing
 LCM oscillation theorem directly.
 
+\section{Extensions to generalized Riemann hypotheses}\label{sec:grh}
+
+The following results concern ideal divisibility and prime-power sums.
+The formal verification inventory in Section~\ref{sec:formalization}
+specifies the results currently checked in Lean.
+
+\begin{theorem}[Corrected ideal Robin criterion]\label{thm:ideal-robin}
+Let $K$ be a number field, let $D_K$ be its discriminant, and write
+$\kappa_K=\operatorname{Res}_{s=1}\zeta_K(s)$. For a nonzero integral
+ideal $\mathfrak a$, write $\sigma_K(\mathfrak a)
+=\sum_{\mathfrak d\mid\mathfrak a}N\mathfrak d$, with the sum over integral
+ideal divisors and $N$ the absolute norm. Then the nontrivial zeros of
+$\zeta_K$ lie on $\operatorname{Re}s=1/2$ if and only if
+\begin{equation}\label{eq:ideal-robin}
+\frac{\sigma_K(\mathfrak a)}{N\mathfrak a}
+\le e^\gamma\kappa_K
+\left(\log\log N\mathfrak a+
+\frac{12+3\log|D_K|}{\sqrt{\log N\mathfrak a}}\right)
+\end{equation}
+for all $\mathfrak a$ of sufficiently large norm, with a threshold
+depending on $K$.
+\end{theorem}
+
+\begin{proof}
+Write $q=N\mathfrak p$ for the norm of a prime ideal. Every sum over $q$
+counts prime ideals with multiplicity of their norms. Put
+\[
+ \theta_K(x)=\sum_{q\le x}\log q,\qquad
+ \psi_K(x)=\sum_{q^j\le x}\log q,\qquad E(x)=\psi_K(x)-x .
+\]
+Define $A(x)=\sum_{q^j\le x}1/(jq^j)$ and
+\[
+ H(x)=-\int_x^\infty E(t)\frac{1+\log t}{t^2\log^2 t}\,dt .
+\]
+Partial summation with the number-field Mertens constant
+\cite{GarciaLeeNumberFieldMertens} gives
+\begin{equation}\label{eq:ideal-mertens}
+ A(x)=\gamma+\log\kappa_K+\log\log x+\frac{E(x)}{x\log x}+H(x).
+\end{equation}
+The fixed-field prime ideal theorem with its zero-free-region error
+justifies convergence. A fixed exceptional zero below $1$ is absorbed in
+that error for sufficiently large $x$.
+
+For the forward direction take $x=\log N\mathfrak a$ and
+$b(q)=-\log(1-q^{-1})$. The logarithm of the ideal divisor ratio is
+at most the sum of $b(q)$ over the prime support of $\mathfrak a$. The
+support costs at most $x$ when a prime ideal costs $\log q$.
+The ratio $b(q)/\log q$ decreases for $q>1$. Subtract
+$b(x)/\log x$ times the cost and bound the surplus by taking all
+$q\le x$. This gives
+\[
+ \log\frac{\sigma_K(\mathfrak a)}{N\mathfrak a}
+ \le \sum_{q\le x}b(q)+\frac{b(x)}{\log x}\bigl(x-\theta_K(x)\bigr).
+\]
+The omitted part of the Euler product logarithm is
+$\sum_{q\le x}b(q)-A(x)=(1+o(1))/(\sqrt{x}\log x)$.
+Its main term is $\tfrac12\sum_{\sqrt{x}<q\le x}q^{-2}$. For
+$q\le x^{1/3}$ the first omitted power is greater than $x$.
+For $q>x^{1/3}$ the exponents of at least three are bounded by summing
+$q^{-3}$. Both contributions are $O_K(x^{-2/3})$ by the prime ideal
+theorem. Also $\psi_K(x)-\theta_K(x)\sim\sqrt x$ from the prime-square
+layer. Substituting $b(x)=x^{-1}+O(x^{-2})$ cancels the $E(x)$ term
+in \eqref{eq:ideal-mertens}. The resulting bound is
+\[
+ \log\frac{\sigma_K(\mathfrak a)}{N\mathfrak a}
+ \le \gamma+\log\kappa_K+\log\log x+H(x)
+       +\frac{2+o(1)}{\sqrt{x}\log x}.
+\]
+Under RH for $\zeta_K$, the integrated explicit formula
+\cite{GrenieMolteniSmoothed} gives
+\[
+ \sqrt{x}\log x\,H(x)
+ =\sum_\rho\frac{x^{i\operatorname{Im}\rho}}{\rho(1-\rho)}+o(1).
+\]
+In detail, integrate the formula for $\int_1^x E(t)\,dt$ against
+the derivative of $(1+\log x)/(x^2\log^2x)$. The resulting terms
+on this scale are bounded by a constant times
+$1/|\rho(\rho+1)|$, which is summable. For each fixed $\rho$, the
+leading term follows by integrating $t^{\rho-2}/\log t$.
+Writing $B_K=\sum_\rho(1/4+(\operatorname{Im}\rho)^2)^{-1}$, the
+logarithmic derivative at $2$ of the entire completion $\Xi_K$ gives
+\[
+ B_K\le 6\frac{\Xi_K'(2)}{\Xi_K(2)}\le 9+3\log|D_K|.
+\]
+The first inequality compares each summand with
+$6(3/2)/(9/4+(\operatorname{Im}\rho)^2)$, deduced using symmetry
+about $1/2$. For the second inequality, the gamma factors and
+$\zeta_K'/\zeta_K$ give nonpositive terms at $2$. Exponentiating
+leaves the coefficient $2+B_K$ on the $x^{-1/2}$ scale. The stated
+coefficient leaves a unit of slack.
+
+For the reverse direction use
+$\mathfrak L_x=\prod_{q^j\le x}\mathfrak p$.
+Its log norm is $\psi_K(x)$ and its log divisor ratio is
+$A(x)+O_K(1/(\sqrt{x}\log x))$. Indeed the local discrepancy is
+$O(q^{-\lfloor\log x/\log q\rfloor-1})$. For $q\le\sqrt{x}$ use the
+bound $1/x$ and count prime ideals. For the remaining $q\le x$ sum
+$q^{-2}$. Concavity gives
+$\log\log\psi_K(x)\le\log\log x+E(x)/(x\log x)$.
+Applying \eqref{eq:ideal-robin} to $\mathfrak L_x$ in
+\eqref{eq:ideal-mertens} yields $H(x)\le O_K(1/(\sqrt{x}\log x))$.
+With $w(t)=(1+\log t)/\log^2t$, integration by parts gives
+\[
+ H_0(x):=-\int_x^\infty E(t)t^{-2}\,dt
+  =\frac{H(x)}{w(x)}+\int_x^\infty H(t)(1/w)'(t)\,dt
+  \le O_K(x^{-1/2}),
+\]
+since $(1/w)'(t)\ge0$. Put
+$F(s)=-\zeta_K'(s)/(s\zeta_K(s))-1/(s-1)$.
+The transform of $H_0(x)$ against $x^{-s}\,dx$ on $x\ge1$ is
+$(F(s)-F(1))/(s-1)$ for $\operatorname{Re}s>1$.
+The transform of $C_Kx^{-1/2}-H_0(x)$, cut off below a fixed large
+$x$ so that the integrand is nonnegative, has the same
+singularities in $\operatorname{Re}s>1/2$ as the negative of that
+Mellin transform. If an off-line zero lies in this half-plane,
+Landau's theorem forces a real singularity at the convergence
+abscissa. At a real zero $\beta$ of multiplicity $j$, the residue is
+$-j/[\beta(1-\beta)]$. The resulting negative divergence contradicts
+nonnegativity of the transform on the real line to its right.
+The functional equation then gives the other half of the strip.
+\end{proof}
+
+\begin{corollary}[Dirichlet GRH and Dedekind-zeta GRH]
+Dirichlet GRH is equivalent to \eqref{eq:ideal-robin} for every
+$K=\mathbb Q(\zeta_d)$, $d\ge1$. Dedekind-zeta GRH is equivalent
+to \eqref{eq:ideal-robin} for every number field $K$.
+\end{corollary}
+
+\begin{proof}
+In the cyclotomic case $\zeta_K$ is the product of the primitive
+Dirichlet $L$-functions associated with characters modulo $d$.
+The factors have no poles in the open strip, so the zero condition
+for the product gives the condition for each factor. Every primitive
+Dirichlet character occurs at its conductor. Removing or adding
+the finite Euler factors for imprimitive characters does not change
+the zeros in the open strip. The all-field statement follows by
+applying Theorem~\ref{thm:ideal-robin} to each $K$.
+\end{proof}
+
+\begin{theorem}[Smoothed prime-power criterion for standard automorphic RH]
+Let $L(s,\pi)$ be a normalized unitary cuspidal standard
+$L$-function over a number field $K$. Put
+$Z=L(s,\pi)L(s,\tilde\pi)$. For a pure norm twist use $Z=\zeta_K$,
+since vertical shifts preserve the real part of a zero. Write
+$m$ for the pole order of $Z$ at $1$ and
+$-Z'(s)/Z(s)=\sum_{\mathfrak p,j}b_{\mathfrak p,j}(N\mathfrak p)^{-js}$.
+RH for $L(s,\pi)$ is equivalent to
+\begin{equation}\label{eq:grand-rh-prime-power}
+ R_Z(x):=\frac{mx}{2}-
+ \sum_{\mathfrak p,j:\,(N\mathfrak p)^j\le x}
+ b_{\mathfrak p,j}\left(1-\frac{(N\mathfrak p)^j}{x}\right)
+ \le C_Z\sqrt{x}
+\end{equation}
+for some $C_Z$ and all sufficiently large $x$.
+\end{theorem}
+
+\begin{proof}
+Conjugation makes $b_{\mathfrak p,j}$ real. Perron's kernel
+$1/[s(s+1)]$ gives the triangular weight in
+\eqref{eq:grand-rh-prime-power}. Under RH shift to a fixed line
+strictly below $1/2$ and above the trivial zeros. The pole
+at $1$ contributes $mx/2$ and cancels. The remaining zero sum
+$\sum_\rho x^\rho/[\rho(\rho+1)]$ is $O_Z(\sqrt{x})$ by the
+zero count for the completed $L$-functions. The integral on the
+shifted line is of lower order. See
+\cite{LagariasAutomorphicLi} for the standard analytic properties
+and the corresponding zero count.
+
+Conversely, the transform of $R_Z(x)$ against $x^{-s-1}\,dx$
+on $x\ge1$ is
+\[
+ \frac{m}{2(s-1)}+\frac{Z'(s)}{s(s+1)Z(s)}.
+\]
+The singularity at $1$ cancels. At a real zero $\beta>1/2$
+with multiplicity $j$, the transform of $C_Z\sqrt{x}-R_Z(x)$
+has residue $-j/[\beta(\beta+1)]$. Landau's theorem and positivity
+exclude any singularity to the right of $1/2$, by the same
+convergence-abscissa argument as above. The functional equations
+give the other half. The factors of $Z$ have no poles in the open
+strip, so their zeros cannot cancel.
+\end{proof}
+
+This criterion applies to general unitary Hecke $L$-functions in
+degree one and to the higher ranks without assuming temperedness.
+The test uses a weighted sum of prime powers. A weighted all-ideal
+bound can also be obtained when the logarithmic Euler coefficients
+are nonnegative. For unitary Hecke characters $\chi$ other than pure
+norm twists, the coefficients of
+$\zeta_K(s)^2L(s,\chi)L(s,\bar\chi)$ are
+$2+2\operatorname{Re}(\chi(\mathfrak p)^j)\ge0$, including at
+the ramified primes when $\chi(\mathfrak p)$ is set to zero.
+Subtracting a price $1/(x\log x)$ for each unit of weighted log norm
+then cancels the Mertens boundary term exactly. The details of the
+weighted comparison are recorded in \path{docs/GRH.md}.
+
 \section{Formal verification and reproducibility}\label{sec:formalization}
 
 \subsection{Public statements and the checked proof graph}
 
-The preceding proofs have been formalized in Lean~4.33.1 using
-Mathlib~\cite{Lean4,Mathlib}.  The three public equivalence declarations have the
+The three classical Robin and Lagarias equivalences below have been
+formalized in Lean~4.33.1 using Mathlib~\cite{Lean4,Mathlib}.
+Section~\ref{sec:grh} gives mathematical proofs of the generalized criteria.
+The Lean development proves the nonvanishing implication from the
+eventual triangular bound for a holomorphic pole-removed function with
+the stated absolutely convergent logarithmic-derivative expansion and
+locally finite coefficients. The headline generalized equivalences
+remain in development.
+
+The three public equivalence declarations have the
 mathematical types
 \begin{align*}
  &(\forall n\in\N,\ 5040<n\Rightarrow
@@ -2764,6 +2969,22 @@ are the work of the Robin1984 project; credits for external Lean
 infrastructure are recorded above and in the repository metadata.
 
 \begin{thebibliography}{99}
+
+\bibitem{GarciaLeeNumberFieldMertens}
+S. R. Garcia and E. S. Lee,
+\emph{Unconditional explicit Mertens' theorems for number fields and
+Dedekind zeta residue bounds},
+\url{https://arxiv.org/abs/2007.10313}.
+
+\bibitem{GrenieMolteniSmoothed}
+L. Greni\'e and G. Molteni,
+\emph{Explicit smoothed prime ideals theorems under GRH},
+\url{https://sites.unimi.it/molteni/research/papers-pdf/34-molteni-Explicit_smoothed_prime_ideals_theorems_under_GRH.pdf}.
+
+\bibitem{LagariasAutomorphicLi}
+J. C. Lagarias,
+\emph{Li coefficients for automorphic $L$-functions},
+Ann. Inst. Fourier \textbf{57} (2007), 1689--1740.
 
 \bibitem{AlaogluErdos1944}
 L. Alaoglu and P. Erd\H{o}s,

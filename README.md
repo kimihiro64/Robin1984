@@ -42,6 +42,20 @@ constant, harmonic numbers, real logarithm and real power, and
 `RiemannHypothesis` predicate. There are no hidden hypotheses in any of the
 three compared theorems.
 
+## Extensions to generalized RH
+
+The [corrected ideal Robin criterion](docs/GRH.md) has the same form for
+Dirichlet and Dedekind-zeta GRH. Dirichlet GRH uses all cyclotomic fields.
+Dedekind-zeta GRH uses all number fields. The corresponding propositions are
+in [Robin1984/GRH.lean](Robin1984/GRH.lean). The note gives the mathematical
+argument and describes related criteria for Hecke and automorphic L-functions.
+
+Lean proves that the eventual triangular square-root bound excludes zeros
+with real part greater than one half for functions with the stated
+pole-removed logarithmic derivative. See
+[`ne_zero_of_eventual_triangularSquareRootBound`](Robin1984/GRH/SmoothedCriterion.lean).
+Formalization of the headline equivalences is in progress.
+
 ## Mathematical organization
 
 The proof development is organized by mathematical role:
