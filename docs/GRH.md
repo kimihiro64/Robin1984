@@ -27,8 +27,11 @@ $0<\Re s<1$ among the factors. Using every number field instead gives
 The Lean file [Robin1984/GRH.lean](../Robin1984/GRH.lean) defines these three
 equivalence propositions and proves uniqueness of the Dedekind continuation,
 the Dirichlet change-of-level identity, and the cyclotomic reduction under
-the stated zeta factorization. The Lean development also verifies the
-consequences of an integrated-error bound and the two analytic implications
+the stated zeta factorization. For every number field and every
+$\Re s>1$, Lean proves the prime-ideal Euler product for Mathlib's
+Dedekind zeta, its nonvanishing there, and the absolutely convergent
+prime-power series for its negative logarithmic derivative. Lean also proves
+the consequences of an integrated-error bound and the two analytic implications
 for triangular sums under their stated transform hypotheses. The fieldwise
 and family equivalences below are developed in prose.
 

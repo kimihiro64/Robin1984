@@ -1038,6 +1038,42 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/DedekindEulerProduct.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The prime-ideal Euler product for Dedekind zeta and the convergent complex logarithm of that product.",
+      "formalization_note": "The norm series is reindexed by prime-ideal exponents. Exponentiating the sum of local logarithms proves zero-freeness for real part greater than one.",
+      "content_basis": "Reviewed the norm of each prime ideal, its Euler weight, the infinite product, and the nonvanishing identity.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindIdealSeries.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The norm-fiber reindexing in the Formal Frontier sum_product Dedekind zeta development at 80e4127a67742659d521466204c6d2d7e0ca2b3f, and the Dirichlet class number estimate.",
+      "formalization_note": "The norm-count summability is reused to prove absolute summability over the actual nonzero ideals.",
+      "content_basis": "Reviewed the norm fibers, absolute convergence over nonzero integral ideals, and equality with the Mathlib series.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindLogDerivative.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Termwise differentiation of the Dedekind zeta log Euler product on the half-plane of absolute convergence.",
+      "formalization_note": "Local uniform comparison and the geometric expansion give the absolutely convergent logarithmic derivative over prime powers.",
+      "content_basis": "Reviewed local derivatives, uniform summability of the logarithms, the absolute prime-power comparison, and the differentiated Euler product.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindPrimeFactorization.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Unique factorization of nonzero ideals in a Dedekind domain.",
+      "formalization_note": "The equivalence stores a multiset of nonzero prime ideals, so both finite Euler expansions and ideal divisor sums can use the same factorization.",
+      "content_basis": "Reviewed the equivalence of nonzero integral ideals with multisets of height-one primes and its product identity.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/DedekindSeries.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Ideal counting in the Dirichlet class number formula and partial summation of an absolutely convergent Dirichlet series.",
@@ -1134,6 +1170,24 @@
       "formalization_note": "An actual zero yields a strictly negative real residue. A holomorphic transform on a half-plane then excludes complex zeros of the pole-removed function.",
       "content_basis": "Reviewed the sign of the triangular real residue and holomorphy of the moment transform in the required half-plane.",
       "dependency_status": "Mathlib complex moment analysis and the local logarithmic-derivative residue and nonvanishing lemmas.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/FiniteEulerFactors.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Products of finitely many absolutely convergent geometric series.",
+      "formalization_note": "Exponent assignments are reindexed by a product with one coordinate removed, and absolute convergence is retained at each step.",
+      "content_basis": "Reviewed the comparison, splitting a finite exponent assignment at one prime, and the geometric factors.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/FinsuppEulerProduct.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Euler product expansion for a free commutative monoid.",
+      "formalization_note": "The finite subseries is reindexed by the exact exponent assignments on its finite prime set, then the support limit recovers the full product.",
+      "content_basis": "Reviewed the support equivalence, passage from finite sets to finite-support exponents, and the Euler-product limit.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
       "reviewed": true
     },
     {

@@ -4,9 +4,8 @@ import Mathlib.NumberTheory.LSeries.DirichletContinuation
 import Mathlib.NumberTheory.NumberField.Cyclotomic.Basic
 import Mathlib.NumberTheory.NumberField.DedekindZeta
 import Mathlib.RingTheory.UniqueFactorizationDomain.Finite
-import Robin1984.GRH.DedekindSeries
+import Robin1984.GRH.DedekindLogDerivative
 import Robin1984.GRH.DedekindTailCriterion
-import Robin1984.GRH.EulerProductSupport
 import Robin1984.GRH.SmoothedCriterion
 import Robin1984.GRH.SmoothedForward
 import Robin1984.GRH.SupportingLine
