@@ -4,11 +4,14 @@ import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 import Mathlib.Analysis.SpecificLimits.Normed
 import Mathlib.MeasureTheory.Group.Measure
 import Mathlib.MeasureTheory.Integral.DominatedConvergence
+import Mathlib.MeasureTheory.Measure.Haar.Basic
 import Mathlib.NumberTheory.NumberField.AdeleRing
+import Mathlib.NumberTheory.NumberField.Completion.FinitePlace
 import Mathlib.Tactic.FieldSimp
 import Mathlib.Tactic.GCongr
 import Mathlib.Tactic.Ring
 import Mathlib.Topology.Algebra.ContinuousMonoidHom
+import Mathlib.Topology.Algebra.Valued.LocallyCompact
 import Robin1984.GRH.AutomorphicEulerLog
 
 /-!
@@ -27,6 +30,9 @@ A unitary character is a continuous circle-valued character of the ideles
 that is trivial on the principal ideles. Its factors use evaluations at
 uniformizers for unramified primes. Absolute convergence gives the Hecke
 Euler series and the paired logarithm used in the triangular criterion.
+The local integral uses the multiplicative Haar measure normalized by the
+compact valuation-one subgroup, whose compactness follows from the finite
+residue field of the completion.
 The criterion takes the analytic continuation and completion as inputs.
 -/
 
@@ -1023,5 +1029,247 @@ end FinitePlace
 
 end TateFactors
 
+
+section LocalHaar
+
+open MeasureTheory Topology
+
+variable {K : Type*} [Field K] [NumberField K]
+variable (p : HeightOneSpectrum (RingOfIntegers K))
+
+private theorem exists_lt_one_adicCompletionIntegers_sub
+    (b : p.adicCompletionIntegers K) :
+    Exists (fun a : RingOfIntegers K =>
+      (Valued.v : Valuation (p.adicCompletion K) (WithZero (Multiplicative Int)))
+        ((algebraMap (RingOfIntegers K) (p.adicCompletion K) a) -
+          (b : p.adicCompletion K)) < 1) := by
+  let V := (Valued.v : Valuation (p.adicCompletion K) (WithZero (Multiplicative Int)))
+  have hnear : Filter.Eventually (fun x : p.adicCompletion K =>
+      V (x - (b : p.adicCompletion K)) < 1) (nhds (b : p.adicCompletion K)) := by
+    apply Valued.mem_nhds.mpr
+    refine Exists.intro 1 ?_
+    intro x hx
+    change V.restrict (x - (b : p.adicCompletion K)) < 1 at hx
+    change V (x - (b : p.adicCompletion K)) < 1
+    exact V.restrict_lt_one_iff.mp hx
+  have hK := (HeightOneSpectrum.denseRange_algebraMap (K := K) p).mem_nhds hnear
+  choose k hk using hK
+  let x := algebraMap K (p.adicCompletion K) k
+  have hx : V (x - (b : p.adicCompletion K)) < 1 := hk
+  have hb : V (b : p.adicCompletion K) <= 1 := b.property
+  have hX : V x <= 1 := by
+    calc
+      V x = V ((x - (b : p.adicCompletion K)) + (b : p.adicCompletion K)) := by
+        rw [sub_add_cancel]
+      _ <= max (V (x - (b : p.adicCompletion K))) (V (b : p.adicCompletion K)) :=
+        V.map_add _ _
+      _ <= 1 := max_le (le_of_lt hx) hb
+  have hvK : p.valuation K k <= 1 := by
+    rw [<- HeightOneSpectrum.valuedAdicCompletion_eq_valuation' (v := p)]
+    exact hX
+  have hO := p.exists_valuation_sub_lt_of_integer hvK 1
+  choose a ha using hO
+  refine Exists.intro a ?_
+  have ha' : V (algebraMap (RingOfIntegers K) (p.adicCompletion K) a - x) < 1 := by
+    rw [IsScalarTower.algebraMap_apply (RingOfIntegers K) K (p.adicCompletion K)]
+    dsimp [x]
+    rw [<- map_sub]
+    let z := algebraMap (RingOfIntegers K) K a - k
+    change Valued.v (z : p.adicCompletion K) < (1 : WithZero (Multiplicative Int))
+    rw [HeightOneSpectrum.valuedAdicCompletion_eq_valuation' (v := p)]
+    exact ha
+  let A := algebraMap (RingOfIntegers K) (p.adicCompletion K) a
+  calc
+    V (A - (b : p.adicCompletion K)) =
+        V ((A - x) + (x - (b : p.adicCompletion K))) := by
+      rw [sub_add_sub_cancel]
+    _ <= max (V (A - x)) (V (x - (b : p.adicCompletion K))) := V.map_add _ _
+    _ < 1 := max_lt ha' hx
+
+
+
+
+/-- Every residue class of the completed valuation ring is represented by a
+global algebraic integer. -/
+theorem surjective_heckeLocalResidueMap :
+    Function.Surjective
+      ((IsLocalRing.residue (p.adicCompletionIntegers K)).comp
+        (algebraMap (RingOfIntegers K) (p.adicCompletionIntegers K))) := by
+  let D := p.adicCompletionIntegers K
+  let V := (Valued.v : Valuation (p.adicCompletion K) (WithZero (Multiplicative Int)))
+  intro c
+  have hc := IsLocalRing.residue_surjective c
+  choose b hb using hc
+  have haExists := exists_lt_one_adicCompletionIntegers_sub p b
+  choose a ha using haExists
+  refine Exists.intro a ?_
+  change IsLocalRing.residue D (algebraMap (RingOfIntegers K) D a) = c
+  rw [<- hb, <- sub_eq_zero, <- map_sub, IsLocalRing.residue_eq_zero_iff]
+  exact (Valuation.mem_maximalIdeal_iff (p.adicCompletion K) V).mpr ha
+
+
+
+
+/-- Completion induces the residue field isomorphism at the same prime. -/
+noncomputable def heckeLocalResidueEquiv :
+    RingEquiv (HasQuotient.Quotient (RingOfIntegers K) p.asIdeal)
+      (IsLocalRing.ResidueField (p.adicCompletionIntegers K)) := by
+  let D := p.adicCompletionIntegers K
+  let rho := (IsLocalRing.residue D).comp (algebraMap (RingOfIntegers K) D)
+  have hKer : forall a : RingOfIntegers K, rho a = 0 <-> Membership.mem p.asIdeal a := by
+    intro a
+    change IsLocalRing.residue D (algebraMap (RingOfIntegers K) D a) = 0 <-> _
+    rw [IsLocalRing.residue_eq_zero_iff]
+    let V := (Valued.v : Valuation (p.adicCompletion K) (WithZero (Multiplicative Int)))
+    have hMax : Membership.mem (IsLocalRing.maximalIdeal D)
+        (algebraMap (RingOfIntegers K) D a) <->
+        Valued.v (a : p.adicCompletion K) < (1 : WithZero (Multiplicative Int)) :=
+      Valuation.mem_maximalIdeal_iff (p.adicCompletion K) V
+    have hv := HeightOneSpectrum.valuedAdicCompletion_eq_valuation (K := K) (v := p) a
+    have hPrime := HeightOneSpectrum.valuation_lt_one_iff_mem (K := K) p a
+    exact hMax.trans (Iff.intro
+      (fun h => hPrime.mp (hv.symm.trans_lt h))
+      (fun h => hv.trans_lt (hPrime.mpr h)))
+  let rhoBar := Ideal.Quotient.lift p.asIdeal rho (fun a ha => (hKer a).mpr ha)
+  have hInj : Function.Injective rhoBar := by
+    intro x y h
+    have hx := Ideal.Quotient.mk_surjective x
+    choose a ha using hx
+    have hy := Ideal.Quotient.mk_surjective y
+    choose b hb using hy
+    rw [<- ha, <- hb] at h
+    rw [<- ha, <- hb]
+    change rho a = rho b at h
+    apply sub_eq_zero.mp
+    rw [<- map_sub, Ideal.Quotient.eq_zero_iff_mem]
+    apply (hKer (a - b)).mp
+    rw [map_sub, h, sub_self]
+  have hSurj : Function.Surjective rhoBar := by
+    intro c
+    have h := surjective_heckeLocalResidueMap p c
+    choose a ha using h
+    exact Exists.intro (Ideal.Quotient.mk p.asIdeal a) ha
+  exact RingEquiv.ofBijective rhoBar (And.intro hInj hSurj)
+
+/-- The residue field of the finite completion is finite. -/
+theorem finite_heckeLocalResidueField :
+    Finite (IsLocalRing.ResidueField (p.adicCompletionIntegers K)) := by
+  have hFinite : Finite (HasQuotient.Quotient (RingOfIntegers K) p.asIdeal) :=
+    p.asIdeal.finiteQuotientOfFreeOfNeBot p.ne_bot
+  exact @Finite.of_surjective _ _ hFinite _ (heckeLocalResidueEquiv p).surjective
+
+/-- The ring of integers of a finite completion is compact. -/
+theorem compactSpace_heckeLocalIntegers :
+    CompactSpace (p.adicCompletionIntegers K) := by
+  change CompactSpace (Valued.integer (p.adicCompletion K))
+  exact Valued.integer.compactSpace_iff_completeSpace_and_isDiscreteValuationRing_and_finite_residueField.mpr
+    (And.intro
+      (@IsClosed.completeSpace_coe (p.adicCompletion K) _ _ _
+        (Valued.isClosed_valuationSubring _))
+      (And.intro (inferInstance : IsDiscreteValuationRing (p.adicCompletionIntegers K))
+        (finite_heckeLocalResidueField p)))
+
+
+
+
+/-- The nonzero valuation of units is locally constant on every finite
+completion. -/
+theorem eventually_heckeLocalValueIndex_eq (a : Units (p.adicCompletion K)) :
+    Filter.Eventually (fun b : Units (p.adicCompletion K) =>
+      heckeLocalValueIndex p b = heckeLocalValueIndex p a) (nhds a) := by
+  let V := (Valued.v : Valuation (p.adicCompletion K) (WithZero (Multiplicative Int)))
+  have ha : Not (V (a : p.adicCompletion K) = 0) :=
+    (Valuation.ne_zero_iff V).mpr a.ne_zero
+  have hV : Filter.Eventually (fun b : p.adicCompletion K => V b = V a)
+      (nhds (a : p.adicCompletion K)) := Valued.locally_const ha
+  have hc : Continuous (fun b : Units (p.adicCompletion K) => (b : p.adicCompletion K)) :=
+    Units.continuous_val
+  refine (hc.continuousAt.eventually hV).mono ?_
+  intro b hb
+  apply WithZero.coe_inj.mp
+  rw [coe_heckeLocalValueIndex, coe_heckeLocalValueIndex]
+  exact hb
+
+/-- The valuation-one subgroup of the local multiplicative group is open. -/
+theorem isOpen_heckeLocalUnitShell : IsOpen (heckeLocalUnitShell p) := by
+  rw [isOpen_iff_mem_nhds]
+  intro a ha
+  refine (eventually_heckeLocalValueIndex_eq p a).mono ?_
+  intro b hb
+  have hA : Valued.v (a : p.adicCompletion K) = (1 : WithZero (Multiplicative Int)) := ha
+  change Valued.v (b : p.adicCompletion K) = (1 : WithZero (Multiplicative Int))
+  rw [<- coe_heckeLocalValueIndex p b, hb, coe_heckeLocalValueIndex]
+  exact hA
+
+/-- The finite absolute value on local units is continuous. -/
+theorem continuous_heckeFiniteAbsoluteValue :
+    Continuous (fun a : Units (p.adicCompletion K) =>
+      Real.exp (((Multiplicative.toAdd (heckeLocalValueIndex p a) : Int) : Real) *
+        Real.log (dedekindPrimeNorm K p : Real))) := by
+  rw [continuous_iff_continuousAt]
+  intro a
+  let F (x : Units (p.adicCompletion K)) :=
+    Real.exp (((Multiplicative.toAdd (heckeLocalValueIndex p x) : Int) : Real) *
+      Real.log (dedekindPrimeNorm K p : Real))
+  have hEq : Filter.Eventually (fun x => F x = F a) (nhds a) := by
+    refine (eventually_heckeLocalValueIndex_eq p a).mono ?_
+    intro x hx
+    show Real.exp (((Multiplicative.toAdd (heckeLocalValueIndex p x) : Int) : Real) * _) =
+      Real.exp (((Multiplicative.toAdd (heckeLocalValueIndex p a) : Int) : Real) * _)
+    rw [hx]
+  change Tendsto F (nhds a) (nhds (F a))
+  exact (Filter.tendsto_congr' hEq).mpr tendsto_const_nhds
+
+/-- The open unit shell of a finite completion is compact. -/
+theorem isCompact_heckeLocalUnitShell : IsCompact (heckeLocalUnitShell p) := by
+  have h := compactSpace_heckeLocalIntegers p
+  have hRing : IsCompact (p.adicCompletionIntegers K : Set (p.adicCompletion K)) :=
+    isCompact_iff_compactSpace.mpr h
+  have hUnits := (Submonoid.units_isCompact
+    (S := (p.adicCompletionIntegers K).toSubring.toSubmonoid)) hRing
+  convert hUnits using 1
+  ext a
+  exact (HeightOneSpectrum.adicCompletionIntegers.mem_units_iff_valued_eq_one
+    (K := K) (v := p) (a := a)).symm
+
+/-- The unit shell is a compact set with nonempty interior. -/
+def heckeLocalUnitPositiveCompact :
+    TopologicalSpace.PositiveCompacts (Units (p.adicCompletion K)) :=
+  { toCompacts := { carrier := heckeLocalUnitShell p, isCompact' := isCompact_heckeLocalUnitShell p }
+    interior_nonempty' := by
+      rw [(isOpen_heckeLocalUnitShell p).interior_eq]
+      exact Exists.intro 1 (by change Valued.v (1 : p.adicCompletion K) = _; exact map_one _) }
+
+section Haar
+
+variable [MeasurableSpace (Units (p.adicCompletion K))]
+  [BorelSpace (Units (p.adicCompletion K))]
+
+/-- Haar measure on the local multiplicative group, normalized by the units. -/
+noncomputable def heckeLocalHaar : Measure (Units (p.adicCompletion K)) :=
+  Measure.haarMeasure (heckeLocalUnitPositiveCompact p)
+
+instance heckeLocalHaar_isMulLeftInvariant : Measure.IsMulLeftInvariant (heckeLocalHaar p) :=
+  Measure.isMulLeftInvariant_haarMeasure _
+
+theorem heckeLocalHaar_unitShell : heckeLocalHaar p (heckeLocalUnitShell p) = 1 :=
+  Measure.haarMeasure_self
+
+/-- The normalized Haar integral of the finite local test is the standard
+Hecke Euler factor for positive real part. -/
+theorem integral_heckeLocalTateFactor_haar
+    (chi : UnitaryHeckeCharacter K) {s : Complex} (hs : 0 < s.re) :
+    integral (heckeLocalHaar p)
+      (fun x => heckeLocalTateTest p chi x * heckeLocalTateWeight p chi s x) =
+      Inv.inv (1 - heckeLocalParameter chi p * (dedekindPrimeNorm K p : Complex) ^ (-s)) := by
+  have hMul : MeasurableMul (Units (p.adicCompletion K)) :=
+    { measurable_const_mul := fun x => (continuous_const_mul x).measurable
+      measurable_mul_const := fun x => (continuous_mul_const x).measurable }
+  exact @integral_heckeLocalTateFactor K _ _ p _ hMul (heckeLocalHaar p) _
+    (isOpen_heckeLocalUnitShell p).measurableSet (heckeLocalHaar_unitShell p) chi s hs
+
+end Haar
+
+end LocalHaar
 
 end Robin1984.GRH
