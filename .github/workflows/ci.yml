@@ -295,15 +295,57 @@ jobs:
           key: robin1984-docs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', 'docbuild/lean-toolchain', 'docbuild/lakefile.toml', 'docbuild/lake-manifest.json', '*.lean', 'Robin1984/**/*.lean', 'TauCeti/**/*.lean', 'DedekindZeta/**/*.lean') }}
           restore-keys: |
             robin1984-docs-${{ runner.os }}-${{ runner.arch }}-
+      - name: Build the documented Lean module
+        working-directory: docbuild
+        env:
+          LEAN_NUM_THREADS: "1"
+          MATHLIB_NO_CACHE_ON_UPDATE: "1"
+        run: lake build +Robin1984:leanArts
       - name: Build doc-gen4 output
         working-directory: docbuild
         env:
-          # Limit concurrent Lake jobs so the documentation build fits the runner.
           LEAN_NUM_THREADS: "1"
           MATHLIB_NO_CACHE_ON_UPDATE: "1"
           DISABLE_EQUATIONS: "1"
           DOCGEN_SRC: github
-        run: lake build Robin1984:docs
+          DOCS_CACHE_HIT: ${{ steps.restore-docs.outputs.cache-hit }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          swap_file=
+          swap_active=false
+          cleanup() {
+            if [[ "$swap_active" == true ]]; then
+              sudo swapoff "$swap_file"
+            fi
+            if [[ -n "$swap_file" ]]; then
+              rm -f -- "$swap_file"
+            fi
+          }
+          trap cleanup EXIT
+
+          # Leave at least 5 GiB for the documentation database and HTML.
+          # Use up to 8 GiB of the remaining space for a cold build.
+          if [[ "$DOCS_CACHE_HIT" != true ]]; then
+            available_mib=$(df -Pm "$RUNNER_TEMP" | awk 'NR == 2 { print $4 }')
+            swap_mib=$((available_mib - 5120))
+            if (( swap_mib > 8192 )); then
+              swap_mib=8192
+            fi
+            if (( swap_mib >= 1024 )); then
+              swap_file=$(mktemp "$RUNNER_TEMP/robin1984-docs.XXXXXX")
+              chmod 600 "$swap_file"
+              fallocate -l "${swap_mib}M" "$swap_file"
+              mkswap "$swap_file"
+              sudo swapon "$swap_file"
+              swap_active=true
+            fi
+          fi
+
+          free -h
+          df -h "$RUNNER_TEMP" "$PWD"
+          grep -E '^(MemAvailable|SwapTotal|CommitLimit|Committed_AS):' /proc/meminfo
+          /usr/bin/time -v lake build Robin1984:docs
       - name: Check the dependency pins
         run: git diff --exit-code -- lean-toolchain lakefile.lean lake-manifest.json docbuild/lean-toolchain docbuild/lakefile.toml docbuild/lake-manifest.json
       - name: Prepare the offline API-documentation landing page
