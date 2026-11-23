@@ -55,8 +55,11 @@ constant, harmonic numbers, real logarithm and real power, and
 Both results use a field-dependent norm cutoff. The inequality and proofs
 are described in [the generalized criteria](docs/GRH.md). The Grand RH
 section proves a triangular criterion for a supplied family of completed
-L-functions with standard analytic data. Instantiating it for every
-standard automorphic L-function remains open in Lean.
+L-functions with standard analytic data. The Hecke specialization constructs
+the Euler factors, conductor, and Gamma shifts from the characters. The
+global Hecke continuation and functional equation are supplied hypotheses.
+Instantiating the criterion for every standard automorphic L-function
+remains open in Lean.
 
 ## Mathematical organization
 

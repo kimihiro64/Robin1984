@@ -301,7 +301,7 @@ exponential Euler product. The log series divides each logarithmic
 derivative coefficient at an ideal power by the logarithm of that power's
 norm.
 
-## The rank-one Hecke Euler factors
+## The rank-one Hecke criterion
 
 `HeckeEulerProduct.lean` defines a unitary Hecke character as a continuous
 circle-valued character of the ideles that is trivial on the principal
@@ -316,9 +316,13 @@ c_\chi(\mathfrak p,j)
   \log N\mathfrak p,\qquad j\ge1.
 $$
 The triangular sum uses the prime-ideal powers $(N\mathfrak p)^j<x$.
-The theorem `heckeCompletedCriterion` applies the completed-family
-criterion to these actual Euler factors given the analytic continuations
-and the completed functional equations and order bounds.
+`HeckeConductor.lean` constructs the conductor ideal from the least local
+exponents and proves that the inverse character has the same conductor.
+`HeckeArchimedean.lean` constructs the local Gamma shifts from the real and
+complex components and proves their radial Gaussian Mellin identities.
+The theorem `heckeCompletedCriterion_of_characterParameters` uses these
+inputs and the proved Euler factors. It takes the global analytic
+continuation, completed functional equation, and order bound as hypotheses.
 
 The Challenge states the critical-line condition directly for every
 pole-cleared completed L-function in the supplied family. The Solution

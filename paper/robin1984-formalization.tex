@@ -1916,8 +1916,13 @@ $\alpha_\chi(\mathfrak p)=0$ at ramified primes. It proves the Euler
 product on $\Re s>1$ and the paired coefficient
 $b_{\mathfrak p,j}=2\Re(\alpha_\chi(\mathfrak p)^j)\log N\mathfrak p$
 for every $j\ge1$ in \path{Robin1984/GRH/HeckeEulerProduct.lean}.
-The triangular equivalence for the Hecke family uses the supplied
-analytic continuations and completions.
+The local exponents give the conductor ideal in
+\path{Robin1984/GRH/HeckeConductor.lean}. The real and complex
+shifts and their radial Gaussian Mellin evaluations on $\Re s>0$
+are verified in \path{Robin1984/GRH/HeckeArchimedean.lean}.
+The resulting Hecke triangular criterion uses those local data
+and takes the global analytic continuation, order bound, and
+functional equation as inputs.
 
 A weighted all-ideal bound can also be obtained when the
 logarithmic Euler coefficients are nonnegative. For unitary Hecke

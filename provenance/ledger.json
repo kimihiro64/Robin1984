@@ -1434,6 +1434,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeArchimedean.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The unitary characters of the real and complex local multiplicative groups and their archimedean Gamma factors in Tate's thesis.",
+      "formalization_note": "Proves both local character formulas, obtains the archimedean shifts from the actual ideles, evaluates the radial Gaussian Mellin integrals, and applies the completed Hecke criterion with these shifts and the conductor.",
+      "content_basis": "Reviewed the continuous-character differential equation, the angular and radial decompositions, the local completion maps, the Gaussian substitutions, and the triangular criterion with character parameters.",
+      "dependency_status": "Uses pinned Mathlib analysis and infinite adeles, the Hecke conductor ideal and the project-local completed Hecke criterion.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeConductor.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The conductor of a continuous unitary character of the idele class group over a number field.",
