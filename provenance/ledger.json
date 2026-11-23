@@ -1056,6 +1056,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeTateQuotientIntegration.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's unfolding of the multiplicative idele integral over principal ideles and the logarithmic norm.",
+      "formalization_note": "Transports the product of Lebesgue measure and the norm-one measure, proves the quotient measure identity, and applies unfolding over the full principal subgroup.",
+      "content_basis": "Checked translation invariance, the full fundamental domain, the pushforward product measure, and the resulting equality of complex integrals.",
+      "dependency_status": "Uses the true idele class coordinates, Borel fundamental domains, and Mathlib's unfolding theorem.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/Helpers/Event.lean",
       "classification": "Primarily project-original",
       "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",

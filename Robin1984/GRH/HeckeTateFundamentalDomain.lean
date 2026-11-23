@@ -112,6 +112,43 @@ theorem exists_measurableSectionSet_of_compactLocalHomeomorph
   choose hxF hy using Set.mem_iUnion.mp hx
   exact hS.2.2.2.2.2 x hxF hy
 
+/-- A measurable set containing exactly one representative of each coset is a fundamental domain. -/
+theorem isFundamentalDomain_of_quotientSection
+    {A : Type*} [CommGroup A] [MeasurableSpace A] (P : Subgroup A)
+    (mu : Measure A) {S : Set A} (hS : MeasurableSet S)
+    (hInj : Set.InjOn (QuotientGroup.mk' P) S)
+    (hSur : Set.image (QuotientGroup.mk' P) S = Set.univ) :
+    IsFundamentalDomain P.op S mu := by
+  let q := QuotientGroup.mk' P
+  apply IsFundamentalDomain.mk' hS.nullMeasurableSet
+  intro x
+  have hx : Membership.mem (Set.image q S) (q x) := by
+    have hAll : Set.image q S = Set.univ := hSur
+    rw [hAll]
+    exact Set.mem_univ _
+  choose y hy hyq using hx
+  have hG : Membership.mem P (Inv.inv x * y) := QuotientGroup.leftRel_apply.mp (Quotient.exact hyq.symm)
+  let a : P.op := Subtype.mk (MulOpposite.op (Inv.inv x * y)) hG
+  have ha : SMul.smul a x = y := by
+    change x * (Inv.inv x * y) = y
+    rw [<- mul_assoc, mul_inv_cancel, one_mul]
+  have haS : Membership.mem S (SMul.smul a x) := by
+    rw [ha]
+    exact hy
+  refine ExistsUnique.intro a haS ?_
+  intro b hb
+  have hbq : q (SMul.smul b x) = q x := by
+    change q (x * MulOpposite.unop b.val) = q x
+    have hOne : q (MulOpposite.unop b.val) = 1 :=
+      (QuotientGroup.eq_one_iff _).mpr b.property
+    rw [q.map_mul, hOne]
+    exact mul_one (q x)
+  have haq : q (SMul.smul a x) = q x := (congrArg (fun z => q z) ha).trans hyq
+  have hba : SMul.smul b x = SMul.smul a x := hInj hb haS (hbq.trans haq.symm)
+  apply Subtype.ext
+  apply MulOpposite.unop_injective
+  exact mul_left_cancel hba
+
 variable (K : Type*) [Field K] [NumberField K]
 
 /-- The group of norm-one ideles is locally compact in its subgroup topology. -/
@@ -173,47 +210,21 @@ theorem exists_heckeNormOneClassFundamentalDomain
     Exists (fun S : Set (heckeNormOneIdeles K) => Exists (fun C : Set (heckeNormOneIdeles K) =>
       And (IsCompact C) (And (S <= C) (And (MeasurableSet S)
         (IsFundamentalDomain (heckePrincipalNormOneIdele K).range.op S mu))))) := by
-  let G := (heckePrincipalNormOneIdele K).range
-  let q := QuotientGroup.mk' G
   choose S C hS using exists_heckeNormOneClassBorelSection K
-  refine Exists.intro S (Exists.intro C (And.intro hS.1
-    (And.intro hS.2.1 (And.intro hS.2.2.1 ?_))))
-  apply IsFundamentalDomain.mk' hS.2.2.1.nullMeasurableSet
-  intro x
-  have hx : Membership.mem (Set.image q S) (q x) := by
-    have h : Set.image q S = Set.univ := hS.2.2.2.2
-    rw [h]
-    exact Set.mem_univ _
-  choose y hy hyq using hx
-  have hG : Membership.mem G (Inv.inv x * y) := QuotientGroup.leftRel_apply.mp (Quotient.exact hyq.symm)
-  let a : G.op := Subtype.mk (MulOpposite.op (Inv.inv x * y)) hG
-  have ha : SMul.smul a x = y := by
-    change x * (Inv.inv x * y) = y
-    rw [<- mul_assoc, mul_inv_cancel, one_mul]
-  have haS : Membership.mem S (SMul.smul a x) := by
-    rw [ha]
-    exact hy
-  refine ExistsUnique.intro a haS ?_
-  intro b hb
-  have hbq : q (SMul.smul b x) = q x := by
-    change q (x * MulOpposite.unop b.val) = q x
-    have hOne : q (MulOpposite.unop b.val) = 1 :=
-      (QuotientGroup.eq_one_iff _).mpr b.property
-    rw [q.map_mul, hOne]
-    exact mul_one (q x)
-  have hInj : Set.InjOn q S := hS.2.2.2.1
-  have haq : q (SMul.smul a x) = q x := (congrArg (fun z => q z) ha).trans hyq
-  have hba : SMul.smul b x = SMul.smul a x := hInj hb haS (hbq.trans haq.symm)
-  apply Subtype.ext
-  apply MulOpposite.unop_injective
-  exact mul_left_cancel hba
+  exact Exists.intro S (Exists.intro C (And.intro hS.1 (And.intro hS.2.1
+    (And.intro hS.2.2.1 (isFundamentalDomain_of_quotientSection
+      (heckePrincipalNormOneIdele K).range mu hS.2.2.1 hS.2.2.2.1 hS.2.2.2.2)))))
+
+/-- The multiplicative group of a number field is countable. -/
+theorem countable_units_numberField : Countable (Units K) := by
+  let e := (Module.finBasis Rat K).equivFun
+  let : Countable K := e.injective.countable
+  exact Units.val_injective.countable
 
 /-- The principal norm-one subgroup is countable. -/
 theorem countable_heckePrincipalNormOneIdeles :
     Countable (heckePrincipalNormOneIdele K).range := by
-  let e := (Module.finBasis Rat K).equivFun
-  let : Countable K := e.injective.countable
-  let : Countable (Units K) := Units.val_injective.countable
+  let : Countable (Units K) := countable_units_numberField K
   let P := heckePrincipalNormOneIdele K
   have h : Function.Surjective P.rangeRestrict := by
     intro a
