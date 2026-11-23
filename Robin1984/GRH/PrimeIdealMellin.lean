@@ -227,24 +227,64 @@ theorem measurable_dedekindChebyshevErrorRatio : Measurable (dedekindChebyshevEr
     exact (measurable_of_countable F).comp Nat.measurable_floor
   exact (hPsi.sub measurable_id).div (measurable_id.pow_const 2)
 
+theorem dedekindChebyshevErrorRatio_mellin_and_integrable {s : Complex} (hs : 1 < s.re) :
+    let mu := volume.restrict (Ioi (1 : Real))
+    let w := fun x : Real => (x : Complex) ^ (1 - s) * (dedekindChebyshevErrorRatio K x : Complex)
+    And (Integrable w mu)
+      (integral mu w = (-deriv (dedekindZeta K) s / dedekindZeta K s) / s - 1 / (s - 1)) := by
+  let mu := volume.restrict (Ioi (1 : Real))
+  have hEq : Filter.EventuallyEq (ae mu)
+      (fun x : Real => (x : Complex) ^ (1 - s) * (dedekindChebyshevErrorRatio K x : Complex))
+      (fun x : Real => ((dedekindChebyshev K x - x : Real) : Complex) *
+        (x : Complex) ^ (-s - 1)) := by
+    filter_upwards [ae_restrict_mem measurableSet_Ioi] with x hx
+    have hx0 : Not ((x : Complex) = 0) :=
+      Complex.ofReal_ne_zero.mpr (zero_lt_one.trans (show 1 < x from hx)).ne'
+    have hTwo : (x : Complex) ^ (2 : Complex) = (x : Complex) ^ (2 : Nat) := by
+      simp
+    have hInv : Inv.inv ((x : Complex) ^ (2 : Nat)) = (x : Complex) ^ (-(2 : Complex)) := by
+      rw [Complex.cpow_neg, hTwo]
+    unfold dedekindChebyshevErrorRatio
+    rw [Complex.ofReal_div, Complex.ofReal_pow, div_eq_mul_inv, hInv]
+    calc
+      _ = ((dedekindChebyshev K x - x : Real) : Complex) *
+          ((x : Complex) ^ (1 - s) * (x : Complex) ^ (-(2 : Complex))) := by ring
+      _ = _ := by
+        rw [<- Complex.cpow_add _ _ hx0, show (1 : Complex) - s + (-2) = -s - 1 by ring]
+  have h := dedekindChebyshevError_mellin K hs
+  exact And.intro (h.1.congr hEq.symm) ((integral_congr_ae hEq).trans h.2)
+
 theorem dedekindChebyshevErrorRatio_mellin {s : Complex} (hs : 1 < s.re) :
     integral (volume.restrict (Ioi (1 : Real))) (fun x : Real =>
       (x : Complex) ^ (1 - s) * (dedekindChebyshevErrorRatio K x : Complex)) =
-      (-deriv (dedekindZeta K) s / dedekindZeta K s) / s - 1 / (s - 1) := by
-  refine (integral_congr_ae ?_).trans (dedekindChebyshevError_mellin K hs).2
-  filter_upwards [ae_restrict_mem measurableSet_Ioi] with x hx
-  have hx0 : Not ((x : Complex) = 0) :=
-    Complex.ofReal_ne_zero.mpr (zero_lt_one.trans (show 1 < x from hx)).ne'
-  have hTwo : (x : Complex) ^ (2 : Complex) = (x : Complex) ^ (2 : Nat) := by
-    simp
-  have hInv : Inv.inv ((x : Complex) ^ (2 : Nat)) = (x : Complex) ^ (-(2 : Complex)) := by
-    rw [Complex.cpow_neg, hTwo]
-  unfold dedekindChebyshevErrorRatio
-  rw [Complex.ofReal_div, Complex.ofReal_pow, div_eq_mul_inv, hInv]
+      (-deriv (dedekindZeta K) s / dedekindZeta K s) / s - 1 / (s - 1) :=
+  (dedekindChebyshevErrorRatio_mellin_and_integrable K hs).2
+
+/-- On every finite interval used by the improper integral, the
+Chebyshev error density is integrable. -/
+theorem dedekindChebyshevErrorRatio_integrableOn_Ioo (b : Real) :
+    IntegrableOn (dedekindChebyshevErrorRatio K) (Ioo 1 b) := by
+  let w := fun x : Real => (x : Complex) ^ (1 - (2 : Complex)) *
+    (dedekindChebyshevErrorRatio K x : Complex)
+  have hFull : IntegrableOn w (Ioi (1 : Real)) :=
+    (dedekindChebyshevErrorRatio_mellin_and_integrable K (s := 2) (by norm_num)).1
+  have hInt : IntegrableOn w (Ioo 1 b) := hFull.mono_set (fun _ h => h.1)
+  refine (hInt.norm.const_mul b).mono'
+    (measurable_dedekindChebyshevErrorRatio K).aestronglyMeasurable ?_
+  filter_upwards [ae_restrict_mem measurableSet_Ioo] with x hx
+  have hx0 : 0 < x := zero_lt_one.trans hx.1
+  have hWeight : norm (w x) = Inv.inv x * norm (dedekindChebyshevErrorRatio K x) := by
+    unfold w
+    rw [show 1 - (2 : Complex) = -1 by norm_num, Complex.cpow_neg, Complex.cpow_one,
+      norm_mul, norm_inv, Complex.norm_real, Complex.norm_real, Real.norm_of_nonneg hx0.le]
+  have hInv : x * Inv.inv x = 1 := by
+    field_simp [hx0.ne']
   calc
-    _ = ((dedekindChebyshev K x - x : Real) : Complex) *
-        ((x : Complex) ^ (1 - s) * (x : Complex) ^ (-(2 : Complex))) := by ring
-    _ = _ := by
-      rw [<- Complex.cpow_add _ _ hx0, show (1 : Complex) - s + (-2) = -s - 1 by ring]
+    norm (dedekindChebyshevErrorRatio K x) =
+        x * (Inv.inv x * norm (dedekindChebyshevErrorRatio K x)) := by
+      rw [<- mul_assoc, hInv, one_mul]
+    _ <= b * norm (w x) := by
+      rw [<- hWeight]
+      exact mul_le_mul_of_nonneg_right hx.2.le (norm_nonneg _)
 
 end Robin1984.GRH

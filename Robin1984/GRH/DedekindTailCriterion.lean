@@ -61,34 +61,17 @@ private theorem norm_integratedTail_le {g : Real -> Real}
     (setIntegral_mono_set hg.norm (Filter.Eventually.of_forall (fun _ => norm_nonneg _))
       (Filter.Eventually.of_forall (fun _ h => hSub h)))
 
-private theorem tailComparison_mellin {g : Real -> Real} (hMeas : Measurable g)
-    (hg : IntegrableOn g (Ioi (1 : Real))) (C : Real) (s : Complex) (hs : 1 < s.re) :
+private theorem integratedTail_mellin {g : Real -> Real} (hMeas : Measurable g)
+    (hg : IntegrableOn g (Ioi (1 : Real))) (s : Complex) (hs : 1 < s.re) :
     let mu := volume.restrict (Ioi (1 : Real))
-    let F := fun x : Real => C * Real.sqrt x + x * integratedTail g x
-    let K := fun x : Real => (F x : Complex) * (x : Complex) ^ (-s - 1)
-    And (Integrable K mu)
-      (integral mu K = (C : Complex) / (s - 1 / 2) +
+    let T := fun x : Real => (x : Complex) ^ (-s) * (integratedTail g x : Complex)
+    And (Integrable T mu)
+      (integral mu T =
         (integral mu (fun x : Real => (x : Complex) ^ (1 - s) * (g x : Complex)) -
           integral mu (fun x : Real => (g x : Complex))) / (1 - s)) := by
   let mu := volume.restrict (Ioi (1 : Real))
-  let F := fun x : Real => C * Real.sqrt x + x * integratedTail g x
-  let P := fun x : Real => (C : Complex) * (x : Complex) ^ (((1 / 2 : Real) : Complex) - s - 1)
   let T := fun x : Real => (x : Complex) ^ (-s) * (integratedTail g x : Complex)
-  let K := fun x : Real => (F x : Complex) * (x : Complex) ^ (-s - 1)
   let M := integral mu (fun t => norm (g t))
-  have hPExp : (((1 / 2 : Real) : Complex) - s - 1).re < -1 := by
-    simp only [Complex.sub_re, Complex.ofReal_re, Complex.one_re]
-    linarith only [hs]
-  have hPInt : Integrable P mu :=
-    (integrableOn_Ioi_cpow_of_lt hPExp zero_lt_one).const_mul _
-  have hPVal : integral mu P = (C : Complex) / (s - 1 / 2) := by
-    unfold P
-    rw [integral_const_mul, integral_Ioi_cpow_of_lt hPExp zero_lt_one]
-    have hHalf : ((1 / 2 : Real) : Complex) = (1 / 2 : Complex) := by norm_num
-    have hExp : ((1 / 2 : Real) : Complex) - s - 1 + 1 = -(s - 1 / 2) := by
-      rw [hHalf]
-      ring
-    rw [hExp, Complex.ofReal_one, Complex.one_cpow, neg_div_neg_eq, mul_one_div]
   have hTExp : (-s).re < -1 := by rw [Complex.neg_re]; linarith only [hs]
   have hTWeight : IntegrableOn (fun x : Real => (x : Complex) ^ (-s)) (Ioi (1 : Real)) :=
     integrableOn_Ioi_cpow_of_lt hTExp zero_lt_one
@@ -116,6 +99,34 @@ private theorem tailComparison_mellin {g : Real -> Real} (hMeas : Measurable g)
     have hgCast : IntegrableOn (fun t : Real => (g t : Complex)) (Ioi (1 : Real)) :=
       Integrable.ofReal hg
     exact integral_tail_cpow_dividedDifference hgCast s hs
+  exact And.intro hTInt hTVal
+
+private theorem tailComparison_mellin (B : Real -> Real) (C : Real) (s : Complex) (hs : 1 < s.re)
+    (hTInt : IntegrableOn (fun x : Real => (x : Complex) ^ (-s) * (B x : Complex)) (Ioi (1 : Real))) :
+    let mu := volume.restrict (Ioi (1 : Real))
+    let F := fun x : Real => C * Real.sqrt x + x * B x
+    let K := fun x : Real => (F x : Complex) * (x : Complex) ^ (-s - 1)
+    And (Integrable K mu)
+      (integral mu K = (C : Complex) / (s - 1 / 2) +
+        integral mu (fun x : Real => (x : Complex) ^ (-s) * (B x : Complex))) := by
+  let mu := volume.restrict (Ioi (1 : Real))
+  let F := fun x : Real => C * Real.sqrt x + x * B x
+  let P := fun x : Real => (C : Complex) * (x : Complex) ^ (((1 / 2 : Real) : Complex) - s - 1)
+  let T := fun x : Real => (x : Complex) ^ (-s) * (B x : Complex)
+  let K := fun x : Real => (F x : Complex) * (x : Complex) ^ (-s - 1)
+  have hPExp : (((1 / 2 : Real) : Complex) - s - 1).re < -1 := by
+    simp only [Complex.sub_re, Complex.ofReal_re, Complex.one_re]
+    linarith only [hs]
+  have hPInt : Integrable P mu :=
+    (integrableOn_Ioi_cpow_of_lt hPExp zero_lt_one).const_mul _
+  have hPVal : integral mu P = (C : Complex) / (s - 1 / 2) := by
+    unfold P
+    rw [integral_const_mul, integral_Ioi_cpow_of_lt hPExp zero_lt_one]
+    have hHalf : ((1 / 2 : Real) : Complex) = (1 / 2 : Complex) := by norm_num
+    have hExp : ((1 / 2 : Real) : Complex) - s - 1 + 1 = -(s - 1 / 2) := by
+      rw [hHalf]
+      ring
+    rw [hExp, Complex.ofReal_one, Complex.one_cpow, neg_div_neg_eq, mul_one_div]
   have hK : Filter.EventuallyEq (ae mu) K (P + T) := by
     have hTail : Filter.Eventually (fun x : Real => 1 < x) (ae mu) :=
       ae_restrict_mem measurableSet_Ioi
@@ -142,7 +153,7 @@ private theorem tailComparison_mellin {g : Real -> Real} (hMeas : Measurable g)
   refine And.intro ((hPInt.add hTInt).congr hK.symm) ?_
   rw [integral_congr_ae hK]
   change integral mu (fun x => P x + T x) = _
-  rw [integral_add hPInt hTInt, hPVal, hTVal]
+  rw [integral_add hPInt hTInt, hPVal]
 
 private theorem logDeriv_one_add_integral_eq_zero {g : Real -> Real} {f : Complex -> Complex}
     (hg : IntegrableOn g (Ioi (1 : Real))) (hf : AnalyticAt Complex f 1)
@@ -218,6 +229,104 @@ private theorem logDeriv_one_add_integral_eq_zero {g : Real -> Real} {f : Comple
   change logDeriv f 1 + 1 + integral mu (fun x : Real => (g x : Complex)) = 0
   rw [hMass, add_neg_cancel]
 
+/-- A bounded tail with the Dedekind divided-difference transform
+excludes zeros to the right of one half when its signed upper bound holds. -/
+theorem ne_zero_of_eventual_mellinTailBound {B : Real -> Real} {f : Complex -> Complex}
+    {Fone : Complex}
+    (hMeas : Measurable B)
+    (hNorm : exists M : Real, And (0 <= M) (forall x : Real, 1 < x -> norm (B x) <= M))
+    (hf : AnalyticOnNhd Complex f {z : Complex | (1 / 2 : Real) < z.re})
+    (hNoRealHigh : forall b : Real, 1 <= b -> Not (f (b : Complex) = 0))
+    (hAtOne : logDeriv f 1 + 1 + Fone = 0)
+    (hMellin : forall s : Complex, 1 < s.re ->
+      let mu := volume.restrict (Ioi (1 : Real))
+      let W := fun x : Real => (x : Complex) ^ (-s) * (B x : Complex)
+      And (Integrable W mu) (integral mu W = (-(logDeriv f s + 1) / s - Fone) / (1 - s)))
+    (hBound : exists C t : Real, forall x : Real, t < x -> -x * B x <= C * Real.sqrt x)
+    {z : Complex} (hz : (1 / 2 : Real) < z.re) :
+    Not (f z = 0) := by
+  choose c t hct using hBound
+  choose M hM hNormBound using hNorm
+  let C := max c (max 1 t * M)
+  let F := fun x : Real => C * Real.sqrt x + x * B x
+  let nu := positiveMellinMeasure F 1 0
+  have hF (x : Real) (hx : 1 < x) : 0 <= F x := by
+    have hSqrt : 1 <= Real.sqrt x := by
+      simpa only [Real.sqrt_one] using Real.sqrt_le_sqrt hx.le
+    have hC : -x * B x <= C * Real.sqrt x := by
+      by_cases ht : t < x
+      case pos =>
+        exact (hct x ht).trans (mul_le_mul_of_nonneg_right (le_max_left _ _)
+          (Real.sqrt_nonneg _))
+      case neg =>
+        have hTail : -B x <= M := by
+          have hNorm := hNormBound x hx
+          rw [Real.norm_eq_abs] at hNorm
+          exact (neg_le_abs _).trans hNorm
+        have hTop : x <= max 1 t := (le_of_not_gt ht).trans (le_max_right _ _)
+        calc
+          _ = x * (-B x) := by ring
+          _ <= x * M := mul_le_mul_of_nonneg_left hTail (zero_lt_one.trans hx).le
+          _ <= max 1 t * M := mul_le_mul_of_nonneg_right hTop hM
+          _ <= C * Real.sqrt x :=
+            (le_mul_of_one_le_right (mul_nonneg (zero_le_one.trans (le_max_left _ _)) hM) hSqrt).trans
+              (mul_le_mul_of_nonneg_right (le_max_right _ _) (Real.sqrt_nonneg _))
+    change 0 <= C * Real.sqrt x + x * B x
+    linarith only [hC]
+  have hFMeas : Measurable F :=
+    (measurable_const.mul Real.continuous_sqrt.measurable).add
+      (measurable_id.mul hMeas)
+  have hSupport := ae_nonneg_log_positiveMellinMeasure F (le_refl (1 : Real)) 0
+  have hMoment (t : Real) (ht : t < -1) : Membership.mem (integrableExpSet Real.log nu) t := by
+    apply (mem_integrableExpSet_positiveMellinMeasure_iff hFMeas (le_refl (1 : Real)) hF 0 t).mpr
+    have htRe : 1 < (-(t : Complex)).re := by
+      rw [Complex.neg_re, Complex.ofReal_re]
+      exact lt_neg_of_lt_neg ht
+    have hI : IntegrableOn (fun x : Real =>
+        ((F x : Complex) * (x : Complex) ^ (-(-(t : Complex)) - 1)).re) (Ioi (1 : Real)) :=
+      (tailComparison_mellin B C (-(t : Complex)) htRe (hMellin _ htRe).1).1.re
+    refine hI.congr_fun (fun x hx => ?_) measurableSet_Ioi
+    change ((F x : Complex) * (x : Complex) ^ (-(-(t : Complex)) - 1)).re =
+      F x * x ^ (t - 0 - 1)
+    have hExp : -(-(t : Complex)) - 1 = ((t - 0 - 1 : Real) : Complex) := by
+      simp only [neg_neg, sub_zero, Complex.ofReal_sub, Complex.ofReal_one]
+    rw [hExp, <- Complex.ofReal_cpow (zero_le_one.trans hx.le),
+      <- Complex.ofReal_mul, Complex.ofReal_re]
+  have hBaseExp : Membership.mem (interior (integrableExpSet Real.log nu)) (-(2 : Complex)).re :=
+    mem_interior_iff_mem_nhds.mpr (Filter.mem_of_superset
+      (Iio_mem_nhds (by norm_num : (-(2 : Complex)).re < -1)) hMoment)
+  refine ne_zero_of_dedekindTailComparison (C := (C : Complex)) (Fone := Fone)
+    Real.measurable_log hSupport hf hNoRealHigh hAtOne hBaseExp ?_ hz
+  have hTwo : Membership.mem {z : Complex | (1 / 2 : Real) < z.re} (2 : Complex) := by norm_num
+  have hTwoNonzero : Not (f (2 : Complex) = 0) := by
+    simpa only [Complex.ofReal_ofNat] using hNoRealHigh 2 (by norm_num)
+  have hNear : Filter.Eventually (fun s : Complex => 1 < s.re) (nhds (2 : Complex)) :=
+    (isOpen_lt continuous_const Complex.continuous_re).mem_nhds (by norm_num)
+  have hNearNonzero : Filter.Eventually (fun s => Not (f s = 0)) (nhds (2 : Complex)) :=
+    (hf _ hTwo).continuousAt.tendsto.eventually (isOpen_ne.mem_nhds hTwoNonzero)
+  filter_upwards [hNear, hNearNonzero] with s hs hsNonzero
+  have hMellinEq : complexMGF Real.log nu (-s) =
+      (C : Complex) / (s - 1 / 2) + (-(logDeriv f s + 1) / s - Fone) / (1 - s) := by
+    change complexMGF Real.log (positiveMellinMeasure F 1 0) (-s) = _
+    rw [complexMGF_log_positiveMellinMeasure hFMeas (le_refl (1 : Real)) hF]
+    simpa only [Complex.ofReal_zero, sub_zero, (hMellin s hs).2] using
+      (tailComparison_mellin B C s hs (hMellin s hs).1).2
+  have hs0 : Not (s = 0) := Complex.ne_zero_of_re_pos (zero_lt_one.trans hs)
+  have hs1 : Not (s - 1 = 0) := Complex.ne_zero_of_re_pos (by
+    simp only [Complex.sub_re, Complex.one_re]
+    exact sub_pos.mpr hs)
+  have hOneS : Not (1 - s = 0) := sub_ne_zero.mpr (Ne.symm (sub_ne_zero.mp hs1))
+  have hsHalf : Not (s - 1 / 2 = 0) := Complex.ne_zero_of_re_pos (by
+    norm_num [Complex.sub_re]
+    linarith only [hs])
+  have hLog : logDeriv f s = -1 - s * Fone - s * (s - 1) * ((C : Complex) / (s - 1 / 2)) +
+      s * (s - 1) * complexMGF Real.log nu (-s) := by
+    rw [hMellinEq]
+    field_simp [hs0, hOneS, hsHalf]
+    ring
+  have hD := (div_eq_iff hsNonzero).mp (show deriv f s / f s = _ from hLog)
+  exact hD.trans (mul_comm _ _)
+
 /-- An eventual upper bound for minus the integrated error excludes
 right-half-plane zeros, given the absolute-integrability and
 logarithmic-derivative data of the number-field application. -/
@@ -232,93 +341,20 @@ theorem ne_zero_of_eventual_integratedTailBound {g : Real -> Real} {f : Complex 
       -x * integratedTail g x <= C * Real.sqrt x)
     {z : Complex} (hz : (1 / 2 : Real) < z.re) :
     Not (f z = 0) := by
-  choose c t hct using hBound
   let mu := volume.restrict (Ioi (1 : Real))
-  let M := integral mu (fun x => norm (g x))
-  let C := max c (max 1 t * M)
-  let F := fun x : Real => C * Real.sqrt x + x * integratedTail g x
   let Fone : Complex := integral mu (fun x : Real => (g x : Complex))
-  let nu := positiveMellinMeasure F 1 0
-  have hM : 0 <= M := integral_nonneg (fun _ => norm_nonneg _)
-  have hF (x : Real) (hx : 1 < x) : 0 <= F x := by
-    have hSqrt : 1 <= Real.sqrt x := by
-      simpa only [Real.sqrt_one] using Real.sqrt_le_sqrt hx.le
-    have hC : -x * integratedTail g x <= C * Real.sqrt x := by
-      by_cases ht : t < x
-      case pos =>
-        exact (hct x ht).trans (mul_le_mul_of_nonneg_right (le_max_left _ _)
-          (Real.sqrt_nonneg _))
-      case neg =>
-        have hTail : -integratedTail g x <= M := by
-          have hNorm := norm_integratedTail_le hg hx
-          rw [Real.norm_eq_abs] at hNorm
-          exact (neg_le_abs _).trans hNorm
-        have hTop : x <= max 1 t := (le_of_not_gt ht).trans (le_max_right _ _)
-        calc
-          _ = x * (-integratedTail g x) := by ring
-          _ <= x * M := mul_le_mul_of_nonneg_left hTail (zero_lt_one.trans hx).le
-          _ <= max 1 t * M := mul_le_mul_of_nonneg_right hTop hM
-          _ <= C * Real.sqrt x :=
-            (le_mul_of_one_le_right (mul_nonneg (zero_le_one.trans (le_max_left _ _)) hM) hSqrt).trans
-              (mul_le_mul_of_nonneg_right (le_max_right _ _) (Real.sqrt_nonneg _))
-    change 0 <= C * Real.sqrt x + x * integratedTail g x
-    linarith only [hC]
-  have hFMeas : Measurable F :=
-    (measurable_const.mul Real.continuous_sqrt.measurable).add
-      (measurable_id.mul (measurable_integratedTail hMeas))
-  have hSupport := ae_nonneg_log_positiveMellinMeasure F (le_refl (1 : Real)) 0
-  have hMoment (t : Real) (ht : t < -1) : Membership.mem (integrableExpSet Real.log nu) t := by
-    apply (mem_integrableExpSet_positiveMellinMeasure_iff hFMeas (le_refl (1 : Real)) hF 0 t).mpr
-    have htRe : 1 < (-(t : Complex)).re := by
-      rw [Complex.neg_re, Complex.ofReal_re]
-      exact lt_neg_of_lt_neg ht
-    have hI : IntegrableOn (fun x : Real =>
-        ((F x : Complex) * (x : Complex) ^ (-(-(t : Complex)) - 1)).re) (Ioi (1 : Real)) :=
-      (tailComparison_mellin hMeas hg C (-(t : Complex)) htRe).1.re
-    refine hI.congr_fun (fun x hx => ?_) measurableSet_Ioi
-    change ((F x : Complex) * (x : Complex) ^ (-(-(t : Complex)) - 1)).re =
-      F x * x ^ (t - 0 - 1)
-    have hExp : -(-(t : Complex)) - 1 = ((t - 0 - 1 : Real) : Complex) := by
-      simp only [neg_neg, sub_zero, Complex.ofReal_sub, Complex.ofReal_one]
-    rw [hExp, <- Complex.ofReal_cpow (zero_le_one.trans hx.le),
-      <- Complex.ofReal_mul, Complex.ofReal_re]
-  have hBaseExp : Membership.mem (interior (integrableExpSet Real.log nu)) (-(2 : Complex)).re :=
-    mem_interior_iff_mem_nhds.mpr (Filter.mem_of_superset
-      (Iio_mem_nhds (by norm_num : (-(2 : Complex)).re < -1)) hMoment)
   have hOne : AnalyticAt Complex f 1 := hf _ (by norm_num)
   have hOneNonzero : Not (f 1 = 0) := by
     simpa only [Complex.ofReal_one] using hNoRealHigh 1 (le_refl (1 : Real))
   have hAtOne := logDeriv_one_add_integral_eq_zero hg hOne hOneNonzero hSeries
-  refine ne_zero_of_dedekindTailComparison (C := (C : Complex)) (Fone := Fone)
-    Real.measurable_log hSupport hf hNoRealHigh hAtOne hBaseExp ?_ hz
-  have hTwo : Membership.mem {z : Complex | (1 / 2 : Real) < z.re} (2 : Complex) := by norm_num
-  have hTwoNonzero : Not (f (2 : Complex) = 0) := by
-    simpa only [Complex.ofReal_ofNat] using hNoRealHigh 2 (by norm_num)
-  have hNear : Filter.Eventually (fun s : Complex => 1 < s.re) (nhds (2 : Complex)) :=
-    (isOpen_lt continuous_const Complex.continuous_re).mem_nhds (by norm_num)
-  have hNearNonzero : Filter.Eventually (fun s => Not (f s = 0)) (nhds (2 : Complex)) :=
-    (hf _ hTwo).continuousAt.tendsto.eventually (isOpen_ne.mem_nhds hTwoNonzero)
-  filter_upwards [hNear, hNearNonzero] with s hs hsNonzero
-  have hMellin : complexMGF Real.log nu (-s) =
-      (C : Complex) / (s - 1 / 2) + (-(logDeriv f s + 1) / s - Fone) / (1 - s) := by
-    change complexMGF Real.log (positiveMellinMeasure F 1 0) (-s) = _
-    rw [complexMGF_log_positiveMellinMeasure hFMeas (le_refl (1 : Real)) hF]
-    simpa only [Complex.ofReal_zero, sub_zero, hSeries s hs] using
-      (tailComparison_mellin hMeas hg C s hs).2
-  have hs0 : Not (s = 0) := Complex.ne_zero_of_re_pos (zero_lt_one.trans hs)
-  have hs1 : Not (s - 1 = 0) := Complex.ne_zero_of_re_pos (by
-    simp only [Complex.sub_re, Complex.one_re]
-    exact sub_pos.mpr hs)
-  have hOneS : Not (1 - s = 0) := sub_ne_zero.mpr (Ne.symm (sub_ne_zero.mp hs1))
-  have hsHalf : Not (s - 1 / 2 = 0) := Complex.ne_zero_of_re_pos (by
-    norm_num [Complex.sub_re]
-    linarith only [hs])
-  have hLog : logDeriv f s = -1 - s * Fone - s * (s - 1) * ((C : Complex) / (s - 1 / 2)) +
-      s * (s - 1) * complexMGF Real.log nu (-s) := by
-    rw [hMellin]
-    field_simp [hs0, hOneS, hsHalf]
-    ring
-  have hD := (div_eq_iff hsNonzero).mp (show deriv f s / f s = _ from hLog)
-  exact hD.trans (mul_comm _ _)
+  have hNorm : exists M : Real, And (0 <= M)
+      (forall x : Real, 1 < x -> norm (integratedTail g x) <= M) :=
+    Exists.intro (integral mu (fun x => norm (g x)))
+      (And.intro (integral_nonneg (fun _ => norm_nonneg _)) (fun _ hx => norm_integratedTail_le hg hx))
+  refine ne_zero_of_eventual_mellinTailBound (Fone := Fone) (measurable_integratedTail hMeas)
+    hNorm hf hNoRealHigh hAtOne ?_ hBound hz
+  intro s hs
+  have h := integratedTail_mellin hMeas hg s hs
+  exact And.intro h.1 (by simpa only [hSeries s hs] using h.2)
 
 end Robin1984.GRH

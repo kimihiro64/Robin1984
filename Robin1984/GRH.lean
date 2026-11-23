@@ -3,10 +3,11 @@ import Mathlib.NumberTheory.Harmonic.EulerMascheroni
 import Mathlib.NumberTheory.LSeries.DirichletContinuation
 import Mathlib.NumberTheory.NumberField.Cyclotomic.Basic
 import Mathlib.NumberTheory.NumberField.DedekindZeta
-import Robin1984.GRH.DedekindDeLaValleePoussin
-import Robin1984.GRH.DedekindTailCriterion
+import Robin1984.GRH.DedekindLineNonvanishing
+import Robin1984.GRH.DedekindNormCoefficients
 import Robin1984.GRH.PrimeIdealMellin
 import Robin1984.GRH.PrimeIdealPrimorial
+import Robin1984.GRH.PrimitiveTailCriterion
 import Robin1984.GRH.SmoothedCriterion
 import Robin1984.GRH.SmoothedForward
 import Robin1984.GRH.SupportingLine

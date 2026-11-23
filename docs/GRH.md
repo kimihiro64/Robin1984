@@ -32,12 +32,16 @@ $\Re s>1$, Lean proves the prime-ideal Euler product for Mathlib's
 Dedekind zeta, its nonvanishing there, and the absolutely convergent
 prime-power series for its negative logarithmic derivative, with the
 three-point trigonometric positivity inequality in that half-plane. Lean
-also proves the Mellin transform of the Chebyshev error there, the ideal
-divisor ratio as a product of finite geometric factors, and the exact
-Chebyshev log norm and local Euler factors of the cutoff ideal. The
-integrated-error and triangular-sum criteria use their stated transform
-and tail hypotheses. The fieldwise and family equivalences below are
-developed in prose.
+proves that an entire pole-cleared continuation with nonzero value at one
+cannot vanish on the line of convergence. The natural-index Dirichlet
+coefficients have Chebyshev partial sums and give the same logarithmic
+derivative. Lean also proves the weighted Mellin transform of the Chebyshev
+error, the ideal divisor ratio as a product of finite geometric factors,
+and the exact log norm and local Euler factors of the cutoff ideal. The
+signed Dedekind tail implication accepts a convergent improper primitive
+with the prescribed value at one. The integrated-error and triangular-sum
+criteria use their stated transform and tail hypotheses. The fieldwise and
+family equivalences below are developed in prose.
 
 ### Forward implication
 

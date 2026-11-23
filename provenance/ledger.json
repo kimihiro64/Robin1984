@@ -1065,11 +1065,29 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/DedekindLineNonvanishing.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The de la Vallee Poussin proof of nonvanishing on the line of absolute convergence.",
+      "formalization_note": "Extract the integer order by a horizontal limit of the scaled logarithmic derivative and use the exact signed residues in the three-point inequality.",
+      "content_basis": "Checked initial logarithmic-derivative normalization, horizontal residue limits, and the three-point sign contradiction.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/DedekindLogDerivative.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Termwise differentiation of the Dedekind zeta log Euler product on the half-plane of absolute convergence.",
       "formalization_note": "Local uniform comparison and the geometric expansion give the absolutely convergent logarithmic derivative over prime powers.",
       "content_basis": "Reviewed local derivatives, uniform summability of the logarithms, the absolute prime-power comparison, and the differentiated Euler product.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindNormCoefficients.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The natural-index Dirichlet series of the negative logarithmic derivative of Dedekind zeta.",
+      "formalization_note": "Reindex the absolutely convergent prime-power series by finite norm fibers and use the same reindexing for partial sums.",
+      "content_basis": "Checked finite-fiber reindexing and the norm-indexed identity for both the Dirichlet series and every finite Chebyshev sum.",
       "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
       "reviewed": true
     },
@@ -1214,6 +1232,24 @@
       "mathematical_source": "The number-field analogue of the least common multiple of the integers up to a cutoff.",
       "formalization_note": "Project the exact finite prime-power support onto a multiset of prime ideals and count each fiber by an exponent interval.",
       "content_basis": "Checked the logarithmic norm, count of each exponent fiber, support, and finite geometric factors.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/PrimitiveMellin.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Fubini's theorem on a triangular domain and the Mellin transform of a primitive.",
+      "formalization_note": "Characterize integrability by the weighted slice norms, then evaluate the complex power integral on each slice.",
+      "content_basis": "Checked measurability, weighted product integrability, and the primitive and tail divided differences.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/PrimitiveTailCriterion.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The signed tail argument using the divided-difference Mellin transform and Landau's theorem.",
+      "formalization_note": "Bound the real improper tail by combining convergence at infinity with local integrability, then pass its exact transform to the Dedekind comparison.",
+      "content_basis": "Checked the boundedness of the convergent primitive tail and its use in the signed Landau argument.",
       "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
       "reviewed": true
     },
