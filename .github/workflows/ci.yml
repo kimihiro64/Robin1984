@@ -298,6 +298,8 @@ jobs:
       - name: Build doc-gen4 output
         working-directory: docbuild
         env:
+          # Limit concurrent Lake jobs so the documentation build fits the runner.
+          LEAN_NUM_THREADS: "1"
           MATHLIB_NO_CACHE_ON_UPDATE: "1"
           DISABLE_EQUATIONS: "1"
           DOCGEN_SRC: github

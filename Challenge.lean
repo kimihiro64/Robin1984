@@ -65,10 +65,11 @@ def LagariasElementaryCriterion : Prop :=
 
 namespace GRH
 
-universe u
+universe u u_2
 
-/-- Sum of the absolute norms of the integral ideal divisors of a nonzero ideal. -/
-noncomputable def idealDivisorNormSum {K : Type u} [Field K] [NumberField K]
+/-- Sum of the absolute norms of the integral ideal divisors of a nonzero ideal.
+Comparator checks the universe parameter name against the implementation. -/
+noncomputable def idealDivisorNormSum {K : Type u_2} [Field K] [NumberField K]
     (a : Ideal (NumberField.RingOfIntegers K)) (ha : Not (a = 0)) : Nat := by
   classical
   letI := UniqueFactorizationMonoid.fintypeSubtypeDvd a ha
