@@ -1447,7 +1447,7 @@
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Additive Haar measure and Fourier integration over the compact open integral finite adeles.",
       "formalization_note": "Normalizes finite additive Haar measure on the integral subgroup and evaluates its principal-frequency Fourier integral through the trace-dual ideal.",
-      "content_basis": "Reviewed local compactness, the unit mass of integral finite adeles, and translation invariance on the integral subgroup for the Fourier integral.",
+      "content_basis": "Reviewed local compactness, normalized additive Haar measure, the character integral, and the partition of the integral subgroup by principal ideal quotient classes.",
       "dependency_status": "Uses pinned Mathlib additive Haar theory and the verified trace duality for number-field adeles.",
       "reviewed": true
     },

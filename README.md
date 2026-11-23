@@ -59,7 +59,10 @@ L-functions with standard analytic data. The Hecke specialization constructs
 the Euler factors, conductor, and Gamma shifts from the characters. Each pure
 norm character gives a vertical translate of Dedekind zeta. Lean proves that
 its critical-line property is equivalent to both the corrected ideal Robin
-inequality and the triangular prime-power bound for the field. For a
+inequality and the triangular prime-power bound for the field. Lean also
+verifies compactness of the additive adelic quotient, constructs its
+canonical character, and proves Poisson summation on a finite adelic coset.
+For a
 pole-free Hecke pair, normalized reflected Mellin tails with finite
 absolute moments supply the continuation, functional equation, and growth
 bound. Identifying those tails with the completed Hecke products remains

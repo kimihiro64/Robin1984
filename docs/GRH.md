@@ -328,6 +328,26 @@ for zeros in the open critical strip of the translated function.
 exponents and proves that the inverse character has the same conductor.
 `HeckeArchimedean.lean` constructs the local Gamma shifts from the real and
 complex components and proves their radial Gaussian Mellin identities.
+
+The principal diagonal is discrete and the additive quotient $\mathbb A_K/K$
+is compact. The canonical character $\psi$ constructed in
+`HeckeAdeleCharacter.lean` is continuous and trivial on $K$. If $x\in K$
+matches the finite coordinates of an adele $u$ modulo the local integer
+rings, then $\psi(u)=\exp(2\pi i\operatorname{Tr}_{\infty}(u_\infty-x))$.
+
+For $a\in\mathbb A_{K,f}$, $0\ne d\in\mathcal O_K$, and a Schwartz function
+$f$ on the weighted Minkowski space, the theorem
+`tsum_finiteAdelePrincipalCoset_eq_adelicFourier` proves
+$$
+\sum_{\substack{x\in K\\x_f\in a+d\widehat{\mathcal O}_K}} f(e_K(x))
+=\frac{1}{N((d))\sqrt{|D_K|}}\sum_{\xi\in(d)^\vee}
+  \psi_f(-a\xi)\widehat f(c_K(e_K(\xi))).
+$$
+Here $e_K$ weights the complex coordinates by $\sqrt{2}$, $c_K$ conjugates
+those coordinates, and $(d)^\vee$ is the trace-dual ideal. The finite
+additive Haar measure $\mu_f$ gives $\widehat{\mathcal O}_K$ mass one and
+satisfies $N((d))\mu_f(d\widehat{\mathcal O}_K)=1$.
+
 The theorem `heckeCompletedCriterion_of_characterParameters` uses these
 inputs and the proved Euler factors with supplied global analytic data.
 For the pole-free case, `heckePoleFreeCompletedCriterion_of_mellinTails`

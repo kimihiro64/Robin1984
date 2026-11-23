@@ -158,4 +158,204 @@ theorem integral_heckeFiniteAdeleHaar_character
     apply Subtype.ext
     exact sub_eq_zero.mp ((mul_eq_zero.mp hZero).resolve_right hJ)
 
+/-- The principal multiple of the integral finite adeles. -/
+noncomputable def heckeScaledIntegralFiniteAdeles (d : K) : AddSubgroup (HeckeFiniteAdeles K) :=
+  heckeIntegralFiniteAdeles.map {
+    toFun := fun z => z * algebraMap K (HeckeFiniteAdeles K) d
+    map_zero' := zero_mul _
+    map_add' := fun _ _ => add_mul _ _ _ }
+
+/-- Division by the principal scalar tests membership in the scaled subgroup. -/
+theorem mem_heckeScaledIntegralFiniteAdeles_iff
+    (d : K) (hd : Not (d = 0)) (x : HeckeFiniteAdeles K) :
+    Membership.mem (heckeScaledIntegralFiniteAdeles d) x <->
+    forall p : HeightOneSpectrum (RingOfIntegers K), Membership.mem (p.adicCompletionIntegers K)
+      (x p / algebraMap K (p.adicCompletion K) d) := by
+  let A := HeckeFiniteAdeles K
+  let g := algebraMap K A
+  have hInv : Inv.inv d * d = 1 := by field_simp [hd]
+  constructor
+  case mp =>
+    intro hx
+    choose y hy using AddSubgroup.mem_map.mp hx
+    intro p
+    let e := algebraMap K (p.adicCompletion K)
+    have he : Not (e d = 0) := (map_ne_zero_iff e e.injective).mpr hd
+    have hEq : y * g d = x := hy.2
+    rw [<- hEq]
+    change Membership.mem (p.adicCompletionIntegers K) (y p * e d / e d)
+    rw [(div_eq_iff he).mpr (show y p * e d = y p * e d from rfl)]
+    exact hy.1 p
+  case mpr =>
+    intro h
+    apply AddSubgroup.mem_map.mpr
+    refine Exists.intro (x * g (Inv.inv d)) (And.intro ?_ ?_)
+    case refine_1 =>
+      intro p
+      let e := algebraMap K (p.adicCompletion K)
+      have he : Not (e d = 0) := (map_ne_zero_iff e e.injective).mpr hd
+      have hE : e (Inv.inv d) = 1 / e d := by
+        apply (eq_div_iff he).2
+        rw [<- map_mul, hInv, map_one]
+      change Membership.mem (p.adicCompletionIntegers K) (x p * e (Inv.inv d))
+      rw [hE, one_div, <- div_eq_mul_inv]
+      exact h p
+    case refine_2 =>
+      change (x * g (Inv.inv d)) * g d = x
+      rw [mul_assoc, <- map_mul, hInv, map_one, mul_one]
+
+private theorem heckeScaledIntegralFiniteAdeles_le (d : RingOfIntegers K) :
+    heckeScaledIntegralFiniteAdeles (algebraMap (RingOfIntegers K) K d) <=
+      heckeIntegralFiniteAdeles := by
+  intro x hx
+  choose y hy using AddSubgroup.mem_map.mp hx
+  have hEq : y * algebraMap K (HeckeFiniteAdeles K) (algebraMap (RingOfIntegers K) K d) = x :=
+    hy.2
+  rw [<- hEq]
+  intro p
+  change Membership.mem (p.adicCompletionIntegers K)
+    (y p * algebraMap (RingOfIntegers K) (p.adicCompletion K) d)
+  exact mul_mem (hy.1 p) (HeightOneSpectrum.coe_algebraMap_mem (RingOfIntegers K) K p d)
+
+/-- Scaling the compact open integral finite adeles by a principal
+integer divides their Haar mass by the norm of its principal ideal. -/
+theorem heckeFiniteAdeleHaar_scaledIntegral_mass
+    (d : RingOfIntegers K) (hd : Not (d = 0)) :
+    (Ideal.absNorm (Ideal.span ({d} : Set (RingOfIntegers K))) : ENNReal) *
+      heckeFiniteAdeleHaar (heckeScaledIntegralFiniteAdeles
+        (algebraMap (RingOfIntegers K) K d) : Set (HeckeFiniteAdeles K)) = 1 := by
+  let R := RingOfIntegers K
+  let A := HeckeFiniteAdeles K
+  let e := algebraMap R K
+  let g := algebraMap K A
+  let dd := e d
+  let H : AddSubgroup A := heckeIntegralFiniteAdeles
+  let D := heckeScaledIntegralFiniteAdeles dd
+  let I : Ideal R := Ideal.span {d}
+  let Q := HasQuotient.Quotient R I
+  let mu : Measure A := heckeFiniteAdeleHaar
+  let : Measure.IsAddLeftInvariant mu := heckeFiniteAdeleHaar_isAddLeftInvariant
+  have hD : Not (dd = 0) := (map_ne_zero_iff e (FaithfulSMul.algebraMap_injective R K)).mpr hd
+  have hI : Not (I = 0) := fun h => hd (Ideal.span_singleton_eq_bot.mp h)
+  let : I.toAddSubgroup.FiniteIndex := Ideal.finiteIndex hI
+  let : Finite Q := inferInstanceAs (Finite (HasQuotient.Quotient R I.toAddSubgroup))
+  let : Fintype Q := Fintype.ofFinite Q
+  have hSurj : Function.Surjective (Ideal.Quotient.mk I) := Ideal.Quotient.mk_surjective
+  let repr (c : Q) := Classical.choose (hSurj c)
+  have hRepr (c : Q) : Ideal.Quotient.mk I (repr c) = c :=
+    Classical.choose_spec (hSurj c)
+  let rho (c : Q) := g (e (repr c))
+  let C (c : Q) := Set.image (fun z : A => rho c + z) (D : Set A)
+  have hHtoD : D <= H := heckeScaledIntegralFiniteAdeles_le d
+  have hG (b : R) : Membership.mem H (g (e b)) :=
+    fun p => HeightOneSpectrum.coe_algebraMap_mem R K p b
+  have hCoeff (b : R) : Membership.mem D (g (e b)) <-> Membership.mem I b := by
+    rw [mem_heckeScaledIntegralFiniteAdeles_iff dd hD]
+    change (forall p : HeightOneSpectrum R, Membership.mem (p.adicCompletionIntegers K)
+      (algebraMap K (p.adicCompletion K) (e b) / algebraMap K (p.adicCompletion K) dd)) <-> _
+    rw [principal_mem_finiteAdele_modulus_iff (e b) dd hD, Ideal.mem_span_singleton]
+    apply exists_congr
+    intro y
+    rw [<- map_mul]
+    exact (FaithfulSMul.algebraMap_injective R K).eq_iff
+  have hDisjoint : Pairwise (fun c j : Q => Disjoint (C c) (C j)) := by
+    intro c j hne
+    apply Set.disjoint_left.mpr
+    intro a ha hb
+    choose x hx using ha
+    choose y hy using hb
+    have hEq : rho c + x = rho j + y := hx.2.trans hy.2.symm
+    have hDiff : rho c - rho j = y - x := by
+      calc
+        rho c - rho j = (rho c + x) - (rho j + x) := by abel
+        _ = y - x := by rw [hEq]; abel
+    have hIn : Membership.mem D (g (e (repr c - repr j))) := by
+      rw [map_sub e, map_sub g]
+      change Membership.mem D (rho c - rho j)
+      rw [hDiff]
+      exact D.sub_mem hy.1 hx.1
+    apply hne
+    have hRel := (Ideal.Quotient.eq (I := I)).mpr ((hCoeff _).mp hIn)
+    rw [hRepr, hRepr] at hRel
+    exact hRel
+  have hCover : Set.iUnion C = (H : Set A) := by
+    ext a
+    constructor
+    case mp =>
+      intro ha
+      choose c hc using Set.mem_iUnion.mp ha
+      choose x hx using hc
+      rw [<- hx.2]
+      exact H.add_mem (hG (repr c)) (hHtoD hx.1)
+    case mpr =>
+      intro ha
+      choose x hx using exists_finiteAdele_sub_principal_modulus a dd hD
+      have hIn : Membership.mem D (a - g x) :=
+        (mem_heckeScaledIntegralFiniteAdeles_iff dd hD _).mpr hx
+      have hxH : Membership.mem H (g x) := by
+        have hh := H.sub_mem ha (hHtoD hIn)
+        rw [sub_sub_cancel] at hh
+        exact hh
+      have hxR : Exists (fun b : R => x = e b) := by
+        have hLoc : forall p : HeightOneSpectrum R, Membership.mem (p.adicCompletionIntegers K)
+            (algebraMap K (p.adicCompletion K) x / algebraMap K (p.adicCompletion K) 1) := by
+          intro p
+          rw [map_one, div_one]
+          exact hxH p
+        simpa only [one_mul] using
+          (principal_mem_finiteAdele_modulus_iff x 1 one_ne_zero).mp hLoc
+      choose b hb using hxR
+      let i := Ideal.Quotient.mk I b
+      have hbI : Membership.mem I (b - repr i) :=
+        (Ideal.Quotient.eq (I := I)).mp (hRepr i).symm
+      have hShift := (hCoeff (b - repr i)).mpr hbI
+      rw [map_sub e, map_sub g, <- hb] at hShift
+      change Membership.mem D (g x - rho i) at hShift
+      have hz : Membership.mem D (a - rho i) := by
+        have hEq : a - rho i = (a - g x) + (g x - rho i) := by abel
+        rw [hEq]
+        exact D.add_mem hIn hShift
+      have hzEq : rho i + (a - rho i) = a :=
+        (add_comm _ _).trans (sub_add_cancel _ _)
+      exact Set.mem_iUnion.mpr (Exists.intro i (Exists.intro (a - rho i) (And.intro hz hzEq)))
+  have hDOpen : IsOpen (D : Set A) := by
+    have hEq : (D : Set A) = Set.preimage (fun x : A => x * g (Inv.inv dd)) (H : Set A) := by
+      ext x
+      constructor
+      case mp =>
+        intro hx
+        choose y hy using AddSubgroup.mem_map.mp hx
+        have hx' : y * g dd = x := hy.2
+        have hInv : dd * Inv.inv dd = 1 := by field_simp [hD]
+        change Membership.mem H (x * g (Inv.inv dd))
+        rw [<- hx', mul_assoc, <- map_mul, hInv, map_one, mul_one]
+        exact hy.1
+      case mpr =>
+        intro hx
+        change Membership.mem H (x * g (Inv.inv dd)) at hx
+        apply AddSubgroup.mem_map.mpr
+        refine Exists.intro (x * g (Inv.inv dd)) (And.intro hx ?_)
+        have hInv : Inv.inv dd * dd = 1 := by field_simp [hD]
+        change x * g (Inv.inv dd) * g dd = x
+        rw [mul_assoc, <- map_mul, hInv, map_one, mul_one]
+    rw [hEq]
+    exact isOpen_heckeIntegralFiniteAdeles.preimage (continuous_id.mul continuous_const)
+  have hMeas (i : Q) : MeasurableSet (C i) :=
+    ((Homeomorph.addLeft (rho i)).isOpenMap _ hDOpen).measurableSet
+  have hVol (i : Q) : mu (C i) = mu (D : Set A) := by
+    have hp := (measurePreserving_add_left mu (rho i)).measure_preimage (hMeas i).nullMeasurableSet
+    have hPre : Set.preimage (fun z : A => rho i + z) (C i) = (D : Set A) :=
+      Set.preimage_image_eq _ (fun _ _ h => add_left_cancel h)
+    rw [hPre] at hp
+    exact hp.symm
+  have hNorm : Ideal.absNorm I = Nat.card Q := rfl
+  change (Ideal.absNorm I : ENNReal) * mu (D : Set A) = 1
+  calc
+    _ = tsum (fun _ : Q => mu (D : Set A)) := by
+      rw [tsum_fintype, Finset.sum_const, Finset.card_univ, nsmul_eq_mul, hNorm,
+        Nat.card_eq_fintype_card]
+    _ = tsum (fun i : Q => mu (C i)) := tsum_congr (fun i => (hVol i).symm)
+    _ = mu (Set.iUnion C) := (measure_iUnion hDisjoint hMeas).symm
+    _ = 1 := by rw [hCover]; exact heckeFiniteAdeleHaar_integral
+
 end Robin1984.GRH

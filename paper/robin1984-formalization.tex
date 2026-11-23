@@ -1928,6 +1928,28 @@ The local exponents give the conductor ideal in
 shifts and their radial Gaussian Mellin evaluations on $\Re s>0$
 are verified in \path{Robin1984/GRH/HeckeArchimedean.lean}.
 The resulting Hecke triangular criterion uses those local data.
+
+\paragraph{The adelic Poisson formula for a finite coset.}
+Lean verifies that the diagonal is discrete and that
+$\mathbb A_K/K$ is compact. It constructs the continuous additive
+character $\psi$ that is trivial on the diagonal and proves that the
+finite character annihilator for $d\widehat{\mathcal O}_K$ is the
+trace-dual ideal $(d)^\vee$. With mass one on
+$\widehat{\mathcal O}_K$, the finite additive Haar measure satisfies
+$N((d))\mu_f(d\widehat{\mathcal O}_K)=1$.
+
+For every $a\in\mathbb A_{K,f}$, $0\ne d\in\mathcal O_K$, and Schwartz
+function $f$ on the weighted Minkowski space,
+\path{Robin1984/GRH/HeckeAdelePoisson.lean} proves
+\[
+  \sum_{\substack{x\in K\\ x_f\in a+d\widehat{\mathcal O}_K}} f(e_K(x))
+  =
+  \frac{1}{N((d))\sqrt{|D_K|}}
+  \sum_{\xi\in(d)^\vee} \psi_f(-a\xi)\widehat f(c_K(e_K(\xi))).
+\]
+Here $x_f$ is the finite component of the principal adele, $e_K$ weights
+the complex coordinates by $\sqrt{2}$, and $c_K$ conjugates those coordinates.
+
 For the pole-free case, Lean also constructs the entire continuation
 from a Mellin tail
 $A_i(s)=\int_X f_i(x)e^{s\log r(x)}\,dM(x)$ and the reflected tail of
