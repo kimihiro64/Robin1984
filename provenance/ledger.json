@@ -1443,6 +1443,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeAdeleHaar.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Additive Haar measure and Fourier integration over the compact open integral finite adeles.",
+      "formalization_note": "Normalizes finite additive Haar measure on the integral subgroup and evaluates its principal-frequency Fourier integral through the trace-dual ideal.",
+      "content_basis": "Reviewed local compactness, the unit mass of integral finite adeles, and translation invariance on the integral subgroup for the Fourier integral.",
+      "dependency_status": "Uses pinned Mathlib additive Haar theory and the verified trace duality for number-field adeles.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeAdeleLattice.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The additive strong approximation and lattice theorem for number-field adeles in Tate's thesis.",

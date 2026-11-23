@@ -2,7 +2,7 @@ import Mathlib.Analysis.Calculus.ParametricIntegral
 import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 import Mathlib.MeasureTheory.Integral.Gamma
 import Robin1984.GRH.DedekindTriangular
-import Robin1984.GRH.HeckeAdeleTraceDual
+import Robin1984.GRH.HeckeAdeleHaar
 import Robin1984.GRH.HeckeConductor
 
 /-!
