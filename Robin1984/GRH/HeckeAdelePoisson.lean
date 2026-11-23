@@ -1,4 +1,4 @@
-import Robin1984.GRH.HeckeAdeleTraceDual
+import Robin1984.GRH.HeckeAdeleHaar
 
 /-!
 ## Provenance
@@ -16,14 +16,15 @@ For a number field, restricting principal points to a single finite adele
 coset produces a translate of an ideal lattice in the archimedean space.
 Lattice Poisson summation gives the trace-dual sum. The phase is the
 canonical additive character of the finite adele at the negative
-principal frequency.
+principal frequency. The same sum is expressed as the archimedean Fourier
+transform times the finite Haar Fourier integral over the coset.
 -/
 
 set_option autoImplicit false
 
 namespace Robin1984.GRH
 
-open NumberField IsDedekindDomain
+open NumberField IsDedekindDomain MeasureTheory
 open scoped Classical FourierTransform
 
 variable {K : Type*} [Field K] [NumberField K]
@@ -317,5 +318,72 @@ theorem tsum_finiteAdelePrincipalCoset_eq_adelicFourier
   dsimp only
   rw [hPhase, inner_eEmb_conjMink_eq_trace, mul_neg, map_neg (Algebra.trace Rat K),
     Rat.cast_neg, neg_neg, mul_comm x0 w.val]
+
+variable [MeasurableSpace (HeckeFiniteAdeles K)] [BorelSpace (HeckeFiniteAdeles K)]
+
+/-- Poisson summation for a Schwartz function on the archimedean adeles
+and the indicator of one principal coset on the finite adeles. The
+archimedean Fourier transform has the trace pairing and the factor
+`1 / sqrt |discr K|` for this choice of finite Haar measure. -/
+theorem tsum_finiteAdelePrincipalCoset_eq_fourierIntegral
+    (a : HeckeFiniteAdeles K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (f : SchwartzMap (DedekindZeta.Theta.minkowskiSpace K) Complex) :
+    let D := heckeScaledIntegralFiniteAdeles (algebraMap (RingOfIntegers K) K d)
+    let C := Set.image (fun z : HeckeFiniteAdeles K => a + z) (D : Set (HeckeFiniteAdeles K))
+    tsum (fun x : Subtype (InFiniteAdelePrincipalCoset a (algebraMap (RingOfIntegers K) K d)) =>
+      f (DedekindZeta.Theta.eEmb K x.val)) =
+      tsum (fun t : K =>
+        let y := DedekindZeta.Theta.conjMink K (DedekindZeta.Theta.eEmb K t)
+        Inv.inv (Real.sqrt (abs (NumberField.discr K : Real)) : Complex) *
+          FourierTransform.fourier (f : DedekindZeta.Theta.minkowskiSpace K -> Complex) y *
+          integral (heckeFiniteAdeleHaar.restrict C) (fun z => (heckeFiniteAdelePrincipalChar (-t) z : Complex))) := by
+  let R := RingOfIntegers K
+  let I := Ideal.span ({d} : Set R)
+  let Q := (DedekindZeta.Theta.dualIdeal K I : Submodule R K)
+  let D := heckeScaledIntegralFiniteAdeles (algebraMap R K d)
+  let C := Set.image (fun z : HeckeFiniteAdeles K => a + z) (D : Set (HeckeFiniteAdeles K))
+  let r : Complex := Real.sqrt (abs (NumberField.discr K : Real))
+  let n : Complex := Ideal.absNorm I
+  let F (t : K) := FourierTransform.fourier (f : DedekindZeta.Theta.minkowskiSpace K -> Complex)
+    (DedekindZeta.Theta.conjMink K (DedekindZeta.Theta.eEmb K t))
+  let phase (t : K) : Complex := heckeFiniteAdelePrincipalChar (-t) a
+  let G (t : K) : Complex := phase t * (Inv.inv (DedekindZeta.Theta.covolume K I : Complex) * F t)
+  have hCov : Inv.inv (DedekindZeta.Theta.covolume K I : Complex) = Inv.inv n * Inv.inv r := by
+    change Inv.inv (Complex.ofReal ((Ideal.absNorm I : Real) *
+      Real.sqrt (abs (NumberField.discr K : Real)))) = _
+    rw [Complex.ofReal_mul, Complex.ofReal_natCast]
+    change Inv.inv (n * r) = Inv.inv n * Inv.inv r
+    by_cases hn : n = 0
+    case pos => simp only [hn, zero_mul, inv_zero]
+    case neg =>
+      by_cases hr : r = 0
+      case pos => simp only [hr, mul_zero, inv_zero]
+      case neg => field_simp [hn, hr]
+  have hSum := tsum_finiteAdelePrincipalCoset_eq_adelicFourier a d hd f
+  change _ = tsum (fun t : Subtype (Q : Set K) => G t.val) at hSum
+  dsimp only
+  rw [hSum]
+  refine (tsum_subtype (Q : Set K) G).trans ?_
+  apply tsum_congr
+  intro t
+  change (Q : Set K).indicator G t =
+    Inv.inv r * F t *
+      integral (heckeFiniteAdeleHaar.restrict C) (fun z => (heckeFiniteAdelePrincipalChar (-t) z : Complex))
+  rw [integral_heckeFiniteAdeleHaar_principalCoset a d hd (-t)]
+  have hNeg : Membership.mem Q (-t) <-> Membership.mem Q t := by
+    constructor
+    case mp =>
+      intro ht
+      simpa only [neg_neg] using Q.neg_mem ht
+    case mpr => exact Q.neg_mem
+  by_cases ht : Membership.mem Q t
+  case pos =>
+    rw [Set.indicator_of_mem ht, if_pos (hNeg.mpr ht)]
+    change phase t * (Inv.inv (DedekindZeta.Theta.covolume K I : Complex) * F t) =
+      Inv.inv r * F t * (phase t * Inv.inv n)
+    rw [hCov]
+    ring
+  case neg =>
+    rw [Set.indicator_of_notMem ht, if_neg (fun h => ht (hNeg.mp h)), mul_zero]
 
 end Robin1984.GRH

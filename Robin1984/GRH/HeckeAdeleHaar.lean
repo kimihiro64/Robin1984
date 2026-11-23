@@ -60,6 +60,24 @@ private def heckeIntegralFinitePositiveCompact : PositiveCompacts (HeckeFiniteAd
 theorem locallyCompactSpace_heckeFiniteAdeles : LocallyCompactSpace (HeckeFiniteAdeles K) :=
   (heckeIntegralFinitePositiveCompact (K := K)).locallyCompactSpace_of_addGroup
 
+/-- The canonical finite additive character evaluated at a principal frequency. -/
+noncomputable def heckeFiniteAdelePrincipalChar (t : K) : AddChar (HeckeFiniteAdeles K) Circle where
+  toFun a := heckeAdeleAddChar (Prod.mk (0 : InfiniteAdeleRing K) (a * algebraMap K (HeckeFiniteAdeles K) t))
+  map_zero_eq_one' := by
+    change heckeAdeleAddChar (Prod.mk (0 : InfiniteAdeleRing K) (0 * algebraMap K (HeckeFiniteAdeles K) t)) = 1
+    rw [zero_mul]
+    exact AddChar.map_zero_eq_one _
+  map_add_eq_mul' x y := by
+    let r (a : HeckeFiniteAdeles K) : AdeleRing (RingOfIntegers K) K :=
+      Prod.mk 0 (a * algebraMap K (HeckeFiniteAdeles K) t)
+    have hr : r (x + y) = r x + r y := by
+      change Prod.mk (0 : InfiniteAdeleRing K) ((x + y) * algebraMap K (HeckeFiniteAdeles K) t) =
+        Prod.mk ((0 : InfiniteAdeleRing K) + 0)
+          (x * algebraMap K (HeckeFiniteAdeles K) t + y * algebraMap K (HeckeFiniteAdeles K) t)
+      rw [zero_add, add_mul]
+    change heckeAdeleAddChar (r (x + y)) = heckeAdeleAddChar (r x) * heckeAdeleAddChar (r y)
+    rw [hr, AddChar.map_add_eq_mul]
+
 variable [MeasurableSpace (HeckeFiniteAdeles K)] [BorelSpace (HeckeFiniteAdeles K)]
 
 /-- Additive Haar measure giving the product of the finite integer rings
@@ -79,6 +97,59 @@ theorem heckeFiniteAdeleHaar_integral :
     (heckeIntegralFinitePositiveCompact (K := K) : Set (HeckeFiniteAdeles K)) = 1
   exact Measure.addHaarMeasure_self
 
+private theorem integral_addChar_subgroup
+    (H : AddSubgroup (HeckeFiniteAdeles K)) (hH : MeasurableSet (H : Set (HeckeFiniteAdeles K)))
+    (chi : AddChar (HeckeFiniteAdeles K) Circle) :
+    integral (heckeFiniteAdeleHaar.restrict (H : Set (HeckeFiniteAdeles K))) (fun z => (chi z : Complex)) =
+      if forall z, Membership.mem H z -> chi z = 1 then
+        ((heckeFiniteAdeleHaar (H : Set (HeckeFiniteAdeles K))).toReal : Complex)
+      else 0 := by
+  let mu : Measure (HeckeFiniteAdeles K) := heckeFiniteAdeleHaar
+  let psi (a : HeckeFiniteAdeles K) : Complex := chi a
+  let J := integral (mu.restrict (H : Set (HeckeFiniteAdeles K))) psi
+  change J = if forall z, Membership.mem H z -> chi z = 1 then
+    ((mu (H : Set (HeckeFiniteAdeles K))).toReal : Complex) else 0
+  by_cases ht : forall z, Membership.mem H z -> chi z = 1
+  case pos =>
+    rw [if_pos ht]
+    have hConst : Set.EqOn psi (fun _ => (1 : Complex)) (H : Set (HeckeFiniteAdeles K)) := by
+      intro z hz
+      exact congrArg (fun a : Circle => (a : Complex)) (ht z hz)
+    change integral (mu.restrict (H : Set (HeckeFiniteAdeles K))) psi = _
+    rw [setIntegral_congr_fun hH hConst, integral_const]
+    simp only [Measure.real, Measure.restrict_apply_univ, Complex.real_smul, mul_one]
+  case neg =>
+    rw [if_neg ht]
+    by_contra hJ
+    apply ht
+    intro a ha
+    let : Measure.IsAddLeftInvariant mu := heckeFiniteAdeleHaar_isAddLeftInvariant
+    have hShift : Set.image (fun b : HeckeFiniteAdeles K => b + a) (H : Set (HeckeFiniteAdeles K)) = (H : Set (HeckeFiniteAdeles K)) := by
+      ext y
+      constructor
+      case mp =>
+        intro hy
+        choose b hb using hy
+        rw [<- hb.2]
+        exact H.add_mem hb.1 ha
+      case mpr =>
+        intro hy
+        exact Exists.intro (y - a) (And.intro (H.sub_mem hy ha) (sub_add_cancel _ _))
+    have hMP : MeasurePreserving (fun b : HeckeFiniteAdeles K => b + a) mu mu :=
+      measurePreserving_add_right mu a
+    have hI := hMP.setIntegral_image_emb (Homeomorph.addRight a).measurableEmbedding
+      psi (H : Set (HeckeFiniteAdeles K))
+    have hTranslate : (fun b : HeckeFiniteAdeles K => psi (b + a)) = fun b => psi a * psi b := by
+      funext b
+      rw [add_comm b a]
+      simp only [psi, AddChar.map_add_eq_mul, Circle.coe_mul]
+    rw [hShift, hTranslate, integral_const_mul] at hI
+    change J = psi a * J at hI
+    have hZero : (psi a - 1) * J = 0 := by
+      rw [sub_mul, one_mul, <- hI, sub_self]
+    apply Subtype.ext
+    exact sub_eq_zero.mp ((mul_eq_zero.mp hZero).resolve_right hJ)
+
 /-- The finite Fourier integral of the integral subgroup, at a frequency
 scaled by a principal modulus, is the indicator of the trace-dual ideal. -/
 theorem integral_heckeFiniteAdeleHaar_character
@@ -95,68 +166,22 @@ theorem integral_heckeFiniteAdeleHaar_character
   let A := HeckeFiniteAdeles K
   let H : AddSubgroup A := heckeIntegralFiniteAdeles
   let mu : Measure A := heckeFiniteAdeleHaar
-  let e := algebraMap K A (algebraMap (RingOfIntegers K) K d * t)
-  let psi (a : A) := ((heckeAdeleAddChar (Prod.mk (0 : InfiniteAdeleRing K) (a * e) :
-    HeckeAdeles K)) : Complex)
-  let J := integral (mu.restrict (H : Set A)) psi
+  let chi := heckeFiniteAdelePrincipalChar (algebraMap (RingOfIntegers K) K d * t)
   let Q := (DedekindZeta.Theta.dualIdeal K (Ideal.span ({d} : Set (RingOfIntegers K))) :
     Submodule (RingOfIntegers K) K)
-  change J = if Membership.mem Q t then 1 else 0
-  have hH : MeasurableSet (H : Set A) := isOpen_heckeIntegralFiniteAdeles.measurableSet
-  have hAdd (x y : A) : psi (x + y) = psi x * psi y := by
-    let r (a : A) : HeckeAdeles K := Prod.mk 0 (a * e)
-    have hr : r (x + y) = r x + r y := by
-      change Prod.mk (0 : InfiniteAdeleRing K) ((x + y) * e) =
-        Prod.mk ((0 : InfiniteAdeleRing K) + 0) (x * e + y * e)
-      rw [zero_add, add_mul]
-    change ((heckeAdeleAddChar (r (x + y))) : Complex) =
-      ((heckeAdeleAddChar (r x)) : Complex) * ((heckeAdeleAddChar (r y)) : Complex)
-    rw [hr, AddChar.map_add_eq_mul, Circle.coe_mul]
+  change integral (mu.restrict (H : Set A)) (fun z => (chi z : Complex)) =
+    if Membership.mem Q t then 1 else 0
+  have hAnn : (forall z, Membership.mem H z -> chi z = 1) <-> Membership.mem Q t :=
+    heckeAdeleAddChar_finitePrincipalIdeal_annihilator_iff d hd t
+  rw [integral_addChar_subgroup H isOpen_heckeIntegralFiniteAdeles.measurableSet chi]
   by_cases ht : Membership.mem Q t
   case pos =>
-    rw [if_pos ht]
-    have hGood := (heckeAdeleAddChar_finitePrincipalIdeal_annihilator_iff d hd t).mpr ht
-    have hConst : Set.EqOn psi (fun _ => (1 : Complex)) (H : Set A) := by
-      intro a ha
-      have h := hGood a ha
-      exact congrArg (fun z : Circle => (z : Complex)) h
-    change integral (mu.restrict (H : Set A)) psi = 1
-    rw [setIntegral_congr_fun hH hConst, integral_const]
-    simp only [Measure.real, Measure.restrict_apply_univ]
-    have hMu : mu (H : Set A) = 1 := heckeFiniteAdeleHaar_integral
-    rw [hMu, ENNReal.toReal_one, one_smul]
+    rw [if_pos ht, if_pos (hAnn.mpr ht)]
+    change ((mu (H : Set A)).toReal : Complex) = 1
+    rw [show mu (H : Set A) = 1 from heckeFiniteAdeleHaar_integral, ENNReal.toReal_one,
+      Complex.ofReal_one]
   case neg =>
-    rw [if_neg ht]
-    by_contra hJ
-    apply ht
-    apply (heckeAdeleAddChar_finitePrincipalIdeal_annihilator_iff d hd t).mp
-    intro a ha
-    have haH : Membership.mem H a := ha
-    let : Measure.IsAddLeftInvariant mu := heckeFiniteAdeleHaar_isAddLeftInvariant
-    have hShift : Set.image (fun b : A => b + a) (H : Set A) = (H : Set A) := by
-      ext y
-      constructor
-      case mp =>
-        intro hy
-        choose b hb using hy
-        rw [<- hb.2]
-        exact H.add_mem hb.1 haH
-      case mpr =>
-        intro hy
-        exact Exists.intro (y - a) (And.intro (H.sub_mem hy haH) (sub_add_cancel _ _))
-    have hMP : MeasurePreserving (fun b : A => b + a) mu mu :=
-      measurePreserving_add_right mu a
-    have hI := hMP.setIntegral_image_emb (Homeomorph.addRight a).measurableEmbedding
-      psi (H : Set A)
-    have hTranslate : (fun b : A => psi (b + a)) = fun b => psi a * psi b := by
-      funext b
-      rw [add_comm b a, hAdd]
-    rw [hShift, hTranslate, integral_const_mul] at hI
-    change J = psi a * J at hI
-    have hZero : (psi a - 1) * J = 0 := by
-      rw [sub_mul, one_mul, <- hI, sub_self]
-    apply Subtype.ext
-    exact sub_eq_zero.mp ((mul_eq_zero.mp hZero).resolve_right hJ)
+    rw [if_neg ht, if_neg (fun h => ht (hAnn.mp h))]
 
 /-- The principal multiple of the integral finite adeles. -/
 noncomputable def heckeScaledIntegralFiniteAdeles (d : K) : AddSubgroup (HeckeFiniteAdeles K) :=
@@ -164,6 +189,37 @@ noncomputable def heckeScaledIntegralFiniteAdeles (d : K) : AddSubgroup (HeckeFi
     toFun := fun z => z * algebraMap K (HeckeFiniteAdeles K) d
     map_zero' := zero_mul _
     map_add' := fun _ _ => add_mul _ _ _ }
+
+omit [MeasurableSpace (HeckeFiniteAdeles K)] [BorelSpace (HeckeFiniteAdeles K)] in
+/-- A nonzero principal multiple of the integral finite adeles is open. -/
+theorem isOpen_heckeScaledIntegralFiniteAdeles (d : K) (hd : Not (d = 0)) :
+    IsOpen (heckeScaledIntegralFiniteAdeles d : Set (HeckeFiniteAdeles K)) := by
+  let H : AddSubgroup (HeckeFiniteAdeles K) := heckeIntegralFiniteAdeles
+  let D := heckeScaledIntegralFiniteAdeles d
+  let g := algebraMap K (HeckeFiniteAdeles K)
+  have hEq : (D : Set (HeckeFiniteAdeles K)) =
+      Set.preimage (fun x : HeckeFiniteAdeles K => x * g (Inv.inv d)) (H : Set (HeckeFiniteAdeles K)) := by
+    ext x
+    constructor
+    case mp =>
+      intro hx
+      choose y hy using AddSubgroup.mem_map.mp hx
+      have hx' : y * g d = x := hy.2
+      have hInv : d * Inv.inv d = 1 := by field_simp [hd]
+      change Membership.mem H (x * g (Inv.inv d))
+      rw [<- hx', mul_assoc, <- map_mul, hInv, map_one, mul_one]
+      exact hy.1
+    case mpr =>
+      intro hx
+      change Membership.mem H (x * g (Inv.inv d)) at hx
+      apply AddSubgroup.mem_map.mpr
+      refine Exists.intro (x * g (Inv.inv d)) (And.intro hx ?_)
+      have hInv : Inv.inv d * d = 1 := by field_simp [hd]
+      change x * g (Inv.inv d) * g d = x
+      rw [mul_assoc, <- map_mul, hInv, map_one, mul_one]
+  change IsOpen (D : Set (HeckeFiniteAdeles K))
+  rw [hEq]
+  exact isOpen_heckeIntegralFiniteAdeles.preimage (continuous_id.mul continuous_const)
 
 /-- Division by the principal scalar tests membership in the scaled subgroup. -/
 theorem mem_heckeScaledIntegralFiniteAdeles_iff
@@ -318,28 +374,7 @@ theorem heckeFiniteAdeleHaar_scaledIntegral_mass
       have hzEq : rho i + (a - rho i) = a :=
         (add_comm _ _).trans (sub_add_cancel _ _)
       exact Set.mem_iUnion.mpr (Exists.intro i (Exists.intro (a - rho i) (And.intro hz hzEq)))
-  have hDOpen : IsOpen (D : Set A) := by
-    have hEq : (D : Set A) = Set.preimage (fun x : A => x * g (Inv.inv dd)) (H : Set A) := by
-      ext x
-      constructor
-      case mp =>
-        intro hx
-        choose y hy using AddSubgroup.mem_map.mp hx
-        have hx' : y * g dd = x := hy.2
-        have hInv : dd * Inv.inv dd = 1 := by field_simp [hD]
-        change Membership.mem H (x * g (Inv.inv dd))
-        rw [<- hx', mul_assoc, <- map_mul, hInv, map_one, mul_one]
-        exact hy.1
-      case mpr =>
-        intro hx
-        change Membership.mem H (x * g (Inv.inv dd)) at hx
-        apply AddSubgroup.mem_map.mpr
-        refine Exists.intro (x * g (Inv.inv dd)) (And.intro hx ?_)
-        have hInv : Inv.inv dd * dd = 1 := by field_simp [hD]
-        change x * g (Inv.inv dd) * g dd = x
-        rw [mul_assoc, <- map_mul, hInv, map_one, mul_one]
-    rw [hEq]
-    exact isOpen_heckeIntegralFiniteAdeles.preimage (continuous_id.mul continuous_const)
+  have hDOpen : IsOpen (D : Set A) := isOpen_heckeScaledIntegralFiniteAdeles dd hD
   have hMeas (i : Q) : MeasurableSet (C i) :=
     ((Homeomorph.addLeft (rho i)).isOpenMap _ hDOpen).measurableSet
   have hVol (i : Q) : mu (C i) = mu (D : Set A) := by
@@ -357,5 +392,94 @@ theorem heckeFiniteAdeleHaar_scaledIntegral_mass
     _ = tsum (fun i : Q => mu (C i)) := tsum_congr (fun i => (hVol i).symm)
     _ = mu (Set.iUnion C) := (measure_iUnion hDisjoint hMeas).symm
     _ = 1 := by rw [hCover]; exact heckeFiniteAdeleHaar_integral
+
+omit [MeasurableSpace (HeckeFiniteAdeles K)] [BorelSpace (HeckeFiniteAdeles K)] in
+private theorem principalFiniteChar_scaledIntegral_iff
+    (d : RingOfIntegers K) (hd : Not (d = 0)) (t : K) :
+    let D := heckeScaledIntegralFiniteAdeles (algebraMap (RingOfIntegers K) K d)
+    (forall z, Membership.mem D z -> heckeFiniteAdelePrincipalChar t z = 1) <->
+      Membership.mem
+        (DedekindZeta.Theta.dualIdeal K (Ideal.span ({d} : Set (RingOfIntegers K))) :
+          Submodule (RingOfIntegers K) K) t := by
+  let e := algebraMap (RingOfIntegers K) K
+  let g := algebraMap K (HeckeFiniteAdeles K)
+  let D := heckeScaledIntegralFiniteAdeles (e d)
+  let H : AddSubgroup (HeckeFiniteAdeles K) := heckeIntegralFiniteAdeles
+  have hComp (z : HeckeFiniteAdeles K) :
+      heckeFiniteAdelePrincipalChar t (z * g (e d)) =
+        heckeAdeleAddChar (Prod.mk (0 : InfiniteAdeleRing K) (z * g (e d * t))) := by
+    change heckeAdeleAddChar (Prod.mk (0 : InfiniteAdeleRing K) ((z * g (e d)) * g t)) = _
+    rw [mul_assoc, <- map_mul]
+  change (forall z, Membership.mem D z -> heckeFiniteAdelePrincipalChar t z = 1) <-> _
+  rw [<- heckeAdeleAddChar_finitePrincipalIdeal_annihilator_iff d hd t]
+  constructor
+  case mp =>
+    intro h z hz
+    rw [<- hComp]
+    exact h (z * g (e d)) (AddSubgroup.mem_map.mpr (Exists.intro z (And.intro hz rfl)))
+  case mpr =>
+    intro h z hz
+    choose b hb using AddSubgroup.mem_map.mp hz
+    have heq : b * g (e d) = z := hb.2
+    rw [<- heq, hComp]
+    exact h b hb.1
+
+private theorem scaledIntegral_real_mass
+    (d : RingOfIntegers K) (hd : Not (d = 0)) :
+    (heckeFiniteAdeleHaar (heckeScaledIntegralFiniteAdeles
+        (algebraMap (RingOfIntegers K) K d) : Set (HeckeFiniteAdeles K))).toReal =
+      Inv.inv (Ideal.absNorm (Ideal.span ({d} : Set (RingOfIntegers K))) : Real) := by
+  let I := Ideal.span ({d} : Set (RingOfIntegers K))
+  let m := heckeFiniteAdeleHaar (heckeScaledIntegralFiniteAdeles
+    (algebraMap (RingOfIntegers K) K d) : Set (HeckeFiniteAdeles K))
+  have h := congrArg ENNReal.toReal (heckeFiniteAdeleHaar_scaledIntegral_mass d hd)
+  change ((Ideal.absNorm I : ENNReal) * m).toReal = (1 : ENNReal).toReal at h
+  rw [ENNReal.toReal_mul, ENNReal.toReal_natCast, ENNReal.toReal_one] at h
+  have hn : Not ((Ideal.absNorm I : Real) = 0) := by
+    intro h0
+    rw [h0, zero_mul] at h
+    exact zero_ne_one h
+  change m.toReal = _
+  rw [<- one_div]
+  exact (eq_div_iff hn).mpr ((mul_comm _ _).trans h)
+
+/-- The finite Fourier integral over a principal coset equals its phase times
+the inverse ideal norm on the trace-dual ideal and vanishes off that ideal. -/
+theorem integral_heckeFiniteAdeleHaar_principalCoset
+    (a : HeckeFiniteAdeles K) (d : RingOfIntegers K) (hd : Not (d = 0)) (t : K) :
+    let I := Ideal.span ({d} : Set (RingOfIntegers K))
+    let D := heckeScaledIntegralFiniteAdeles (algebraMap (RingOfIntegers K) K d)
+    integral (heckeFiniteAdeleHaar.restrict (Set.image (fun z : HeckeFiniteAdeles K => a + z) (D : Set (HeckeFiniteAdeles K))))
+      (fun z => (heckeFiniteAdelePrincipalChar t z : Complex)) =
+      if Membership.mem (DedekindZeta.Theta.dualIdeal K I : Submodule (RingOfIntegers K) K) t
+      then (heckeFiniteAdelePrincipalChar t a : Complex) * Inv.inv (Ideal.absNorm I : Complex) else 0 := by
+  let R := RingOfIntegers K
+  let e := algebraMap R K
+  let D := heckeScaledIntegralFiniteAdeles (e d)
+  let mu : Measure (HeckeFiniteAdeles K) := heckeFiniteAdeleHaar
+  let psi (z : HeckeFiniteAdeles K) : Complex := heckeFiniteAdelePrincipalChar t z
+  let : Measure.IsAddLeftInvariant mu := heckeFiniteAdeleHaar_isAddLeftInvariant
+  have hMP : MeasurePreserving (fun z : HeckeFiniteAdeles K => a + z) mu mu :=
+    measurePreserving_add_left mu a
+  have hI := hMP.setIntegral_image_emb (Homeomorph.addLeft a).measurableEmbedding psi (D : Set (HeckeFiniteAdeles K))
+  have hTranslate : (fun z : HeckeFiniteAdeles K => psi (a + z)) = fun z => psi a * psi z := by
+    funext z
+    simp only [psi, AddChar.map_add_eq_mul, Circle.coe_mul]
+  rw [hTranslate, integral_const_mul] at hI
+  have hd' : Not (e d = 0) := (map_ne_zero_iff e (FaithfulSMul.algebraMap_injective R K)).mpr hd
+  dsimp only
+  rw [show integral (mu.restrict (Set.image (fun z : HeckeFiniteAdeles K => a + z) (D : Set (HeckeFiniteAdeles K)))) psi =
+      psi a * integral (mu.restrict (D : Set (HeckeFiniteAdeles K))) psi from hI]
+  let I := Ideal.span ({d} : Set R)
+  have hAnn : (forall z, Membership.mem D z -> heckeFiniteAdelePrincipalChar t z = 1) <->
+      Membership.mem (DedekindZeta.Theta.dualIdeal K I : Submodule R K) t :=
+    principalFiniteChar_scaledIntegral_iff d hd t
+  rw [integral_addChar_subgroup D (isOpen_heckeScaledIntegralFiniteAdeles (e d) hd').measurableSet (heckeFiniteAdelePrincipalChar t)]
+  by_cases hT : Membership.mem (DedekindZeta.Theta.dualIdeal K I : Submodule R K) t
+  case pos =>
+    rw [if_pos hT, if_pos (hAnn.mpr hT), scaledIntegral_real_mass d hd,
+      Complex.ofReal_inv, Complex.ofReal_natCast]
+  case neg =>
+    rw [if_neg hT, if_neg (fun h => hT (hAnn.mp h)), mul_zero]
 
 end Robin1984.GRH
