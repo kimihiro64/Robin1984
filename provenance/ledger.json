@@ -1434,6 +1434,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeEulerProduct.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The unitary Hecke character on the idele class group and the Euler product of its finite local factors.",
+      "formalization_note": "Constructs the finite factors from pinned Mathlib adeles, proves absolute convergence and the paired logarithmic identity, and applies the triangular criterion when given the analytic completions.",
+      "content_basis": "Reviewed the local ideles, normalized valuations and uniformizer invariance, the local power series, global prime-power summability, and the Hecke criterion.",
+      "dependency_status": "Uses pinned Mathlib adeles and valuations, the established Dedekind prime-power convergence, and the Robin1984 standard completion criterion.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/IdealDivisorEuler.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The finite Euler factors of the divisor-sum function in a Dedekind domain.",

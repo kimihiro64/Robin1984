@@ -301,12 +301,30 @@ exponential Euler product. The log series divides each logarithmic
 derivative coefficient at an ideal power by the logarithm of that power's
 norm.
 
-The release Challenge gives the earlier analytic-data statement. For
-the full standard automorphic family, Lean still needs the actual
-$L$-functions, their Euler data, completed order bounds, and functional
-equations. The published proof archive contains Hecke L-functions and
-their functional equations. Robin1984 has its own criterion and currently
-has no dependency on the archive.
+## The rank-one Hecke Euler factors
+
+`HeckeEulerProduct.lean` defines a unitary Hecke character as a continuous
+circle-valued character of the ideles that is trivial on the principal
+ideles. For an unramified prime ideal, the local parameter
+$\alpha_\chi(\mathfrak p)$ is the character value at a uniformizer in that
+local component. At a ramified prime ideal, the parameter is zero. Lean
+proves independence of the uniformizer, the Euler product for
+$\operatorname{Re}s>1$, and the paired logarithmic coefficient
+$$
+c_\chi(\mathfrak p,j)
+=2\operatorname{Re}\bigl(\alpha_\chi(\mathfrak p)^j\bigr)
+  \log N\mathfrak p,\qquad j\ge1.
+$$
+The triangular sum uses the prime-ideal powers $(N\mathfrak p)^j<x$.
+The theorem `heckeCompletedCriterion` applies the completed-family
+criterion to these actual Euler factors given the analytic continuations
+and the completed functional equations and order bounds.
+
+The release Challenge gives the earlier analytic-data statement. Its
+specialization to every standard automorphic L-function requires formal
+proofs of the analytic data for the actual representations in every
+rank and number field. The published proof archive contains independent
+Hecke L-functions and their functional equations.
 [Hecke L-functions](https://github.com/leanprover-community/riemann-hypothesis/blob/40e56bab026552e089d7afcfeff08d2defb9c005/src/GroundTheory/GlobalFields/TateThesis/HeckeLFunction.lean)
 [Hecke functional equation](https://github.com/leanprover-community/riemann-hypothesis/blob/40e56bab026552e089d7afcfeff08d2defb9c005/src/GroundTheory/GlobalFields/TateThesis/HeckeTheoremFE.lean)
 For the trivial Hecke character of a field $K$, use $Z=\zeta_K$ and
