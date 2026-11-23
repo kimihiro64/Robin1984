@@ -663,4 +663,368 @@ theorem exists_entireOrderOne_of_standardPairedCompletion_noPole
   rw [mul_left_comm, standardCompletionFactor_mul_reciprocal hConductor 0 mu nu hMu hNu hs,
     pow_zero, mul_one]
 
+
+/-! ## Growth of the completion from a strip bound -/
+
+section
+
+open Complex MeasureTheory
+
+/-- On the half-plane with real part at least one, one more than a
+factorial bounds the norm of Gamma. -/
+private theorem norm_gamma_le_one_add_factorial_ceil {z : Complex} (hz : 1 <= z.re) :
+    norm (Complex.Gamma z) <= 1 + (Nat.factorial (Nat.ceil z.re) : Real) := by
+  let n := Nat.ceil z.re
+  let M : Measure Real := volume.restrict (Ioi (0 : Real))
+  let f (t : Real) : Complex := (Real.exp (-t) : Complex) * (t : Complex) ^ (z - 1)
+  let g (t : Real) := Real.exp (-t)
+  let h (t : Real) := Real.exp (-t) * t ^ n
+  have hzpos : 0 < z.re := zero_lt_one.trans_le hz
+  have hf : Integrable f M := Complex.GammaIntegral_convergent hzpos
+  have hg : Integrable g M := by
+    simpa only [IntegrableOn, M, g, sub_self, Real.rpow_zero, mul_one] using
+      (Real.GammaIntegral_convergent (s := 1) zero_lt_one)
+  have hArg : 0 < (n : Real) + 1 := by positivity
+  have hh : Integrable h M := by
+    simpa only [IntegrableOn, M, h, add_sub_cancel_right, Real.rpow_natCast] using
+      (Real.GammaIntegral_convergent hArg)
+  have hComparison : Filter.Eventually (fun t : Real => norm (f t) <= g t + h t) (ae M) := by
+    apply (ae_restrict_mem measurableSet_Ioi).mono
+    intro t ht
+    have ht0 : 0 < t := ht
+    have hPow : t ^ (z.re - 1) <= 1 + t ^ n := by
+      by_cases hSmall : t <= 1
+      case pos =>
+        have hLe := Real.rpow_le_one ht0.le hSmall (sub_nonneg.mpr hz)
+        exact hLe.trans (le_add_of_nonneg_right (pow_nonneg ht0.le _))
+      case neg =>
+        have hExpLe : z.re - 1 <= (n : Real) :=
+          (sub_le_self _ zero_le_one).trans (Nat.le_ceil z.re)
+        have hLe := Real.rpow_le_rpow_of_exponent_le (le_of_lt (lt_of_not_ge hSmall)) hExpLe
+        rw [Real.rpow_natCast] at hLe
+        exact hLe.trans (le_add_of_nonneg_left zero_le_one)
+    change norm ((Real.exp (-t) : Complex) * (t : Complex) ^ (z - 1)) <= _
+    rw [norm_mul, Complex.norm_of_nonneg (Real.exp_pos _).le,
+      Complex.norm_cpow_eq_rpow_re_of_pos ht0, Complex.sub_re, Complex.one_re]
+    have a := mul_le_mul_of_nonneg_left hPow (Real.exp_pos (-t)).le
+    simpa only [mul_add, mul_one, g, h] using a
+  have hOne : integral M g = 1 := by
+    simpa [M, g] using (Real.Gamma_eq_integral (s := 1) zero_lt_one).symm
+  have hFact : integral M h = (Nat.factorial n : Real) := by
+    simpa [M, h, Real.rpow_natCast, Real.Gamma_nat_eq_factorial] using (Real.Gamma_eq_integral hArg).symm
+  rw [Complex.Gamma_eq_integral hzpos]
+  change norm (integral M f) <= _
+  calc
+    _ <= integral M (fun t => norm (f t)) := norm_integral_le_integral_norm _
+    _ <= integral M (fun t => g t + h t) := integral_mono_ae hf.norm (hg.add hh) hComparison
+    _ = 1 + (Nat.factorial n : Real) := by
+      rw [integral_add hg hh, hOne, hFact]
+
+
+/-- Gamma has an order-at-most-one norm bound on the half-plane with real part at least one. -/
+private theorem norm_gamma_le_order_one_on_right {z : Complex} (hz : 1 <= z.re)
+    {eps : Real} (heps : 0 < eps) :
+    norm (Complex.Gamma z) <=
+      Real.exp ((Real.log 2 + Inv.inv eps) * (1 + norm z) ^ (1 + eps)) := by
+  let n := Nat.ceil z.re
+  let r := 1 + norm z
+  have hr : 1 <= r := le_add_of_nonneg_right (norm_nonneg z)
+  have hrpos : 0 < r := zero_lt_one.trans_le hr
+  have hn : (n : Real) <= r := by
+    have hceil := Nat.ceil_lt_add_one (zero_le_one.trans hz)
+    change (n : Real) < z.re + 1 at hceil
+    have hnorm := Complex.re_le_norm z
+    dsimp [r]
+    linarith only [hceil, hnorm]
+  have hFact : (Nat.factorial n : Real) <= Real.exp (r * Real.log r) := by
+    calc
+      _ <= (n : Real) ^ n := by exact_mod_cast Nat.factorial_le_pow n
+      _ <= r ^ n := by gcongr
+      _ = r ^ (n : Real) := (Real.rpow_natCast r n).symm
+      _ <= r ^ r := Real.rpow_le_rpow_of_exponent_le hr hn
+      _ = _ := by rw [Real.rpow_def_of_pos hrpos, mul_comm]
+  have hLog := Real.log_le_sub_one_of_pos (Real.rpow_pos_of_pos hrpos eps)
+  rw [Real.log_rpow hrpos] at hLog
+  have hi : 0 <= Inv.inv eps := (inv_pos.mpr heps).le
+  have hLogLe : Real.log r <= Inv.inv eps * r ^ eps := by
+    calc
+      _ = Inv.inv eps * (eps * Real.log r) := by field_simp [ne_of_gt heps]
+      _ <= _ := mul_le_mul_of_nonneg_left (hLog.trans (sub_le_self _ zero_le_one)) hi
+  let R := r ^ (1 + eps)
+  have hR : 1 <= R := Real.one_le_rpow hr (by positivity)
+  have hE : r * Real.log r <= Inv.inv eps * R := by
+    calc
+      _ <= r * (Inv.inv eps * r ^ eps) := mul_le_mul_of_nonneg_left hLogLe hrpos.le
+      _ = _ := by
+        dsimp [R]
+        rw [Real.rpow_add hrpos, Real.rpow_one]
+        ring
+  have hExpOne : 1 <= Real.exp (Inv.inv eps * R) :=
+    Real.one_le_exp_iff.mpr (mul_nonneg hi (zero_le_one.trans hR))
+  have hScale : Real.log 2 <= Real.log 2 * R := by
+    simpa only [mul_one] using mul_le_mul_of_nonneg_left hR (Real.log_nonneg one_le_two)
+  calc
+    _ <= 1 + (Nat.factorial n : Real) := norm_gamma_le_one_add_factorial_ceil hz
+    _ <= 1 + Real.exp (Inv.inv eps * R) := add_le_add_right (hFact.trans (Real.exp_le_exp.mpr hE)) _
+    _ <= 2 * Real.exp (Inv.inv eps * R) := by linarith only [hExpOne]
+    _ = Real.exp (Real.log 2 + Inv.inv eps * R) := by
+      rw [Real.exp_add, Real.exp_log (by norm_num : (0 : Real) < 2)]
+    _ <= Real.exp ((Real.log 2 + Inv.inv eps) * R) := by
+      rw [add_mul, Real.exp_le_exp]
+      exact add_le_add_left hScale _
+
+
+
+
+private def HasOrderOneBoundOn (S : Set Complex) (f : Complex -> Complex) : Prop :=
+  forall eps : Real, 0 < eps -> exists C : Real, 0 < C /\
+    forall z : Complex, Membership.mem S z ->
+      norm (f z) <= Real.exp (C * (1 + norm z) ^ (1 + eps))
+
+private theorem HasOrderOneBoundOn.mul {S : Set Complex} {f g : Complex -> Complex}
+    (hf : HasOrderOneBoundOn S f) (hg : HasOrderOneBoundOn S g) :
+    HasOrderOneBoundOn S (fun z => f z * g z) := by
+  intro eps heps
+  choose C hC using hf eps heps
+  choose D hD using hg eps heps
+  refine Exists.intro (C + D) (And.intro (add_pos hC.1 hD.1) ?_)
+  intro z hz
+  rw [norm_mul]
+  calc
+    _ <= Real.exp (C * (1 + norm z) ^ (1 + eps)) *
+        Real.exp (D * (1 + norm z) ^ (1 + eps)) :=
+      mul_le_mul (hC.2 z hz) (hD.2 z hz) (norm_nonneg _) (Real.exp_nonneg _)
+    _ = _ := by rw [<- Real.exp_add, add_mul]
+
+private theorem HasOrderOneBoundOn.affine {S T : Set Complex} {f : Complex -> Complex}
+    (hf : HasOrderOneBoundOn T f) (a b : Complex)
+    (hMaps : forall z, Membership.mem S z -> Membership.mem T (a * z + b)) :
+    HasOrderOneBoundOn S (fun z => f (a * z + b)) := by
+  intro eps heps
+  choose C hC using hf eps heps
+  let M := 1 + norm a + norm b
+  have hM : 0 < M := by dsimp [M]; positivity
+  refine Exists.intro (C * M ^ (1 + eps)) (And.intro (mul_pos hC.1 (Real.rpow_pos_of_pos hM _)) ?_)
+  intro z hz
+  have hArg : 1 + norm (a * z + b) <= M * (1 + norm z) := by
+    calc
+      _ <= 1 + (norm (a * z) + norm b) := add_le_add le_rfl (norm_add_le _ _)
+      _ = 1 + (norm a * norm z + norm b) := by rw [norm_mul]
+      _ <= _ := by
+        dsimp only [M]
+        nlinarith only [norm_nonneg z, norm_nonneg a, mul_nonneg (norm_nonneg b) (norm_nonneg z)]
+  refine (hC.2 _ (hMaps z hz)).trans (Real.exp_le_exp.mpr ?_)
+  have hPow := Real.rpow_le_rpow (by positivity : (0 : Real) <= 1 + norm (a * z + b))
+    hArg (show 0 <= 1 + eps by linarith)
+  rw [Real.mul_rpow hM.le (by positivity : (0 : Real) <= 1 + norm z)] at hPow
+  rw [mul_assoc]
+  exact mul_le_mul_of_nonneg_left hPow hC.1.le
+
+private theorem EntireOfOrderAtMost.restrict {f : Complex -> Complex}
+    (h : EntireOfOrderAtMost 1 f) (S : Set Complex) :
+    HasOrderOneBoundOn S f := by
+  intro eps heps
+  choose C hC using h.exists_bound heps
+  exact Exists.intro C (And.intro hC.1 (fun z _ => hC.2 z))
+
+private theorem HasOrderOneBoundOn.of_uniform {S : Set Complex} {f : Complex -> Complex}
+    (B : Real) (hB : forall z, Membership.mem S z -> norm (f z) <= Real.exp B) :
+    HasOrderOneBoundOn S f := by
+  intro eps heps
+  refine Exists.intro (1 + max 0 B) (And.intro (by positivity) ?_)
+  intro z hz
+  exact (hB z hz).trans (Real.exp_le_exp.mpr (calc
+    B <= 1 + max 0 B := by linarith only [le_max_right (0 : Real) B]
+    _ <= _ := le_mul_of_one_le_right (by positivity)
+      (Real.one_le_rpow (le_add_of_nonneg_right (norm_nonneg z)) (by positivity))))
+
+private theorem HasOrderOneBoundOn.prod {S : Set Complex} {iota : Type*}
+    (s : Finset iota) (f : iota -> Complex -> Complex)
+    (hf : forall i, Membership.mem s i -> HasOrderOneBoundOn S (f i)) :
+    HasOrderOneBoundOn S (fun z => s.prod (fun i => f i z)) := by
+  classical
+  induction s using Finset.induction_on with
+  | empty =>
+    apply HasOrderOneBoundOn.of_uniform 0
+    intro z _
+    rw [Finset.prod_empty, norm_one, Real.exp_zero]
+  | insert i s hi ih =>
+    have hI := hf i (Finset.mem_insert_self i s)
+    have hS := ih (fun j hj => hf j (Finset.mem_insert_of_mem hj))
+    simpa only [Finset.prod_insert hi] using hI.mul hS
+
+private theorem gamma_hasOrderOneBoundOn : HasOrderOneBoundOn
+    (Set.ofPred (fun z : Complex => 1 <= z.re)) Gamma := by
+  intro eps heps
+  refine Exists.intro (Real.log 2 + Inv.inv eps)
+    (And.intro (add_pos (Real.log_pos (by norm_num)) (inv_pos.mpr heps)) ?_)
+  intro z hz
+  exact norm_gamma_le_order_one_on_right hz heps
+
+private theorem const_cpow_mul_hasOrderOneBoundOn {S : Set Complex} {a : Real}
+    (ha : 0 < a) (c : Complex) :
+    HasOrderOneBoundOn S (fun z => (a : Complex) ^ (c * z)) :=
+  EntireOfOrderAtMost.restrict (entireOrderOne_const_cpow ha c) S
+
+private theorem lReal_hasOrderOneBoundOn : HasOrderOneBoundOn
+    (Set.ofPred (fun z : Complex => 2 <= z.re)) LReal := by
+  have hArg : forall z : Complex, 2 <= z.re -> 1 <= ((1 / 2 : Complex) * z + 0).re := by
+    intro z hz
+    simp [Complex.mul_re]
+    linarith only [hz]
+  have hGamma := gamma_hasOrderOneBoundOn.affine (1 / 2) 0 hArg
+  have hCpow := const_cpow_mul_hasOrderOneBoundOn (S := Set.ofPred (fun z => 2 <= z.re))
+    Real.pi_pos (-1 / 2)
+  have hEq (z : Complex) : (-1 / 2 : Complex) * z = -z / 2 := by ring
+  have hHalf (z : Complex) : (1 / 2 : Complex) * z = z / 2 := by ring
+  change HasOrderOneBoundOn _ (fun z => (Real.pi : Complex) ^ (-z / 2) * Gamma (z / 2))
+  simpa only [hEq, add_zero, hHalf] using hCpow.mul hGamma
+
+private theorem lComplex_hasOrderOneBoundOn : HasOrderOneBoundOn
+    (Set.ofPred (fun z : Complex => 1 <= z.re)) LComplex := by
+  let S := Set.ofPred (fun z : Complex => 1 <= z.re)
+  have hConst : HasOrderOneBoundOn S (fun _ => (2 : Complex)) := by
+    apply HasOrderOneBoundOn.of_uniform (Real.log 2)
+    intro z _
+    simp [Real.exp_log (by norm_num : (0 : Real) < 2)]
+  have hBase : 0 < 2 * Real.pi := mul_pos (by norm_num) Real.pi_pos
+  have hBaseCast : ((2 * Real.pi : Real) : Complex) = 2 * (Real.pi : Complex) := by norm_cast
+  have hCpow := const_cpow_mul_hasOrderOneBoundOn (S := S) hBase (-1)
+  change HasOrderOneBoundOn S (fun z => 2 * (2 * (Real.pi : Complex)) ^ (-z) * Gamma z)
+  simpa only [hBaseCast, neg_one_mul] using (hConst.mul hCpow).mul gamma_hasOrderOneBoundOn
+
+
+private theorem id_hasOrderOneBoundOn (S : Set Complex) :
+    HasOrderOneBoundOn S (fun z => z) := by
+  intro eps heps
+  refine Exists.intro 1 (And.intro zero_lt_one ?_)
+  intro z _
+  rw [one_mul]
+  have hr : (1 : Real) <= 1 + norm z := le_add_of_nonneg_right (norm_nonneg z)
+  have hPow : (1 + norm z) ^ (1 : Real) <= (1 + norm z) ^ (1 + eps) :=
+    Real.rpow_le_rpow_of_exponent_le hr (le_add_of_nonneg_right heps.le)
+  rw [Real.rpow_one] at hPow
+  exact (le_add_of_nonneg_left zero_le_one).trans (hPow.trans
+    ((le_add_of_nonneg_right zero_le_one).trans (Real.add_one_le_exp _)))
+
+private theorem pow_hasOrderOneBoundOn (S : Set Complex) (m : Nat) :
+    HasOrderOneBoundOn S (fun z => z ^ m) := by
+  induction m with
+  | zero =>
+    apply HasOrderOneBoundOn.of_uniform 0
+    intro z _
+    rw [pow_zero, norm_one, Real.exp_zero]
+  | succ n ih =>
+    simpa only [pow_succ] using ih.mul (id_hasOrderOneBoundOn S)
+
+/-- The full pole-clearing, conductor and archimedean factor has order-one
+growth on the half-plane with real part at least three. -/
+theorem standardCompletionFactor_orderOneBound_on_right
+    {realPlaces complexPlaces : Type*} [Fintype realPlaces] [Fintype complexPlaces]
+    {conductor : Real} (hConductor : 0 < conductor) (m : Nat)
+    (mu : realPlaces -> Complex) (nu : complexPlaces -> Complex)
+    (hMu : forall i, -(1 : Real) / 2 < (mu i).re)
+    (hNu : forall i, -(1 : Real) / 2 < (nu i).re)
+    {eps : Real} (heps : 0 < eps) :
+    exists C : Real, 0 < C /\ forall s : Complex, 3 <= s.re ->
+      norm (standardCompletionFactor conductor m mu nu s) <=
+        Real.exp (C * (1 + norm s) ^ (1 + eps)) := by
+  let S := Set.ofPred (fun s : Complex => 3 <= s.re)
+  have hCpow := const_cpow_mul_hasOrderOneBoundOn (S := S)
+    hConductor (1 / 2)
+  have hHalf (s : Complex) : (1 / 2 : Complex) * s = s / 2 := by ring
+  have hCond :
+      HasOrderOneBoundOn S (fun s => (conductor : Complex) ^ (s / 2)) := by
+    simpa only [hHalf] using hCpow
+  have hReal (i : realPlaces) : HasOrderOneBoundOn S (fun s => LReal (s + mu i)) := by
+    have hArg : forall s : Complex, 3 <= s.re -> 2 <= ((1 : Complex) * s + mu i).re := by
+      intro s hs
+      rw [one_mul, Complex.add_re]
+      linarith only [hs, hMu i]
+    simpa only [one_mul] using lReal_hasOrderOneBoundOn.affine (S := S) 1 (mu i) hArg
+  have hComplex (i : complexPlaces) : HasOrderOneBoundOn S (fun s => LComplex (s + nu i)) := by
+    have hArg : forall s : Complex, 3 <= s.re -> 1 <= ((1 : Complex) * s + nu i).re := by
+      intro s hs
+      rw [one_mul, Complex.add_re]
+      linarith only [hs, hNu i]
+    simpa only [one_mul] using lComplex_hasOrderOneBoundOn.affine (S := S) 1 (nu i) hArg
+  have hR := HasOrderOneBoundOn.prod Finset.univ (fun i s => LReal (s + mu i)) (fun i _ => hReal i)
+  have hC := HasOrderOneBoundOn.prod Finset.univ (fun i s => LComplex (s + nu i)) (fun i _ => hComplex i)
+  have hProduct := (((pow_hasOrderOneBoundOn S m).mul hCond).mul hR).mul hC
+  exact hProduct eps heps
+
+/-- For a pole-cleared paired completion, the Euler product and Gamma factors
+control the right half-plane. Reflection controls the left. A growth bound on
+the intervening strip then suffices for the entire order-one bound. -/
+theorem entireOrderOne_of_standardPairedCompletion_and_stripBound
+    {realPlaces complexPlaces : Type*}
+    [Fintype realPlaces] [Fintype complexPlaces]
+    {conductor : Real} (hConductor : 0 < conductor) (m : Nat)
+    (mu : realPlaces -> Complex) (nu : complexPlaces -> Complex)
+    (hMu : forall i, -(1 : Real) / 2 < (mu i).re)
+    (hNu : forall i, -(1 : Real) / 2 < (nu i).re)
+    {ordinary Lambda : Complex -> Complex} (hEntire : Differentiable Complex Lambda)
+    (B : Real) (hOrdinaryBound : forall s : Complex, 3 <= s.re ->
+      norm (ordinary s) <= Real.exp B)
+    (hCompletion : forall s : Complex, 3 <= s.re ->
+      Lambda s = standardCompletionFactor conductor m mu nu s *
+        ((s - 1) ^ m * ordinary s))
+    (hReflect : forall s : Complex, norm (Lambda (1 - s)) = norm (Lambda s))
+    (hStrip : forall eps : Real, 0 < eps -> exists C : Real, 0 < C /\
+      forall s : Complex, -2 <= s.re -> s.re <= 3 ->
+        norm (Lambda s) <= Real.exp (C * (1 + norm s) ^ (1 + eps))) :
+    EntireOfOrderAtMost 1 Lambda := by
+  let Right : Set Complex := Set.ofPred (fun s => 3 <= s.re)
+  let Left : Set Complex := Set.ofPred (fun s => s.re <= -2)
+  have hFactor : HasOrderOneBoundOn Right (standardCompletionFactor conductor m mu nu) :=
+    fun _ heps => standardCompletionFactor_orderOneBound_on_right hConductor m mu nu hMu hNu heps
+  have hOrdinary : HasOrderOneBoundOn Right ordinary :=
+    HasOrderOneBoundOn.of_uniform B hOrdinaryBound
+  have hPower : HasOrderOneBoundOn Right (fun s => (s - 1) ^ m) := by
+    have hP := (pow_hasOrderOneBoundOn (Set.univ : Set Complex) m).affine
+      (S := Right) 1 (-1) (fun _ _ => Set.mem_univ _)
+    simpa only [one_mul, sub_eq_add_neg] using hP
+  have hRight : HasOrderOneBoundOn Right Lambda := by
+    intro eps heps
+    choose C hC using (hFactor.mul (hPower.mul hOrdinary)) eps heps
+    refine Exists.intro C (And.intro hC.1 ?_)
+    intro s hs
+    rw [hCompletion s hs]
+    exact hC.2 s hs
+  have hLeft : HasOrderOneBoundOn Left Lambda := by
+    have hMap (s : Complex) (hs : Membership.mem Left s) :
+        Membership.mem Right ((-1 : Complex) * s + 1) := by
+      change 3 <= ((-1 : Complex) * s + 1).re
+      rw [neg_one_mul, Complex.add_re, Complex.neg_re, Complex.one_re]
+      linarith only [show s.re <= -2 from hs]
+    intro eps heps
+    choose C hC using (hRight.affine (-1) 1 hMap) eps heps
+    refine Exists.intro C (And.intro hC.1 ?_)
+    intro s hs
+    have heq : (-1 : Complex) * s + 1 = 1 - s := by ring
+    simpa only [heq, hReflect] using hC.2 s hs
+  refine And.intro hEntire ?_
+  intro eps heps
+  choose A hA using hRight eps heps
+  choose D hD using hLeft eps heps
+  choose C hC using hStrip eps heps
+  refine Exists.intro (A + D + C) (And.intro (add_pos (add_pos hA.1 hD.1) hC.1) ?_)
+  intro s
+  have hMono (E : Real) (hE : E <= A + D + C) :
+      Real.exp (E * (1 + norm s) ^ (1 + eps)) <=
+        Real.exp ((A + D + C) * (1 + norm s) ^ (1 + eps)) :=
+    Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_right hE (by positivity))
+  by_cases hs : 3 <= s.re
+  case pos =>
+    exact (hA.2 s hs).trans (hMono A (by linarith only [hD.1, hC.1]))
+  case neg =>
+    by_cases hL : s.re <= -2
+    case pos =>
+      exact (hD.2 s hL).trans (hMono D (by linarith only [hA.1, hC.1]))
+    case neg =>
+      exact (hC.2 s (le_of_lt (lt_of_not_ge hL)) (le_of_lt (lt_of_not_ge hs))).trans
+        (hMono C (by linarith only [hA.1, hD.1]))
+
+end
+
 end Robin1984.GRH

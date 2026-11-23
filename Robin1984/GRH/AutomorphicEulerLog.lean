@@ -189,4 +189,51 @@ theorem grandRobinCompletedCriterion_of_eulerProduct
     hCompletedOrder (fun pi s hs => (hInputs pi s hs).1)
     (fun pi s hs => (hInputs pi s hs).2) hCompletion hEquation
 
+
+/-- The log of the Euler product has a uniform absolute bound on each closed
+right half-plane strictly inside its region of absolute convergence. -/
+theorem norm_grandEulerLog_le {powers : Type*} (d : GrandRobinEulerData powers)
+    (hTwo : forall i, 2 <= d.normPower i) {a : Real}
+    (hSummable : Summable (fun i => norm (d.coefficient i) * d.normPower i ^ (-a)))
+    {s : Complex} (hs : a <= s.re) :
+    norm (grandEulerLog d s) <=
+      tsum (fun i => (Real.log 2) ^ (-1 : Int) *
+        (norm (d.coefficient i) * d.normPower i ^ (-a))) := by
+  have hM := hSummable.mul_left ((Real.log 2) ^ (-1 : Int))
+  have hBound (i : powers) := norm_grandPrimePowerLogTerm_le d i (hTwo i) hs
+  have hNorm := Summable.of_nonneg_of_le (fun i => norm_nonneg (grandPrimePowerLogTerm d i s))
+    hBound hM
+  change norm (tsum (fun i => grandPrimePowerLogTerm d i s)) <= _
+  exact (norm_tsum_le_tsum_norm hNorm).trans (hNorm.tsum_le_tsum hBound hM)
+
+
+/-- Absolute convergence and the functional equation reduce the order-one
+growth condition for the paired completion to its closed middle strip. -/
+theorem entireOrderOne_of_standardPairedEulerProduct_and_stripBound
+    {powers realPlaces complexPlaces : Type*}
+    [Fintype realPlaces] [Fintype complexPlaces]
+    (d : GrandRobinEulerData powers) (hTwo : forall i, 2 <= d.normPower i)
+    (hSummable : Summable (fun i => norm (d.coefficient i) * d.normPower i ^ (-(2 : Real))))
+    {conductor : Real} (hConductor : 0 < conductor) (m : Nat)
+    (mu : realPlaces -> Complex) (nu : complexPlaces -> Complex)
+    (hMu : forall i, -(1 : Real) / 2 < (mu i).re)
+    (hNu : forall i, -(1 : Real) / 2 < (nu i).re)
+    {Lambda : Complex -> Complex} (hEntire : Differentiable Complex Lambda)
+    (hCompletion : forall s : Complex, 3 <= s.re ->
+      Lambda s = standardCompletionFactor conductor m mu nu s *
+        ((s - 1) ^ m * Complex.exp (grandEulerLog d s)))
+    (hReflect : forall s : Complex, norm (Lambda (1 - s)) = norm (Lambda s))
+    (hStrip : forall eps : Real, 0 < eps -> exists C : Real, 0 < C /\
+      forall s : Complex, -2 <= s.re -> s.re <= 3 ->
+        norm (Lambda s) <= Real.exp (C * (1 + norm s) ^ (1 + eps))) :
+    EntireOfOrderAtMost 1 Lambda := by
+  let C := tsum (fun i => (Real.log 2) ^ (-1 : Int) *
+    (norm (d.coefficient i) * d.normPower i ^ (-(2 : Real))))
+  refine entireOrderOne_of_standardPairedCompletion_and_stripBound hConductor m mu nu hMu hNu
+    hEntire C ?_ hCompletion hReflect hStrip
+  intro s hs
+  have hs2 : (2 : Real) <= s.re := (by norm_num : (2 : Real) <= 3).trans hs
+  rw [Complex.norm_exp]
+  exact Real.exp_le_exp.mpr ((Complex.re_le_norm _).trans (norm_grandEulerLog_le d hTwo hSummable hs2))
+
 end Robin1984.GRH
