@@ -7,6 +7,7 @@ import Mathlib.MeasureTheory.Integral.DominatedConvergence
 import Mathlib.MeasureTheory.Measure.Haar.Basic
 import Mathlib.NumberTheory.NumberField.AdeleRing
 import Mathlib.NumberTheory.NumberField.Completion.FinitePlace
+import Mathlib.NumberTheory.NumberField.ProductFormula
 import Mathlib.Tactic.FieldSimp
 import Mathlib.Tactic.GCongr
 import Mathlib.Tactic.Ring
@@ -1271,5 +1272,275 @@ theorem integral_heckeLocalTateFactor_haar
 end Haar
 
 end LocalHaar
+
+section IdeleNorm
+
+variable {K : Type*} [Field K] [NumberField K]
+
+/-- The finite local norms in an idele differ from one at only finitely
+many places. -/
+theorem finiteSupport_heckeFiniteIdeleFactors
+    (a : Units (FiniteAdeleRing (RingOfIntegers K) K)) :
+    Function.HasFiniteMulSupport (fun p : HeightOneSpectrum (RingOfIntegers K) =>
+      norm (a.val p)) := by
+  have h := (FiniteAdeleRing.isUnit_iff.mp a.isUnit).2
+  apply Filter.eventually_cofinite.mp
+  refine h.mono ?_
+  intro p hp
+  change norm (a.val p) = 1
+  rw [FinitePlace.norm_def, hp]
+  simp
+
+/-- The product of the normalized finite absolute values of an idele. -/
+noncomputable def heckeFiniteIdeleNorm :
+    MonoidHom (Units (FiniteAdeleRing (RingOfIntegers K) K)) Real where
+  toFun a := finprod (fun p : HeightOneSpectrum (RingOfIntegers K) => norm (a.val p))
+  map_one' := by
+    apply finprod_eq_one_of_forall_eq_one
+    intro p
+    change norm (1 : p.adicCompletion K) = 1
+    exact norm_one
+  map_mul' a b := by
+    rw [<- finprod_mul_distrib
+      (finiteSupport_heckeFiniteIdeleFactors a) (finiteSupport_heckeFiniteIdeleFactors b)]
+    apply finprod_congr
+    intro p
+    change norm (a.val p * b.val p) = norm (a.val p) * norm (b.val p)
+    exact norm_mul _ _
+
+/-- The finite idelic norm is positive. -/
+theorem heckeFiniteIdeleNorm_pos
+    (a : Units (FiniteAdeleRing (RingOfIntegers K) K)) :
+    0 < heckeFiniteIdeleNorm a := by
+  classical
+  change 0 < finprod (fun p : HeightOneSpectrum (RingOfIntegers K) => norm (a.val p))
+  have h := finiteSupport_heckeFiniteIdeleFactors a
+  rw [finprod_eq_prod_of_mulSupport_subset_of_finite _ Set.Subset.rfl h]
+  exact Finset.prod_pos (fun p _ => norm_pos_iff.mpr ((FiniteAdeleRing.isUnit_iff.mp a.isUnit).1 p))
+
+/-- On principal finite ideles, the finite idelic norm equals the finite
+product in the number-field product formula. -/
+theorem heckeFiniteIdeleNorm_principal (a : Units K) :
+    heckeFiniteIdeleNorm
+      (Units.map (algebraMap K (FiniteAdeleRing (RingOfIntegers K) K)).toMonoidHom a) =
+      finprod (fun w : FinitePlace K => w (a : K)) := by
+  change finprod (fun p : HeightOneSpectrum (RingOfIntegers K) =>
+      norm ((algebraMap K (FiniteAdeleRing (RingOfIntegers K) K) (a : K)) p)) = _
+  rw [<- finprod_comp_equiv FinitePlace.equivHeightOneSpectrum.symm]
+  congr 1
+
+/-- The archimedean idelic norm has exponent one at real places and
+exponent two at complex places. -/
+noncomputable def heckeInfiniteIdeleNorm :
+    MonoidHom (Units (InfiniteAdeleRing K)) Real where
+  toFun a := Finset.prod Finset.univ (fun w : InfinitePlace K => norm (a.val w) ^ w.mult)
+  map_one' := by
+    apply Finset.prod_eq_one
+    intro w _
+    change norm (1 : w.Completion) ^ w.mult = 1
+    rw [norm_one, one_pow]
+  map_mul' a b := by
+    rw [<- Finset.prod_mul_distrib]
+    apply Finset.prod_congr rfl
+    intro w _
+    change norm (a.val w * b.val w) ^ w.mult = _
+    rw [norm_mul, mul_pow]
+
+/-- The archimedean idelic norm is positive. -/
+theorem heckeInfiniteIdeleNorm_pos (a : Units (InfiniteAdeleRing K)) :
+    0 < heckeInfiniteIdeleNorm a := by
+  change 0 < Finset.prod Finset.univ (fun w : InfinitePlace K => norm (a.val w) ^ w.mult)
+  apply Finset.prod_pos
+  intro w _
+  have hMul : a.val w * a.inv w = 1 :=
+    congrArg (fun f : InfiniteAdeleRing K => f w) a.val_inv
+  have hNonzero : Not (a.val w = 0) := by
+    intro hZero
+    rw [hZero, zero_mul] at hMul
+    exact zero_ne_one hMul
+  exact pow_pos (norm_pos_iff.mpr hNonzero) _
+
+/-- The archimedean norm of a principal idele is the weighted product
+of the original field element's archimedean absolute values. -/
+theorem heckeInfiniteIdeleNorm_principal (a : Units K) :
+    heckeInfiniteIdeleNorm
+      (Units.map (algebraMap K (InfiniteAdeleRing K)).toMonoidHom a) =
+      Finset.prod Finset.univ (fun w : InfinitePlace K => w (a : K) ^ w.mult) := by
+  change Finset.prod Finset.univ (fun w : InfinitePlace K =>
+      norm ((algebraMap K (InfiniteAdeleRing K) (a : K)) w) ^ w.mult) = _
+  apply Finset.prod_congr rfl
+  intro w _
+  rw [InfiniteAdeleRing.algebraMap_apply]
+  exact congrArg (fun t : Real => t ^ w.mult)
+    (InfinitePlace.Completion.norm_coe w (WithAbs.toAbs w.val (a : K)))
+
+/-- The absolute idelic norm on the actual Mathlib adele ring. -/
+noncomputable def heckeIdelicNorm :
+    MonoidHom (Units (AdeleRing (RingOfIntegers K) K)) Real :=
+  (heckeInfiniteIdeleNorm.comp
+    (Units.map (RingHom.fst (InfiniteAdeleRing K) (FiniteAdeleRing (RingOfIntegers K) K)).toMonoidHom)) *
+  (heckeFiniteIdeleNorm.comp
+    (Units.map (RingHom.snd (InfiniteAdeleRing K) (FiniteAdeleRing (RingOfIntegers K) K)).toMonoidHom))
+
+/-- Every idele has strictly positive absolute idelic norm. -/
+theorem heckeIdelicNorm_pos (a : Units (AdeleRing (RingOfIntegers K) K)) :
+    0 < heckeIdelicNorm a :=
+  mul_pos (heckeInfiniteIdeleNorm_pos _) (heckeFiniteIdeleNorm_pos _)
+
+/-- The idelic norm is one on principal ideles, by the product formula. -/
+theorem heckeIdelicNorm_principal (a : Units K) :
+    heckeIdelicNorm
+      (Units.map (algebraMap K (AdeleRing (RingOfIntegers K) K)).toMonoidHom a) = 1 := by
+  let z := Units.map (algebraMap K (AdeleRing (RingOfIntegers K) K)).toMonoidHom a
+  let piInf := (RingHom.fst (InfiniteAdeleRing K)
+    (FiniteAdeleRing (RingOfIntegers K) K)).toMonoidHom
+  let piFin := (RingHom.snd (InfiniteAdeleRing K)
+    (FiniteAdeleRing (RingOfIntegers K) K)).toMonoidHom
+  change heckeInfiniteIdeleNorm (Units.map piInf z) *
+    heckeFiniteIdeleNorm (Units.map piFin z) = 1
+  have hInf : Units.map piInf z =
+      Units.map (algebraMap K (InfiniteAdeleRing K)).toMonoidHom a := by
+    apply Units.ext
+    rfl
+  have hFin : Units.map piFin z =
+      Units.map (algebraMap K (FiniteAdeleRing (RingOfIntegers K) K)).toMonoidHom a := by
+    apply Units.ext
+    rfl
+  rw [hInf, hFin, heckeInfiniteIdeleNorm_principal, heckeFiniteIdeleNorm_principal]
+  exact NumberField.prod_abs_eq_one a.ne_zero
+
+/-- The product of finite absolute values is continuous in the units
+topology of the restricted product. -/
+theorem continuous_heckeFiniteIdeleNorm :
+    Continuous (heckeFiniteIdeleNorm
+      (K := K) : Units (FiniteAdeleRing (RingOfIntegers K) K) -> Real) := by
+  let A := FiniteAdeleRing (RingOfIntegers K) K
+  let I : Set A := {a | forall p : HeightOneSpectrum (RingOfIntegers K),
+    Membership.mem (p.adicCompletionIntegers K) (a p)}
+  let U : Set (Units A) := Set.inter
+    (Set.preimage (fun a : Units A => a.val) I)
+    (Set.preimage (fun a : Units A => a.inv) I)
+  have hI : IsOpen I :=
+    RestrictedProduct.isOpen_forall_mem
+      (R := fun p : HeightOneSpectrum (RingOfIntegers K) => p.adicCompletion K)
+      (A := fun p => (p.adicCompletionIntegers K : Set (p.adicCompletion K)))
+      (fun p => Valued.isOpen_valuationSubring (p.adicCompletion K))
+  have hU : IsOpen U :=
+    (hI.preimage Units.continuous_val).inter (hI.preimage Units.continuous_coe_inv)
+  have hOne : Membership.mem U (1 : Units A) := by
+    refine And.intro ?_ ?_ <;> intro p <;> exact (p.adicCompletionIntegers K).one_mem
+  have hNorm : forall a : Units A, Membership.mem U a -> heckeFiniteIdeleNorm a = 1 := by
+    intro a ha
+    apply finprod_eq_one_of_forall_eq_one
+    intro p
+    let aP := RestrictedProduct.unitsEquiv
+      (fun q : HeightOneSpectrum (RingOfIntegers K) => q.adicCompletion K) a p
+    have hP : Valued.v (a.val p) = (1 : WithZero (Multiplicative Int)) :=
+      (HeightOneSpectrum.adicCompletionIntegers.mem_units_iff_valued_eq_one
+        (K := K) (v := p) (a := aP)).mp (And.intro (ha.1 p) (ha.2 p))
+    rw [FinitePlace.norm_def, hP]
+    simp
+  rw [continuous_iff_continuousAt]
+  intro a
+  have hOpen : IsOpen (Set.preimage (fun x : Units A => Inv.inv a * x) U) :=
+    hU.preimage (continuous_const_mul (Inv.inv a))
+  have hNear : Filter.Eventually (fun x : Units A => Membership.mem U (Inv.inv a * x)) (nhds a) :=
+    hOpen.mem_nhds (by
+      change Membership.mem U (Inv.inv a * a)
+      rw [inv_mul_cancel]
+      exact hOne)
+  have hEq : Filter.Eventually (fun x : Units A =>
+      heckeFiniteIdeleNorm x = heckeFiniteIdeleNorm a) (nhds a) := by
+    refine hNear.mono ?_
+    intro x hx
+    calc
+      heckeFiniteIdeleNorm x = heckeFiniteIdeleNorm (a * (Inv.inv a * x)) := by
+        rw [<- mul_assoc, mul_inv_cancel, one_mul]
+      _ = heckeFiniteIdeleNorm a := by rw [map_mul, hNorm _ hx, mul_one]
+  exact (Filter.tendsto_congr' hEq).mpr tendsto_const_nhds
+
+/-- The product of the archimedean absolute values is continuous. -/
+theorem continuous_heckeInfiniteIdeleNorm :
+    Continuous (heckeInfiniteIdeleNorm (K := K) : Units (InfiniteAdeleRing K) -> Real) := by
+  change Continuous (fun a : Units (InfiniteAdeleRing K) =>
+    Finset.prod Finset.univ (fun w : InfinitePlace K => norm (a.val w) ^ w.mult))
+  apply continuous_finsetProd
+  intro w _
+  have hc : Continuous (fun a : InfiniteAdeleRing K => a w) := continuous_apply w
+  exact ((hc.comp Units.continuous_val).norm).pow _
+
+/-- The absolute idelic norm is continuous. -/
+theorem continuous_heckeIdelicNorm :
+    Continuous (heckeIdelicNorm (K := K) : Units (AdeleRing (RingOfIntegers K) K) -> Real) := by
+  let piInf := (RingHom.fst (InfiniteAdeleRing K)
+    (FiniteAdeleRing (RingOfIntegers K) K)).toMonoidHom
+  let piFin := (RingHom.snd (InfiniteAdeleRing K)
+    (FiniteAdeleRing (RingOfIntegers K) K)).toMonoidHom
+  change Continuous (fun a : Units (AdeleRing (RingOfIntegers K) K) =>
+    heckeInfiniteIdeleNorm (Units.map piInf a) * heckeFiniteIdeleNorm (Units.map piFin a))
+  have hInf : Continuous piInf := continuous_fst
+  have hFin : Continuous piFin := continuous_snd
+  exact (continuous_heckeInfiniteIdeleNorm.comp (Units.continuous_map hInf)).mul
+    (continuous_heckeFiniteIdeleNorm.comp (Units.continuous_map hFin))
+
+/-- The unitary Hecke character obtained by raising the absolute idelic
+norm to the imaginary power `i * t`. -/
+noncomputable def heckeNormCharacter (t : Real) : UnitaryHeckeCharacter K := by
+  let phi : ContinuousMonoidHom (Units (AdeleRing (RingOfIntegers K) K)) Circle :=
+    { toFun := fun a => Circle.exp (t * Real.log (heckeIdelicNorm a))
+      map_one' := by simp
+      map_mul' := by
+        intro a b
+        rw [map_mul heckeIdelicNorm a b, Real.log_mul
+          (ne_of_gt (heckeIdelicNorm_pos a)) (ne_of_gt (heckeIdelicNorm_pos b)),
+          mul_add, Circle.exp_add]
+      continuous_toFun :=
+        Circle.exp.continuous.comp (continuous_const.mul
+          (continuous_heckeIdelicNorm.log (fun a => ne_of_gt (heckeIdelicNorm_pos a)))) }
+  refine Subtype.mk phi ?_
+  intro a
+  change Circle.exp (t * Real.log (heckeIdelicNorm
+    (Units.map (algebraMap K (AdeleRing (RingOfIntegers K) K)).toMonoidHom a))) = 1
+  rw [heckeIdelicNorm_principal, Real.log_one, mul_zero, Circle.exp_zero]
+
+/-- The idelic norm on a single finite component is its normalized
+local absolute value. -/
+theorem heckeIdelicNorm_localIdeleHom
+    (p : HeightOneSpectrum (RingOfIntegers K)) (a : Units (p.adicCompletion K)) :
+    heckeIdelicNorm (localIdeleHom K p a) = norm (a : p.adicCompletion K) := by
+  let z := localIdeleHom K p a
+  let piInf := (RingHom.fst (InfiniteAdeleRing K)
+    (FiniteAdeleRing (RingOfIntegers K) K)).toMonoidHom
+  let piFin := (RingHom.snd (InfiniteAdeleRing K)
+    (FiniteAdeleRing (RingOfIntegers K) K)).toMonoidHom
+  change heckeInfiniteIdeleNorm (Units.map piInf z) *
+    heckeFiniteIdeleNorm (Units.map piFin z) = _
+  have hInf : Units.map piInf z = 1 := by
+    apply Units.ext
+    rfl
+  rw [hInf, map_one, one_mul]
+  let f (q : HeightOneSpectrum (RingOfIntegers K)) :=
+    norm (finiteLocalAdele K p (a : p.adicCompletion K) q)
+  change finprod f = norm (a : p.adicCompletion K)
+  have hAway : forall q, Not (q = p) -> f q = 1 := by
+    intro q hq
+    change norm (finiteLocalAdele K p (a : p.adicCompletion K) q) = 1
+    rw [finiteLocalAdele_away K p q (a : p.adicCompletion K) hq, norm_one]
+  rw [finprod_eq_single f p hAway]
+  change norm (finiteLocalAdele K p (a : p.adicCompletion K) p) = _
+  rw [finiteLocalAdele_at]
+
+/-- A pure idelic norm character is unramified at every finite prime. -/
+theorem heckeNormCharacter_unramified
+    (t : Real) (p : HeightOneSpectrum (RingOfIntegers K)) :
+    HeckeUnramifiedAt (heckeNormCharacter t) p := by
+  intro a ha
+  have hNorm : norm (a : p.adicCompletion K) = 1 := by
+    rw [FinitePlace.norm_def, ha]
+    simp
+  change Circle.exp (t * Real.log (heckeIdelicNorm (localIdeleHom K p a))) = 1
+  rw [heckeIdelicNorm_localIdeleHom, hNorm, Real.log_one, mul_zero, Circle.exp_zero]
+
+end IdeleNorm
 
 end Robin1984.GRH
