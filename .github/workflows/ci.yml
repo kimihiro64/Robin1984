@@ -345,6 +345,32 @@ jobs:
           free -h
           df -h "$RUNNER_TEMP" "$PWD"
           grep -E '^(MemAvailable|SwapTotal|CommitLimit|Committed_AS):' /proc/meminfo
+          # Lake returns imports in dependency order. Limit each invocation
+          # to eight new doc-info workers and reuse the completed SQLite rows.
+          if [[ "$DOCS_CACHE_HIT" != true ]]; then
+            import_graph=$(lake query --json '+Robin1984:transImports')
+            import_list=$(jq -er '
+              if type == "array" and length > 0
+                and all(.[]; type == "string" and length > 0)
+                and (unique | length) == length
+              then .[]
+              else error("Expected a nonempty list of unique Lake module names")
+              end
+            ' <<< "$import_graph")
+            mapfile -t modules <<< "$import_list"
+            modules+=('Robin1984')
+            batch_size=8
+            for ((offset=0; offset < ${#modules[@]}; offset+=batch_size)); do
+              targets=()
+              for module in "${modules[@]:offset:batch_size}"; do
+                targets+=("+${module}:docInfo")
+              done
+              printf 'Building doc-info targets %d-%d of %d\n' \
+                "$((offset + 1))" "$((offset + ${#targets[@]}))" "${#modules[@]}"
+              lake build "${targets[@]}"
+            done
+          fi
+
           /usr/bin/time -v lake build Robin1984:docs
       - name: Check the dependency pins
         run: git diff --exit-code -- lean-toolchain lakefile.lean lake-manifest.json docbuild/lean-toolchain docbuild/lakefile.toml docbuild/lake-manifest.json
