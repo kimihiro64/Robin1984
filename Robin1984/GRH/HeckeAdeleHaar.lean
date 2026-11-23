@@ -260,7 +260,8 @@ theorem mem_heckeScaledIntegralFiniteAdeles_iff
       change (x * g (Inv.inv d)) * g d = x
       rw [mul_assoc, <- map_mul, hInv, map_one, mul_one]
 
-private theorem heckeScaledIntegralFiniteAdeles_le (d : RingOfIntegers K) :
+/-- Multiplication by an integral principal scalar preserves integrality. -/
+theorem heckeScaledIntegralFiniteAdeles_le (d : RingOfIntegers K) :
     heckeScaledIntegralFiniteAdeles (algebraMap (RingOfIntegers K) K d) <=
       heckeIntegralFiniteAdeles := by
   intro x hx
@@ -273,13 +274,38 @@ private theorem heckeScaledIntegralFiniteAdeles_le (d : RingOfIntegers K) :
     (y p * algebraMap (RingOfIntegers K) (p.adicCompletion K) d)
   exact mul_mem (hy.1 p) (HeightOneSpectrum.coe_algebraMap_mem (RingOfIntegers K) K p d)
 
-/-- Scaling the compact open integral finite adeles by a principal
-integer divides their Haar mass by the norm of its principal ideal. -/
-theorem heckeFiniteAdeleHaar_scaledIntegral_mass
+private noncomputable def heckePrincipalResidueRepresentative (d : RingOfIntegers K)
+    (c : HasQuotient.Quotient (RingOfIntegers K) (Ideal.span ({d} : Set (RingOfIntegers K)))) :
+    RingOfIntegers K :=
+  Classical.choose (Ideal.Quotient.mk_surjective c)
+
+/-- The principal finite adele attached to a chosen residue representative. -/
+noncomputable def heckePrincipalResidueCenter (d : RingOfIntegers K)
+    (c : HasQuotient.Quotient (RingOfIntegers K) (Ideal.span ({d} : Set (RingOfIntegers K)))) :
+    HeckeFiniteAdeles K :=
+  algebraMap K (HeckeFiniteAdeles K)
+    (algebraMap (RingOfIntegers K) K (heckePrincipalResidueRepresentative d c))
+
+/-- A translate of the scaled integral finite adeles. -/
+def heckeFiniteAdelePrincipalCoset (a : HeckeFiniteAdeles K) (d : K) :
+    Set (HeckeFiniteAdeles K) :=
+  Set.image (fun z => a + z) (heckeScaledIntegralFiniteAdeles d : Set (HeckeFiniteAdeles K))
+
+/-- The coset of a residue class modulo a principal integral ideal. -/
+noncomputable def heckePrincipalResidueCoset (d : RingOfIntegers K)
+    (c : HasQuotient.Quotient (RingOfIntegers K) (Ideal.span ({d} : Set (RingOfIntegers K)))) :
+    Set (HeckeFiniteAdeles K) :=
+  heckeFiniteAdelePrincipalCoset (heckePrincipalResidueCenter d c)
+    (algebraMap (RingOfIntegers K) K d)
+
+/-- The residue-class cosets of a nonzero principal ideal partition the
+integral finite adeles. -/
+theorem heckePrincipalResidueCosets_partition
     (d : RingOfIntegers K) (hd : Not (d = 0)) :
-    (Ideal.absNorm (Ideal.span ({d} : Set (RingOfIntegers K))) : ENNReal) *
-      heckeFiniteAdeleHaar (heckeScaledIntegralFiniteAdeles
-        (algebraMap (RingOfIntegers K) K d) : Set (HeckeFiniteAdeles K)) = 1 := by
+    And (Pairwise (fun c j => Disjoint (heckePrincipalResidueCoset d c)
+      (heckePrincipalResidueCoset d j)))
+      (Set.iUnion (heckePrincipalResidueCoset d) =
+        (heckeIntegralFiniteAdeles (K := K) : Set (HeckeFiniteAdeles K))) := by
   let R := RingOfIntegers K
   let A := HeckeFiniteAdeles K
   let e := algebraMap R K
@@ -289,19 +315,12 @@ theorem heckeFiniteAdeleHaar_scaledIntegral_mass
   let D := heckeScaledIntegralFiniteAdeles dd
   let I : Ideal R := Ideal.span {d}
   let Q := HasQuotient.Quotient R I
-  let mu : Measure A := heckeFiniteAdeleHaar
-  let : Measure.IsAddLeftInvariant mu := heckeFiniteAdeleHaar_isAddLeftInvariant
   have hD : Not (dd = 0) := (map_ne_zero_iff e (FaithfulSMul.algebraMap_injective R K)).mpr hd
-  have hI : Not (I = 0) := fun h => hd (Ideal.span_singleton_eq_bot.mp h)
-  let : I.toAddSubgroup.FiniteIndex := Ideal.finiteIndex hI
-  let : Finite Q := inferInstanceAs (Finite (HasQuotient.Quotient R I.toAddSubgroup))
-  let : Fintype Q := Fintype.ofFinite Q
-  have hSurj : Function.Surjective (Ideal.Quotient.mk I) := Ideal.Quotient.mk_surjective
-  let repr (c : Q) := Classical.choose (hSurj c)
+  let repr (c : Q) := heckePrincipalResidueRepresentative d c
   have hRepr (c : Q) : Ideal.Quotient.mk I (repr c) = c :=
-    Classical.choose_spec (hSurj c)
-  let rho (c : Q) := g (e (repr c))
-  let C (c : Q) := Set.image (fun z : A => rho c + z) (D : Set A)
+    Classical.choose_spec (Ideal.Quotient.mk_surjective c)
+  let rho (c : Q) := heckePrincipalResidueCenter d c
+  let C (c : Q) := heckePrincipalResidueCoset d c
   have hHtoD : D <= H := heckeScaledIntegralFiniteAdeles_le d
   have hG (b : R) : Membership.mem H (g (e b)) :=
     fun p => HeightOneSpectrum.coe_algebraMap_mem R K p b
@@ -374,6 +393,35 @@ theorem heckeFiniteAdeleHaar_scaledIntegral_mass
       have hzEq : rho i + (a - rho i) = a :=
         (add_comm _ _).trans (sub_add_cancel _ _)
       exact Set.mem_iUnion.mpr (Exists.intro i (Exists.intro (a - rho i) (And.intro hz hzEq)))
+  exact And.intro hDisjoint hCover
+
+/-- Scaling the compact open integral finite adeles by a principal
+integer divides their Haar mass by the norm of its principal ideal. -/
+theorem heckeFiniteAdeleHaar_scaledIntegral_mass
+    (d : RingOfIntegers K) (hd : Not (d = 0)) :
+    (Ideal.absNorm (Ideal.span ({d} : Set (RingOfIntegers K))) : ENNReal) *
+      heckeFiniteAdeleHaar (heckeScaledIntegralFiniteAdeles
+        (algebraMap (RingOfIntegers K) K d) : Set (HeckeFiniteAdeles K)) = 1 := by
+  let R := RingOfIntegers K
+  let A := HeckeFiniteAdeles K
+  let e := algebraMap R K
+  let dd := e d
+  let H : AddSubgroup A := heckeIntegralFiniteAdeles
+  let D := heckeScaledIntegralFiniteAdeles dd
+  let I : Ideal R := Ideal.span {d}
+  let Q := HasQuotient.Quotient R I
+  let mu : Measure A := heckeFiniteAdeleHaar
+  let : Measure.IsAddLeftInvariant mu := heckeFiniteAdeleHaar_isAddLeftInvariant
+  have hD : Not (dd = 0) := (map_ne_zero_iff e (FaithfulSMul.algebraMap_injective R K)).mpr hd
+  have hI : Not (I = 0) := fun h => hd (Ideal.span_singleton_eq_bot.mp h)
+  let : I.toAddSubgroup.FiniteIndex := Ideal.finiteIndex hI
+  let : Finite Q := inferInstanceAs (Finite (HasQuotient.Quotient R I.toAddSubgroup))
+  let : Fintype Q := Fintype.ofFinite Q
+  let rho (c : Q) := heckePrincipalResidueCenter d c
+  let C (c : Q) := heckePrincipalResidueCoset d c
+  have hParts := heckePrincipalResidueCosets_partition d hd
+  have hDisjoint : Pairwise (fun c j : Q => Disjoint (C c) (C j)) := hParts.1
+  have hCover : Set.iUnion C = (H : Set A) := hParts.2
   have hDOpen : IsOpen (D : Set A) := isOpen_heckeScaledIntegralFiniteAdeles dd hD
   have hMeas (i : Q) : MeasurableSet (C i) :=
     ((Homeomorph.addLeft (rho i)).isOpenMap _ hDOpen).measurableSet
