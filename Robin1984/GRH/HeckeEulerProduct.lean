@@ -2,6 +2,8 @@ import Mathlib.Analysis.Complex.Circle
 import Mathlib.Analysis.Complex.LocallyUniformLimit
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 import Mathlib.Analysis.SpecificLimits.Normed
+import Mathlib.MeasureTheory.Group.Measure
+import Mathlib.MeasureTheory.Integral.DominatedConvergence
 import Mathlib.NumberTheory.NumberField.AdeleRing
 import Mathlib.Tactic.FieldSimp
 import Mathlib.Tactic.GCongr
@@ -648,5 +650,378 @@ theorem heckePoleFreeCompletedCriterion_of_pairOrder
     (fun _ T => finite_heckePrimePowerNorm_lt K T) hSummable hOrder
     (fun i s hs => (hLocal i s hs).1) (fun i s hs => (hLocal i s hs).2)
     hFCompletion hFactor hEquation
+
+
+/-! ## Finite local Tate integrals -/
+
+section TateFactors
+
+open MeasureTheory MeasureTheory.Measure
+
+/-- The integral of a geometric series supported on measurable shells of
+unit measure is its usual Euler factor. -/
+private theorem integral_geometric_shells {X : Type*} [MeasurableSpace X]
+    (M : Measure X) (shell : Nat -> Set X)
+    (hMeas : forall n, MeasurableSet (shell n))
+    (hMass : forall n, M (shell n) = 1) {z : Complex} (hz : norm z < 1) :
+    integral M (fun x => tsum (fun n => Set.indicator (shell n) (fun _ => z ^ n) x)) =
+      Inv.inv (1 - z) := by
+  let F (n : Nat) := Set.indicator (shell n) (fun _ : X => z ^ n)
+  have hInt (n : Nat) : Integrable (F n) M :=
+    (integrable_indicator_iff (hMeas n)).mpr (integrableOn_const (C := z ^ n) (by simp [hMass n]))
+  have hReal (n : Nat) : M.real (shell n) = 1 := by
+    simp only [Measure.real, hMass n, ENNReal.toReal_one]
+  have hTerm (n : Nat) : integral M (F n) = z ^ n := by
+    rw [integral_indicator_const (z ^ n) (hMeas n), hReal n, one_smul]
+  have hNormTerm (n : Nat) : integral M (fun x => norm (F n x)) = norm z ^ n := by
+    have hEq (x : X) : norm (F n x) = Set.indicator (shell n) (fun _ : X => norm z ^ n) x := by
+      classical
+      by_cases hx : Membership.mem (shell n) x
+      case pos => simp [F, hx, norm_pow]
+      case neg => simp [F, hx]
+    simp only [hEq, integral_indicator_const _ (hMeas n), hReal n, one_smul]
+  have hSum : Summable (fun n => integral M (fun x => norm (F n x))) := by
+    simpa only [hNormTerm] using summable_geometric_of_lt_one (norm_nonneg z) hz
+  change integral M (fun x => tsum (fun n => F n x)) = _
+  rw [<- integral_tsum_of_summable_integral_norm hInt hSum]
+  simp only [hTerm]
+  exact tsum_geometric_of_norm_lt_one hz
+
+/-- When the shells are disjoint and the integrand has a constant geometric
+value on each shell, its integral over their union is the local Euler factor. -/
+private theorem integral_on_geometric_shells {X : Type*} [MeasurableSpace X]
+    (M : Measure X) (shell : Nat -> Set X) (weight : X -> Complex)
+    (hMeas : forall n, MeasurableSet (shell n))
+    (hMass : forall n, M (shell n) = 1)
+    (hDisjoint : Pairwise (fun n m => Disjoint (shell n) (shell m)))
+    {z : Complex} (hz : norm z < 1)
+    (hWeight : forall n x, Membership.mem (shell n) x -> weight x = z ^ n) :
+    integral M (Set.indicator (iUnion shell) weight) = Inv.inv (1 - z) := by
+  classical
+  have hEq (x : X) : Set.indicator (iUnion shell) weight x =
+      tsum (fun n => Set.indicator (shell n) (fun _ => z ^ n) x) := by
+    by_cases hx : Membership.mem (iUnion shell) x
+    case pos =>
+      choose n hn using Set.mem_iUnion.mp hx
+      have hSingle (j : Nat) (hj : Not (j = n)) :
+          Set.indicator (shell j) (fun _ => z ^ j) x = 0 := by
+        have hjx : Not (Membership.mem (shell j) x) :=
+          fun hjx => (Set.disjoint_left.mp (hDisjoint hj)) hjx hn
+        exact Set.indicator_of_notMem hjx _
+      have hTsum : tsum (fun j => Set.indicator (shell j) (fun _ => z ^ j) x) =
+          Set.indicator (shell n) (fun _ => z ^ n) x := tsum_eq_single n hSingle
+      rw [Set.indicator_of_mem hx, hWeight n x hn, hTsum, Set.indicator_of_mem hn]
+    case neg =>
+      rw [Set.indicator_of_notMem hx]
+      have hZero (n : Nat) : Set.indicator (shell n) (fun _ => z ^ n) x = 0 :=
+        Set.indicator_of_notMem (fun hn => hx (Set.mem_iUnion.mpr (Exists.intro n hn))) _
+      simp only [hZero, tsum_zero]
+  rw [funext hEq]
+  exact integral_geometric_shells M shell hMeas hMass hz
+
+/-- A multiplicative local weight trivial on the unit shell integrates to
+its Euler factor over the union of the uniformizer shells. -/
+private theorem integral_unramified_uniformizerShells
+    {G : Type*} [Group G] [MeasurableSpace G] [MeasurableMul G]
+    (M : Measure G) [Measure.IsMulLeftInvariant M] (unitShell : Set G)
+    (hMeas : MeasurableSet unitShell) (hMass : M unitShell = 1)
+    (uniformizer : G) (weight : MonoidHom G Complex)
+    (hUnit : forall x, Membership.mem unitShell x -> weight x = 1)
+    (hDisjoint : Pairwise (fun n m : Nat => Disjoint
+      (Set.preimage (fun x : G => Inv.inv (uniformizer ^ n) * x) unitShell)
+      (Set.preimage (fun x : G => Inv.inv (uniformizer ^ m) * x) unitShell)))
+    (hNorm : norm (weight uniformizer) < 1) :
+    integral M (Set.indicator
+      (iUnion (fun n : Nat => Set.preimage (fun x : G => Inv.inv (uniformizer ^ n) * x) unitShell))
+      weight) = Inv.inv (1 - weight uniformizer) := by
+  let shell (n : Nat) := Set.preimage (fun g : G => Inv.inv (uniformizer ^ n) * g) unitShell
+  have hPres (n : Nat) := measurePreserving_mul_left M (Inv.inv (uniformizer ^ n))
+  have hMeasShell (n : Nat) : MeasurableSet (shell n) := (hPres n).measurable hMeas
+  have hMassShell (n : Nat) : M (shell n) = 1 :=
+    ((hPres n).measure_preimage hMeas.nullMeasurableSet).trans hMass
+  refine integral_on_geometric_shells M shell weight hMeasShell hMassShell hDisjoint hNorm ?_
+  intro n x hx
+  have hx' : x = uniformizer ^ n * (Inv.inv (uniformizer ^ n) * x) := by
+    rw [<- mul_assoc, mul_inv_cancel, one_mul]
+  calc
+    _ = weight (uniformizer ^ n * (Inv.inv (uniformizer ^ n) * x)) := congrArg weight hx'
+    _ = _ := by rw [map_mul, hUnit _ hx, map_pow, mul_one]
+
+section FinitePlace
+
+variable {L : Type*} [Field L] [NumberField L]
+variable (p : HeightOneSpectrum (RingOfIntegers L))
+
+/-- The nonzero local valuation takes values in the multiplicative
+integers when restricted to units of the local field. -/
+noncomputable def heckeLocalValueIndex :
+    MonoidHom (Units (p.adicCompletion L)) (Multiplicative Int) :=
+  WithZero.unitsWithZeroEquiv.toMonoidHom.comp
+    (Units.map (Valued.v : Valuation (p.adicCompletion L) (WithZero (Multiplicative Int))).toMonoidHom)
+
+theorem coe_heckeLocalValueIndex (a : Units (p.adicCompletion L)) :
+    (heckeLocalValueIndex p a : WithZero (Multiplicative Int)) =
+      Valued.v (a : p.adicCompletion L) :=
+  WithZero.coe_unitsWithZeroEquiv_eq_units_val _
+
+/-- The unit shell of the local field consists of the valuation-one elements. -/
+def heckeLocalUnitShell : Set (Units (p.adicCompletion L)) :=
+  Set.ofPred (fun a => Valued.v (a : p.adicCompletion L) = (1 : WithZero (Multiplicative Int)))
+
+/-- The complex unramified weight combines the finite character and the
+power of the normalized finite absolute value. -/
+noncomputable def heckeLocalTateWeight (chi : UnitaryHeckeCharacter L) (s : Complex) :
+    MonoidHom (Units (p.adicCompletion L)) Complex where
+  toFun a :=
+    (chi.val (localIdeleHom L p a) : Complex) *
+      Complex.exp (((Multiplicative.toAdd (heckeLocalValueIndex p a) : Int) : Complex) *
+        (Real.log (dedekindPrimeNorm L p : Real) : Complex) * s)
+  map_one' := by
+    simp [map_one, Complex.exp_zero]
+  map_mul' a b := by
+    have hAdd (x y : Multiplicative Int) :
+        Multiplicative.toAdd (x * y) = Multiplicative.toAdd x + Multiplicative.toAdd y := rfl
+    simp only [map_mul, Circle.coe_mul, hAdd, Int.cast_add, add_mul, Complex.exp_add]
+    ac_rfl
+
+/-- A valuation-one element contributes multiplicative weight one in the
+unramified case. -/
+theorem heckeLocalTateWeight_eq_one (chi : UnitaryHeckeCharacter L)
+    (hUnramified : HeckeUnramifiedAt chi p) (s : Complex)
+    (a : Units (p.adicCompletion L)) (ha : Membership.mem (heckeLocalUnitShell p) a) :
+    heckeLocalTateWeight p chi s a = 1 := by
+  have hA : Valued.v (a : p.adicCompletion L) = (1 : WithZero (Multiplicative Int)) := ha
+  have hIndex : heckeLocalValueIndex p a = 1 := by
+    apply WithZero.coe_inj.mp
+    rw [coe_heckeLocalValueIndex p a, hA]
+    rfl
+  change (chi.val (localIdeleHom L p a) : Complex) *
+    Complex.exp (((Multiplicative.toAdd (heckeLocalValueIndex p a) : Int) : Complex) *
+      (Real.log (dedekindPrimeNorm L p : Real) : Complex) * s) = 1
+  simp [hUnramified a hA, hIndex]
+
+private theorem heckeLocalValueIndex_uniformizer (a : Units (p.adicCompletion L))
+    (ha : Valued.v (a : p.adicCompletion L) = finiteUniformizerValue) :
+    heckeLocalValueIndex p a = Multiplicative.ofAdd (-1 : Int) := by
+  apply WithZero.coe_inj.mp
+  rw [coe_heckeLocalValueIndex p a, ha]
+  rfl
+
+/-- At a uniformizer the weight is the Hecke Euler parameter times the
+prime norm to the negative complex exponent. -/
+theorem heckeLocalTateWeight_uniformizer (chi : UnitaryHeckeCharacter L)
+    (hUnramified : HeckeUnramifiedAt chi p) (s : Complex)
+    (a : Units (p.adicCompletion L)) (ha : Valued.v (a : p.adicCompletion L) = finiteUniformizerValue) :
+    heckeLocalTateWeight p chi s a =
+      heckeLocalParameter chi p * (dedekindPrimeNorm L p : Complex) ^ (-s) := by
+  have hN : (1 : Real) < (dedekindPrimeNorm L p : Real) := by
+    exact_mod_cast one_lt_dedekindPrimeNorm L p
+  have hArg : 0 < (dedekindPrimeNorm L p : Real) := zero_lt_one.trans hN
+  change (chi.val (localIdeleHom L p a) : Complex) *
+    Complex.exp (((Multiplicative.toAdd (heckeLocalValueIndex p a) : Int) : Complex) *
+      (Real.log (dedekindPrimeNorm L p : Real) : Complex) * s) = _
+  rw [<- heckeLocalParameter_eq_of_uniformizer chi p hUnramified a ha,
+    heckeLocalValueIndex_uniformizer p a ha, <- Complex.ofReal_natCast,
+    Complex.cpow_def_of_ne_zero (Complex.ofReal_ne_zero.mpr hArg.ne')]
+  have hCast :
+      ((Multiplicative.toAdd (Multiplicative.ofAdd (-1 : Int)) : Int) : Complex) = -1 := by
+    change ((-1 : Int) : Complex) = -1
+    norm_num
+  rw [hCast, <- Complex.ofReal_log hArg.le]
+  congr 2
+  ring
+
+private theorem heckeLocalUnitShell_iff_index_one (x : Units (p.adicCompletion L)) :
+    Membership.mem (heckeLocalUnitShell p) x <-> heckeLocalValueIndex p x = 1 := by
+  change Valued.v (x : p.adicCompletion L) = ((1 : Multiplicative Int) : WithZero (Multiplicative Int))
+    <-> heckeLocalValueIndex p x = 1
+  rw [<- coe_heckeLocalValueIndex p x]
+  exact WithZero.coe_inj
+
+private theorem toAdd_uniformizerValue_pow (n : Nat) :
+    Multiplicative.toAdd ((Multiplicative.ofAdd (-1 : Int)) ^ n) = -(n : Int) := by
+  induction n with
+  | zero => rfl
+  | succ k ih =>
+    rw [pow_succ]
+    change Multiplicative.toAdd ((Multiplicative.ofAdd (-1 : Int)) ^ k) + (-1 : Int) =
+      -(Nat.succ k : Int)
+    rw [ih, Nat.cast_succ]
+    ring
+
+private theorem mem_heckeLocalUniformizerShell_iff
+    (a : Units (p.adicCompletion L)) (ha : Valued.v (a : p.adicCompletion L) = finiteUniformizerValue)
+    (n : Nat) (x : Units (p.adicCompletion L)) :
+    Membership.mem (Set.preimage (fun u => Inv.inv (a ^ n) * u) (heckeLocalUnitShell p)) x <->
+      Multiplicative.toAdd (heckeLocalValueIndex p x) = -(n : Int) := by
+  change Membership.mem (heckeLocalUnitShell p) (Inv.inv (a ^ n) * x) <-> _
+  rw [heckeLocalUnitShell_iff_index_one, map_mul, map_inv, map_pow,
+    heckeLocalValueIndex_uniformizer p a ha]
+  change -(Multiplicative.toAdd ((Multiplicative.ofAdd (-1 : Int)) ^ n)) +
+      Multiplicative.toAdd (heckeLocalValueIndex p x) = 0 <-> _
+  rw [toAdd_uniformizerValue_pow]
+  constructor
+  case mp =>
+    intro h
+    linarith only [h]
+  case mpr =>
+    intro h
+    rw [h, neg_neg, add_neg_cancel]
+
+/-- Distinct nonnegative powers of a uniformizer index disjoint shells. -/
+theorem heckeLocalUniformizerShells_pairwiseDisjoint
+    (a : Units (p.adicCompletion L)) (ha : Valued.v (a : p.adicCompletion L) = finiteUniformizerValue) :
+    Pairwise (fun n m : Nat => Disjoint
+      (Set.preimage (fun x => Inv.inv (a ^ n) * x) (heckeLocalUnitShell p))
+      (Set.preimage (fun x => Inv.inv (a ^ m) * x) (heckeLocalUnitShell p))) := by
+  intro n m hne
+  apply Set.disjoint_left.mpr
+  intro x hx hy
+  have hn := (mem_heckeLocalUniformizerShell_iff p a ha n x).mp hx
+  have hm := (mem_heckeLocalUniformizerShell_iff p a ha m x).mp hy
+  exact hne (by exact_mod_cast neg_injective (hn.symm.trans hm))
+
+/-- The nonzero integral local elements have nonpositive logarithmic
+valuation, with the uniformizer normalized to minus one. -/
+def heckeLocalIntegralUnits : Set (Units (p.adicCompletion L)) :=
+  Set.ofPred (fun x => Multiplicative.toAdd (heckeLocalValueIndex p x) <= 0)
+
+theorem heckeLocalUniformizerShells_eq_integralUnits
+    (a : Units (p.adicCompletion L)) (ha : Valued.v (a : p.adicCompletion L) = finiteUniformizerValue) :
+    iUnion (fun n : Nat => Set.preimage (fun x => Inv.inv (a ^ n) * x) (heckeLocalUnitShell p)) =
+      heckeLocalIntegralUnits p := by
+  ext x
+  constructor
+  case mp =>
+    intro hx
+    choose n hn using Set.mem_iUnion.mp hx
+    have h := (mem_heckeLocalUniformizerShell_iff p a ha n x).mp hn
+    change Multiplicative.toAdd (heckeLocalValueIndex p x) <= 0
+    rw [h]
+    exact neg_nonpos.mpr (by positivity)
+  case mpr =>
+    intro hx
+    change Multiplicative.toAdd (heckeLocalValueIndex p x) <= 0 at hx
+    let n := Int.toNat (-(Multiplicative.toAdd (heckeLocalValueIndex p x)))
+    have hN : (n : Int) = -(Multiplicative.toAdd (heckeLocalValueIndex p x)) :=
+      Int.toNat_of_nonneg (neg_nonneg.mpr hx)
+    refine Set.mem_iUnion.mpr (Exists.intro n ((mem_heckeLocalUniformizerShell_iff p a ha n x).mpr ?_))
+    linarith only [hN]
+
+/-- With the local Haar normalization, the unramified test function
+integrates to the Euler factor for every parameter with positive real part. -/
+theorem integral_unramifiedHeckeLocalFactor
+    [MeasurableSpace (Units (p.adicCompletion L))]
+    [MeasurableMul (Units (p.adicCompletion L))]
+    (M : Measure (Units (p.adicCompletion L))) [Measure.IsMulLeftInvariant M]
+    (hMeas : MeasurableSet (heckeLocalUnitShell p)) (hMass : M (heckeLocalUnitShell p) = 1)
+    (chi : UnitaryHeckeCharacter L) (hUnramified : HeckeUnramifiedAt chi p)
+    (a : Units (p.adicCompletion L)) (ha : Valued.v (a : p.adicCompletion L) = finiteUniformizerValue)
+    {s : Complex} (hs : 0 < s.re) :
+    integral M (Set.indicator (heckeLocalIntegralUnits p) (heckeLocalTateWeight p chi s)) =
+        Inv.inv (1 - heckeLocalParameter chi p * (dedekindPrimeNorm L p : Complex) ^ (-s)) := by
+  have hN : (1 : Real) < (dedekindPrimeNorm L p : Real) := by
+    exact_mod_cast one_lt_dedekindPrimeNorm L p
+  have hNorm : norm (heckeLocalParameter chi p * (dedekindPrimeNorm L p : Complex) ^ (-s)) < 1 := by
+    have hPow := Real.rpow_lt_rpow_of_exponent_lt hN (neg_lt_zero.mpr hs)
+    rw [Real.rpow_zero] at hPow
+    rw [norm_mul, <- Complex.ofReal_natCast,
+      Complex.norm_cpow_eq_rpow_re_of_pos (zero_lt_one.trans hN), Complex.neg_re]
+    exact (mul_le_mul_of_nonneg_right (norm_heckeLocalParameter_le_one chi p)
+      (Real.rpow_nonneg (zero_le_one.trans hN.le) _)).trans_lt (by simpa only [one_mul] using hPow)
+  rw [<- heckeLocalTateWeight_uniformizer p chi hUnramified s a ha] at hNorm
+  rw [<- heckeLocalTateWeight_uniformizer p chi hUnramified s a ha,
+    <- heckeLocalUniformizerShells_eq_integralUnits p a ha]
+  exact integral_unramified_uniformizerShells M (heckeLocalUnitShell p) hMeas hMass a
+    (heckeLocalTateWeight p chi s) (heckeLocalTateWeight_eq_one p chi hUnramified s)
+    (heckeLocalUniformizerShells_pairwiseDisjoint p a ha) hNorm
+
+
+/-- The ramified test density is the inverse character on the local unit
+shell and vanishes outside that shell. -/
+noncomputable def heckeLocalRamifiedTest (chi : UnitaryHeckeCharacter L) :
+    Units (p.adicCompletion L) -> Complex :=
+  Set.indicator (heckeLocalUnitShell p)
+    (fun x => (chi.val (localIdeleHom L p (Inv.inv x)) : Complex))
+
+/-- With the local Haar normalization, the ramified test function
+integrates to the Euler factor one for every complex parameter. -/
+theorem integral_ramifiedHeckeLocalFactor
+    [MeasurableSpace (Units (p.adicCompletion L))]
+    (M : Measure (Units (p.adicCompletion L)))
+    (hMeas : MeasurableSet (heckeLocalUnitShell p)) (hMass : M (heckeLocalUnitShell p) = 1)
+    (chi : UnitaryHeckeCharacter L) (hRamified : Not (HeckeUnramifiedAt chi p)) (s : Complex) :
+    integral M (fun x => heckeLocalRamifiedTest p chi x * heckeLocalTateWeight p chi s x) =
+      Inv.inv (1 - heckeLocalParameter chi p * (dedekindPrimeNorm L p : Complex) ^ (-s)) := by
+  classical
+  have hZero : heckeLocalParameter chi p = 0 := by
+    unfold heckeLocalParameter
+    rw [if_neg hRamified]
+  rw [hZero, zero_mul, sub_zero, inv_one]
+  have hPoint (x : Units (p.adicCompletion L)) :
+      heckeLocalRamifiedTest p chi x * heckeLocalTateWeight p chi s x =
+        Set.indicator (heckeLocalUnitShell p) (fun _ => (1 : Complex)) x := by
+    by_cases hx : Membership.mem (heckeLocalUnitShell p) x
+    case pos =>
+      have hIdx := (heckeLocalUnitShell_iff_index_one p x).mp hx
+      have hc : chi.val (localIdeleHom L p (Inv.inv x)) *
+          chi.val (localIdeleHom L p x) = 1 := by
+        rw [<- map_mul, <- map_mul, inv_mul_cancel, map_one, map_one]
+      have hWeight :
+          heckeLocalTateWeight p chi s x = (chi.val (localIdeleHom L p x) : Complex) := by
+        change (chi.val (localIdeleHom L p x) : Complex) *
+          Complex.exp (((Multiplicative.toAdd (heckeLocalValueIndex p x) : Int) : Complex) *
+            (Real.log (dedekindPrimeNorm L p : Real) : Complex) * s) = _
+        simp [hIdx]
+      rw [heckeLocalRamifiedTest, Set.indicator_of_mem hx, Set.indicator_of_mem hx, hWeight]
+      simpa only [Circle.coe_mul, Circle.coe_one] using congrArg (fun z : Circle => (z : Complex)) hc
+    case neg =>
+      simp [heckeLocalRamifiedTest, hx]
+  rw [funext hPoint, integral_indicator_const (1 : Complex) hMeas]
+  simp [Measure.real, hMass]
+
+
+/-- The local test density for the Euler factor uses the integral elements
+in the unramified case and the inverse character on units in the ramified case. -/
+noncomputable def heckeLocalTateTest (chi : UnitaryHeckeCharacter L) :
+    Units (p.adicCompletion L) -> Complex := by
+  classical
+  exact if HeckeUnramifiedAt chi p then
+    Set.indicator (heckeLocalIntegralUnits p) (fun _ => 1)
+    else heckeLocalRamifiedTest p chi
+
+/-- With unit-shell measure one, the canonical finite test gives the
+standard Hecke Euler factor on the local right half-plane. -/
+theorem integral_heckeLocalTateFactor
+    [MeasurableSpace (Units (p.adicCompletion L))]
+    [MeasurableMul (Units (p.adicCompletion L))]
+    (M : Measure (Units (p.adicCompletion L))) [Measure.IsMulLeftInvariant M]
+    (hMeas : MeasurableSet (heckeLocalUnitShell p)) (hMass : M (heckeLocalUnitShell p) = 1)
+    (chi : UnitaryHeckeCharacter L)
+    {s : Complex} (hs : 0 < s.re) :
+    integral M (fun x => heckeLocalTateTest p chi x * heckeLocalTateWeight p chi s x) =
+      Inv.inv (1 - heckeLocalParameter chi p * (dedekindPrimeNorm L p : Complex) ^ (-s)) := by
+  classical
+  by_cases h : HeckeUnramifiedAt chi p
+  case pos =>
+    rw [heckeLocalTateTest, if_pos h]
+    have hPoint (x : Units (p.adicCompletion L)) :
+        Set.indicator (heckeLocalIntegralUnits p) (fun _ => (1 : Complex)) x *
+            heckeLocalTateWeight p chi s x =
+          Set.indicator (heckeLocalIntegralUnits p) (heckeLocalTateWeight p chi s) x := by
+      by_cases hx : Membership.mem (heckeLocalIntegralUnits p) x
+      case pos => simp [hx]
+      case neg => simp [hx]
+    rw [funext hPoint]
+    exact integral_unramifiedHeckeLocalFactor p M hMeas hMass chi h
+      (localUniformizer L p) (valuation_localUniformizer L p) hs
+  case neg =>
+    rw [heckeLocalTateTest, if_neg h]
+    exact integral_ramifiedHeckeLocalFactor p M hMeas hMass chi h s
+
+end FinitePlace
+
+end TateFactors
+
 
 end Robin1984.GRH
