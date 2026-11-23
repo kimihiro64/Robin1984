@@ -241,7 +241,8 @@ noncomputable def heckeFiniteLocalIdele
   (Units.map (RingHom.snd (InfiniteAdeleRing K) (FiniteDilationAdeles K)).toMonoidHom).comp (localIdeleHom K p)
 
 omit [MeasurableSpace (FiniteDilationAdeles K)] [BorelSpace (FiniteDilationAdeles K)] in
-private theorem heckeFiniteLocalIdele_at (p : HeightOneSpectrum (RingOfIntegers K))
+/-- The component at the supported place is the given local unit. -/
+theorem heckeFiniteLocalIdele_at (p : HeightOneSpectrum (RingOfIntegers K))
     (a : Units (p.adicCompletion K)) :
     (heckeFiniteLocalIdele p a).val p = a.val := by
   classical
@@ -249,7 +250,8 @@ private theorem heckeFiniteLocalIdele_at (p : HeightOneSpectrum (RingOfIntegers 
   exact Function.update_self p a.val _
 
 omit [MeasurableSpace (FiniteDilationAdeles K)] [BorelSpace (FiniteDilationAdeles K)] in
-private theorem heckeFiniteLocalIdele_away
+/-- Components away from the supported place are one. -/
+theorem heckeFiniteLocalIdele_away
     (p q : HeightOneSpectrum (RingOfIntegers K)) (hq : Not (q = p))
     (a : Units (p.adicCompletion K)) :
     (heckeFiniteLocalIdele p a).val q = 1 := by
@@ -463,7 +465,8 @@ theorem heckeFiniteAdditiveModulus_localIdele_eq_norm
     _ = N a := congrArg N ha
 
 
-private def finiteComponent (p : HeightOneSpectrum (RingOfIntegers K)) :
+/-- Evaluation of a finite idele as a unit at the chosen place. -/
+def heckeFiniteIdeleComponent (p : HeightOneSpectrum (RingOfIntegers K)) :
     MonoidHom (Units (FiniteDilationAdeles K)) (Units (p.adicCompletion K)) where
   toFun b :=
     { val := b.val p
@@ -482,30 +485,30 @@ theorem heckeFiniteAdditiveModulus_eq_ideleNorm (b : Units (FiniteDilationAdeles
     Filter.eventually_cofinite.mp (FiniteAdeleRing.isUnit_iff.mp b.isUnit).2
   let s := hSupp.toFinset
   let single := fun p : HeightOneSpectrum (RingOfIntegers K) =>
-    heckeFiniteLocalIdele p (finiteComponent p b)
+    heckeFiniteLocalIdele p (heckeFiniteIdeleComponent p b)
   let part := s.prod single
   have hAt (q : HeightOneSpectrum (RingOfIntegers K)) (hq : Membership.mem s q) :
-      finiteComponent q part = finiteComponent q b := by
-    change finiteComponent q (s.prod single) = finiteComponent q b
+      heckeFiniteIdeleComponent q part = heckeFiniteIdeleComponent q b := by
+    change heckeFiniteIdeleComponent q (s.prod single) = heckeFiniteIdeleComponent q b
     rw [map_prod, Finset.prod_eq_single_of_mem q hq]
     . apply Units.ext
-      exact heckeFiniteLocalIdele_at q (finiteComponent q b)
+      exact heckeFiniteLocalIdele_at q (heckeFiniteIdeleComponent q b)
     . intro p _ hp
       apply Units.ext
-      exact heckeFiniteLocalIdele_away p q (Ne.symm hp) (finiteComponent p b)
+      exact heckeFiniteLocalIdele_away p q (Ne.symm hp) (heckeFiniteIdeleComponent p b)
   have hAway (q : HeightOneSpectrum (RingOfIntegers K)) (hq : Not (Membership.mem s q)) :
-      finiteComponent q part = 1 := by
-    change finiteComponent q (s.prod single) = 1
+      heckeFiniteIdeleComponent q part = 1 := by
+    change heckeFiniteIdeleComponent q (s.prod single) = 1
     rw [map_prod]
     apply Finset.prod_eq_one
     intro p hp
     have hne : Not (q = p) := fun h => hq (by rw [h]; exact hp)
     apply Units.ext
-    exact heckeFiniteLocalIdele_away p q hne (finiteComponent p b)
+    exact heckeFiniteLocalIdele_away p q hne (heckeFiniteIdeleComponent p b)
   let rest := b * Inv.inv part
   have hRestIndex (q : HeightOneSpectrum (RingOfIntegers K)) :
-      Valued.v (finiteComponent q rest).val = 1 := by
-    change Valued.v (finiteComponent q (b * Inv.inv part)).val = 1
+      Valued.v (heckeFiniteIdeleComponent q rest).val = 1 := by
+    change Valued.v (heckeFiniteIdeleComponent q (b * Inv.inv part)).val = 1
     rw [map_mul, map_inv]
     by_cases hq : Membership.mem s q
     . rw [hAt q hq, mul_inv_cancel]
@@ -515,7 +518,7 @@ theorem heckeFiniteAdditiveModulus_eq_ideleNorm (b : Units (FiniteDilationAdeles
       exact hq (hSupp.mem_toFinset.mpr h)
   have hRestUnit (q : HeightOneSpectrum (RingOfIntegers K)) :=
     (HeightOneSpectrum.adicCompletionIntegers.mem_units_iff_valued_eq_one
-      (K := K) (v := q) (a := finiteComponent q rest)).mpr (hRestIndex q)
+      (K := K) (v := q) (a := heckeFiniteIdeleComponent q rest)).mpr (hRestIndex q)
   have hv : Membership.mem heckeIntegralFiniteAdeles (rest : FiniteDilationAdeles K) := fun q => (hRestUnit q).1
   have hi : Membership.mem heckeIntegralFiniteAdeles rest.inv := fun q => (hRestUnit q).2
   have hD : dilationReal rest = 1 := by
@@ -543,7 +546,7 @@ theorem heckeFiniteAdditiveModulus_eq_ideleNorm (b : Units (FiniteDilationAdeles
     _ = s.prod (fun p => norm (b.val p)) := by
       apply Finset.prod_congr rfl
       intro p _
-      exact heckeFiniteAdditiveModulus_localIdele_eq_norm p (finiteComponent p b)
+      exact heckeFiniteAdditiveModulus_localIdele_eq_norm p (heckeFiniteIdeleComponent p b)
     _ = heckeFiniteIdeleNorm b := hn.symm
 
 /-- Fourier scaling on the finite adeles uses the inverse idelic norm. -/

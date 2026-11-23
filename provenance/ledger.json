@@ -1524,6 +1524,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeFiniteIdealClass.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The finite idele description of the ideal class group and normalized valuations in a number field.",
+      "formalization_note": "Constructs the surjective ideal homomorphism and proves the compactness of its integral unit kernel.",
+      "content_basis": "Checked local valuation exponents, the finite prime factorization, compatibility with principal ideals, and the class group quotient.",
+      "dependency_status": "Uses Mathlib's fractional ideal factorization and class group, and the finite idele component and local valuation maps.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeFiniteTateTest.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Tate's finite test functions, local conductor congruences, and adelic Poisson summation.",
