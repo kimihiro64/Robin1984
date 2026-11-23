@@ -1541,6 +1541,67 @@ theorem heckeNormCharacter_unramified
   change Circle.exp (t * Real.log (heckeIdelicNorm (localIdeleHom K p a))) = 1
   rw [heckeIdelicNorm_localIdeleHom, hNorm, Real.log_one, mul_zero, Circle.exp_zero]
 
+private theorem norm_eq_inv_of_valuation_finiteUniformizer
+    (p : HeightOneSpectrum (RingOfIntegers K)) (x : p.adicCompletion K)
+    (hx : Valued.v x = finiteUniformizerValue) :
+    norm x = Inv.inv (dedekindPrimeNorm K p : Real) := by
+  rw [FinitePlace.norm_def, hx, finiteUniformizerValue,
+    WithZeroMulInt.toNNReal_neg_apply _ WithZero.coe_ne_zero, WithZero.unzero_coe]
+  change (((Ideal.absNorm p.asIdeal : NNReal) ^ (-1 : Int) : NNReal) : Real) = _
+  simp [dedekindPrimeNorm]
+
+/-- The local parameter of a pure norm character is the inverse imaginary
+power of the prime norm. -/
+theorem heckeLocalParameter_normCharacter
+    (t : Real) (p : HeightOneSpectrum (RingOfIntegers K)) :
+    heckeLocalParameter (heckeNormCharacter t) p =
+      (dedekindPrimeNorm K p : Complex) ^ (-((t : Complex) * Complex.I)) := by
+  have hExists := HeightOneSpectrum.valuedAdicCompletion_surjective K p finiteUniformizerValue
+  choose u hu using hExists
+  have hValNonzero : Not (finiteUniformizerValue = 0) := WithZero.coe_ne_zero
+  have hNonzero : Not (u = 0) := by
+    intro hZero
+    rw [hZero, map_zero] at hu
+    exact hValNonzero hu.symm
+  let a : Units (p.adicCompletion K) := Units.mk0 u hNonzero
+  rw [heckeLocalParameter_eq_of_uniformizer (heckeNormCharacter t) p
+    (heckeNormCharacter_unramified t p) a hu]
+  have hPos : 0 < (dedekindPrimeNorm K p : Real) := by
+    exact_mod_cast zero_lt_one.trans (one_lt_dedekindPrimeNorm K p)
+  change (Circle.exp (t * Real.log (heckeIdelicNorm (localIdeleHom K p a))) : Complex) = _
+  have hNorm : norm (a : p.adicCompletion K) = Inv.inv (dedekindPrimeNorm K p : Real) :=
+    norm_eq_inv_of_valuation_finiteUniformizer p (a : p.adicCompletion K) hu
+  rw [heckeIdelicNorm_localIdeleHom, hNorm,
+    Circle.coe_exp, Real.log_inv, <- Complex.ofReal_natCast,
+    Complex.cpow_def_of_ne_zero (Complex.ofReal_ne_zero.mpr hPos.ne')]
+  rw [Complex.ofReal_mul, Complex.ofReal_neg, <- Complex.ofReal_log hPos.le]
+  congr 1
+  ring
+
+/-- On the half-plane of absolute convergence, the Hecke series for
+the pure norm character is the vertically shifted Dedekind zeta function. -/
+theorem heckeEulerL_normCharacter_eq_dedekindZeta (t : Real)
+    {s : Complex} (hs : 1 < s.re) :
+    heckeEulerL K (heckeNormCharacter t) s =
+      dedekindZeta K (s + (t : Complex) * Complex.I) := by
+  have hsShift : 1 < (s + (t : Complex) * Complex.I).re := by
+    simpa [Complex.add_re, Complex.mul_re] using hs
+  have hHecke := hasProd_heckeEulerL K (heckeNormCharacter t) hs
+  have hFactors : (fun p : HeightOneSpectrum (RingOfIntegers K) =>
+      Inv.inv (1 - heckeLocalParameter (heckeNormCharacter t) p *
+        (dedekindPrimeNorm K p : Complex) ^ (-s))) =
+      fun p => Inv.inv (1 - (dedekindPrimeNorm K p : Complex) ^
+        (-(s + (t : Complex) * Complex.I))) := by
+    funext p
+    have hPos : 0 < (dedekindPrimeNorm K p : Real) := by
+      exact_mod_cast zero_lt_one.trans (one_lt_dedekindPrimeNorm K p)
+    have hNe : Not ((dedekindPrimeNorm K p : Complex) = 0) := by
+      rw [<- Complex.ofReal_natCast]
+      exact Complex.ofReal_ne_zero.mpr hPos.ne'
+    rw [heckeLocalParameter_normCharacter, neg_add, Complex.cpow_add _ _ hNe, mul_comm]
+  rw [hFactors] at hHecke
+  exact hHecke.unique (hasProd_dedekindZeta_eulerFactors K hsShift)
+
 end IdeleNorm
 
 end Robin1984.GRH

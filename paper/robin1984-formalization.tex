@@ -1916,6 +1916,13 @@ $\alpha_\chi(\mathfrak p)=0$ at ramified primes. It proves the Euler
 product on $\Re s>1$ and the paired coefficient
 $b_{\mathfrak p,j}=2\Re(\alpha_\chi(\mathfrak p)^j)\log N\mathfrak p$
 for every $j\ge1$ in \path{Robin1984/GRH/HeckeEulerProduct.lean}.
+The same file evaluates the finite local Tate integrals on $\Re s>0$,
+using multiplicative Haar measure normalized by the unit subgroup.
+For each $t\in\mathbb R$ the unitary idelic norm character
+$\chi_t=|\cdot|^{it}$ gives $L(s,\chi_t)=\zeta_K(s+it)$ on $\Re s>1$.
+Lean constructs its shifted continuation and proves that its critical-line
+property is equivalent to both the corrected ideal Robin criterion and the
+triangular prime-power bound for $K$.
 The local exponents give the conductor ideal in
 \path{Robin1984/GRH/HeckeConductor.lean}. The real and complex
 shifts and their radial Gaussian Mellin evaluations on $\Re s>0$

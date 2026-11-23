@@ -1,6 +1,7 @@
 import Mathlib.Analysis.Calculus.ParametricIntegral
 import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 import Mathlib.MeasureTheory.Integral.Gamma
+import Robin1984.GRH.DedekindTriangular
 import Robin1984.GRH.HeckeConductor
 
 /-!
@@ -898,5 +899,85 @@ theorem heckePoleFreeCompletedCriterion_of_mellinTails
 
 end
 
+
+section NormTwist
+
+variable (K : Type*) [Field K] [NumberField K]
+
+/-- The meromorphic Hecke L-function of the pure idelic norm character
+is the Dedekind zeta continuation translated by `i * t`. -/
+noncomputable def heckeNormTwistL (t : Real) (s : Complex) : Complex :=
+  DedekindZeta.dedekindZetaContinuation K (s + (t : Complex) * Complex.I)
+
+/-- The translated continuation agrees with the pure norm character's
+Euler series throughout its half-plane of absolute convergence. -/
+theorem heckeNormTwistL_eq_euler (t : Real) {s : Complex} (hs : 1 < s.re) :
+    heckeNormTwistL K t s = heckeEulerL K (heckeNormCharacter t) s := by
+  have hShift : 1 < (s + (t : Complex) * Complex.I).re := by
+    simpa [Complex.add_re, Complex.mul_re] using hs
+  rw [heckeNormTwistL, DedekindZeta.dedekindZetaContinuation_eq_series K hShift,
+    heckeEulerL_normCharacter_eq_dedekindZeta t hs]
+
+/-- The continuation of the pure norm Hecke L-function is analytic
+away from the translated pole. -/
+theorem analyticAt_heckeNormTwistL (t : Real) {s : Complex}
+    (hs : Not (s = 1 - (t : Complex) * Complex.I)) :
+    AnalyticAt Complex (heckeNormTwistL K t) s := by
+  have hPole : Not (s + (t : Complex) * Complex.I = 1) := by
+    intro h
+    exact hs (eq_sub_of_add_eq h)
+  change AnalyticAt Complex
+    (Function.comp (DedekindZeta.dedekindZetaContinuation K) (fun z : Complex => z + (t : Complex) * Complex.I)) s
+  have hTranslate : AnalyticAt Complex (fun z : Complex => z + (t : Complex) * Complex.I) s :=
+    analyticAt_id.add analyticAt_const
+  exact AnalyticAt.comp (f := fun z : Complex => z + (t : Complex) * Complex.I) (x := s)
+    (DedekindZeta.analyticAt_dedekindZetaContinuation K hPole) hTranslate
+
+/-- A pure idelic norm character has all its nontrivial zeros on the
+critical line exactly when the same is true of Dedekind zeta. -/
+theorem dedekindRH_iff_heckeNormTwistRH (t : Real) :
+    Iff (DedekindRH K)
+      (forall s : Complex, 0 < s.re -> s.re < 1 -> heckeNormTwistL K t s = 0 -> s.re = 1 / 2) := by
+  rw [dedekindRH_iff_zeros_of_continuation (DedekindZeta.isDedekindZetaContinuation_actual K)]
+  constructor
+  case mp =>
+    intro h s hs0 hs1 hz
+    have hRe : (s + (t : Complex) * Complex.I).re = s.re := by
+      simp [Complex.add_re, Complex.mul_re]
+    have hZero : DedekindZeta.dedekindZetaContinuation K (s + (t : Complex) * Complex.I) = 0 :=
+      hz
+    have hLine := h (s + (t : Complex) * Complex.I)
+      (by rw [hRe]; exact hs0) (by rw [hRe]; exact hs1) hZero
+    rwa [hRe] at hLine
+  case mpr =>
+    intro h s hs0 hs1 hz
+    let z := s - (t : Complex) * Complex.I
+    have hRe : z.re = s.re := by simp [z, Complex.sub_re, Complex.mul_re]
+    have hZero : heckeNormTwistL K t z = 0 := by
+      change DedekindZeta.dedekindZetaContinuation K (z + (t : Complex) * Complex.I) = 0
+      rw [show z + (t : Complex) * Complex.I = s from sub_add_cancel _ _]
+      exact hz
+    have hLine := h z (by rw [hRe]; exact hs0) (by rw [hRe]; exact hs1) hZero
+    rwa [hRe] at hLine
+
+/-- For any real twist parameter, the critical-line statement for the
+norm-character Hecke L-function is equivalent to corrected ideal Robin. -/
+theorem heckeNormTwistRH_iff_correctedIdealRobin (t : Real) :
+    Iff (forall s : Complex, 0 < s.re -> s.re < 1 ->
+        heckeNormTwistL K t s = 0 -> s.re = 1 / 2)
+      (CorrectedIdealRobin K) :=
+  (dedekindRH_iff_heckeNormTwistRH K t).symm.trans
+    (Iff.intro (correctedIdealRobin_of_dedekindRH K) (dedekindRH_of_correctedIdealRobin K))
+
+/-- The same norm-character critical-line statement is equivalent
+to the triangular prime-power bound over the number field. -/
+theorem heckeNormTwistRH_iff_dedekindTriangularRobin (t : Real) :
+    Iff (forall s : Complex, 0 < s.re -> s.re < 1 ->
+        heckeNormTwistL K t s = 0 -> s.re = 1 / 2)
+      (DedekindTriangularRobin K) :=
+  (dedekindRH_iff_heckeNormTwistRH K t).symm.trans
+    (dedekindRH_iff_dedekindTriangularRobin K)
+
+end NormTwist
 
 end Robin1984.GRH

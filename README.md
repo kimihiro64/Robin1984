@@ -56,7 +56,10 @@ Both results use a field-dependent norm cutoff. The inequality and proofs
 are described in [the generalized criteria](docs/GRH.md). The Grand RH
 section proves a triangular criterion for a supplied family of completed
 L-functions with standard analytic data. The Hecke specialization constructs
-the Euler factors, conductor, and Gamma shifts from the characters. For a
+the Euler factors, conductor, and Gamma shifts from the characters. Each pure
+norm character gives a vertical translate of Dedekind zeta. Lean proves that
+its critical-line property is equivalent to both the corrected ideal Robin
+inequality and the triangular prime-power bound for the field. For a
 pole-free Hecke pair, normalized reflected Mellin tails with finite
 absolute moments supply the continuation, functional equation, and growth
 bound. Identifying those tails with the completed Hecke products remains

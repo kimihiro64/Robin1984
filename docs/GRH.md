@@ -316,6 +316,14 @@ c_\chi(\mathfrak p,j)
   \log N\mathfrak p,\qquad j\ge1.
 $$
 The triangular sum uses the prime-ideal powers $(N\mathfrak p)^j<x$.
+The finite local Tate integral uses Haar measure of mass one on the unit
+subgroup and equals the Euler factor for $\operatorname{Re}s>0$.
+For every real $t$, the actual unitary character $\chi_t=|\cdot|^{it}$
+has $L(s,\chi_t)=\zeta_K(s+it)$. Lean verifies the Euler product identity
+on $\operatorname{Re}s>1$ and gives the continuation away from $1-it$.
+Theorems `heckeNormTwistRH_iff_correctedIdealRobin` and
+`heckeNormTwistRH_iff_dedekindTriangularRobin` prove both equivalences
+for zeros in the open critical strip of the translated function.
 `HeckeConductor.lean` constructs the conductor ideal from the least local
 exponents and proves that the inverse character has the same conductor.
 `HeckeArchimedean.lean` constructs the local Gamma shifts from the real and
