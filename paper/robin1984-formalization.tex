@@ -1827,53 +1827,87 @@ applying Theorem~\ref{thm:ideal-robin} to each $K$.
 \end{proof}
 
 \begin{theorem}[Triangular prime-power criterion for grand RH]
-Let $L(s,\pi)$ be a normalized unitary cuspidal standard
-$L$-function over a number field $K$. Put
-$Z=L(s,\pi)L(s,\tilde\pi)$. For a pure norm twist use $Z=\zeta_K$,
-since vertical shifts preserve the real part of a zero. Write
-$m$ for the pole order of $Z$ at $1$ and
-$-Z'(s)/Z(s)=\sum_{\mathfrak p,j}b_{\mathfrak p,j}(N\mathfrak p)^{-js}$.
-RH for $L(s,\pi)$ is equivalent to
+Consider the normalized unitary cuspidal standard automorphic
+$L$-functions of every rank over every number field. For each
+$L(s,\pi)$, put $Z(s)=L(s,\pi)L(s,\tilde\pi)$. For a pure norm
+twist use $Z=\zeta_K$ after translation in the imaginary direction.
+Write $m$ for the pole order of $Z$ at $1$ and
+$-Z'(s)/Z(s)=\sum_{\mathfrak p,j\geq 1}
+ b_{\mathfrak p,j}(N\mathfrak p)^{-js}$, where $\mathfrak p$ ranges
+over the nonzero prime ideals of the field.
+
+Every zero of every pole-cleared completed standard $L$-function in
+this family has real part $1/2$ if and only if, for each $Z$, there is
+a real constant $C_Z$ such that
 \begin{equation}\label{eq:grand-rh-prime-power}
  R_Z(x):=\frac{mx}{2}-
- \sum_{\mathfrak p,j:\,(N\mathfrak p)^j\le x}
+ \sum_{\mathfrak p,j:\,j\geq 1,\,(N\mathfrak p)^j\le x}
  b_{\mathfrak p,j}\left(1-\frac{(N\mathfrak p)^j}{x}\right)
  \le C_Z\sqrt{x}
 \end{equation}
-for some $C_Z$ and all sufficiently large $x$.
+for all sufficiently large $x$.
 \end{theorem}
 
 \begin{proof}
-Conjugation makes $b_{\mathfrak p,j}$ real. Perron's kernel
-$1/[s(s+1)]$ gives the triangular weight in
-\eqref{eq:grand-rh-prime-power}. Under RH shift to a fixed line
-strictly below $1/2$ and above the trivial zeros. The pole
-at $1$ contributes $mx/2$ and cancels. The remaining zero sum
-$\sum_\rho x^\rho/[\rho(\rho+1)]$ is $O_Z(\sqrt{x})$ by the
-zero count for the completed $L$-functions. The integral on the
-shifted line is of lower order. See
-\cite{LagariasAutomorphicLi} for the standard analytic properties
-and the corresponding zero count.
+Conjugation makes $b_{\mathfrak p,j}$ real. The standard Euler
+products, completion, and functional equation are described in
+\cite[\S\,2]{ThornerZhaoRankinSelberg}. Set $F(s)=(s-1)^mZ(s)$.
+This is entire of order at most one. Indeed, one can recover it from
+the pole-cleared completion by reciprocal Gamma and conductor
+factors and division by $s^m$. The reciprocal Gamma functions have
+order one by Euler's product, and division by $s^m$ is bounded on
+the complement of the unit disk. The apparent singularity at zero
+is removable because $F$ is entire.
 
-Conversely, the transform of $R_Z(x)$ against $x^{-s-1}\,dx$
-on $x\ge1$ is
+On $\Re s>1/2$ the completion factors are nonzero, since every
+shifted Gamma argument has positive real part there. The completed
+functional equation relates a zero at $s$ to a zero of the dual at
+$1-s$. These facts transfer the completed zero assertion to
+nonvanishing of $F$ on $\Re s>1/2$, and conversely across the family.
+The archimedean bounds used for the transfer are recorded in
+\cite[\S\,6]{LagariasAutomorphicLi} and
+\cite[\S\,2]{ThornerZhaoRankinSelberg}.
+
+The exact Mellin transform, on $\Re s>1$, is
 \[
- \frac{m}{2(s-1)}+\frac{Z'(s)}{s(s+1)Z(s)}.
+ \int_1^\infty R_Z(x)x^{-s-1}\,dx
+ =\frac{m}{2(s-1)}+\frac{Z'(s)}{s(s+1)Z(s)}
+ =\frac{F'(s)/F(s)+m(s+2)/2}{s(s+1)} .
 \]
-The singularity at $1$ cancels. At a real zero $\beta>1/2$
-with multiplicity $j$, the transform of $C_Z\sqrt{x}-R_Z(x)$
-has residue $-j/[\beta(\beta+1)]$. Landau's theorem and positivity
-exclude any singularity to the right of $1/2$, by the same
-convergence-abscissa argument as above. The functional equations
-give the other half. The factors of $Z$ have no poles in the open
-strip, so their zeros cannot cancel.
+The pole correction cancels the apparent pole at $s=1$. Given
+\eqref{eq:grand-rh-prime-power}, Landau's theorem applied to the
+nonnegative tail of $C_Z\sqrt{x}-R_Z(x)$ forces $F$ to be nonzero
+on $\Re s>1/2$. A real zero $\beta>1/2$ of multiplicity $j$ would
+give the comparison transform residue $-j/[\beta(\beta+1)]$.
+The convergence-abscissa argument also excludes nonreal zeros
+in the same half-plane.
+
+Conversely, suppose $F$ is nonzero on $\Re s>1/2$. In the genus-one
+expansion of its logarithmic derivative let $b$ be the constant
+term, and let $m_0,m_{-1}$ be the zero multiplicities at $0,-1$.
+The divided zero term at $\rho\notin\{0,-1\}$ has inverse
+Mellin transform $(x^\rho-x^{-1})/[\rho(\rho+1)]$.
+Matching transforms gives, for almost every $x>1$,
+\begin{align*}
+ R_Z(x)=\Re\Bigg[&
+ b(1-x^{-1})+m(1-\tfrac12x^{-1})
+ +m_0(\log x-1+x^{-1})-m_{-1}x^{-1}\log x\\
+ &+\sum_{\substack{\rho:\,F(\rho)=0\\\rho\notin\{0,-1\}}}
+ \frac{x^\rho-x^{-1}}{\rho(\rho+1)}\Bigg].
+\end{align*}
+The summation counts multiplicity. Order at most one implies
+summability of $1/|\rho(\rho+1)|$ away from $0,-1$. Every zero
+appearing in the sum has real part at most $1/2$, so the right
+side is $O_Z(\sqrt{x})$. Continuity of the locally finite
+triangular sum gives the pointwise bound in
+\eqref{eq:grand-rh-prime-power}.
 \end{proof}
 
-Grand RH here means RH for the normalized unitary cuspidal standard
-$L$-functions over all number fields, quantified over all degrees.
-This includes general unitary Hecke $L$-functions in degree one.
-The Lean Challenge specifies the paired analytic data for this criterion.
-Its instantiation by the standard automorphic families is in progress.
+Degree one includes unitary Hecke $L$-functions. For the trivial
+Hecke character of a field $K$, Lean verifies that the triangular
+bound is equivalent to Dedekind RH and to the corrected ideal
+criterion for that field. Both proofs are in
+\path{Robin1984/GRH/DedekindTriangular.lean}.
 The test uses a weighted sum of prime powers. A weighted all-ideal
 bound can also be obtained when the logarithmic Euler coefficients
 are nonnegative. For unitary Hecke characters $\chi$ other than pure
@@ -1892,10 +1926,12 @@ weighted comparison are recorded in \path{docs/GRH.md}.
 Lean~4.33.1 and Mathlib~\cite{Lean4,Mathlib} verify the three classical
 Robin and Lagarias equivalences and both corrected ideal Robin
 equivalences in Section~\ref{sec:grh}. The automated statement boundary
-compares the same five declarations. The grand RH criterion has a Lean
-proof for families equipped with the specified analytic data. Its
-instantiation for all standard automorphic L-functions remains a
-follow-up.
+compares the same five declarations. Lean proves the completed-zero
+triangular criterion from the specified Euler, order-one and
+completion data in
+\path{grandRobinCompletedCriterion_of_entireOrder}.
+The formal instantiation of those data for the full standard
+automorphic family remains a follow-up.
 
 The three classical equivalence declarations have the
 mathematical types
@@ -3004,6 +3040,12 @@ L. Greni\'e and G. Molteni,
 J. C. Lagarias,
 \emph{Li coefficients for automorphic $L$-functions},
 Ann. Inst. Fourier \textbf{57} (2007), 1689--1740.
+
+\bibitem{ThornerZhaoRankinSelberg}
+J. Thorner and S. Zhao,
+\emph{Landau--Siegel zeros of Rankin--Selberg $L$-functions},
+preprint, 2026,
+\href{https://arxiv.org/abs/2601.04189}{arXiv:2601.04189}.
 
 \bibitem{AlaogluErdos1944}
 L. Alaoglu and P. Erd\H{o}s,
