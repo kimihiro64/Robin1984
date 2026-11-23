@@ -1002,6 +1002,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeIdeleClassCoordinates.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The logarithmic-norm splitting of the idele group and the idele class group in Tate's thesis.",
+      "formalization_note": "Uses the explicit positive archimedean section and principal multiplication to construct the two homeomorphisms and verify their coordinate laws.",
+      "content_basis": "Checked the exponential section, principal invariance, both inverse maps, continuity, and compatibility with multiplication.",
+      "dependency_status": "Uses the idelic product formula, compact norm-one class construction, and the explicit archimedean scaling section.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeTateDualSupport.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Tate's finite additive Fourier transform, duality of an integral modulus, and the restricted product of local fields.",

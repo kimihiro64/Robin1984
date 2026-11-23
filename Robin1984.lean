@@ -1,4 +1,5 @@
 import Robin1984.Equivalence.Theorem
+import Robin1984.GRH.HeckeIdeleClassCoordinates
 import Robin1984.GRH.HeckeTateMellin
 import Robin1984.Lagarias.Theorem
 import Robin1984.Mathlib

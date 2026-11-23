@@ -162,7 +162,8 @@ theorem exists_compact_mixedNorm_unitRepresentatives (r : Real) (hr : 0 < r) :
       mul_comm c (Inv.inv c), hinv _ hc.ne', one_smul]
 
 omit [NumberField K] in
-private theorem continuous_heckeInfiniteAdele_mixedSpace_symm :
+/-- The inverse archimedean coordinate map is continuous. -/
+theorem continuous_heckeInfiniteAdele_mixedSpace_symm :
     Continuous (InfiniteAdeleRing.ringEquiv_mixedSpace K).symm := by
   let E := InfiniteAdeleRing.ringEquiv_mixedSpace K
   apply continuous_pi
@@ -289,7 +290,8 @@ private abbrev FractionalIntegerIdeal :=
 noncomputable def heckeNormOneIdeles : Subgroup (Units (AdeleRing (RingOfIntegers K) K)) :=
   (heckeIdelicNorm (K := K)).toHomUnits.ker
 
-private theorem mem_heckeNormOneIdeles (a : GlobalIdeles K) :
+/-- Membership in the norm-one subgroup is the condition that the idelic norm is one. -/
+theorem mem_heckeNormOneIdeles (a : GlobalIdeles K) :
     Membership.mem (heckeNormOneIdeles K) a <-> heckeIdelicNorm a = 1 := by
   change _ = _ <-> _
   exact Iff.intro (congrArg Units.val) (fun h => Units.ext h)
