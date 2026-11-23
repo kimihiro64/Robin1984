@@ -1047,6 +1047,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/AutomorphicEulerLog.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The absolutely convergent logarithmic Euler product and its derivative on the right half-plane.",
+      "formalization_note": "Differentiates the log sum termwise and proves nonvanishing and the logarithmic derivative needed by the completed-family criterion.",
+      "content_basis": "Reviewed the coefficient normalization by the prime-power norm logarithm, the locally uniform majorant, and the completed-family consumer.",
+      "dependency_status": "Uses Mathlib's locally uniform differentiation and the Robin1984 standard completion theorem.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/DedekindDeLaValleePoussin.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The de la Vallee Poussin trigonometric argument for zeta nonvanishing on the line of absolute convergence.",

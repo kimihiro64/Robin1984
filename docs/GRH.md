@@ -294,11 +294,21 @@ order-one bound for the pole-cleared completed functions. Lean proves
 the order-one bound for the reciprocal Gamma factors, the resulting
 growth bound for the pole-cleared ordinary function, and the
 nonvanishing of the completion factor to the right of $1/2$.
+In `AutomorphicEulerLog.lean`, the theorem
+`grandRobinCompletedCriterion_of_eulerProduct` derives right-half-plane
+nonvanishing and the logarithmic derivative from the absolutely convergent
+exponential Euler product. The log series divides each logarithmic
+derivative coefficient at an ideal power by the logarithm of that power's
+norm.
 
 The release Challenge gives the earlier analytic-data statement. For
 the full standard automorphic family, Lean still needs the actual
 $L$-functions, their Euler data, completed order bounds, and functional
-equations.
+equations. The published proof archive contains Hecke L-functions and
+their functional equations. Robin1984 has its own criterion and currently
+has no dependency on the archive.
+[Hecke L-functions](https://github.com/leanprover-community/riemann-hypothesis/blob/40e56bab026552e089d7afcfeff08d2defb9c005/src/GroundTheory/GlobalFields/TateThesis/HeckeLFunction.lean)
+[Hecke functional equation](https://github.com/leanprover-community/riemann-hypothesis/blob/40e56bab026552e089d7afcfeff08d2defb9c005/src/GroundTheory/GlobalFields/TateThesis/HeckeTheoremFE.lean)
 For the trivial Hecke character of a field $K$, use $Z=\zeta_K$ and
 $m=1$. Its logarithmic Euler coefficient at $(N\mathfrak p)^j$ is
 $\log N\mathfrak p$. Thus, for $x\ge1$,
