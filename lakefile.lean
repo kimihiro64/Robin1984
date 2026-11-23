@@ -40,12 +40,12 @@ require mathlib from git
 
 lean_lib Robin1984 where
 
+-- The vendored entry points import siblings throughout their namespaces.
 lean_lib DedekindZeta where
-  roots := #[`DedekindZeta.ConeMellinBridge, `DedekindZeta.PerClass]
+  globs := #[.submodules `DedekindZeta]
 
 lean_lib TauCeti where
-  roots := #[`TauCeti.MeasureTheory.Integral.IntervalIntegral.AbsolutelyContinuousFun,
-    `TauCeti.NumberTheory.LSeries.Newman.Tauberian]
+  globs := #[.submodules `TauCeti]
 
 @[default_target]
 lean_lib Challenge where
