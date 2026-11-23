@@ -41,35 +41,115 @@ The Challenge definitions use Mathlib's divisor sum, Euler--Mascheroni
 constant, harmonic numbers, real logarithm and real power, and
 `RiemannHypothesis` predicate.
 
-## Extensions to generalized RH
+## Dirichlet GRH, Dedekind ERH, and Grand RH
 
-- **Dirichlet GRH.** Every zero in the open critical strip of **every
-  Dirichlet L-function** has real part one half if and only if the
-  corrected ideal Robin inequality holds in every cyclotomic field.
-  The proof derives the cyclotomic factorization through the primitive
-  characters attached to each modulus.
-- **Dedekind ERH.** The critical-line property for the Dedekind zeta
-  function of every number field is equivalent to the same corrected
-  ideal Robin inequality in every number field.
+### The corrected ideal Robin inequality
 
-Both results use a field-dependent norm cutoff. The
-[research paper](paper/robin1984-formalization.tex) gives their full
-proofs and derives the triangular prime-power criterion for the
-standard L-functions of unitary cuspidal representations of
-`GL(n)` in every rank and over every number field. The paper cites
-the classical analytic theorems used for the automorphic family.
-It retains the classical Robin, colossally abundant, and Lagarias
-arguments in appendices.
+Let $K$ be a number field with ring of integers $\mathcal O_K$ and
+discriminant $D_K$. Write $\kappa_K=\operatorname{Res}_{s=1}\zeta_K(s)$
+for the residue of its Dedekind zeta function, and let $\gamma$ be the
+Euler–Mascheroni constant. For a nonzero integral ideal $\mathfrak a$,
+the absolute norm and the ideal divisor sum are
 
-Lean verifies the corrected ideal equivalences and the triangular
-criterion for an indexed family with the stated analytic data. In
-degree one it constructs Hecke Euler factors, conductors, and Gamma
-shifts, and identifies pure norm twists with translates of Dedekind
-zeta. The checked adelic theory includes the additive character,
-Poisson summation for translated finite test functions, and Fourier
-scaling by the finite idelic norm. The identification of the global
-Mellin tails with the general completed Hecke products and the
-all-rank automorphic instantiation remain open in Lean. See
+```math
+N\mathfrak a=\#(\mathcal O_K/\mathfrak a),
+\qquad
+\sigma_K(\mathfrak a)=
+  \sum_{\substack{\mathfrak d\mid\mathfrak a\\
+                   \mathfrak d\ \mathrm{integral}}}N\mathfrak d.
+```
+
+The corrected inequality for $K$ asks for an integer cutoff $A_K$
+such that every nonzero integral ideal $\mathfrak a$ with
+$N\mathfrak a\ge A_K$ satisfies
+
+```math
+\frac{\sigma_K(\mathfrak a)}{N\mathfrak a}
+\ \le\
+e^\gamma\kappa_K
+\left(
+  \log\log N\mathfrak a+
+  \frac{12+3\log|D_K|}{\sqrt{\log N\mathfrak a}}
+\right).
+```
+
+All logarithms are natural. The cutoff can depend on $K$.
+
+- **Dirichlet GRH.** For every integer $m\ge1$ and every Dirichlet character
+  $\chi$ modulo $m$, every zero of $L(s,\chi)$ in $0<\Re s<1$ lies on
+  $\Re s=1/2$ if and only if the corrected ideal Robin inequality holds
+  in every cyclotomic field $K=\mathbb Q(\zeta_m)$, where $\zeta_m$ is a
+  primitive $m$-th root of unity.
+- **Dedekind ERH.** For every number field $K$, every zero of $\zeta_K(s)$
+  in $0<\Re s<1$ lies on $\Re s=1/2$ if and only if the corrected ideal
+  Robin inequality holds in every number field $K$.
+
+### Grand RH and the triangular prime-power inequality
+
+Grand RH is the assertion that every nontrivial zero of every standard
+automorphic $L(s,\pi)$ has real part $1/2$. Here $\pi$ ranges over unitary
+cuspidal representations of $\mathrm{GL}_n(\mathbb A_K)$ for all $n\ge1$
+and all number fields $K$. The nontrivial zeros are the zeros of the
+pole-cleared completed standard function.
+
+For each $K$, include the test $Z=\zeta_K$. For every $\pi$ other than a
+pure norm character $|\cdot|_{\mathbb A_K}^{it}$ of $\mathrm{GL}_1$,
+include the paired test $Z=L(s,\pi)L(s,\widetilde\pi)$, where
+$\widetilde\pi$ is the contragredient of $\pi$. The $Z=\zeta_K$ test
+covers the pure norm characters because their standard functions are
+$\zeta_K(s+it)$.
+
+For a nonzero prime ideal $\mathfrak p$ write $q=N\mathfrak p$.
+The real coefficients $b_{\mathfrak p,j}(Z)$ for integers $j\ge1$
+are those of the logarithmic derivative
+
+```math
+-\frac{Z'(s)}{Z(s)}
+ =\sum_{\mathfrak p}\sum_{j\ge1}b_{\mathfrak p,j}(Z)q^{-js},
+\qquad \Re s>1.
+```
+
+For $Z=\zeta_K$, $b_{\mathfrak p,j}(Z)=\log q$. For a pair, write
+$L_{\mathfrak p}(s,\pi)=\prod_{k=1}^n(1-\alpha_{\mathfrak p,k}q^{-s})^{-1}$,
+using zero parameters as needed at ramified primes. Then
+
+```math
+b_{\mathfrak p,j}(Z)=2\log q\,
+    \Re\!\left(\sum_{k=1}^n\alpha_{\mathfrak p,k}^{\,j}\right).
+```
+
+Let $m_Z$ be the pole order of $Z$ at $1$, equal to $1$ for the
+Dedekind test and $0$ for a paired test. Grand RH is equivalent to
+the following bound for every test $Z$.
+
+```math
+R_Z(x)
+ =\frac{m_Z x}{2}
+  -\sum_{\substack{\mathfrak p,\ j\ge1\\ q^j\le x}}
+    b_{\mathfrak p,j}(Z)\left(1-\frac{q^j}{x}\right)
+ \ \le\ C_Z\sqrt{x}
+\qquad (x\ge X_Z).
+```
+
+Each $Z$ has its own constants $C_Z\in\mathbb R$ and $X_Z\ge1$, and
+the bound holds for every real $x\ge X_Z$. For $Z=\zeta_K$, the triangular
+bound and the corrected ideal Robin inequality are equivalent for that
+field. Taking all fields gives Dedekind ERH. Taking all cyclotomic fields
+gives Dirichlet GRH.
+
+### Proofs and verification
+
+The [research paper](paper/robin1984-formalization.tex) proves all three
+equivalences in ordinary mathematics and gives the citations for the
+automorphic analytic inputs. The classical Robin, colossally abundant,
+and Lagarias arguments appear in its appendices.
+
+Lean verifies both corrected ideal equivalences. It also proves the
+triangular equivalence for a family supplied with the analytic data in
+`HasStandardAutomorphicAnalytics`. The all-rank instantiation is still
+open in Lean. The rank-one development now reaches entire adelic Mellin
+tails on the idele class quotient. The identification with the completed
+Hecke Euler products is still in progress. See
 [the generalized criteria](docs/GRH.md) for the declarations.
 
 ## Mathematical organization
