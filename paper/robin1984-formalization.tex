@@ -1920,9 +1920,18 @@ The local exponents give the conductor ideal in
 \path{Robin1984/GRH/HeckeConductor.lean}. The real and complex
 shifts and their radial Gaussian Mellin evaluations on $\Re s>0$
 are verified in \path{Robin1984/GRH/HeckeArchimedean.lean}.
-The resulting Hecke triangular criterion uses those local data
-and takes the global analytic continuation, order bound, and
-functional equation as inputs.
+The resulting Hecke triangular criterion uses those local data.
+For the pole-free case, Lean also constructs the entire continuation
+from a Mellin tail
+$A_i(s)=\int_X f_i(x)e^{s\log r(x)}\,dM(x)$ and the reflected tail of
+the dual. The construction assumes $r\ge1$ almost everywhere and
+finite absolute moments $\int_X |f_i(x)|r(x)^a\,dM(x)$ for every
+$a\in\mathbb R$. Unit-modulus root factors with
+$\epsilon_i\epsilon_{\widetilde i}=1$ give the functional equation.
+On $-2\le\Re s\le3$, the moments at $a=3$ bound both tails. The
+Euler product and Gamma factors then give order at most one for the
+pair. The remaining global identity on $\Re s>1$ identifies the
+constructed pair with the standard completed Hecke product.
 
 A weighted all-ideal bound can also be obtained when the
 logarithmic Euler coefficients are nonnegative. For unitary Hecke

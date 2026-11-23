@@ -1,3 +1,4 @@
+import Mathlib.Analysis.Calculus.ParametricIntegral
 import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 import Mathlib.MeasureTheory.Integral.Gamma
 import Robin1984.GRH.HeckeConductor
@@ -662,5 +663,240 @@ theorem complexInfiniteHeckeGamma_eq_radial_mellin {K : Type*} [Field K] [Number
     2 * (((2 * Real.pi : Real) : Complex) ^ (-w) * Complex.Gamma w)
   rw [radial_gaussian_mellin (2 * Real.pi) hPi w hw]
   ring
+
+/-! ## Reflected Mellin tails of the pole-free completion -/
+
+section
+
+open Filter Topology
+
+variable {X : Type*} [MeasurableSpace X]
+
+/-- A Mellin tail with the unitary character included in the density. -/
+noncomputable def heckeMellinTail (M : Measure X) (f : X -> Complex)
+    (r : X -> Real) (s : Complex) : Complex :=
+  integral M (fun x => f x * Complex.exp (s * (Real.log (r x) : Complex)))
+
+/-- On a closed left half-plane, the norm of an integrable Mellin tail
+is bounded by its weighted absolute integral at the right endpoint. -/
+theorem norm_heckeMellinTail_le (M : Measure X) (f : X -> Complex) (r : X -> Real)
+    (hf : AEStronglyMeasurable f M) (hr : AEMeasurable r M)
+    (hRadius : Filter.Eventually (fun x => 1 <= r x) (ae M))
+    {a : Real} (hWeight : Integrable (fun x => norm (f x) * r x ^ a) M)
+    {s : Complex} (hs : s.re <= a) :
+    norm (heckeMellinTail M f r s) <= integral M (fun x => norm (f x) * r x ^ a) := by
+  let g : X -> Complex := fun x => f x * Complex.exp (s * (Real.log (r x) : Complex))
+  have hLog : AEMeasurable (fun x => (Real.log (r x) : Complex)) M :=
+    Complex.continuous_ofReal.measurable.comp_aemeasurable (Real.measurable_log.comp_aemeasurable hr)
+  have hExp : AEMeasurable (fun x => Complex.exp (s * (Real.log (r x) : Complex))) M :=
+    Complex.continuous_exp.measurable.comp_aemeasurable (hLog.const_mul s)
+  have hMeas : AEStronglyMeasurable g M := hf.mul hExp.aestronglyMeasurable
+  have hBound : Filter.Eventually (fun x => norm (g x) <= norm (f x) * r x ^ a) (ae M) := by
+    apply hRadius.mono
+    intro x hx
+    change norm (f x * Complex.exp (s * (Real.log (r x) : Complex))) <= _
+    rw [norm_mul, Complex.norm_exp, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, mul_zero,
+      sub_zero, Real.rpow_def_of_pos (zero_lt_one.trans_le hx)]
+    refine mul_le_mul_of_nonneg_left (Real.exp_le_exp.mpr ?_) (norm_nonneg _)
+    rw [mul_comm s.re]
+    exact mul_le_mul_of_nonneg_left hs (Real.log_nonneg hx)
+  have hInt : Integrable g M := hWeight.mono' hMeas hBound
+  exact (norm_integral_le_integral_norm _).trans (integral_mono_ae hInt.norm hWeight hBound)
+
+/-- Exponential moments at every real exponent justify differentiating a
+Mellin tail at every complex parameter. -/
+theorem hasDerivAt_heckeMellinTail (M : Measure X) (f : X -> Complex) (r : X -> Real)
+    (hf : AEStronglyMeasurable f M) (hr : AEMeasurable r M)
+    (hRadius : Filter.Eventually (fun x => 1 <= r x) (ae M))
+    (hWeight : forall a : Real, Integrable (fun x => norm (f x) * r x ^ a) M)
+    (s : Complex) :
+    HasDerivAt (heckeMellinTail M f r)
+      (integral M (fun x => f x * (Complex.exp (s * (Real.log (r x) : Complex)) *
+        (Real.log (r x) : Complex)))) s := by
+  let l (x : X) : Complex := Real.log (r x)
+  let G (z : Complex) (x : X) := f x * Complex.exp (z * l x)
+  let G' (z : Complex) (x : X) := f x * (Complex.exp (z * l x) * l x)
+  let a := s.re + 1
+  let U := Set.ofPred (fun z : Complex => z.re < a)
+  have hU : Membership.mem (nhds s) U :=
+    (isOpen_lt Complex.continuous_re continuous_const).mem_nhds
+      (show s.re < s.re + 1 from lt_add_of_pos_right _ zero_lt_one)
+  have hL : AEMeasurable l M :=
+    Complex.continuous_ofReal.measurable.comp_aemeasurable (Real.measurable_log.comp_aemeasurable hr)
+  have hExp (z : Complex) : AEMeasurable (fun x => Complex.exp (z * l x)) M :=
+    Complex.continuous_exp.measurable.comp_aemeasurable (hL.const_mul z)
+  have hG (z : Complex) : AEStronglyMeasurable (G z) M := hf.mul (hExp z).aestronglyMeasurable
+  have hG' : AEStronglyMeasurable (G' s) M :=
+    hf.mul ((hExp s).aestronglyMeasurable.mul hL.aestronglyMeasurable)
+  have hExpNorm (z : Complex) (x : X) (hx : 1 <= r x) :
+      norm (Complex.exp (z * l x)) = r x ^ z.re := by
+    dsimp [l]
+    rw [Complex.norm_exp, Complex.mul_re, Complex.ofReal_re,
+      Complex.ofReal_im, mul_zero, sub_zero, Real.rpow_def_of_pos (zero_lt_one.trans_le hx),
+      mul_comm z.re]
+  have hGint : Integrable (G s) M := by
+    refine (hWeight s.re).mono' (hG s) (hRadius.mono ?_)
+    intro x hx
+    change norm (f x * Complex.exp (s * l x)) <= _
+    rw [norm_mul, hExpNorm s x hx]
+  have hDeriv (x : X) (z : Complex) : HasDerivAt (fun zz => G zz x) (G' z x) z := by
+    have hMul : HasDerivAt (fun zz : Complex => zz * l x) (l x) z := by
+      simpa only [id, one_mul] using (hasDerivAt_id z).mul_const (l x)
+    exact ((Complex.hasDerivAt_exp (z * l x)).comp z hMul).const_mul (f x)
+  have hDerivNorm : Filter.Eventually (fun x => forall z : Complex, Membership.mem U z ->
+      norm (G' z x) <= norm (f x) * r x ^ (a + 1)) (ae M) := by
+    refine hRadius.mono ?_
+    intro x hx z hz
+    have hrpos := zero_lt_one.trans_le hx
+    have hzle : z.re <= a := (show z.re < a from hz).le
+    have hl : norm (l x) <= r x := by
+      dsimp [l]
+      rw [Complex.norm_of_nonneg (Real.log_nonneg hx)]
+      exact (Real.log_le_sub_one_of_pos hrpos).trans (sub_le_self _ zero_le_one)
+    change norm (f x * (Complex.exp (z * l x) * l x)) <= _
+    rw [norm_mul, norm_mul, hExpNorm z x hx]
+    apply mul_le_mul_of_nonneg_left _ (norm_nonneg _)
+    calc
+      _ <= r x ^ a * r x := mul_le_mul (Real.rpow_le_rpow_of_exponent_le hx hzle) hl
+        (norm_nonneg _) (Real.rpow_nonneg hrpos.le _)
+      _ = _ := by simpa only [Real.rpow_one] using (Real.rpow_add hrpos a 1).symm
+  have hD : Filter.Eventually (fun x =>
+      forall z : Complex, Membership.mem U z -> HasDerivAt (fun zz => G zz x) (G' z x) z) (ae M) :=
+    Filter.Eventually.of_forall (fun x z _ => hDeriv x z)
+  exact (hasDerivAt_integral_of_dominated_loc_of_deriv_le hU
+    (Filter.Eventually.of_forall hG) hGint hG' hDerivNorm (hWeight (a + 1)) hD).2
+
+/-- Under the exponential moment hypothesis, the Mellin tail is entire. -/
+theorem differentiable_heckeMellinTail (M : Measure X) (f : X -> Complex) (r : X -> Real)
+    (hf : AEStronglyMeasurable f M) (hr : AEMeasurable r M)
+    (hRadius : Filter.Eventually (fun x => 1 <= r x) (ae M))
+    (hWeight : forall a : Real, Integrable (fun x => norm (f x) * r x ^ a) M) :
+    Differentiable Complex (heckeMellinTail M f r) :=
+  fun s => (hasDerivAt_heckeMellinTail M f r hf hr hRadius hWeight s).differentiableAt
+
+
+/-- The pole-free Hecke criterion follows from continuation of the paired
+completion, its functional equation, and its growth on the middle strip. -/
+theorem heckePoleFreeCompletedCriterion_of_stripBound
+    {K : Type*} [Field K] [NumberField K] {index : Type*}
+    (character : index -> UnitaryHeckeCharacter K) (dual : index -> index)
+    (completedL equationFactor : index -> Complex -> Complex)
+    (hDual : forall i, dual (dual i) = i)
+    (hUnit : forall i s, norm (equationFactor i s) = 1)
+    (hEntire : forall i, Differentiable Complex (fun s => completedL i s * completedL (dual i) s))
+    (hCompletedEuler : forall i s, 1 < s.re ->
+      completedL i s * completedL (dual i) s =
+        heckePairedCompletionFactor (character i) 0 s *
+          (heckeEulerL K (character i) s * heckeEulerL K (unitaryHeckeInverse (character i)) s))
+    (hStrip : forall i, exists B : Real, forall s : Complex, -2 <= s.re -> s.re <= 3 ->
+      norm (completedL i s * completedL (dual i) s) <= B)
+    (hEquation : forall i s, completedL (dual i) (1 - s) =
+      equationFactor i s * completedL i s) :
+    CompletedFamilyRH completedL <-> forall i, HeckeTriangularBound (character i) 0 := by
+  classical
+  let Q (i : index) := heckeArithmeticConductor (character i) ^ (2 : Nat)
+  let mu (i : index) := heckePairedRealShift (character i)
+  let nu (i : index) := heckePairedComplexShift (character i)
+  have hQ (i : index) : 0 < Q i := pow_pos (heckeArithmeticConductor_pos (character i)) _
+  have hMu (i : index) (p : PairedRealHeckePlaces K) : -(1 : Real) / 2 < (mu i p).re :=
+    (show -(1 : Real) / 2 < 0 by norm_num).trans_le (heckePairedRealShift_re_nonneg (character i) p)
+  have hNu (i : index) (p : PairedComplexHeckePlaces K) : -(1 : Real) / 2 < (nu i p).re :=
+    (show -(1 : Real) / 2 < 0 by norm_num).trans_le (heckePairedComplexShift_re_nonneg (character i) p)
+  have hMirror (i : index) (s : Complex) :
+      norm (completedL i (1 - s) * completedL (dual i) (1 - s)) =
+        norm (completedL i s * completedL (dual i) s) := by
+    have hFirst : completedL i (1 - s) = equationFactor (dual i) s * completedL (dual i) s := by
+      simpa only [hDual i] using hEquation (dual i) s
+    rw [hFirst, hEquation i s]
+    simp only [norm_mul, hUnit, one_mul]
+    exact mul_comm _ _
+  have hGrowth (i : index) :
+      Complex.Hadamard.EntireOfOrderAtMost 1 (fun s => completedL i s * completedL (dual i) s) := by
+    refine entireOrderOne_heckePair_of_stripBound K (character i) (hQ i) (mu i) (nu i)
+      (hMu i) (hNu i) (hEntire i) (hCompletedEuler i) (hMirror i) ?_
+    choose B hB using hStrip i
+    intro eps heps
+    let C := 1 + max 0 B
+    have hC : 0 < C := by dsimp [C]; positivity
+    refine Exists.intro C (And.intro hC ?_)
+    intro s hsL hsR
+    have hPow : 1 <= (1 + norm s) ^ (1 + eps) :=
+      Real.one_le_rpow (le_add_of_nonneg_right (norm_nonneg s)) (by positivity)
+    calc
+      _ <= B := hB s hsL hsR
+      _ <= C := (le_max_right 0 B).trans (le_add_of_nonneg_left zero_le_one)
+      _ <= C * (1 + norm s) ^ (1 + eps) := le_mul_of_one_le_right hC.le hPow
+      _ <= _ := (le_add_of_nonneg_right zero_le_one).trans (Real.add_one_le_exp _)
+  exact heckePoleFreeCompletedCriterion_of_pairOrder K character dual completedL equationFactor
+    Q mu nu hQ hMu hNu hGrowth hCompletedEuler hEquation
+
+/-- The completion formed by a Mellin tail and the reflected tail of the
+dual character, with the associated root factor. -/
+noncomputable def heckeCompletedFromMellinTails {index : Type*}
+    (M : Measure X) (density : index -> X -> Complex) (radius : X -> Real)
+    (dual : index -> index) (root : index -> Complex) (i : index) (s : Complex) : Complex :=
+  heckeMellinTail M (density i) radius s +
+    root (dual i) * heckeMellinTail M (density (dual i)) radius (1 - s)
+
+/-- For pole-free Hecke characters presented by reflected Mellin tails,
+the continued functions satisfy the Robin-style equivalence once they
+are identified with the paired Euler products on the right half-plane. -/
+theorem heckePoleFreeCompletedCriterion_of_mellinTails
+    {K : Type*} [Field K] [NumberField K] {index : Type*}
+    (character : index -> UnitaryHeckeCharacter K) (dual : index -> index)
+    (root : index -> Complex) (hDual : forall i, dual (dual i) = i)
+    (hRootNorm : forall i, norm (root i) = 1)
+    (hRootProduct : forall i, root i * root (dual i) = 1)
+    (M : Measure X) (density : index -> X -> Complex) (radius : X -> Real)
+    (hDensity : forall i, AEStronglyMeasurable (density i) M)
+    (hRadiusMeas : AEMeasurable radius M)
+    (hRadius : Filter.Eventually (fun x => 1 <= radius x) (ae M))
+    (hMoment : forall i (a : Real), Integrable (fun x => norm (density i x) * radius x ^ a) M)
+    (hEuler : forall i s, 1 < s.re ->
+      heckeCompletedFromMellinTails M density radius dual root i s *
+        heckeCompletedFromMellinTails M density radius dual root (dual i) s =
+        heckePairedCompletionFactor (character i) 0 s *
+          (heckeEulerL K (character i) s * heckeEulerL K (unitaryHeckeInverse (character i)) s)) :
+    CompletedFamilyRH (heckeCompletedFromMellinTails M density radius dual root) <->
+      forall i, HeckeTriangularBound (character i) 0 := by
+  let completed := heckeCompletedFromMellinTails M density radius dual root
+  have hTail (i : index) :=
+    differentiable_heckeMellinTail M (density i) radius (hDensity i) hRadiusMeas hRadius (hMoment i)
+  have hRef : Differentiable Complex (fun s : Complex => 1 - s) :=
+    (differentiable_const (1 : Complex)).sub differentiable_id
+  have hEntire (i : index) : Differentiable Complex (completed i) :=
+    (hTail i).add ((differentiable_const _).mul ((hTail (dual i)).comp hRef))
+  let mass (i : index) := integral M (fun x => norm (density i x) * radius x ^ (3 : Real))
+  have hOnStrip (i : index) (s : Complex) (hL : -2 <= s.re) (hR : s.re <= 3) :
+      norm (completed i s) <= mass i + mass (dual i) := by
+    have hMirror : (1 - s).re <= 3 := by
+      rw [Complex.sub_re, Complex.one_re]
+      linarith only [hL]
+    change norm (heckeMellinTail M (density i) radius s +
+      root (dual i) * heckeMellinTail M (density (dual i)) radius (1 - s)) <= _
+    refine (norm_add_le _ _).trans ?_
+    rw [norm_mul, hRootNorm (dual i), one_mul]
+    exact add_le_add
+      (norm_heckeMellinTail_le M (density i) radius (hDensity i) hRadiusMeas hRadius (hMoment i 3) hR)
+      (norm_heckeMellinTail_le M (density (dual i)) radius (hDensity (dual i))
+        hRadiusMeas hRadius (hMoment (dual i) 3) hMirror)
+  have hStrip (i : index) : exists B : Real, forall s : Complex, -2 <= s.re -> s.re <= 3 ->
+      norm (completed i s * completed (dual i) s) <= B := by
+    refine Exists.intro ((mass i + mass (dual i)) * (mass (dual i) + mass (dual (dual i)))) ?_
+    intro s hL hR
+    rw [norm_mul]
+    have hI := hOnStrip i s hL hR
+    have hD := hOnStrip (dual i) s hL hR
+    exact mul_le_mul hI hD (norm_nonneg _) ((norm_nonneg _).trans hI)
+  have hEquation (i : index) (s : Complex) : completed (dual i) (1 - s) = root i * completed i s := by
+    simp only [completed, heckeCompletedFromMellinTails, hDual i, sub_sub_cancel,
+      mul_add, <- mul_assoc, hRootProduct i, one_mul]
+    exact add_comm _ _
+  exact heckePoleFreeCompletedCriterion_of_stripBound character dual completed (fun i _ => root i)
+    hDual (fun i _ => hRootNorm i) (fun i => (hEntire i).mul (hEntire (dual i)))
+    hEuler hStrip hEquation
+
+end
+
 
 end Robin1984.GRH

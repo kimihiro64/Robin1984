@@ -321,8 +321,16 @@ exponents and proves that the inverse character has the same conductor.
 `HeckeArchimedean.lean` constructs the local Gamma shifts from the real and
 complex components and proves their radial Gaussian Mellin identities.
 The theorem `heckeCompletedCriterion_of_characterParameters` uses these
-inputs and the proved Euler factors. It takes the global analytic
-continuation, completed functional equation, and order bound as hypotheses.
+inputs and the proved Euler factors with supplied global analytic data.
+For the pole-free case, `heckePoleFreeCompletedCriterion_of_mellinTails`
+constructs the completed functions from reflected Mellin tails
+$A_i(s)=\int_X f_i(x)e^{s\log r(x)}\,dM(x)$. It takes $r\ge1$ almost
+everywhere and finite absolute moments $\int_X |f_i(x)|r(x)^a\,dM(x)$
+for every $a\in\mathbb R$. With the normalized dual root factors, Lean
+proves entireness and the functional equation. The moments at $a=3$
+bound each completed function on $-2\le\operatorname{Re}s\le3$. The
+remaining global identity identifies the constructed pair with the
+standard completed Hecke product on $\operatorname{Re}s>1$.
 
 The Challenge states the critical-line condition directly for every
 pole-cleared completed L-function in the supplied family. The Solution

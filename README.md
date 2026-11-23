@@ -56,10 +56,12 @@ Both results use a field-dependent norm cutoff. The inequality and proofs
 are described in [the generalized criteria](docs/GRH.md). The Grand RH
 section proves a triangular criterion for a supplied family of completed
 L-functions with standard analytic data. The Hecke specialization constructs
-the Euler factors, conductor, and Gamma shifts from the characters. The
-global Hecke continuation and functional equation are supplied hypotheses.
-Instantiating the criterion for every standard automorphic L-function
-remains open in Lean.
+the Euler factors, conductor, and Gamma shifts from the characters. For a
+pole-free Hecke pair, normalized reflected Mellin tails with finite
+absolute moments supply the continuation, functional equation, and growth
+bound. Identifying those tails with the completed Hecke products remains
+open in Lean. The full standard automorphic family in every rank and number
+field also remains to be instantiated.
 
 ## Mathematical organization
 
