@@ -2,7 +2,7 @@ import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Robin1984.Equivalence.Theorem
 import Robin1984.GRH.CyclotomicFactorization
 import Robin1984.GRH.DedekindTriangular
-import Robin1984.GRH.GrandRobin
+import Robin1984.GRH.StandardAutomorphicFamily
 import Robin1984.Lagarias.Theorem
 import Robin1984.Public
 
@@ -20,8 +20,9 @@ set_option autoImplicit false
 /-!
 # Proved solution
 
-Comparator checks that these declarations have exactly the same statements as
-their counterparts in `Challenge.lean` and use only the permitted axioms.
+The release Comparator checks the three classical equivalences and the
+Dirichlet GRH and Dedekind ERH equivalences against `Challenge.lean`.
+The supplied-family Grand RH criterion below uses the stated analytic data.
 -/
 
 namespace Robin1984
@@ -80,13 +81,28 @@ theorem dedekindERH_iff_correctedIdealRobin :
 
 /-! ## Grand RH -/
 
-theorem grandRH_iff_triangularPrimePowerBound {index coefficients zeros : Type u}
-    [Countable coefficients] [Countable zeros]
-    (automorphicL : index -> Complex -> Complex)
-    (family : index -> GrandRobinDatum coefficients zeros)
-    (realizes : forall pi, GrandRobinRealization (automorphicL pi) (family pi)) :
-    GrandRH automorphicL <-> (forall pi, GrandRobinBound (family pi)) := by
-  exact grandRobinFamilyCriterion automorphicL family realizes
+/-- For a supplied standard family, every zero of each pole-cleared completed
+L-function lies on the critical line exactly when every paired prime-power
+remainder has a square-root upper bound. -/
+theorem grandRH_iff_triangularPrimePowerBound {index : Type u} {powers : index -> Type u}
+    [forall pi, Countable (powers pi)]
+    (family : StandardAutomorphicFamilyData index powers)
+    (analytics : HasStandardAutomorphicAnalytics family) :
+    (forall (pi : index) (s : Complex), family.completedL pi s = 0 -> s.re = 1 / 2) <->
+      (forall pi, StandardFamilyTriangularBound family pi) := by
+  let data (pi : index) : GrandRobinEulerData (powers pi) :=
+    { normPower := fun i => family.primePowerNorm pi i
+      coefficient := family.coefficient pi
+      poleOrder := family.poleOrder pi
+      poleRemoved := family.poleRemoved pi }
+  change CompletedFamilyRH family.completedL <-> forall pi, GrandRobinTriangularBound (data pi)
+  exact grandRobinCompletedCriterion_of_eulerProduct
+    family.completedL family.equationFactor family.dual data
+    family.conductor family.poleOrder family.realShift family.complexShift
+    analytics.conductor_pos analytics.real_shift analytics.complex_shift (fun _ => rfl)
+    analytics.norm_ge_two analytics.norms_locally_finite analytics.log_derivative_summable
+    analytics.ordinary_entire analytics.completed_order_one analytics.euler_product
+    analytics.completion analytics.functional_equation
 
 /-! ## Supporting statements -/
 

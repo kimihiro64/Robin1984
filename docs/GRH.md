@@ -320,9 +320,11 @@ The theorem `heckeCompletedCriterion` applies the completed-family
 criterion to these actual Euler factors given the analytic continuations
 and the completed functional equations and order bounds.
 
-The release Challenge gives the earlier analytic-data statement. Its
-specialization to every standard automorphic L-function requires formal
-proofs of the analytic data for the actual representations in every
+The Challenge states the critical-line condition directly for every
+pole-cleared completed L-function in the supplied family. The Solution
+proves the triangular equivalence from the analytic data for that family.
+The specialization to every standard automorphic L-function still requires
+formal proofs of the analytic data for actual representations in every
 rank and number field. The published proof archive contains independent
 Hecke L-functions and their functional equations.
 [Hecke L-functions](https://github.com/leanprover-community/riemann-hypothesis/blob/40e56bab026552e089d7afcfeff08d2defb9c005/src/GroundTheory/GlobalFields/TateThesis/HeckeLFunction.lean)

@@ -53,10 +53,10 @@ constant, harmonic numbers, real logarithm and real power, and
   ideal Robin inequality in every number field.
 
 Both results use a field-dependent norm cutoff. The inequality and proofs
-are described in [the generalized criteria](docs/GRH.md). The grand RH
-section states the triangular criterion for families equipped with the
-specified analytic data. Its instantiation for all standard automorphic
-L-functions is a follow-up.
+are described in [the generalized criteria](docs/GRH.md). The Grand RH
+section proves a triangular criterion for a supplied family of completed
+L-functions with standard analytic data. Instantiating it for every
+standard automorphic L-function remains open in Lean.
 
 ## Mathematical organization
 

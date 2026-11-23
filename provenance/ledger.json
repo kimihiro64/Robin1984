@@ -1803,6 +1803,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/StandardAutomorphicFamily.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The Euler product and completion data used by the triangular prime-power equivalent of the critical-line property.",
+      "formalization_note": "Defines the completed standard family and its analytic input using the same Mathlib expressions as the independent Challenge.",
+      "content_basis": "Reviewed the exact finite Gamma factors, logarithmic Euler series, order-one condition, and triangular remainder collected in the Challenge and Solution.",
+      "dependency_status": "Uses the Robin1984 Euler-product and completion criterion in the Solution.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/SupportingLine.lean",
       "classification": "Primarily project-original",
       "mathematical_source": "The supporting-line comparison in the project's corrected ideal Robin criterion and its weighted Hecke extension.",

@@ -1829,10 +1829,12 @@ applying Theorem~\ref{thm:ideal-robin} to each $K$.
 \begin{theorem}[Triangular prime-power criterion for grand RH]
 Consider the normalized unitary cuspidal standard automorphic
 $L$-functions of every rank over every number field. For each
-$L(s,\pi)$, put $Z(s)=L(s,\pi)L(s,\tilde\pi)$. For a pure norm
-twist use $Z=\zeta_K$ after translation in the imaginary direction.
-Write $m$ for the pole order of $Z$ at $1$ and
-$-Z'(s)/Z(s)=\sum_{\mathfrak p,j\geq 1}
+$L(s,\pi)$, put $Z(s)=L(s,\pi)L(s,\tilde\pi)$. Normalize a pure
+norm twist by translation in the imaginary direction, so its paired
+product is $\zeta_K^2$. One can equivalently test $\zeta_K$ because
+the remainder for $\zeta_K^2$ is twice that for $\zeta_K$.
+Write $m$ for the pole order of $Z$ at $1$. For $\Re s>1$ write
+$-Z'(s)/Z(s)=\sum_{\mathfrak p}\sum_{j\geq 1}
  b_{\mathfrak p,j}(N\mathfrak p)^{-js}$, where $\mathfrak p$ ranges
 over the nonzero prime ideals of the field.
 
@@ -1841,7 +1843,7 @@ this family has real part $1/2$ if and only if, for each $Z$, there is
 a real constant $C_Z$ such that
 \begin{equation}\label{eq:grand-rh-prime-power}
  R_Z(x):=\frac{mx}{2}-
- \sum_{\mathfrak p,j:\,j\geq 1,\,(N\mathfrak p)^j\le x}
+ \sum_{\mathfrak p,j:\,j\geq 1,\,(N\mathfrak p)^j<x}
  b_{\mathfrak p,j}\left(1-\frac{(N\mathfrak p)^j}{x}\right)
  \le C_Z\sqrt{x}
 \end{equation}
@@ -1908,13 +1910,20 @@ Hecke character of a field $K$, Lean verifies that the triangular
 bound is equivalent to Dedekind RH and to the corrected ideal
 criterion for that field. Both proofs are in
 \path{Robin1984/GRH/DedekindTriangular.lean}.
-The test uses a weighted sum of prime powers. A weighted all-ideal
-bound can also be obtained when the logarithmic Euler coefficients
-are nonnegative. For unitary Hecke characters $\chi$ other than pure
-norm twists, the coefficients of
-$\zeta_K(s)^2L(s,\chi)L(s,\bar\chi)$ are
-$2+2\operatorname{Re}(\chi(\mathfrak p)^j)\ge0$, including at
-the ramified primes when $\chi(\mathfrak p)$ is set to zero.
+For a unitary Hecke character $\chi$, Lean constructs its local
+parameters $\alpha_\chi(\mathfrak p)$ from the finite ideles, with
+$\alpha_\chi(\mathfrak p)=0$ at ramified primes. It proves the Euler
+product on $\Re s>1$ and the paired coefficient
+$b_{\mathfrak p,j}=2\Re(\alpha_\chi(\mathfrak p)^j)\log N\mathfrak p$
+for every $j\ge1$ in \path{Robin1984/GRH/HeckeEulerProduct.lean}.
+The triangular equivalence for the Hecke family uses the supplied
+analytic continuations and completions.
+
+A weighted all-ideal bound can also be obtained when the
+logarithmic Euler coefficients are nonnegative. For unitary Hecke
+characters other than pure norm twists, the coefficients of
+$\zeta_K(s)^2L(s,\chi)L(s,\bar\chi)$ divided by $\log N\mathfrak p$
+are $2+2\Re(\alpha_\chi(\mathfrak p)^j)\ge0$ for every $j\ge1$.
 Subtracting a price $1/(x\log x)$ for each unit of weighted log norm
 then cancels the Mertens boundary term exactly. The details of the
 weighted comparison are recorded in \path{docs/GRH.md}.
@@ -1926,12 +1935,14 @@ weighted comparison are recorded in \path{docs/GRH.md}.
 Lean~4.33.1 and Mathlib~\cite{Lean4,Mathlib} verify the three classical
 Robin and Lagarias equivalences and both corrected ideal Robin
 equivalences in Section~\ref{sec:grh}. The automated statement boundary
-compares the same five declarations. Lean proves the completed-zero
-triangular criterion from the specified Euler, order-one and
-completion data in
-\path{grandRobinCompletedCriterion_of_entireOrder}.
-The formal instantiation of those data for the full standard
-automorphic family remains a follow-up.
+compares the same five declarations. The Grand RH declaration in
+\path{Solution.lean} proves the equivalence between the completed
+critical-line condition and the triangular bound for any supplied
+standard family satisfying the stated analytic hypotheses. It uses
+the Euler products and Gamma factors to supply the inputs of
+\path{grandRobinCompletedCriterion_of_entireOrder}. The formal
+instantiation of those analytic hypotheses for the full standard
+automorphic family remains open.
 
 The three classical equivalence declarations have the
 mathematical types

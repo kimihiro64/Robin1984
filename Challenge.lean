@@ -5,7 +5,6 @@ import Mathlib.NumberTheory.LSeries.DirichletContinuation
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Mathlib.NumberTheory.NumberField.Cyclotomic.Basic
 import Mathlib.NumberTheory.NumberField.DedekindZeta
-import Mathlib.Probability.Moments.ComplexMGF
 import Mathlib.RingTheory.UniqueFactorizationDomain.Finite
 
 set_option autoImplicit false
@@ -103,91 +102,82 @@ def DirichletGRH : Prop :=
   forall (m : Nat) [NeZero m] (chi : DirichletCharacter Complex m) (s : Complex),
     0 < s.re -> s.re < 1 -> DirichletCharacter.LFunction chi s = 0 -> s.re = 1 / 2
 
-/-! ## The grand RH zero condition and analytic data -/
+/-! ## Analytic data for the completed automorphic family -/
 
+/-- The completed L-functions and paired prime-power data for a family
+of standard L-functions. The index identifies the members of the family. -/
+structure StandardAutomorphicFamilyData (index : Type u) (powers : index -> Type u) where
+  completedL : index -> Complex -> Complex
+  dual : index -> index
+  equationFactor : index -> Complex -> Complex
+  primePowerNorm : forall pi, powers pi -> Nat
+  coefficient : forall pi, powers pi -> Real
+  poleOrder : index -> Nat
+  poleRemoved : index -> Complex -> Complex
+  conductor : index -> Real
+  realFactorCount : index -> Nat
+  complexFactorCount : index -> Nat
+  realShift : forall pi, Fin (realFactorCount pi) -> Complex
+  complexShift : forall pi, Fin (complexFactorCount pi) -> Complex
 
-/-- Grand RH: every nontrivial zero of every standard automorphic L-function
-has real part one half. The index ranges over all fields, ranks, and
-normalized unitary cuspidal representations when applied to grand RH. -/
-def GrandRH {index : Type u} (automorphicL : index -> Complex -> Complex) : Prop :=
-  forall (pi : index) (s : Complex),
-    0 < s.re -> s.re < 1 -> automorphicL pi s = 0 -> s.re = 1 / 2
+/-- The signed triangular remainder for the member indexed by `pi`. -/
+noncomputable def standardFamilyTriangularRemainder {index : Type u} {powers : index -> Type u}
+    (family : StandardAutomorphicFamilyData index powers) (pi : index) (x : Real) : Real :=
+  (family.poleOrder pi : Real) / ((2 : Nat) : Real) * x -
+    tsum (fun i => (Set.Ioi (family.primePowerNorm pi i : Real)).indicator
+      (fun y => family.coefficient pi i * (1 - (family.primePowerNorm pi i : Real) / y)) x)
 
-/-- Euler coefficients, pole-removed function, and indexed zeros for a paired standard L-function.
-The constraining analytic identities are stated in `GrandRobinAdmissible`. -/
-structure GrandRobinDatum (coefficients zeros : Type u) where
-  primePower : coefficients -> Nat
-  coefficient : coefficients -> Real
-  poleOrder : Nat
-  poleRemoved : Complex -> Complex
-  zero : zeros -> Complex
-  conjugateIndex : Equiv zeros zeros
-  error : Real -> Real
+/-- The triangular remainder has a square-root upper bound above a cutoff. -/
+def StandardFamilyTriangularBound {index : Type u} {powers : index -> Type u}
+    (family : StandardAutomorphicFamilyData index powers) (pi : index) : Prop :=
+  exists cutoff C : Real, 1 <= cutoff /\
+    forall x : Real, cutoff <= x ->
+      standardFamilyTriangularRemainder family pi x <= C * Real.sqrt x
 
-/-- The one-sided triangular prime-power remainder of the analytic datum. -/
-noncomputable def triangularPrimePowerRemainder {coefficients zeros : Type u}
-    (d : GrandRobinDatum coefficients zeros) (x : Real) : Real :=
-  (d.poleOrder : Real) / 2 * x -
-    tsum (fun i => (Set.Ioi (d.primePower i : Real)).indicator
-      (fun y => d.coefficient i * (1 - (d.primePower i : Real) / y)) x)
+/-- The logarithm of the paired Euler product on its half-plane of convergence. -/
+noncomputable def standardFamilyEulerLog {index : Type u} {powers : index -> Type u}
+    (family : StandardAutomorphicFamilyData index powers) (pi : index) (s : Complex) : Complex :=
+  tsum (fun i => ((family.coefficient pi i : Complex) /
+    (Real.log (family.primePowerNorm pi i : Real) : Complex)) *
+    ((family.primePowerNorm pi i : Real) : Complex) ^ (-s))
 
-/-- The Mellin integrand of a real remainder in the triangular criterion. -/
-noncomputable def grandMellinIntegrand (r : Real -> Real) (s : Complex) (x : Real) : Complex :=
-  (r x : Complex) * (x : Complex) ^ (-s - 1)
+/-- The conductor, pole clearing at the origin, and the finite products of
+real and complex Gamma factors for the paired completion. -/
+noncomputable def standardFamilyCompletionFactor {index : Type u} {powers : index -> Type u}
+    (family : StandardAutomorphicFamilyData index powers) (pi : index) (s : Complex) : Complex :=
+  s ^ family.poleOrder pi * (family.conductor pi : Complex) ^ (s / ((2 : Nat) : Complex)) *
+    (Finset.univ.prod (fun j =>
+      (Real.pi : Complex) ^ (-(s + family.realShift pi j) / ((2 : Nat) : Complex)) *
+        Complex.Gamma ((s + family.realShift pi j) / ((2 : Nat) : Complex)))) *
+    (Finset.univ.prod (fun j =>
+      ((2 : Nat) : Complex) * (((2 : Nat) : Complex) * (Real.pi : Complex)) ^ (-(s + family.complexShift pi j)) *
+        Complex.Gamma (s + family.complexShift pi j)))
 
-/-- The analytic hypotheses for the grand RH criterion.
-They require the paired L-function's log-derivative and zero transform. -/
-structure GrandRobinAdmissible {coefficients zeros : Type u}
-    (d : GrandRobinDatum coefficients zeros) : Prop where
-  primePower_pos : forall i, 1 <= d.primePower i
-  primePowers_locallyFinite : forall t : Real,
-    Set.Finite {i : coefficients | (d.primePower i : Real) < t}
-  dirichlet_summable : forall r : Real, 1 < r ->
-    Summable (fun i => norm (d.coefficient i) * (d.primePower i : Real) ^ (-r))
-  analytic : AnalyticOnNhd Complex d.poleRemoved {s : Complex | (1 / 2 : Real) < s.re}
-  nonzero_at_two : Not (d.poleRemoved (2 : Complex) = 0)
-  logDeriv_eq : forall s : Complex, 1 < s.re ->
-    logDeriv d.poleRemoved s = (d.poleOrder : Complex) / (s - 1) -
-      tsum (fun i => (d.coefficient i : Complex) * (d.primePower i : Complex) ^ (-s))
-  zero_in_strip : forall i, And (0 < (d.zero i).re) ((d.zero i).re < 1)
-  is_zero : forall i, d.poleRemoved (d.zero i) = 0
-  conjugation : forall i, d.zero (d.conjugateIndex i) = (starRingEnd Complex) (d.zero i)
-  reflection : forall s : Complex, 0 < s.re -> s.re < 1 ->
-    d.poleRemoved s = 0 -> d.poleRemoved (1 - s) = 0
-  zero_series_summable :
-    Summable (fun i => (norm (d.zero i * (d.zero i + 1))) ^ (-1 : Int))
-  remainder_continuous : ContinuousOn (triangularPrimePowerRemainder d) (Set.Ioi 1)
-  remainder_measurable : Measurable (triangularPrimePowerRemainder d)
-  error_measurable : Measurable d.error
-  remainder_integrable : forall s : Complex, 1 < s.re ->
-    MeasureTheory.Integrable (grandMellinIntegrand (triangularPrimePowerRemainder d) s)
-      (MeasureTheory.volume.restrict (Set.Ioi (1 : Real)))
-  error_integrable : forall s : Complex, 1 < s.re ->
-    MeasureTheory.Integrable (grandMellinIntegrand d.error s)
-      (MeasureTheory.volume.restrict (Set.Ioi (1 : Real)))
-  mellin_identity : forall s : Complex, 1 < s.re ->
-    MeasureTheory.integral (MeasureTheory.volume.restrict (Set.Ioi (1 : Real)))
-        (grandMellinIntegrand (triangularPrimePowerRemainder d) s) =
-      MeasureTheory.integral (MeasureTheory.volume.restrict (Set.Ioi (1 : Real)))
-        (grandMellinIntegrand d.error s) +
-        tsum (fun i => 1 / (s - d.zero i) + 1 / d.zero i) / (s * (s + 1))
-  error_bound : exists c : Real, forall x : Real, 1 < x -> d.error x <= c * Real.sqrt x
-
-/-- The datum uses the analytic properties of the paired L-function.
-Pairing and removing a pure imaginary norm twist preserve the set of
-real parts of zeros in the open strip. -/
-structure GrandRobinRealization {coefficients zeros : Type u}
-    (L : Complex -> Complex) (d : GrandRobinDatum coefficients zeros) : Prop where
-  admissible : GrandRobinAdmissible d
-  zeroRealParts : forall r : Real, 0 < r -> r < 1 ->
-    ((exists s : Complex, And (s.re = r) (L s = 0)) <->
-      (exists s : Complex, And (s.re = r) (d.poleRemoved s = 0)))
-
-/-- The signed triangular prime-power remainder satisfies an eventual square-root bound. -/
-def GrandRobinBound {coefficients zeros : Type u}
-    (d : GrandRobinDatum coefficients zeros) : Prop :=
-  exists cutoff c : Real, 1 <= cutoff /\
-    forall x : Real, cutoff <= x -> triangularPrimePowerRemainder d x <= c * Real.sqrt x
+/-- The analytic properties used by the criterion. The Euler product and
+completion identify the paired functions, and the completed functional
+equation relates a function to its contragredient. -/
+structure HasStandardAutomorphicAnalytics {index : Type u} {powers : index -> Type u}
+    (family : StandardAutomorphicFamilyData index powers) : Prop where
+  conductor_pos : forall pi, 0 < family.conductor pi
+  real_shift : forall pi j, -(1 : Real) / 2 < (family.realShift pi j).re
+  complex_shift : forall pi j, -(1 : Real) / 2 < (family.complexShift pi j).re
+  norm_ge_two : forall pi i, (2 : Real) <= (family.primePowerNorm pi i : Real)
+  norms_locally_finite : forall pi (T : Real), Set.Finite {i : powers pi |
+    (family.primePowerNorm pi i : Real) < T}
+  log_derivative_summable : forall pi (r : Real), 1 < r ->
+    Summable (fun i => norm (family.coefficient pi i) * (family.primePowerNorm pi i : Real) ^ (-r))
+  ordinary_entire : forall pi, Differentiable Complex (family.poleRemoved pi)
+  completed_order_one : forall pi, Differentiable Complex (family.completedL pi) /\
+    forall eps : Real, 0 < eps -> exists C : Real, 0 < C /\
+      forall z : Complex, norm (family.completedL pi z) <= Real.exp (C * (1 + norm z) ^ (1 + eps))
+  euler_product : forall pi s, 1 < s.re ->
+    family.poleRemoved pi s =
+      (s - 1) ^ family.poleOrder pi * Complex.exp (standardFamilyEulerLog family pi s)
+  completion : forall pi s, (1 : Real) / 2 < s.re ->
+    family.completedL pi s * family.completedL (family.dual pi) s =
+      standardFamilyCompletionFactor family pi s * family.poleRemoved pi s
+  functional_equation : forall pi s, family.completedL (family.dual pi) (1 - s) =
+    family.equationFactor pi s * family.completedL pi s
 
 end GRH
 
@@ -257,18 +247,17 @@ theorem dedekindERH_iff_correctedIdealRobin :
 
 /-! ## Grand RH -/
 
-/-- **Grand RH.** Every nontrivial zero of every standard automorphic
-L-function has real part one half exactly when the signed triangular
-prime-power remainder has an eventual square-root upper bound for each
-function. The statement takes the family of L-functions and asks for
-its paired analytic data. The full grand RH specialization ranges over
-all number fields and all ranks. -/
-theorem grandRH_iff_triangularPrimePowerBound {index coefficients zeros : Type u}
-    [Countable coefficients] [Countable zeros]
-    (automorphicL : index -> Complex -> Complex)
-    (family : index -> GrandRobinDatum coefficients zeros)
-    (realizes : forall pi, GrandRobinRealization (automorphicL pi) (family pi)) :
-    GrandRH automorphicL <-> (forall pi, GrandRobinBound (family pi)) := by
+/-- **Grand RH criterion for a supplied standard family.** Every zero
+of every pole-cleared completed L-function in the family has real part
+one half exactly when the signed triangular prime-power remainder of
+each member has an eventual square-root upper bound. The analytic
+hypotheses specify the Euler products and completed functional equations. -/
+theorem grandRH_iff_triangularPrimePowerBound {index : Type u} {powers : index -> Type u}
+    [forall pi, Countable (powers pi)]
+    (family : StandardAutomorphicFamilyData index powers)
+    (analytics : HasStandardAutomorphicAnalytics family) :
+    (forall (pi : index) (s : Complex), family.completedL pi s = 0 -> s.re = 1 / 2) <->
+      (forall pi, StandardFamilyTriangularBound family pi) := by
   sorry
 
 /-! # Supporting statements -/
