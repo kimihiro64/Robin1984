@@ -1434,6 +1434,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeAdeleCharacter.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The additive character of the adeles that is trivial on the principal field, as used in Tate's thesis.",
+      "formalization_note": "Constructs the character using finite strong approximation, the trace at the infinite places, and the integer trace of an algebraic integer.",
+      "content_basis": "Reviewed independence of the finite representative, the character laws, continuity, principal triviality, and the formula on integral finite coordinates.",
+      "dependency_status": "Uses pinned Mathlib trace and circle APIs and the finite approximation theorem in HeckeAdeleLattice.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeAdeleLattice.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The additive strong approximation and lattice theorem for number-field adeles in Tate's thesis.",
