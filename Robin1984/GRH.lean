@@ -4,7 +4,7 @@ import Mathlib.NumberTheory.LSeries.DirichletContinuation
 import Mathlib.NumberTheory.NumberField.Cyclotomic.Basic
 import Mathlib.NumberTheory.NumberField.DedekindZeta
 import Robin1984.GRH.DedekindLineNonvanishing
-import Robin1984.GRH.DedekindNormCoefficients
+import Robin1984.GRH.DedekindMertensAbel
 import Robin1984.GRH.PrimeIdealMellin
 import Robin1984.GRH.PrimeIdealPrimorial
 import Robin1984.GRH.PrimitiveTailCriterion

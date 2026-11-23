@@ -1083,6 +1083,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/DedekindMertensAbel.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Abel summation with the weight one over the norm times its logarithm.",
+      "formalization_note": "The norm coefficients at zero and one vanish. The derivative of the real weight supplies the signed integral in the finite identity.",
+      "content_basis": "Lean checks the finite weighted identity, both lower-endpoint vanishings, and its exact decomposition into the logarithmic main term and the Chebyshev error.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/DedekindNormCoefficients.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The natural-index Dirichlet series of the negative logarithmic derivative of Dedekind zeta.",

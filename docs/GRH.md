@@ -37,8 +37,11 @@ cannot vanish on the line of convergence. The natural-index Dirichlet
 coefficients have Chebyshev partial sums and give the same logarithmic
 derivative. Lean also proves the weighted Mellin transform of the Chebyshev
 error, the ideal divisor ratio as a product of finite geometric factors,
-and the exact log norm and local Euler factors of the cutoff ideal. The
-signed Dedekind tail implication accepts a convergent improper primitive
+and the exact log norm and local Euler factors of the cutoff ideal. Finite
+Abel summation expresses the Dedekind Mertens prime-power sum as the
+log-log main term, an explicit endpoint constant, and the boundary and
+integral terms of the Chebyshev error. The signed Dedekind tail implication
+accepts a convergent improper primitive
 with the prescribed value at one. The integrated-error and triangular-sum
 criteria use their stated transform and tail hypotheses. The fieldwise and
 family equivalences below are developed in prose.

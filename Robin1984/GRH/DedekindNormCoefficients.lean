@@ -53,6 +53,20 @@ private theorem one_lt_primeNorm_real (p : P) : (1 : Real) < dedekindPrimeNorm K
 theorem dedekindNormCoeff_nonneg (n : Nat) : 0 <= dedekindNormCoeff K n :=
   Finset.sum_nonneg (fun pn _ => Real.log_nonneg (one_lt_primeNorm_real K pn.1).le)
 
+theorem dedekindNormCoeff_eq_zero_of_le_one {n : Nat} (hn : n <= 1) :
+    dedekindNormCoeff K n = 0 := by
+  unfold dedekindNormCoeff
+  apply Finset.sum_eq_zero
+  intro pn hpn
+  exfalso
+  have hq := one_lt_dedekindPrimeNorm K pn.1
+  have hPow : dedekindPrimeNorm K pn.1 <= dedekindPrimePowerNorm K pn := by
+    unfold dedekindPrimePowerNorm
+    simpa only [pow_one] using Nat.pow_le_pow_right hq.le (Nat.succ_pos pn.2)
+  have hPos := hq.trans_le hPow
+  rw [(mem_powersOfNorm K).mp hpn] at hPos
+  exact (not_lt_of_ge hn) hPos
+
 theorem dedekindChebyshev_eq_sum_normCoeff (x : Real) :
     dedekindChebyshev K x = (Finset.range (Nat.floor x + 1)).sum (dedekindNormCoeff K) := by
   classical
@@ -76,6 +90,17 @@ theorem dedekindChebyshev_eq_sum_normCoeff (x : Real) :
       (fun h => And.intro ((mem_primePowersUpTo K).mpr (h.le.trans hmn)) h)
   rw [hFiber]
   rfl
+
+theorem dedekindChebyshev_nonneg (x : Real) : 0 <= dedekindChebyshev K x := by
+  rw [dedekindChebyshev_eq_sum_normCoeff]
+  exact Finset.sum_nonneg (fun n _ => dedekindNormCoeff_nonneg K n)
+
+theorem monotone_dedekindChebyshev : Monotone (dedekindChebyshev K) := by
+  intro x y hxy
+  rw [dedekindChebyshev_eq_sum_normCoeff, dedekindChebyshev_eq_sum_normCoeff]
+  exact Finset.sum_le_sum_of_subset_of_nonneg
+    (Finset.range_mono (Nat.add_le_add_right (Nat.floor_le_floor hxy) 1))
+    (fun n _ _ => dedekindNormCoeff_nonneg K n)
 
 private theorem primePowerTerm_log_real (pn : PP) (s : Complex) :
     dedekindPrimePowerTerm K pn.1 pn.2 s =
