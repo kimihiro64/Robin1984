@@ -30,10 +30,14 @@ the Dirichlet change-of-level identity, and the cyclotomic reduction under
 the stated zeta factorization. For every number field and every
 $\Re s>1$, Lean proves the prime-ideal Euler product for Mathlib's
 Dedekind zeta, its nonvanishing there, and the absolutely convergent
-prime-power series for its negative logarithmic derivative. Lean also proves
-the consequences of an integrated-error bound and the two analytic implications
-for triangular sums under their stated transform hypotheses. The fieldwise
-and family equivalences below are developed in prose.
+prime-power series for its negative logarithmic derivative, with the
+three-point trigonometric positivity inequality in that half-plane. Lean
+also proves the Mellin transform of the Chebyshev error there, the ideal
+divisor ratio as a product of finite geometric factors, and the exact
+Chebyshev log norm and local Euler factors of the cutoff ideal. The
+integrated-error and triangular-sum criteria use their stated transform
+and tail hypotheses. The fieldwise and family equivalences below are
+developed in prose.
 
 ### Forward implication
 

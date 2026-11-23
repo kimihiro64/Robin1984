@@ -1038,6 +1038,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/DedekindDeLaValleePoussin.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The de la Vallee Poussin trigonometric argument for zeta nonvanishing on the line of absolute convergence.",
+      "formalization_note": "Take the real part termwise in the proven Dedekind prime-power Dirichlet series and use the exact square identity.",
+      "content_basis": "Checked the norm logarithms, cosine identity, and transfer of the termwise sign to the convergent sum.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/DedekindEulerProduct.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The prime-ideal Euler product for Dedekind zeta and the convergent complex logarithm of that product.",
@@ -1110,6 +1119,24 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/IdealDivisorEuler.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The finite Euler factors of the divisor-sum function in a Dedekind domain.",
+      "formalization_note": "The divisor equivalence is composed with the dependent finite product of exponent intervals, then the sum is factored exactly.",
+      "content_basis": "Checked the support reindexing, the dependent finite equivalence, and factorization of the finite sum.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/IdealDivisorMultiplicities.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Unique factorization of nonzero integral ideals and the divisor complement.",
+      "formalization_note": "The divisibility relation is transported through the checked multiset equivalence, with the complementary ideal constructed by multiset subtraction.",
+      "content_basis": "Checked the exact divisor equivalence, complementary ideal product, and cancellation using nonzero norms.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/LandauFrontier.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Landau's real convergence-abscissa argument for a nonnegative transform.",
@@ -1161,6 +1188,33 @@
       "formalization_note": "The observable is the real logarithm on a restricted measure, so the Mellin exponent is expressed as the moment generating parameter.",
       "content_basis": "Reviewed the support of the density, its exponential moments, and the real and complex change-of-measure identities.",
       "dependency_status": "Mathlib change of density, complex powers, and real and complex moment generating functions.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/PrimeIdealChebyshev.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Chebyshev function for prime ideals in the logarithmic derivative of Dedekind zeta.",
+      "formalization_note": "The finite range follows from bounded ideal norm and bounded exponent. A pointwise tsum formula permits integration of the step functions.",
+      "content_basis": "Checked the finite exponent and ideal-norm bounds and the real cutoff equivalence.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/PrimeIdealMellin.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Partial summation for the prime-power Dirichlet series of a Dedekind zeta function.",
+      "formalization_note": "The step integrals converge absolutely and the interchange is justified by the summable integral norms.",
+      "content_basis": "Checked absolute integrability, swapping the series with the integral, and the exact domain of the transform.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/PrimeIdealPrimorial.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The number-field analogue of the least common multiple of the integers up to a cutoff.",
+      "formalization_note": "Project the exact finite prime-power support onto a multiset of prime ideals and count each fiber by an exponent interval.",
+      "content_basis": "Checked the logarithmic norm, count of each exponent fiber, support, and finite geometric factors.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
       "reviewed": true
     },
     {

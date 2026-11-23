@@ -3,9 +3,10 @@ import Mathlib.NumberTheory.Harmonic.EulerMascheroni
 import Mathlib.NumberTheory.LSeries.DirichletContinuation
 import Mathlib.NumberTheory.NumberField.Cyclotomic.Basic
 import Mathlib.NumberTheory.NumberField.DedekindZeta
-import Mathlib.RingTheory.UniqueFactorizationDomain.Finite
-import Robin1984.GRH.DedekindLogDerivative
+import Robin1984.GRH.DedekindDeLaValleePoussin
 import Robin1984.GRH.DedekindTailCriterion
+import Robin1984.GRH.PrimeIdealMellin
+import Robin1984.GRH.PrimeIdealPrimorial
 import Robin1984.GRH.SmoothedCriterion
 import Robin1984.GRH.SmoothedForward
 import Robin1984.GRH.SupportingLine
@@ -31,14 +32,6 @@ series on the half-plane of absolute convergence.
 universe u
 
 namespace Robin1984.GRH
-
-/-- The sum of the absolute norms of the divisors of a nonzero integral ideal. -/
-noncomputable def idealDivisorNormSum {K : Type u} [Field K] [NumberField K]
-    (a : Ideal (NumberField.RingOfIntegers K)) (ha : Not (a = 0)) : Nat := by
-  classical
-  letI := UniqueFactorizationMonoid.fintypeSubtypeDvd a ha
-  exact Finset.univ.sum (fun d : {d // Dvd.dvd d a} => Ideal.absNorm d.val)
-
 /-- The corrected divisor-sum inequality eventually holds on all integral ideals. -/
 def CorrectedIdealRobin (K : Type u) [Field K] [NumberField K] : Prop :=
   exists cutoff : Nat,
