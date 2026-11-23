@@ -1452,6 +1452,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeAdeleTraceDual.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The trace pairing and annihilators of compact open finite adelic subgroups in Tate's thesis.",
+      "formalization_note": "Matches the finite character annihilator with the principal trace-dual ideal and aligns the actual infinite adele trace with the existing Minkowski pairing.",
+      "content_basis": "Reviewed the integer kernel of the exponential character, the finite representative formula, the simultaneous approximation argument for the annihilator, and weak approximation for the archimedean pairing.",
+      "dependency_status": "Uses the verified adelic character and finite approximation in Robin1984 and the vendored DedekindZeta trace-dual theorem.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeArchimedean.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The unitary characters of the real and complex local multiplicative groups and their archimedean Gamma factors in Tate's thesis.",
