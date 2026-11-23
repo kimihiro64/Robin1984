@@ -1020,6 +1020,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeTateFundamentalDomain.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Fundamental domains for discrete principal ideles in Tate's quotient integration.",
+      "formalization_note": "Selects one Borel representative per norm-one class from a finite cover of the compact quotient and proves finite mass on the selected domain.",
+      "content_basis": "Checked the compact Borel section, the action of the countable principal subgroup, and the measure obtained by pushing forward the restricted domain.",
+      "dependency_status": "Uses the closed norm-one subgroup, local covering maps for discrete subgroup quotients, and Mathlib's fundamental-domain measure theory.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeTateThetaDecay.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Uniform decay of adelic theta sums on compact idele representatives in Tate's thesis.",
