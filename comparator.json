@@ -4,7 +4,9 @@
   "theorem_names": [
     "Robin1984.robin_inequality_iff_riemannHypothesis",
     "Robin1984.riemannHypothesis_iff_colossallyAbundant_robin",
-    "Robin1984.riemann_hypothesis_iff_lagarias_elementary_criterion"
+    "Robin1984.riemann_hypothesis_iff_lagarias_elementary_criterion",
+    "Robin1984.GRH.dirichletGRH_iff_cyclotomicCorrectedIdealRobin",
+    "Robin1984.GRH.dedekindERH_iff_correctedIdealRobin"
   ],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],

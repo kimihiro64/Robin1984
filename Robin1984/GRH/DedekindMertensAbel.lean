@@ -39,6 +39,33 @@ noncomputable def dedekindMertensPrimePowerSum (x : Real) : Real :=
   (Finset.range (Nat.floor x + 1)).sum
     (fun n => mertensPrimePowerWeight (n : Real) * dedekindNormCoeff K n)
 
+/-- The norm-indexed Mertens sum is the sum of the reciprocal prime-power
+norms divided by their positive exponents. -/
+theorem dedekindMertensPrimePowerSum_eq_sum_primePowersUpTo (x : Real) :
+    dedekindMertensPrimePowerSum K x =
+      (primePowersUpTo K (Nat.floor x)).sum
+        (fun pn => Inv.inv ((dedekindPrimePowerNorm K pn : Real) *
+          ((pn.2 + 1 : Nat) : Real))) := by
+  unfold dedekindMertensPrimePowerSum
+  rw [<- sum_primePowersUpTo_weighted_eq_sum_normCoeff K
+    (Nat.floor x) (fun n => mertensPrimePowerWeight (n : Real))]
+  apply Finset.sum_congr rfl
+  intro pn _
+  let q : Real := dedekindPrimeNorm K pn.1
+  let k := pn.2 + 1
+  have hq : 1 < q := by
+    change (1 : Real) < (dedekindPrimeNorm K pn.1 : Real)
+    exact_mod_cast one_lt_dedekindPrimeNorm K pn.1
+  have hqp : 0 < q ^ k := pow_pos (zero_lt_one.trans hq) _
+  have hk : 0 < (k : Real) := by
+    exact_mod_cast Nat.succ_pos pn.2
+  have hLog : 0 < Real.log q := Real.log_pos hq
+  simp only [mertensPrimePowerWeight, dedekindPrimePowerNorm, Nat.cast_pow]
+  change Inv.inv (q ^ k * Real.log (q ^ k)) * Real.log q =
+    Inv.inv (q ^ k * (k : Real))
+  rw [Real.log_pow]
+  field_simp [hqp.ne', hk.ne', hLog.ne']
+
 private theorem hasDerivAt_mertensPrimePowerWeight {x : Real} (hx : 1 < x) :
     HasDerivAt mertensPrimePowerWeight (-mertensAbelKernel x) x := by
   have hx0 := zero_lt_one.trans hx

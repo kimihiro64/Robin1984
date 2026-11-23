@@ -1065,6 +1065,222 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/AnalyticAssembly.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The gamma factors of the classical Dedekind functional equation.",
+      "formalization_note": "The archimedean factor on the positive half-plane.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of AnalyticAssembly.",
+      "dependency_status": "Uses the pinned Dedekind theta-Mellin source port and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindClassFunctionalEquation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The classical classwise theta proof of the Dedekind functional equation.",
+      "formalization_note": "The functional equation for the completed Dedekind zeta function.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindClassFunctionalEquation.",
+      "dependency_status": "Uses Robin1984's analytic lemmas and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindClassNormalization.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The ideal norm scaling in the classwise theta-Mellin functional equation.",
+      "formalization_note": "Reflection of the normalized Mellin transform for an ideal and its dual.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindClassNormalization.",
+      "dependency_status": "Uses the pinned Dedekind theta-Mellin source port and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindClassSeries.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The decomposition of the Dedekind Dirichlet series by ideal classes.",
+      "formalization_note": "The half-plane class formula for an arbitrary integral representative.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindClassSeries.",
+      "dependency_status": "Uses the pinned Dedekind theta-Mellin source port and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindCompleteContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The classical completed and pole-removed Dedekind zeta functions.",
+      "formalization_note": "The functional equation for the actual Dedekind zeta continuation.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindCompleteContinuation.",
+      "dependency_status": "Uses Robin1984's analytic lemmas and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Theta-Mellin continuation of the Dedekind zeta function from its Dirichlet series.",
+      "formalization_note": "The pole-removed Dedekind zeta function on the positive half-plane.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindContinuation.",
+      "dependency_status": "Uses the pinned Dedekind theta-Mellin source port and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindDualNorm.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The trace-dual fractional ideal and the different of a number field.",
+      "formalization_note": "The norm of an integral representative of the trace-dual ideal.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindDualNorm.",
+      "dependency_status": "Uses Robin1984's analytic lemmas and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindFunctionalBridge.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The Dedekind functional equation and the project definition of the critical-line condition.",
+      "formalization_note": "The actual Dedekind continuation in the Robin1984 predicate.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindFunctionalBridge.",
+      "dependency_status": "Uses Robin1984's analytic lemmas and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindFunctionalEquation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Mellin reflection identity for a theta function and its dual.",
+      "formalization_note": "Reflection for Mellin continuations of a dual pair.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindFunctionalEquation.",
+      "dependency_status": "Uses the pinned Dedekind theta-Mellin source port and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindIntegratedTailBridge.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The one-sided Landau converse for the signed Dedekind Chebyshev primitive.",
+      "formalization_note": "From a Dedekind Chebyshev tail bound to Dedekind RH.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindIntegratedTailBridge.",
+      "dependency_status": "Uses Robin1984's analytic lemmas and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindLaplaceProfile.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The exponential change of variables in the Mellin transform of the Dedekind Chebyshev error.",
+      "formalization_note": "The logarithmic chart for the Dedekind Chebyshev error.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindLaplaceProfile.",
+      "dependency_status": "Uses Robin1984's analytic lemmas and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindLineBridge.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The classical Euler-product nonvanishing argument on the line of convergence.",
+      "formalization_note": "The Dedekind continuation on the boundary.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindLineBridge.",
+      "dependency_status": "Uses Robin1984's analytic lemmas and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindMertensNormalization.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Dedekind Mertens constant computed by Abelian averaging and the class number formula.",
+      "formalization_note": "The Dedekind Mertens constant.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindMertensNormalization.",
+      "dependency_status": "Uses Robin1984's analytic lemmas and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindMertensTailConverse.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The inverse-weight identity and its one-sided bound for the signed Dedekind primitive.",
+      "formalization_note": "The one-sided Mertens tail implies Dedekind RH.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindMertensTailConverse.",
+      "dependency_status": "Uses Robin1984's analytic lemmas and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindPrimeIdealTheorem.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Wiener-Ikehara proof of the prime ideal theorem.",
+      "formalization_note": "Prime-ideal Chebyshev asymptotics.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindPrimeIdealTheorem.",
+      "dependency_status": "Uses the pinned PrimeNumberTheoremAnd dependency.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindPrimitiveConvergence.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Newman's Tauberian theorem applied to the actual Dedekind Chebyshev profile.",
+      "formalization_note": "Convergence of the actual Dedekind Chebyshev primitive.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindPrimitiveConvergence.",
+      "dependency_status": "Uses the pinned Tau Ceti analytic port.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindProfileBound.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Boundedness of the logarithmic Chebyshev profile from the Dedekind prime ideal theorem.",
+      "formalization_note": "Boundedness in the Dedekind logarithmic chart.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindProfileBound.",
+      "dependency_status": "Uses Robin1984's analytic lemmas and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindRobinReverse.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The reverse implication of the corrected ideal Robin criterion.",
+      "formalization_note": "The corrected ideal Robin inequality implies Dedekind RH.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindRobinReverse.",
+      "dependency_status": "Uses Robin1984's analytic lemmas and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindThetaDilation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The scaling law for the ideal theta kernel.",
+      "formalization_note": "Scaling the fractional-ideal theta kernel.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindThetaDilation.",
+      "dependency_status": "Uses the pinned Dedekind theta-Mellin source port and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindWeightedTail.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Integration by parts for the signed weighted Dedekind Mertens expansion.",
+      "formalization_note": "The weighted Dedekind Chebyshev tail.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindWeightedTail.",
+      "dependency_status": "Uses Robin1984's analytic lemmas and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DualIdealRepresentative.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Clearing denominators in fractional ideals of a number field.",
+      "formalization_note": "Clearing a fractional ideal by a rational integer.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DualIdealRepresentative.",
+      "dependency_status": "Uses Robin1984's analytic lemmas and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/MertensTailIntegrationByParts.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Integration by parts for absolutely continuous primitives.",
+      "formalization_note": "Integration by parts for a signed primitive tail.",
+      "content_basis": "Reviewed the exact declaration bodies and imported interfaces of MertensTailIntegrationByParts.",
+      "dependency_status": "Uses the pinned Tau Ceti analytic port.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindCutoffLoss.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "A three-range bound for the geometric error at a Dedekind prime-power cutoff.",
+      "formalization_note": "Use the first-power Chebyshev domination below the square root and the inverse-square kernel above it.",
+      "content_basis": "Compared all three disjoint prime norms ranges and the explicit common denominator for the total cutoff error.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindCutoffMertens.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The truncated real logarithm series and the geometric Euler factors of the prime-power cutoff ideal.",
+      "formalization_note": "Reindex the finite prime-power sum by prime ideal and predecessor exponent, then compare with the logarithm of the divisor ratio.",
+      "content_basis": "Checked the prime/exponent fiber, exact absolute-norm ratio, and one-sided geometric truncation losses.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/DedekindLineNonvanishing.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The de la Vallee Poussin proof of nonvanishing on the line of absolute convergence.",
@@ -1092,6 +1308,24 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/DedekindMertensAbelTransform.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Dirichlet-series Abel summation for the shifted logarithm of Dedekind zeta.",
+      "formalization_note": "Shift the evaluation point by one to obtain the finite Mertens weights and the Mellin kernel.",
+      "content_basis": "Verified the coefficient shift, a power bound on the partial sums, and the exact Abel integral.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindMertensEulerLog.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The real logarithm power series and the Euler product for Dedekind zeta.",
+      "formalization_note": "Group the absolutely summable prime-power logarithm series by the natural norm.",
+      "content_basis": "Verified the exact logarithmic Dirichlet coefficients for every real s > 1.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/DedekindNormCoefficients.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The natural-index Dirichlet series of the negative logarithmic derivative of Dedekind zeta.",
@@ -1106,6 +1340,15 @@
       "mathematical_source": "Unique factorization of nonzero ideals in a Dedekind domain.",
       "formalization_note": "The equivalence stores a multiset of nonzero prime ideals, so both finite Euler expansions and ideal divisor sums can use the same factorization.",
       "content_basis": "Reviewed the equivalence of nonzero integral ideals with multisets of height-one primes and its product identity.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindResidueLogLimit.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Mathlib's analytic class number formula for Dedekind zeta.",
+      "formalization_note": "Compose the real one-sided residue limit with a unit translation, real part, and logarithm.",
+      "content_basis": "Checked the positive residue and the logarithmic pole subtraction as the real parameter tends to zero.",
       "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
       "reviewed": true
     },
@@ -1137,12 +1380,30 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/EulerMascheroniLaplaceMass.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The derivative of the Gamma function at one.",
+      "formalization_note": "Evaluate and rescale the exponential logarithmic moment by a positive change of variables.",
+      "content_basis": "Verified the signed Euler constant and the logarithmic dependence on the positive scale.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/EulerProductSupport.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Euler product limits via dominated convergence for summable series.",
       "formalization_note": "The finite prime collections are directed by inclusion, so every individual ideal factorization is eventually included with its full support.",
       "content_basis": "Reviewed the unconditional limit of the finite-support subseries using the summable absolute majorant.",
       "dependency_status": "Mathlib Tannery theorem and the directed filter of finite subsets.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GrandRobin.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The signed triangular prime-power equivalent of the critical-line property for analytic L-function data.",
+      "formalization_note": "Combines the canonical Mellin forward theorem and the Landau converse using the zero reflection of the pair.",
+      "content_basis": "Checked the exact signed triangular remainder, the pole-removed logarithmic derivative, and both directions of the analytic family-level equivalence.",
+      "dependency_status": "Uses the Robin1984 triangular Mellin criteria and Mathlib. Automorphic instantiation is a separate theorem.",
       "reviewed": true
     },
     {
@@ -1209,6 +1470,177 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/MertensAbelianAverage.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Abelian limit of a normalized exponential average.",
+      "formalization_note": "Split the integrand into a finite initial part and a tail where the pointwise limit gives a uniform bound.",
+      "content_basis": "Checked local integrability, normalized exponential mass, and the right-hand limit.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/MertensTailWeight.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The explicit real Mertens weight and its reciprocal.",
+      "formalization_note": "Differentiate the two weights and bound the reciprocal derivative on the positive domain.",
+      "content_basis": "The derivative is nonnegative and at most the inverse argument when x > 1.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/CyclotomicCharacterCoefficients.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Dirichlet character orthogonality and conductor descent.",
+      "formalization_note": "Reindex the active primitive characters by change of level.",
+      "content_basis": "Terms with noncoprime conductor vanish at positive powers.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindRobinSupportingLine.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The finite supporting-line inequality for weighted Euler factors.",
+      "formalization_note": "The occupied prime powers carry logarithmic norm cost.",
+      "content_basis": "Finite norm factorization and the local truncated series bound.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindRobinForward.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Abel summation and the eventual elementary logarithmic comparison.",
+      "formalization_note": "A positive coefficient gap gives a field-dependent cutoff.",
+      "content_basis": "The supporting line, residue normalization, and signed tail estimate.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/MellinStretchedExponential.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The logarithmic tangent bound for a stretched exponential moment.",
+      "formalization_note": "Adapt the envelope argument from AxiomMath/DedekindZetaZeroFree at 09afbb4ce6570c1615d58509dc197fc9f0956b7d.",
+      "content_basis": "PowerStretchedExponentialEnvelope and MellinTailBounds in that Apache-2.0 source.",
+      "dependency_status": "Mathlib only.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/CyclotomicPrimeDecomposition.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Cyclotomic ramification and the fundamental identity for a Galois extension.",
+      "formalization_note": "Combine the ramified and unramified cases in one coefficient calculation.",
+      "content_basis": "Mathlib inertia degree, ramification index, and norm formulas.",
+      "dependency_status": "Mathlib only.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindCompletedGrowth.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The theta integral proof of order one for the completed Dedekind zeta function.",
+      "formalization_note": "Use the actual radial theta pair for every ideal class.",
+      "content_basis": "Mellin moment bounds, covolume normalization, and a finite class sum.",
+      "dependency_status": "Optional GRH extension and the pinned Dedekind-zeta theta modules.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindCompletedZeroDistribution.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Dedekind functional equation and the Euler-product nonvanishing region.",
+      "formalization_note": "Continue the functional equation of the pole-cleared function through both endpoints.",
+      "content_basis": "Analytic continuation, nonvanishing on the line one, and nonvanishing of gamma factors.",
+      "dependency_status": "Optional GRH extension and the pinned Dedekind-zeta theta modules.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/CyclotomicNormCoefficients.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The logarithmic derivative of the cyclotomic Euler factors.",
+      "formalization_note": "Reindex the finite norm fiber by the primes over its rational base prime.",
+      "content_basis": "Norm powers, contraction to the integers, and cyclotomic prime decomposition.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/CyclotomicFactorization.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The cyclotomic factorization into primitive Dirichlet L-functions.",
+      "formalization_note": "Compare logarithmic Dirichlet series, normalize at real infinity, and use uniqueness of continuation.",
+      "content_basis": "Cyclotomic prime decomposition, primitive character orthogonality, and analytic continuation.",
+      "dependency_status": "Optional Dirichlet GRH extension and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindArchimedeanLogDerivative.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The standard gamma factors and the partial-fraction expansion of the digamma function.",
+      "formalization_note": "Differentiate the normalized factors and use nonnegative Dirichlet coefficients at two.",
+      "content_basis": "Canonical Dedekind completion, Gamma logarithmic derivative, and the pinned PrimeNumberTheoremAnd digamma series.",
+      "dependency_status": "Optional GRH extension and PrimeNumberTheoremAnd.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindRobinSpectralForward.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The integrated explicit formula for the primitive Chebyshev error and the corrected number-field Robin bound.",
+      "formalization_note": "Identify the actual tail with its spectral model by Mellin uniqueness and apply the exact ideal supporting line.",
+      "content_basis": "Completed zero mass, gamma lattices, the field's primitive limit, and the forward Mertens estimate.",
+      "dependency_status": "Dirichlet GRH and Dedekind ERH proof with the pinned analytic dependencies.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindPrimitiveExpansion.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The partial-fraction expansion of the Dedekind logarithmic derivative.",
+      "formalization_note": "Divide the logarithmic derivative by its argument and express the gamma contributions as negative lattices.",
+      "content_basis": "Canonical Hadamard product, archimedean logarithmic derivative, and convergent zero weights.",
+      "dependency_status": "Optional GRH extension and PrimeNumberTheoremAnd.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindSpectralMellin.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Mellin transform of the Chebyshev primitive and absolutely summable power series.",
+      "formalization_note": "Reuse the initial Dedekind transform and interchange the spectral sum with integration using summable integral norms.",
+      "content_basis": "Mellin partial summation and the countable series integrability estimate.",
+      "dependency_status": "Optional GRH extension and existing Dedekind analytic providers.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindCompletedZeroMass.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The explicit logarithmic derivative bound for the Dedekind zero sum under ERH.",
+      "formalization_note": "Subtract the convergent Hadamard sums at reflected points and compare the resulting terms.",
+      "content_basis": "The completed functional equation and the critical-line location of its zeros.",
+      "dependency_status": "Optional GRH extension and PrimeNumberTheoremAnd.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindCompletedHadamard.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Hadamard factorization for an entire function of order at most one.",
+      "formalization_note": "Use the pinned PrimeNumberTheoremAnd canonical product for the completed Dedekind zeta.",
+      "content_basis": "The actual theta growth bound, pole-cleared functional equation, and off-zero logarithmic derivative.",
+      "dependency_status": "Optional GRH extension and PrimeNumberTheoremAnd.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/MertensTailUpperBound.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The derivative-weighted Mertens tail obtained by integration by parts.",
+      "formalization_note": "Pass an inverse-square-root bound for the primitive tail through the Mertens weight while retaining the leading coefficient.",
+      "content_basis": "Checked the inverse-cube-halves integration, the exact signed Mertens expression, and the one-lower-log error.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/MertensWeightedTailIntegrability.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The fundamental theorem of calculus on an improper interval.",
+      "formalization_note": "The negative derivative of the Mertens weight has mass equal to the weight at its lower endpoint.",
+      "content_basis": "The signed tail is absolutely integrable against the derivative under an explicit uniform bound.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/PositiveMellinMeasure.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Change of measure by a nonnegative density in the Mellin transform.",
@@ -1236,6 +1668,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/DedekindPrimeLossIntegral.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Partial summation for the reciprocal-square tail of the prime-ideal Chebyshev measure.",
+      "formalization_note": "Integrate the positive inverse-cube kernel against the finite prime counting sum, then bound that sum by the actual Chebyshev function.",
+      "content_basis": "Checked the prime-power injection, finite kernel integral, and Chebyshev majorant for arbitrary finite prime support.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/PrimeIdealPrimorial.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The number-field analogue of the least common multiple of the integers up to a cutoff.",
@@ -1250,6 +1691,15 @@
       "mathematical_source": "Fubini's theorem on a triangular domain and the Mellin transform of a primitive.",
       "formalization_note": "Characterize integrability by the weighted slice norms, then evaluate the complex power integral on each slice.",
       "content_basis": "Checked measurability, weighted product integrability, and the primitive and tail divided differences.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/PrimitiveTailZeroKernel.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The divided difference of a genus-one logarithmic derivative at the Dedekind pole normalization.",
+      "formalization_note": "Subtract the value at one before summing the Hadamard terms. Each term then has the exact primitive-tail weight and Mellin denominator.",
+      "content_basis": "Checked the termwise partial fraction and the replacement of the difference of the two convergent series.",
       "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
       "reviewed": true
     },
@@ -1305,6 +1755,15 @@
       "formalization_note": "Equality of the known transforms is converted to an almost-everywhere equality and continuity of the remainder gives the pointwise bound.",
       "content_basis": "Reviewed the exact canonical Mellin hypothesis, conjugate pairing, norm bound, and continuity step to obtain the pointwise inequality.",
       "dependency_status": "The project-local triangular zero transform and vertical-line Mellin uniqueness.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindRobinLogBound.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The logarithmic tangent upper bound and the positive square-root correction in the ideal Robin inequality.",
+      "formalization_note": "Apply the tangent inequality twice and compare the positive normalized denominator when the Chebyshev argument is at least half the cutoff.",
+      "content_basis": "Checked the iterated logarithm tangent, exact signed Chebyshev term, and factor-four correction with positive denominators.",
+      "dependency_status": "Optional GRH extension and existing Mathlib APIs.",
       "reviewed": true
     },
     {
@@ -1881,6 +2340,627 @@
       "formalization_note": "The retained statements are Robin's and Lagarias's; the Lean encoding, exact constants, and proof decomposition are the formalization authors' work.",
       "content_basis": "Reviewed the module documentation, imports, theorem statements, and proof role. Retained declarations include robin_inequality_iff_riemannHypothesis, riemannHypothesis_iff_colossallyAbundant_robin, riemann_hypothesis_iff_lagarias_elementary_criterion.",
       "dependency_status": "advertised theorem dependency graph",
+      "reviewed": true
+    },
+    {
+      "path": "DedekindZeta/ConeMellinBridge.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "mathlib-initiative/sum_product at 80e4127a67742659d521466204c6d2d7e0ca2b3f.",
+      "formalization_note": "Lean 4.33.1 compatibility port with narrow imports for DedekindZeta.ConeMellinBridge.",
+      "content_basis": "Reviewed the analytic dependency port SHA-256 A8D7A97FB8A537285588D3ED17E77B65E04BD6DDB8BF2255396278B028444E22 and the module's explicit import closure.",
+      "dependency_status": "Pinned theta-Mellin source port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "DedekindZeta/ConeRadialReduction.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "mathlib-initiative/sum_product at 80e4127a67742659d521466204c6d2d7e0ca2b3f.",
+      "formalization_note": "Lean 4.33.1 compatibility port with narrow imports for DedekindZeta.ConeRadialReduction.",
+      "content_basis": "Reviewed the analytic dependency port SHA-256 90141C6DFA6712627A73C99871DBEF72FA381DACDB236417A5603C7C154F9300 and the module's explicit import closure.",
+      "dependency_status": "Pinned theta-Mellin source port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "DedekindZeta/GammaIntegral.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "mathlib-initiative/sum_product at 80e4127a67742659d521466204c6d2d7e0ca2b3f.",
+      "formalization_note": "Lean 4.33.1 compatibility port with narrow imports for DedekindZeta.GammaIntegral.",
+      "content_basis": "Reviewed the analytic dependency port SHA-256 2D618AD5C5307BE792E396B1DADD59A6AC39D010B6616A5B8E40E51955610E3E and the module's explicit import closure.",
+      "dependency_status": "Pinned theta-Mellin source port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "DedekindZeta/MellinPrinciple.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "mathlib-initiative/sum_product at 80e4127a67742659d521466204c6d2d7e0ca2b3f.",
+      "formalization_note": "Lean 4.33.1 compatibility port with narrow imports for DedekindZeta.MellinPrinciple.",
+      "content_basis": "Reviewed the analytic dependency port SHA-256 4F05C25D4E72D142C16E70EF01119A51DE521764477EEEA3D696908733D3C435 and the module's explicit import closure.",
+      "dependency_status": "Pinned theta-Mellin source port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "DedekindZeta/PerClass.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "mathlib-initiative/sum_product at 80e4127a67742659d521466204c6d2d7e0ca2b3f.",
+      "formalization_note": "Lean 4.33.1 compatibility port with narrow imports for DedekindZeta.PerClass.",
+      "content_basis": "Reviewed the analytic dependency port SHA-256 4BD99F110EEE5B459C6FDA7D74F596D2CEF9F96E40B112EC5CAD6E5B79903B8A and the module's explicit import closure.",
+      "dependency_status": "Pinned theta-Mellin source port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "DedekindZeta/PoissonSummation.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "mathlib-initiative/sum_product at 80e4127a67742659d521466204c6d2d7e0ca2b3f.",
+      "formalization_note": "Lean 4.33.1 compatibility port with narrow imports for DedekindZeta.PoissonSummation.",
+      "content_basis": "Reviewed the analytic dependency port SHA-256 CCA2384F342F037F607012FCB1C9C4A1B5ADF55382146DD0C5EC2D55FA546FDA and the module's explicit import closure.",
+      "dependency_status": "Pinned theta-Mellin source port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "DedekindZeta/Statements.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "mathlib-initiative/sum_product at 80e4127a67742659d521466204c6d2d7e0ca2b3f.",
+      "formalization_note": "Lean 4.33.1 compatibility port with narrow imports for DedekindZeta.Statements.",
+      "content_basis": "Reviewed the analytic dependency port SHA-256 773BB403522A4BFD32FBC4DC96474AEDDEEAC5786024F05C28F5BFB6B572E8F4 and the module's explicit import closure.",
+      "dependency_status": "Pinned theta-Mellin source port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "DedekindZeta/Theta.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "mathlib-initiative/sum_product at 80e4127a67742659d521466204c6d2d7e0ca2b3f.",
+      "formalization_note": "Lean 4.33.1 compatibility port with narrow imports for DedekindZeta.Theta.",
+      "content_basis": "Reviewed the analytic dependency port SHA-256 DA5D07F9F056B2B6DFDB186BC05D27829EBFBF9334B5BE4E43581F99840DB2A3 and the module's explicit import closure.",
+      "dependency_status": "Pinned theta-Mellin source port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Calculus/IteratedDerivWithin.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Derivatives of iterated derivatives within a set.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 41E498F23ADB9D1CD2087DD07E9630FAFC6FEDDC2D997E623CDA0F1896325363. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Calculus/ContDiff/ClosedInterval.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Continuous derivative jets on a closed interval.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 DF8A349606F5CD68374A834958A1223FADF37093CACE98C96F66DDB39E77113A. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Calculus/ContDiff/PiecewiseC1On.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Piecewise `C` curves on an interval.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 D4AF52F8018B65A11147FECA19781BB0849682CC7CAFB46E2A3B4E7070BDEB85. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Calculus/ContDiff/PiecewiseC1On/AbsolutelyContinuous.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Absolute continuity of piecewise `C` curves.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 71AEDEB688F752ECA75F2F3920617FF38FD57617888A13703F8267262338E5A6. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Calculus/DSlope/Basic.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Elementary facts about `dslope`.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 3371D3E75E0333C4EC9B564A94530508D883BE93A492CB7CEDED6D1C784E132A. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Calculus/DSlope/Continuous.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Joint continuity of `dslope`.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 FA792AE6DE52E0E98A302590BED1C7F4C5FA4230A684809E1105C4AD5BE7CC79. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Complex/ClosedHalfPlane.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Holomorphic continuation to a neighbourhood of a closed half-plane.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 DA40AB16341A4A334E0466680EF778338FDA6654F1480A6EC82E4AF24B40D2F6. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Complex/LaplaceTransform.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Truncated Laplace transforms of bounded functions.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 EF22F65F5C479B98753F3D8B4DAA5A24C683C80D5A371A3D0500AECF1387010E. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Complex/NormSq.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Circles centred on the real line.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 19A28322B53AC48A3E1F7D63F4C7DF934D1CCC8D3378252198E5C5ADF5D278CD. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Complex/SlitPlane.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Geometry of the complex slit plane.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 CE3121E065DB66BB666776D3DC778D2E0753A4A131DF9D846CF958AE8EA56268. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Complex/UpperLogContinuity.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Continuity of `arg` and `log` on the closed upper half-plane.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 E88DEE2954C8133F3BBB8D477BB8CF88C4E497DE8B78FA94ACDA40DB5D8ECB53. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/AbsolutelyContinuous.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Absolute continuity of curves from an integrable logarithmic derivative.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 058E8A4C12BFD3309E3A78201DB567F888A7D325AB4197378C5E60601D022024. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/DslopeFTC.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Integrating `g z / z` through a primitive of `dslope g 0`.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 AAB0A82AB09CBEC7F88CE59D72CA24C154F2389065276AD89EE678C7ECDA918E. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/HomologyCauchy.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for The homology Cauchy theorem, via Dixon's argument.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 7021F418ECA6053F1EAD123CC05CB07CA7CA27686AD07CC43A3C219DF30596CF. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/LogDerivFTC.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Fundamental theorem of calculus for a logarithmic-derivative integrand.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 C002C41D3377FC714BCEEF7AE06CD5540AB6FE3C1E46C62B53B661BD7142B8FF. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/NullHomologous.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Basic API for null-homologous contours.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 69FC13595221043635F81581B99BA65BD6D8CBA570BCCFA23E9F2F1C2BC98C70. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Primitive.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Primitives from vanishing contour integrals, and logarithms on sets without holes.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 F5A9674B69CA74DFE4F6961298C42098A599E1E20321C714B8DF2D45338BFB99. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Cauchy/IntegralFormula.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Cauchy's integral formula and the pointwise homology Cauchy theorem.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 7DDC59EE2531633E2956BF5C041B1D23B9C0CB58754BBA167EBBAB430EDFF8E8. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Cauchy/PrincipalValue/Basic.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for The Cauchy principal value of a contour integral at a point (HungerbhlerWasem).",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 511663D33A1A965BFA5BA083A5FF0C9CE8B63E1DCA2195C2C9D9622FEDD96429. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Curve/Approximation.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Smooth endpoint-preserving approximation of continuous complex curves.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 9F30D03ED647AB8E4D7882491225EBB94440AC80ACE7A3B6E52117851F577D47. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Curve/Concat.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Contour integrals along reversed and concatenated curves.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 161A3C50C8C2613830A4639119C5C0D159AC077E9DCBD215EE1062ADF9622A91. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Curve/Distance.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Uniform distance from an avoided point to a continuous curve.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 2D1FA00BC4E9613D08399CDCDD54882A6DA132E2FD9377DBBAE9EB318C25C43E. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Curve/Integrability.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Integrability of contour integrands.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 77AE2B7440AF1EE92B9EA5C63C373BFF73F132DA038EC62495EF467EF23785E0. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Curve/IntegralBound.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for A decay bound for ` ( - w)  g` when `w` is far from the curve.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 6E278BF15C005E1B83EDE917DFFCCBB707EF27461755F1264004315662444A16. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Cycle/Basic.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Cycles of piecewise-`C` curves.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 122223D33B1F414C31C93CA486C73D54E96023020F4B8CD9520C0D63E2F43F84. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Cycle/Winding.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Winding numbers and trace-zero weights of contour cycles.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 CFDC74268A0C085D3CD7C401638D96173AC6106229DFF8613FB538255894525E. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Dixon/Def.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Dixon's `h` and `h` functions and their defining identity.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 9307E7652A8F090CF09FDA8180674469533B24F35CD2372519E40ACAA3D81152. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Dixon/FunctionDiff.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for The Dixon function is entire.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 92A9D4E44510A522790939D2804FD2989A38BF418B3B70E71ABD50E9A5735F81. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Dixon/H1Diff.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Holomorphy of Dixon's `h` on the region.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 FBEA9436ABCBE1B1C137A7E28AD7390545BA3351AD602D0379102891B7793D46. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Dixon/Liouville.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for The Dixon function vanishes (Liouville step).",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 CEE0D8B9BC2739AA9D897C7DDBDB900F9C93EFE48BCC12BACBFBD5E3C1A991F1. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Dixon/H2/Bound.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Norm bound and decay at infinity of Dixon's `dixonH2`.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 34AFFCC4AC50622F772B5C3D48CD585CA3D6B8C91C1890FBBEA710C2B812A642. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Dixon/H2/Diff.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Holomorphy of Dixon's `h` off the curve.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 01758A278A21D814840DB544723EFB43C220ACBE5F74ABAAC932786E9DF9ECA8. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Winding/Continuity.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Continuity of the generalized winding number in the point.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 F34519A0DD621876161C4AB8152C249A90339795B991D35462E64570FF60E5DC. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Winding/Integer.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for The winding number of a closed curve is an integer.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 C2D301F2A7CBD74E15EFE9645B990BF61FBF8471F6DECFA2260B30EFBC938492. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Winding/LocallyConstant.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for The winding number is locally constant off a closed curve.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 7C9C92BB5AED8113EE1E42104A725719AAAE13CF4B06072A32E665327466917F. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Winding/Proximity.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Proximity invariance of the winding number.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 3FF511FF6C89645496684272CCA64F716EB184470780179D44F86697DB871392. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Winding/StarConvex.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Curves in a star-shaped set are null-homologous there.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 DF7CCADE6144E80369454810FBC56F6CF0320DE45EF63C94AD75BF3BFA723B75. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Winding/UnboundedComponent.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for The winding number on the unbounded component.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 8113856D4BA959CDAF35FCEE48E96D940A31F5F7D07D9893F274FE358D75C84E. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Winding/Vanishing.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for The winding number vanishes far from a bounded closed curve.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 9D43C97B69A1C3213D6CD2D60CE1EDDFFDE571E16DE6E68EF7BB3F09A6589361. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Winding/AbsolutelyContinuous/Basic.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Winding numbers of absolutely continuous curves.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 8BFCE5615096F6EA0D98202C24EDF09BAE6DBBFAC7735080585E36F0A5E2D0BB. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Winding/AbsolutelyContinuous/Proximity.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Proximity invariance for absolutely continuous curves.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 758ED95B1859ADE3551BA4D8E98ED2AEB20A3842E26B119DF284191369C3AC50. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Winding/Number/AbsolutelyContinuous.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for The winding integral for absolutely continuous curves.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 2073D1C25071B304D8023378D4F84C85656CF6A2E233F7497BD11BC01E9C7425. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Winding/Number/Basic.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for The generalized winding number (HungerbhlerWasem Def 2.1).",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 2A242F8EC5E534C65DA4A5B1F3B44C7F83C2C2FA25F34FAFEE2AF2B78A776238. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Analysis/Contour/Winding/Number/Reverse.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Orientation reversal for contour winding numbers.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 6FCC3C6788BE3C6D05ADE8D85205D24C3965F7360813199C0AB8591A363ECEFC. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/MeasureTheory/Function/AbsolutelyContinuous/Basic.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Absolutely continuous curves in pseudometric spaces.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 728ADABC0CEABCA08E56F16800AD73DEBFABA21C799EF1D653D9DADBDC1BBE5D. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/MeasureTheory/Function/AbsolutelyContinuous/Comp.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Smooth maps composed with absolutely continuous curves.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 9EAAB68009D27ECF68150BEA1292EAD324722458EBEDDC447EE035BF07A7F251. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/MeasureTheory/Integral/IntervalIntegral/AbsolutelyContinuousFun.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Calculus along absolutely continuous curves.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 EC40FC3FE8540166653A23DD0D49F37E6DB85F7204A84E22881D97532648979F. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/MeasureTheory/Integral/IntervalIntegral/DerivIntegrable.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Interval integrability of the derivative of a `C` function.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 ECCEA294C156244743F5833C7EC5D77B87CFC22A08213CBA7B641AB4FDB17843. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/NumberTheory/LSeries/Newman/Detour.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for The left detour in Newman's contour argument.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 B94E6EBE7963C66B52073E70722A1ACC06744ABFF97D59C5EBCD2621812F0199. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/NumberTheory/LSeries/Newman/Semicircle.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for The semicircle contributions in Newman's argument.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 12A085B6C8DB0014A67723A704B7F9A9906CC2B0C932198BF27CB7882119DDEF. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/NumberTheory/LSeries/Newman/Tauberian.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Newman's Tauberian theorem for bounded Laplace transforms.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 773BF5A4AF7E4BC3F4BF7F00235F042468AEA12B27D32A9D017F25FDB071C867. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/NumberTheory/LSeries/Newman/Transform.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Truncated Laplace transforms and the estimates of Newman's contour argument.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 023900E50FD188C5592CCF0BEC9C871DFCA8BDB3E9479E2E7ACEF0F1C79539F4. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Order/Interval/Finite.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Intervals avoiding a finite set of points.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 E8C1644FB15C9F997269C9A728D152E3AE1B3EAC453C65C844F12E5DD4932C9B. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Topology/ConnectedComponents.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Connected components.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 2BD3EA27D37844E34A292F471A09DCCF216A19612186F0990274BE56CE10BFE6. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Topology/FilledHull.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Filling in the bounded complementary components of a set.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 F1C963AED9C211EBD99E199A80432A95EF0350140F54718FD29FCD7EE6C771FC. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Topology/Frontier.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Elementary frontier lemmas.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 7EF137426E8E9B82F9D9CF6BE68301DFB5897F1076AD77B097C893332B863DA4. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Topology/PathComponent.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Point-set topology of path components.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 9EC207178D10FA529E38E31F60AF425E976A8BFE6FF329DB265501B54B8ACD25. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Topology/UnitInterval.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Partitions and clipped subdivisions of intervals.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 A42DE435E1F6566CBE76D2BACD0C579C20DC8C0582D98CBF3D82B8948ABA1469. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Topology/Homotopy/Path.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Path homotopy helpers.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 79D7767B114778732E960A5C2E02D72093F7BC82A75F605DB6C5ECBEA088E969. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Topology/MetricSpace/Kuratowski.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for The FrchetKuratowski embedding of a pseudometric space.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 333B1F4C75BC8CB07617FE9D341F2319B34DFB40E1AAAFD5B54F119323B1501F. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
+      "reviewed": true
+    },
+    {
+      "path": "TauCeti/Topology/Order/Interval.lean",
+      "classification": "Other published source formalization",
+      "mathematical_source": "Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.",
+      "formalization_note": "Lean 4.33.1 compatibility port for Intervals in order topologies.",
+      "content_basis": "Reviewed analytic dependency snapshot SHA-256 06F7F7F31456E5CBEC86782665F92D516066C84C92AED2D9C81065DB32BD2B2B. The local attribution preserves the upstream proof text.",
+      "dependency_status": "Pinned Tau Ceti port against this repository's Mathlib version.",
       "reviewed": true
     },
     {

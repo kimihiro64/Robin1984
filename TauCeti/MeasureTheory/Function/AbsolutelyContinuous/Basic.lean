@@ -1,0 +1,98 @@
+/-
+Copyright (c) 2026 The Tau Ceti contributors. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: The Tau Ceti contributors
+-/
+module
+
+public import Mathlib.MeasureTheory.Function.AbsolutelyContinuous
+public import TauCeti.Topology.MetricSpace.Kuratowski
+
+/-!
+# Absolutely continuous curves in pseudometric spaces
+
+Mathlib defines `AbsolutelyContinuousOnInterval f a b` for maps `f : ℝ → X` into an arbitrary
+pseudometric space, but states continuity (`AbsolutelyContinuousOnInterval.continuousOn`) and
+bounded variation (`AbsolutelyContinuousOnInterval.boundedVariationOn`) only for maps into a
+seminormed additive group. This file supplies both for an arbitrary pseudometric target, as needed
+for curves in metric spaces which are not normed, such as spaces of probability measures with a
+Wasserstein distance.
+
+Both are transferred from the normed case along the Fréchet–Kuratowski embedding
+`TauCeti.kuratowskiEmbedding` of a pseudometric space into the bounded continuous real functions
+on it. This embedding is an isometry, so it preserves absolute continuity, continuity and
+variation.
+
+## Main results
+
+* `AbsolutelyContinuousOnInterval.continuousOn'`: an absolutely continuous curve in a pseudometric
+  space is continuous on its interval.
+* `AbsolutelyContinuousOnInterval.aemeasurable_restrict_Ioc`: an absolutely continuous curve is
+  almost everywhere measurable on its ordered half-open parameter interval for any measure.
+* `AbsolutelyContinuousOnInterval.boundedVariationOn'`: an absolutely continuous curve in a
+  pseudometric space has bounded variation on its interval.
+* `AbsolutelyContinuousOnInterval.prodMk`: a pair of absolutely continuous curves is an absolutely
+  continuous curve in the product.
+-/
+
+public section
+
+open Set
+
+namespace AbsolutelyContinuousOnInterval
+
+variable {X : Type*} [PseudoMetricSpace X] {γ : ℝ → X} {a b : ℝ}
+
+/-- An absolutely continuous curve in a pseudometric space is continuous on its interval. This
+generalizes `AbsolutelyContinuousOnInterval.continuousOn` from seminormed groups to pseudometric
+spaces. -/
+theorem continuousOn' (hγ : AbsolutelyContinuousOnInterval γ a b) : ContinuousOn γ (uIcc a b) :=
+  have he := TauCeti.isometry_kuratowskiEmbedding (γ a)
+  have hComp : AbsolutelyContinuousOnInterval (TauCeti.kuratowskiEmbedding (γ a) ∘ γ) a b := by
+    simpa only [AbsolutelyContinuousOnInterval, Function.comp_apply, he.dist_eq] using hγ
+  he.isUniformInducing.isInducing.continuousOn_iff.2 hComp.continuousOn
+
+/-- An absolutely continuous curve in a pseudometric space is almost everywhere measurable on
+its ordered half-open parameter interval, with respect to any measure on the parameter space. -/
+theorem aemeasurable_restrict_Ioc [MeasurableSpace X] [BorelSpace X]
+    {μ : MeasureTheory.Measure ℝ} (hγ : AbsolutelyContinuousOnInterval γ a b) :
+    AEMeasurable γ (μ.restrict (Ioc a b)) :=
+  (hγ.continuousOn'.mono (Ioc_subset_uIoc.trans uIoc_subset_uIcc)).aemeasurable measurableSet_Ioc
+
+/-- An absolutely continuous curve in a pseudometric space has bounded variation on its interval.
+This generalizes `AbsolutelyContinuousOnInterval.boundedVariationOn` from seminormed groups to
+pseudometric spaces. -/
+theorem boundedVariationOn' (hγ : AbsolutelyContinuousOnInterval γ a b) :
+    BoundedVariationOn γ (uIcc a b) := by
+  have he := TauCeti.isometry_kuratowskiEmbedding (γ a)
+  have hvar : eVariationOn (TauCeti.kuratowskiEmbedding (γ a) ∘ γ) (uIcc a b) =
+      eVariationOn γ (uIcc a b) := by
+    simp only [eVariationOn, Function.comp_apply, he.edist_eq]
+  rw [BoundedVariationOn, ← hvar]
+  have hComp : AbsolutelyContinuousOnInterval (TauCeti.kuratowskiEmbedding (γ a) ∘ γ) a b := by
+    simpa only [AbsolutelyContinuousOnInterval, Function.comp_apply, he.dist_eq] using hγ
+  exact hComp.boundedVariationOn
+
+/-- A pair of absolutely continuous curves in pseudometric spaces is an absolutely continuous curve
+in their product. -/
+theorem prodMk {Y : Type*} [PseudoMetricSpace Y] {δ : ℝ → Y}
+    (hγ : AbsolutelyContinuousOnInterval γ a b) (hδ : AbsolutelyContinuousOnInterval δ a b) :
+    AbsolutelyContinuousOnInterval (fun t ↦ (γ t, δ t)) a b := by
+  unfold AbsolutelyContinuousOnInterval at hγ hδ ⊢
+  refine squeeze_zero (fun _ ↦ Finset.sum_nonneg fun _ _ ↦ dist_nonneg) (fun _ ↦ ?_)
+    (by simpa using hγ.add hδ)
+  rw [← Finset.sum_add_distrib]
+  gcongr
+  rw [Prod.dist_eq]
+  exact max_le_add_of_nonneg dist_nonneg dist_nonneg
+
+end AbsolutelyContinuousOnInterval
+
+/-!
+## Provenance
+
+- Classification: **Other published source formalization**.
+- Mathematical source: Tau Ceti at 1bf9d63472811e1dfe2ebf0c2f3bb5bc411bd6d5.
+- Formalization note: Lean 4.33.1 compatibility port for Absolutely continuous curves in pseudometric spaces.
+- PROVENANCE-END
+-/

@@ -29,10 +29,11 @@ variable (K : Type*) [Field K] [NumberField K]
 local notation "P" => HeightOneSpectrum (RingOfIntegers K)
 local notation "PP" => Prod P Nat
 
-private noncomputable def powersOfNorm (n : Nat) : Finset PP :=
+/-- Prime ideal powers with the indicated absolute norm. -/
+noncomputable def powersOfNorm (n : Nat) : Finset PP :=
   (primePowersUpTo K n).filter (fun pn => dedekindPrimePowerNorm K pn = n)
 
-private theorem mem_powersOfNorm {n : Nat} {pn : PP} :
+theorem mem_powersOfNorm {n : Nat} {pn : PP} :
     Iff (Membership.mem (powersOfNorm K n) pn) (dedekindPrimePowerNorm K pn = n) := by
   constructor
   case mp =>
@@ -67,16 +68,18 @@ theorem dedekindNormCoeff_eq_zero_of_le_one {n : Nat} (hn : n <= 1) :
   rw [(mem_powersOfNorm K).mp hpn] at hPos
   exact (not_lt_of_ge hn) hPos
 
-theorem dedekindChebyshev_eq_sum_normCoeff (x : Real) :
-    dedekindChebyshev K x = (Finset.range (Nat.floor x + 1)).sum (dedekindNormCoeff K) := by
+/-- Group a finite prime-power sum using any factor depending only on the norm. -/
+theorem sum_primePowersUpTo_weighted_eq_sum_normCoeff (n : Nat) (weight : Nat -> Real) :
+    (primePowersUpTo K n).sum
+        (fun pn => weight (dedekindPrimePowerNorm K pn) *
+          Real.log (dedekindPrimeNorm K pn.1 : Real)) =
+      (Finset.range (n + 1)).sum (fun m => weight m * dedekindNormCoeff K m) := by
   classical
-  let n := Nat.floor x
   let p := primePowersUpTo K n
-  let v := fun pn : PP => Real.log (dedekindPrimeNorm K pn.1 : Real)
   let g := dedekindPrimePowerNorm K
+  let v := fun pn : PP => weight (g pn) * Real.log (dedekindPrimeNorm K pn.1 : Real)
   have hMaps : forall pn : PP, Membership.mem p pn -> Membership.mem (Finset.range (n + 1)) (g pn) :=
     fun pn hp => Finset.mem_range.mpr (Nat.lt_succ_iff.mpr ((mem_primePowersUpTo K).mp hp))
-  unfold dedekindChebyshev
   change p.sum v = _
   rw [<- Finset.sum_fiberwise_of_maps_to hMaps v]
   apply Finset.sum_congr rfl
@@ -88,8 +91,17 @@ theorem dedekindChebyshev_eq_sum_normCoeff (x : Real) :
     rw [Finset.mem_filter, mem_powersOfNorm]
     exact Iff.intro And.right
       (fun h => And.intro ((mem_primePowersUpTo K).mpr (h.le.trans hmn)) h)
-  rw [hFiber]
-  rfl
+  rw [hFiber, dedekindNormCoeff, Finset.mul_sum]
+  apply Finset.sum_congr rfl
+  intro pn hpn
+  change weight (dedekindPrimePowerNorm K pn) * Real.log (dedekindPrimeNorm K pn.1 : Real) = _
+  rw [(mem_powersOfNorm K).mp hpn]
+
+theorem dedekindChebyshev_eq_sum_normCoeff (x : Real) :
+    dedekindChebyshev K x = (Finset.range (Nat.floor x + 1)).sum (dedekindNormCoeff K) := by
+  unfold dedekindChebyshev
+  simpa only [one_mul] using sum_primePowersUpTo_weighted_eq_sum_normCoeff K
+    (Nat.floor x) (fun _ => 1)
 
 theorem dedekindChebyshev_nonneg (x : Real) : 0 <= dedekindChebyshev K x := by
   rw [dedekindChebyshev_eq_sum_normCoeff]
@@ -112,46 +124,55 @@ private theorem primePowerTerm_log_real (pn : PP) (s : Complex) :
   rw [Complex.ofReal_natCast] at h
   rw [h]
 
+/-- Group an absolutely summable prime-power series by norm when its
+factor apart from the base-prime logarithm depends only on that norm. -/
+theorem hasSum_dedekindNormCoeff_mul {u : PP -> Complex} {v : Nat -> Complex} {A : Complex}
+    (hu : HasSum u A)
+    (hTerm : forall pn : PP, u pn = (Real.log (dedekindPrimeNorm K pn.1 : Real) : Complex) *
+      v (dedekindPrimePowerNorm K pn)) :
+    HasSum (fun n : Nat => (dedekindNormCoeff K n : Complex) * v n) A := by
+  classical
+  let g := dedekindPrimePowerNorm K
+  have hSum := hu.tsum_fiberwise g
+  have hEq : (fun n : Nat => tsum (fun pn : {p : PP // g p = n} => u pn.val)) =
+      fun n : Nat => (dedekindNormCoeff K n : Complex) * v n := by
+    funext n
+    let carrier : Set PP := {pn | g pn = n}
+    let _ : Fintype carrier :=
+      Fintype.ofFinset (powersOfNorm K n) (fun _ => mem_powersOfNorm K)
+    let w := fun pn : PP => (Real.log (dedekindPrimeNorm K pn.1 : Real) : Complex)
+    have hFib : (fun pn : carrier => u pn.val) =
+        fun pn : carrier => w pn.val * v n := by
+      funext pn
+      have hp : g pn.val = n := pn.property
+      rw [hTerm]
+      change w pn.val * v (g pn.val) = w pn.val * v n
+      rw [hp]
+    change tsum (fun pn : carrier => u pn.val) = (dedekindNormCoeff K n : Complex) * v n
+    have hFiberSum : (Finset.univ.sum (fun pn : carrier => w pn.val)) = (powersOfNorm K n).sum w :=
+      (Finset.sum_subtype (p := carrier) (powersOfNorm K n)
+        (fun _ => mem_powersOfNorm K) w).symm
+    rw [hFib, tsum_fintype, <- Finset.sum_mul, hFiberSum]
+    congr 1
+    unfold dedekindNormCoeff
+    exact (map_sum Complex.ofRealHom _ _).symm
+  rw [<- hEq]
+  exact hSum
+
 /-- The norm-indexed coefficient sequence has the actual Dedekind
 negative logarithmic derivative as its L-series on the initial
 half-plane. -/
 theorem hasSum_dedekindNormCoeff {s : Complex} (hs : 1 < s.re) :
     LSeriesHasSum (fun n => (dedekindNormCoeff K n : Complex)) s
       (-deriv (dedekindZeta K) s / dedekindZeta K s) := by
-  classical
-  let A := -deriv (dedekindZeta K) s / dedekindZeta K s
-  let u := fun pn : PP => dedekindPrimePowerTerm K pn.1 pn.2 s
-  let g := dedekindPrimePowerNorm K
-  have h : HasSum u A := hasSum_dedekindPrimePowerTerm K hs
-  have hSum := h.tsum_fiberwise g
-  have hEq : (fun n : Nat => tsum (fun pn : {p : PP // g p = n} => u pn.val)) =
-      LSeries.term (fun n => (dedekindNormCoeff K n : Complex)) s := by
+  have hS : Not (s = 0) := Complex.ne_zero_of_re_pos (zero_lt_one.trans hs)
+  change HasSum (LSeries.term (fun n => (dedekindNormCoeff K n : Complex)) s) _
+  have hTerms : LSeries.term (fun n => (dedekindNormCoeff K n : Complex)) s =
+      fun n : Nat => (dedekindNormCoeff K n : Complex) * (n : Complex) ^ (-s) := by
     funext n
-    let carrier : Set PP := {pn | g pn = n}
-    let _ : Fintype carrier :=
-      Fintype.ofFinset (powersOfNorm K n) (fun _ => mem_powersOfNorm K)
-    let v := fun pn : PP => (Real.log (dedekindPrimeNorm K pn.1 : Real) : Complex)
-    have hSn : Not (s = 0) := Complex.ne_zero_of_re_pos (zero_lt_one.trans hs)
-    have hFib : (fun pn : carrier => u pn.val) =
-        fun pn : carrier => v pn.val * (n : Complex) ^ (-s) := by
-      funext pn
-      have hp : g pn.val = n := pn.property
-      unfold u
-      rw [primePowerTerm_log_real K]
-      change v pn.val * (g pn.val : Complex) ^ (-s) = _
-      rw [hp]
-    change tsum (fun pn : carrier => u pn.val) =
-      LSeries.term (fun n => (dedekindNormCoeff K n : Complex)) s n
-    have hFiberSum : (Finset.univ.sum (fun pn : carrier => v pn.val)) = (powersOfNorm K n).sum v :=
-      (Finset.sum_subtype (p := carrier) (powersOfNorm K n)
-        (fun _ => mem_powersOfNorm K) v).symm
-    rw [hFib, tsum_fintype, <- Finset.sum_mul, hFiberSum,
-      LSeries.term_of_ne_zero' hSn, div_eq_mul_inv, Complex.cpow_neg]
-    congr 1
-    unfold dedekindNormCoeff
-    exact (map_sum Complex.ofRealHom _ _).symm
-  change HasSum (LSeries.term (fun n => (dedekindNormCoeff K n : Complex)) s) A
-  rw [<- hEq]
-  exact hSum
+    rw [LSeries.term_of_ne_zero' hS, div_eq_mul_inv, Complex.cpow_neg]
+  rw [hTerms]
+  exact hasSum_dedekindNormCoeff_mul K (hasSum_dedekindPrimePowerTerm K hs)
+    (fun pn => primePowerTerm_log_real K pn s)
 
 end Robin1984.GRH

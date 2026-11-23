@@ -105,13 +105,12 @@ related_formalizations: []
 
 status:
   scope: >-
-    The three advertised declarations prove Robin's full 1984 biconditional
-    in Mathlib's RiemannHypothesis formulation, the equivalent restriction to
-    colossally abundant integers above 5040, and Lagarias's elementary
-    criterion.  The proof development excludes the deliberate statement holes
-    in Challenge.lean from its counts.  It does not establish either side of
-    the biconditionals unconditionally and therefore does not prove the
-    Riemann hypothesis.
+    The advertised declarations give Robin's 1984 biconditional, its
+    colossally abundant restriction, and Lagarias's elementary criterion.
+    They also give corrected ideal Robin equivalences for every Dirichlet
+    L-function and for the Dedekind zeta functions of all number fields.
+    The proof counts cover maintained proofs and exclude the deliberate
+    statement holes in Challenge.lean.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Quot.sound", "Classical.choice"]
@@ -127,6 +126,16 @@ status:
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
     - declaration: "Robin1984.riemann_hypothesis_iff_lagarias_elementary_criterion"
+      file: "Solution.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "Robin1984.GRH.dirichletGRH_iff_cyclotomicCorrectedIdealRobin"
+      file: "Solution.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "Robin1984.GRH.dedekindERH_iff_correctedIdealRobin"
       file: "Solution.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]

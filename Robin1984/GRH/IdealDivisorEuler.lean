@@ -74,7 +74,9 @@ private noncomputable def submultiplicityBoxEquiv [DecidableEq P] (m : M) :
     rw [Finsupp.count_toMultiset, Finsupp.onFinset_apply]
     exact dif_pos p.property
 
-private theorem absNorm_primeMultiset_eq_prod_count [DecidableEq P] (n : M) (S : Finset P)
+/-- The absolute norm of an ideal is the product of the prime norms raised to
+the multiplicities in its prime multiset. -/
+theorem absNorm_primeMultiset_eq_prod_count [DecidableEq P] (n : M) (S : Finset P)
     (hn : n.toFinset <= S) :
     Ideal.absNorm (primeMultisetIdealEquiv n).val =
       S.prod (fun p => dedekindPrimeNorm K p ^ n.count p) := by

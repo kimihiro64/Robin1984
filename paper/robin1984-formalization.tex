@@ -1715,53 +1715,65 @@ The fixed-field prime ideal theorem with its zero-free-region error
 justifies convergence. A fixed exceptional zero below $1$ is absorbed in
 that error for sufficiently large $x$.
 
-For the forward direction take $x=\log N\mathfrak a$ and
-$b(q)=-\log(1-q^{-1})$. The logarithm of the ideal divisor ratio is
-at most the sum of $b(q)$ over the prime support of $\mathfrak a$. The
-support costs at most $x$ when a prime ideal costs $\log q$.
-The ratio $b(q)/\log q$ decreases for $q>1$. Subtract
-$b(x)/\log x$ times the cost and bound the surplus by taking all
-$q\le x$. This gives
+For the forward implication take $x=\log N\mathfrak a$. The local
+factor for an ideal with exponent $k$ at $\mathfrak p$ satisfies
+\[
+ \log\sum_{j=0}^k q^{-j}\le\sum_{j=1}^k\frac1{j q^j}.
+\]
+For $k\ge1$, the tail of the logarithmic series is at most
+$q^{-k-1}/((k+1)(1-q^{-1}))\le q^{-k-1}$, and
+$\log(1-q^{-k-1})\le-q^{-k-1}$. The $k=0$ case is equality.
+Each included prime power has cost $\log q$. Its contribution divided
+by cost is $1/(q^j\log(q^j))$, which decreases as $q^j$ increases.
+Subtract the ratio at $x$ times the total cost $x$ and bound the
+remaining contributions by summing over all $q^j\le x$. This gives
 \[
  \log\frac{\sigma_K(\mathfrak a)}{N\mathfrak a}
- \le \sum_{q\le x}b(q)+\frac{b(x)}{\log x}\bigl(x-\theta_K(x)\bigr).
+ \le A(x)+\frac{x-\psi_K(x)}{x\log x}
+ = \gamma+\log\kappa_K+\log\log x+H(x).
 \]
-The omitted part of the Euler product logarithm is
-$\sum_{q\le x}b(q)-A(x)=(1+o(1))/(\sqrt{x}\log x)$.
-Its main term is $\tfrac12\sum_{\sqrt{x}<q\le x}q^{-2}$. For
-$q\le x^{1/3}$ the first omitted power is greater than $x$.
-For $q>x^{1/3}$ the exponents of at least three are bounded by summing
-$q^{-3}$. Both contributions are $O_K(x^{-2/3})$ by the prime ideal
-theorem. Also $\psi_K(x)-\theta_K(x)\sim\sqrt x$ from the prime-square
-layer. Substituting $b(x)=x^{-1}+O(x^{-2})$ cancels the $E(x)$ term
-in \eqref{eq:ideal-mertens}. The resulting bound is
+
+Put $T(x)=\int_x^\infty E(t)t^{-2}\,dt$ and
+$F_K(s)=(s-1)\zeta_K(s)$. With
+$\Phi(s)=(F_K'(s)/F_K(s)+1)/s$, the weighted Mellin transform
+of $-T$ is $(\Phi(s)-\Phi(1))/(1-s)$ for $\operatorname{Re}s>1$.
+The Hadamard product for the entire completion $\Xi_K$ supplies
+the completed-zero terms in $\Phi$. The archimedean logarithmic
+derivative contributes digamma terms whose series are supported
+on $-2n$ and $-n$ for $n\ge1$, with the real and complex place
+multiplicities, and a separate term at the origin. Taking the
+divided difference turns the term $1/[\rho(s-\rho)]$ into
+$1/[\rho(1-\rho)(s-\rho)]$. Mellin uniqueness on the line
+$\operatorname{Re}s=2$ identifies $-xT(x)$ almost everywhere
+with the real part of the corresponding power series. Its completed-zero terms are
+$x^\rho/[\rho(1-\rho)]$. The origin contributes a constant and
+a logarithm, and the absolutely summable Gamma terms stay bounded.
+
+Under Dedekind RH the absolute values of the completed-zero terms
+sum to $\sqrt{x} B_K$, where
+$B_K=\sum_\rho(1/4+(\operatorname{Im}\rho)^2)^{-1}$ counts
+multiplicities. Subtract the completed logarithmic derivatives at
+$2$ and $-1$. The functional equation relates these values, and
+each zero contributes $3/(9/4+(\operatorname{Im}\rho)^2)$ to
+the real part of the difference. Comparing summands gives
 \[
- \log\frac{\sigma_K(\mathfrak a)}{N\mathfrak a}
- \le \gamma+\log\kappa_K+\log\log x+H(x)
-       +\frac{2+o(1)}{\sqrt{x}\log x}.
+ B_K\le 6\operatorname{Re}\frac{\Xi_K'(2)}{\Xi_K(2)}
+      \le 9+3\log|D_K|.
 \]
-Under RH for $\zeta_K$, the integrated explicit formula
-\cite{GrenieMolteniSmoothed} gives
+At $2$ the two Gamma factors and $\zeta_K'/\zeta_K$ have
+nonpositive real contributions. This leaves the two pole factors
+and the discriminant term in the upper bound.
+The origin and Gamma terms are $O_K(1+\log x)$, so
+$|T(x)|\le (B_K+1)/\sqrt{x}$ almost everywhere beyond a cutoff.
+Continuity of $T$ extends this bound to every sufficiently large $x$. For
+$w(t)=(1+\log t)/\log^2 t$, integration by parts gives
+$H(x)=-w(x)T(x)-\int_x^\infty w'(t)T(t)\,dt$, whence
 \[
- \sqrt{x}\log x\,H(x)
- =\sum_\rho\frac{x^{i\operatorname{Im}\rho}}{\rho(1-\rho)}+o(1).
+ H(x)\le \frac{B_K+1}{\sqrt{x}\log x}
+       +\frac{7(B_K+1)}{\sqrt{x}\log^2 x}
 \]
-In detail, integrate the formula for $\int_1^x E(t)\,dt$ against
-the derivative of $(1+\log x)/(x^2\log^2x)$. The resulting terms
-on this scale are bounded by a constant times
-$1/|\rho(\rho+1)|$, which is summable. For each fixed $\rho$, the
-leading term follows by integrating $t^{\rho-2}/\log t$.
-Writing $B_K=\sum_\rho(1/4+(\operatorname{Im}\rho)^2)^{-1}$, the
-logarithmic derivative at $2$ of the entire completion $\Xi_K$ gives
-\[
- B_K\le 6\frac{\Xi_K'(2)}{\Xi_K(2)}\le 9+3\log|D_K|.
-\]
-The first inequality compares each summand with
-$6(3/2)/(9/4+(\operatorname{Im}\rho)^2)$, deduced using symmetry
-about $1/2$. For the second inequality, the gamma factors and
-$\zeta_K'/\zeta_K$ give nonpositive terms at $2$. Exponentiating
-leaves the coefficient $2+B_K$ on the $x^{-1/2}$ scale. The stated
-coefficient leaves a unit of slack.
+eventually. The leading coefficient $B_K+1$ is strictly below
+$12+3\log|D_K|$, so exponentiation gives \eqref{eq:ideal-robin}.
 
 For the reverse direction use
 $\mathfrak L_x=\prod_{q^j\le x}\mathfrak p$.
@@ -1794,10 +1806,13 @@ nonnegativity of the transform on the real line to its right.
 The functional equation then gives the other half of the strip.
 \end{proof}
 
-\begin{corollary}[Dirichlet GRH and Dedekind-zeta GRH]
-Dirichlet GRH is equivalent to \eqref{eq:ideal-robin} for every
-$K=\mathbb Q(\zeta_d)$, $d\ge1$. Dedekind-zeta GRH is equivalent
-to \eqref{eq:ideal-robin} for every number field $K$.
+\begin{corollary}[Dirichlet GRH and Dedekind ERH]
+Every zero in the open critical strip of every Dirichlet $L$-function,
+over all positive moduli and all characters, has real part $1/2$ if
+and only if \eqref{eq:ideal-robin} holds for every
+$K=\mathbb Q(\zeta_d)$, $d\ge1$. The same inequality over every number
+field $K$ is equivalent to the critical-line assertion for the Dedekind
+zeta function of every number field.
 \end{corollary}
 
 \begin{proof}
@@ -1811,7 +1826,7 @@ the zeros in the open strip. The all-field statement follows by
 applying Theorem~\ref{thm:ideal-robin} to each $K$.
 \end{proof}
 
-\begin{theorem}[Smoothed prime-power criterion for standard automorphic RH]
+\begin{theorem}[Triangular prime-power criterion for grand RH]
 Let $L(s,\pi)$ be a normalized unitary cuspidal standard
 $L$-function over a number field $K$. Put
 $Z=L(s,\pi)L(s,\tilde\pi)$. For a pure norm twist use $Z=\zeta_K$,
@@ -1854,8 +1869,11 @@ give the other half. The factors of $Z$ have no poles in the open
 strip, so their zeros cannot cancel.
 \end{proof}
 
-This criterion applies to general unitary Hecke $L$-functions in
-degree one and to the higher ranks without assuming temperedness.
+Grand RH here means RH for the normalized unitary cuspidal standard
+$L$-functions over all number fields, quantified over all degrees.
+This includes general unitary Hecke $L$-functions in degree one.
+The Lean Challenge specifies the paired analytic data for this criterion.
+Its instantiation by the standard automorphic families is in progress.
 The test uses a weighted sum of prime powers. A weighted all-ideal
 bound can also be obtained when the logarithmic Euler coefficients
 are nonnegative. For unitary Hecke characters $\chi$ other than pure
@@ -1871,16 +1889,15 @@ weighted comparison are recorded in \path{docs/GRH.md}.
 
 \subsection{Public statements and the checked proof graph}
 
-The three classical Robin and Lagarias equivalences below have been
-formalized in Lean~4.33.1 using Mathlib~\cite{Lean4,Mathlib}.
-Section~\ref{sec:grh} gives mathematical proofs of the generalized criteria.
-The Lean development proves the nonvanishing implication from the
-eventual triangular bound for a holomorphic pole-removed function with
-the stated absolutely convergent logarithmic-derivative expansion and
-locally finite coefficients. The headline generalized equivalences
-remain in development.
+Lean~4.33.1 and Mathlib~\cite{Lean4,Mathlib} verify the three classical
+Robin and Lagarias equivalences and both corrected ideal Robin
+equivalences in Section~\ref{sec:grh}. The automated statement boundary
+compares the same five declarations. The grand RH criterion has a Lean
+proof for families equipped with the specified analytic data. Its
+instantiation for all standard automorphic L-functions remains a
+follow-up.
 
-The three public equivalence declarations have the
+The three classical equivalence declarations have the
 mathematical types
 \begin{align*}
  &(\forall n\in\N,\ 5040<n\Rightarrow
@@ -2357,14 +2374,14 @@ proof terms.
 risk: a purported solution might prove an easier proposition with the same
 informal description, or redefine a symbol occurring in the target.
 
-The trusted \codelink{Challenge.lean}{Challenge} module imports only four
-narrow Mathlib modules.  It defines the divisor sum, Robin inequality, CA
-predicate, and Lagarias criterion directly, and states the three advertised
-theorems with deliberate proof holes.  The
-\codelink{Solution.lean}{Solution} module imports the project and supplies the
-actual proofs.  The checked
-\codelink{comparator.json}{Comparator configuration} names exactly those three
-theorems, permits only
+The \codelink{Challenge.lean}{Challenge} module imports only Mathlib. Its
+classical declarations state Robin's criterion, the CA reduction and Lagarias's
+criterion. The module also states the Dirichlet GRH and Dedekind ERH ideal
+criteria and the triangular criterion for the analytic data of grand RH.
+All Challenge theorems have deliberate proof holes.
+The \codelink{Solution.lean}{Solution} module imports the project and supplies
+the proofs. The \codelink{comparator.json}{Comparator configuration} names the
+three classical and two corrected ideal declarations and permits only
 \leanname{propext}, \leanname{Quot.sound}, and
 \leanname{Classical.choice}, requires NanoDa, and declares no definition
 holes.  In particular, the solution is not allowed to choose a convenient
@@ -2375,7 +2392,9 @@ The complete semantic policy is short enough to display:
 "theorem_names": [
   "Robin1984.robin_inequality_iff_riemannHypothesis",
   "Robin1984.riemannHypothesis_iff_colossallyAbundant_robin",
-  "Robin1984.riemann_hypothesis_iff_lagarias_elementary_criterion"
+  "Robin1984.riemann_hypothesis_iff_lagarias_elementary_criterion",
+  "Robin1984.GRH.dirichletGRH_iff_cyclotomicCorrectedIdealRobin",
+  "Robin1984.GRH.dedekindERH_iff_correctedIdealRobin"
 ],
 "definition_names": [],
 "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
@@ -2412,14 +2431,14 @@ two deliberate statement holes in the Palomar challenge, project proof
 sources contain no \leanname{sorry}, \leanname{admit}, or
 \leanname{native\_decide}.  Diagnostic commands such as
 \leanname{\#print axioms} occur neither in repository-owned Lean sources nor
-in the timed external import closure.  A completed kernel audit of both
-advertised declarations returned exactly the standard principles
+in the timed external import closure. A kernel axiom audit of the five
+advertised declarations returned the standard principles
 \[
   \leanname{propext},\qquad
   \leanname{Classical.choice},\qquad
   \leanname{Quot.sound}.
 \]
-This audit follows the proof terms of the three advertised declarations through
+This audit follows the proof terms of the advertised declarations through
 their actual transitive closure.  It therefore distinguishes library files
 that are merely present in a dependency checkout from declarations genuinely
 used by this proof: an unused theorem elsewhere cannot enter the result's

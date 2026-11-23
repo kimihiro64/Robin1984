@@ -12,8 +12,8 @@ import Lake
 /-!
 # Lake project configuration
 
-This file pins the external Lean dependencies and defines the repository's
-three libraries. The default targets are `Challenge` and `Solution` and use
+This file pins the external Lean dependencies and declares the project and
+vendored libraries. The default targets are `Challenge` and `Solution` and use
 Lake's ordinary scheduler, so unrelated modules may build concurrently. The
 memory-intensive certificate modules encode their required order through
 import dependencies.
@@ -39,6 +39,13 @@ require mathlib from git
   "https://github.com/leanprover-community/mathlib4.git" @ "v4.33.1"
 
 lean_lib Robin1984 where
+
+lean_lib DedekindZeta where
+  roots := #[`DedekindZeta.ConeMellinBridge, `DedekindZeta.PerClass]
+
+lean_lib TauCeti where
+  roots := #[`TauCeti.MeasureTheory.Integral.IntervalIntegral.AbsolutelyContinuousFun,
+    `TauCeti.NumberTheory.LSeries.Newman.Tauberian]
 
 @[default_target]
 lean_lib Challenge where

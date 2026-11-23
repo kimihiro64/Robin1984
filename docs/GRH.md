@@ -17,45 +17,28 @@ $$
 \frac{12+3\log|D_K|}{\sqrt{\log N\mathfrak a}}\right).
 \tag{1}
 $$
-The threshold depends on $K$. The family of all $K=\mathbb Q(\zeta_m)$,
-$m\ge 1$, gives **Dirichlet GRH**, by the factorization into the primitive
-Dirichlet $L$-functions attached to the characters modulo $m$. Every
-primitive character occurs at its conductor, and there are no poles in
-$0<\Re s<1$ among the factors. Using every number field instead gives
-**Dedekind-zeta GRH**.
+The threshold depends on $K$. **Dirichlet GRH** asserts that every zero in
+$0<\Re s<1$ of every Dirichlet $L$-function, over all positive moduli and
+all characters, has real part $1/2$. This is equivalent to (1) for every
+cyclotomic field $K=\mathbb Q(\zeta_m)$. The proof uses the factorization
+into primitive Dirichlet factors and the nonvanishing of the finite
+Euler factors that arise for imprimitive characters. **Dedekind ERH**
+asserts the critical-line property for the Dedekind zeta function of
+every number field and is equivalent to (1) for every number field.
 
-The Lean file [Robin1984/GRH.lean](../Robin1984/GRH.lean) defines these three
-equivalence propositions and proves uniqueness of the Dedekind continuation,
-the Dirichlet change-of-level identity, and the cyclotomic reduction under
-the stated zeta factorization. For every number field and every
-$\Re s>1$, Lean proves the prime-ideal Euler product for Mathlib's
-Dedekind zeta, its nonvanishing there, and the absolutely convergent
-prime-power series for its negative logarithmic derivative, with the
-three-point trigonometric positivity inequality in that half-plane. Lean
-proves that an entire pole-cleared continuation with nonzero value at one
-cannot vanish on the line of convergence. The natural-index Dirichlet
-coefficients have Chebyshev partial sums and give the same logarithmic
-derivative. Lean also proves the weighted Mellin transform of the Chebyshev
-error, the ideal divisor ratio as a product of finite geometric factors,
-and the exact log norm and local Euler factors of the cutoff ideal. Finite
-Abel summation expresses the Dedekind Mertens prime-power sum as the
-log-log main term, an explicit endpoint constant, and the boundary and
-integral terms of the Chebyshev error. The signed Dedekind tail implication
-accepts a convergent improper primitive
-with the prescribed value at one. The integrated-error and triangular-sum
-criteria use their stated transform and tail hypotheses. The fieldwise and
-family equivalences below are developed in prose.
+The statements appear in the Mathlib-only [Challenge](../Challenge.lean)
+and the proofs appear in [Solution](../Solution.lean). The fieldwise proof
+combines the Dedekind forward and reverse implications. The Dirichlet
+proof also establishes the cyclotomic factorization by matching the
+logarithmic series coefficients, normalizing along the positive real
+axis, and applying uniqueness of analytic continuation.
 
 ### Forward implication
 
-Write $q=N\mathfrak p$ for the norm of a prime ideal, and let
+Write $q=N\mathfrak p$ for the absolute norm of a prime ideal. All
+prime-power sums count each eligible prime ideal separately. Set
 $$
-\psi_K(x)=\sum_{q^j\le x}\log q,\qquad
-\theta_K(x)=\sum_{q\le x}\log q,\qquad E(x)=\psi_K(x)-x .
-$$
-All sums over $q$ count each prime ideal separately, including ideals of
-equal norm. Set
-$$
+\psi_K(x)=\sum_{q^j\le x}\log q,\qquad E(x)=\psi_K(x)-x,\qquad
 A(x)=\sum_{q^j\le x}\frac{1}{j q^j},\qquad
 H(x)=-\int_x^\infty E(t)\frac{1+\log t}{t^2\log^2t}\,dt .
 $$
@@ -66,64 +49,55 @@ A(x)=\gamma+\log\kappa_K+\log\log x+\frac{E(x)}{x\log x}+H(x).
 $$
 [Garcia and Lee, number-field Mertens theorems](https://arxiv.org/abs/2007.10313)
 
-Use $x=\log N\mathfrak a$ and $b(q)=-\log(1-q^{-1})$. The cost of
-including a prime ideal in the support of $\mathfrak a$ is $\log q$.
-Its Euler-factor contribution to the logarithm of the divisor ratio is at
-most $b(q)$. Since $b(q)/\log q$ decreases with $q>1$, subtracting
-$b(x)/\log x$ times the cost makes the surplus nonnegative precisely for
-$q\le x$. Summing the surplus over those prime ideals gives
+For $k\ge 0$, a local divisor factor satisfies
+$\log\sum_{j=0}^k q^{-j}\le\sum_{j=1}^k1/(jq^j)$.
+For $k\ge1$, the omitted logarithmic series tail is at most $q^{-k-1}$
+and $\log(1-q^{-k-1})\le-q^{-k-1}$.
+Each prime power in the divisor ratio has cost $\log q$ and contribution
+$1/(j q^j)$, with a decreasing contribution-to-cost ratio as $q^j$
+increases. At $x=\log N\mathfrak a$, subtract the ratio at $x$ times
+the cost and sum the nonnegative surplus over $q^j\le x$. This gives
 $$
 \log\frac{\sigma_K(\mathfrak a)}{N\mathfrak a}
-\le \sum_{q\le x} b(q)+ \frac{b(x)}{\log x}
-\bigl(x-\theta_K(x)\bigr).
+\le A(x)+\frac{x-\psi_K(x)}{x\log x}
+=\gamma+\log\kappa_K+\log\log x+H(x).
 \tag{3}
 $$
-The tail $\sum_{q\le x}b(q)-A(x)$ is
-$(1+o(1))/(\sqrt{x}\log x)$. Its main term is
-$\frac12\sum_{\sqrt{x}<q\le x}q^{-2}$ by the prime ideal theorem.
-For $q\le x^{1/3}$ the omitted powers contribute $O_K(x^{-2/3})$,
-using $q^{\lfloor\log x/\log q\rfloor+1}>x$. The terms with
-$q>x^{1/3}$ and exponent at least three have the same bound by partial
-summation. Also $\psi_K(x)-\theta_K(x)\sim\sqrt{x}$, from the second
-power layer. Using $b(x)=x^{-1}+O(x^{-2})$ in (3) cancels the
-$E(x)/(x\log x)$ term of (2) and leaves
+
+Let $T(x)=\int_x^\infty E(t)t^{-2}\,dt$ as an improper integral.
+For $F_K(s)=(s-1)\zeta_K(s)$ write
+$\Phi(s)=(F_K'(s)/F_K(s)+1)/s$. The Mellin transform of $-T$ against
+$x^{-s}dx$ on $x>1$ equals $(\Phi(s)-\Phi(1))/(1-s)$ for $\Re s>1$.
+The logarithmic derivative of the entire completion $\Xi_K$, together
+with the two digamma series, expands the divided difference into the
+origin terms and the poles of the completed zero and Gamma series.
+Mellin uniqueness gives the formula for $-xT(x)$ almost everywhere, with
+completed-zero terms $x^\rho/(\rho(1-\rho))$ and an $O_K(1+\log x)$ remainder. The Gamma
+series in the remainder use the negative lattices $-2n$ and $-n$ for
+$n\ge1$, with the corresponding real and complex place multiplicities.
+
+Under Dedekind RH, each completed-zero term has absolute value
+$\sqrt{x}/(1/4+(\Im\rho)^2)$. Put
+$B_K=\sum_\rho(1/4+(\Im\rho)^2)^{-1}$, counting zeros with multiplicity.
+Subtracting the completed logarithmic derivatives at $2$ and $-1$
+and using the functional equation gives
 $$
-\log\frac{\sigma_K(\mathfrak a)}{N\mathfrak a}
-\le \gamma+\log\kappa_K+\log\log x+
-H(x)+\frac{2+o(1)}{\sqrt{x}\log x}.
+B_K\le 6\Re\frac{\Xi_K'(2)}{\Xi_K(2)}\le 9+3\log|D_K|.
 \tag{4}
 $$
-
-Under RH for $\zeta_K$, integrate the smoothed explicit formula for
-$\int_1^x E(t)\,dt$ against the derivative of
-$(1+\log t)/(t^2\log^2t)$. Absolute convergence of the integrated zero
-sum gives
+The second estimate uses nonpositive Gamma terms and the nonpositive
+logarithmic derivative of $\zeta_K$ at $2$. Consequently
+$|T(x)|\le (B_K+1)/\sqrt{x}$ almost everywhere beyond a cutoff.
+Continuity of $T$ extends the bound to every sufficiently large $x$.
+Integration by parts in $H$
+then gives the explicit upper estimate
 $$
-\sqrt{x}\log x\,H(x)
-=\sum_\rho\frac{x^{i\Im\rho}}{\rho(1-\rho)}+o(1).
+H(x)\le \frac{B_K+1}{\sqrt{x}\log x}
+       +\frac{7(B_K+1)}{\sqrt{x}\log^2x}
 \tag{5}
 $$
-Indeed the term in $\int_1^t E(u)\,du$ from $\rho$ is
-$-t^{1+\rho}/[\rho(1+\rho)]$. After integration by parts its contribution
-is $\rho^{-1}\int_x^\infty t^\rho(1+\log t)/(t^2\log^2t)\,dt$.
-For each fixed zero this has the asymptotic in (5), while the
-integration-by-parts form is dominated on the normalized scale by
-$O(1/|\rho(1+\rho)|)$, a summable bound.
-[Grenié and Molteni, smoothed prime ideal theorem](https://sites.unimi.it/molteni/research/papers-pdf/34-molteni-Explicit_smoothed_prime_ideals_theorems_under_GRH.pdf)
-
-For the usual entire completed $\Xi_K$, set
-$B_K=\sum_\rho(1/4+(\Im\rho)^2)^{-1}$, with multiplicities. Symmetry
-about $1/2$ gives
-$$
-\frac{\Xi_K'(2)}{\Xi_K(2)}
-=\sum_\rho \frac{3/2}{9/4+(\Im\rho)^2}.
-$$
-The summand in $B_K$ is at most six times the corresponding summand
-here. At $2$ the gamma factors and $\zeta_K'/\zeta_K$ contribute
-nonpositive terms, so $\Xi_K'/\Xi_K(2)\le 3/2+\frac12\log|D_K|$.
-Thus $2+B_K\le11+3\log|D_K|$ in (4). Exponentiating leaves the same
-leading coefficient on the $1/\sqrt{x}$ scale in (1), and the
-remaining unit of slack gives the eventual inequality.
+for sufficiently large $x$. The leading coefficient $B_K+1$ is strictly
+below $12+3\log|D_K|$, which gives (1) after exponentiation.
 
 ### Reverse implication
 
@@ -293,9 +267,23 @@ half. The conjugate pair detects the zeros of both factors, which have
 no poles in the open strip.
 
 Quantifying (7) over all number fields and all normalized unitary
-cuspidal standard $L$-functions gives standard automorphic GRH.
-Restricting to Dedekind zeta or Dirichlet factors gives the two lower
-zero statements. Equation (7) is a prime-power criterion. Equations (1)
-and (6) are ideal inequalities; (6) requires the positive coefficients
-used in its supporting-line proof.
+cuspidal standard $L$-functions gives grand RH in the standard automorphic
+sense. The Lean Challenge states this criterion for a family of paired analytic
+data. The automorphic instantiation is in progress.
+For the trivial Hecke character of a field $K$, use $Z=\zeta_K$ and
+$m=1$. Its logarithmic Euler coefficient at $(N\mathfrak p)^j$ is
+$\log N\mathfrak p$. Thus, for $x\ge1$,
+$$
+R_{\zeta_K}(x)
+=\frac{x}{2}-\frac1x\int_1^x\psi_K(t)\,dt
+=\frac1{2x}-\frac1x\int_1^x(\psi_K(t)-t)\,dt .
+$$
+The first equality integrates the indicator of $t\ge (N\mathfrak p)^j$
+over $[1,x]$ in the finite prime-power sum. The triangular and corrected
+ideal criteria both test Dedekind RH in this specialization. The ideal
+criterion uses the Mertens sum built from the same prime powers, with
+weights $1/[j(N\mathfrak p)^j]$ and a comparison of positive divisor
+products. Over the cyclotomic fields the shared Dedekind zero condition
+gives Dirichlet GRH. The triangular sum also accepts signed coefficients,
+which allows the higher-rank standard automorphic specialization.
 [Lagarias, Li coefficients and automorphic zero criteria](https://www.numdam.org/articles/10.5802/aif.2311/)

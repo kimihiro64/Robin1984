@@ -24,9 +24,9 @@ Riemann hypothesis.
 
 ## Advertised results
 
-The small statement surface is [Challenge.lean](Challenge.lean). Palomar
-Comparator checks the corresponding proved declarations in
-[Solution.lean](Solution.lean):
+[Challenge.lean](Challenge.lean) contains the Mathlib-only statements.
+[Solution.lean](Solution.lean) proves the classical, Dirichlet GRH and
+Dedekind ERH equivalences included in the Palomar Comparator configuration.
 
 - `Robin1984.robin_inequality_iff_riemannHypothesis` formalizes Robin's
   equivalence between the Riemann hypothesis and the strict divisor-sum
@@ -39,22 +39,24 @@ Comparator checks the corresponding proved declarations in
 
 The Challenge definitions use Mathlib's divisor sum, Euler--Mascheroni
 constant, harmonic numbers, real logarithm and real power, and
-`RiemannHypothesis` predicate. There are no hidden hypotheses in any of the
-three compared theorems.
+`RiemannHypothesis` predicate.
 
 ## Extensions to generalized RH
 
-The [corrected ideal Robin criterion](docs/GRH.md) has the same form for
-Dirichlet and Dedekind-zeta GRH. Dirichlet GRH uses all cyclotomic fields.
-Dedekind-zeta GRH uses all number fields. The corresponding propositions are
-in [Robin1984/GRH.lean](Robin1984/GRH.lean). The note gives the mathematical
-argument and describes related criteria for Hecke and automorphic L-functions.
+- **Dirichlet GRH.** Every zero in the open critical strip of **every
+  Dirichlet L-function** has real part one half if and only if the
+  corrected ideal Robin inequality holds in every cyclotomic field.
+  The proof derives the cyclotomic factorization through the primitive
+  characters attached to each modulus.
+- **Dedekind ERH.** The critical-line property for the Dedekind zeta
+  function of every number field is equivalent to the same corrected
+  ideal Robin inequality in every number field.
 
-Lean proves that the eventual triangular square-root bound excludes zeros
-with real part greater than one half for functions with the stated
-pole-removed logarithmic derivative. See
-[`ne_zero_of_eventual_triangularSquareRootBound`](Robin1984/GRH/SmoothedCriterion.lean).
-Formalization of the headline equivalences is in progress.
+Both results use a field-dependent norm cutoff. The inequality and proofs
+are described in [the generalized criteria](docs/GRH.md). The grand RH
+section states the triangular criterion for families equipped with the
+specified analytic data. Its instantiation for all standard automorphic
+L-functions is a follow-up.
 
 ## Mathematical organization
 
@@ -150,12 +152,12 @@ proof, theorem-by-theorem correspondence, and original references.
 
 ## Trust and proof surface
 
-The completed kernel axiom audit of the three proved `Solution` declarations
+The kernel axiom audit of the five Comparator `Solution` declarations
 returned exactly Lean's standard principles `propext`, `Classical.choice`,
 and `Quot.sound`. Project proof sources contain no custom axiom declarations,
-`sorry`, `admit`, or `native_decide`. The three deliberate `sorry`s in
-`Challenge.lean` are statement holes required by the Challenge/Solution
-comparison and are excluded from proof-status counts.
+`sorry`, `admit`, or `native_decide`. The deliberate `sorry`s in `Challenge.lean` mark statements and are excluded
+from proof-status counts. The Comparator manifest lists the declarations
+with audited proofs.
 
 Finite certificates use ordinary `decide +kernel`, exact natural and rational
 arithmetic, and proved soundness theorems. Comparator statement checking and
