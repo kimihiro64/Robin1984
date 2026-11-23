@@ -2395,10 +2395,19 @@ Using Dirichlet's unit theorem and the finiteness of the ideal
 class group, \path{Robin1984/GRH/HeckeIdeleClassCompactness.lean}
 constructs a compact set of norm-one ideles meeting every
 norm-one idele class. It also proves that the principal
-subgroup is closed and discrete. The compact representatives
-supply the domain for uniform theta estimates in Tate's Mellin
-argument~\cite{Tate1967}. Those estimates and the unfolding
-identity with the Hecke Euler product remain to be verified in Lean.
+subgroup is closed and discrete. On those compact representatives,
+\path{Robin1984/GRH/HeckeTateThetaDecay.lean} proves an absolute
+theta-sum estimate by clearing one common finite denominator and
+then summing the archimedean Schwartz bound over a lattice.
+\path{Robin1984/GRH/HeckeTateDualSupport.lean} verifies compact support
+and boundedness for the finite Fourier dual.
+\path{Robin1984/GRH/HeckeTateThetaQuotient.lean} descends the sum with
+its zero term removed to the norm-one class quotient. It proves
+uniform exponential decay in the logarithmic norm parameter for
+the original and dual tests. These are the large-norm estimates
+used in Tate's Mellin argument~\cite{Tate1967}. Formalizing the
+quotient Mellin integral and its unfolding into the Hecke Euler
+product remains in progress.
 
 For the pole-free case, Lean also constructs the entire continuation
 from a Mellin tail
