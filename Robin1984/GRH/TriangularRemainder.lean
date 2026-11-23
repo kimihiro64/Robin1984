@@ -19,7 +19,7 @@ comparison contributes the pole at one half. Each weighted coefficient
 contributes its Dirichlet term divided by the triangular Mellin kernel.
 -/
 
-open MeasureTheory Set
+open Filter MeasureTheory Set
 
 namespace Robin1984.GRH
 
@@ -214,5 +214,57 @@ theorem triangularComparison_mellin {iota : Type*} [Countable iota]
     _ = _ := by
       rw [show integral mu P = _ from hP.2, show integral mu Q = _ from hQ.2, hTVal]
       simp only [Complex.ofReal_one]
+
+/-- Local finiteness and the vanishing of each weight at its cutoff give
+continuity of the signed triangular remainder on the positive tail. -/
+theorem continuousOn_triangularRemainder {iota : Type*}
+    (a b : iota -> Real) (m : Real)
+    (hFinite : forall T : Real, Set.Finite {i : iota | a i < T}) :
+    ContinuousOn (triangularRemainder a b m) (Ioi (1 : Real)) := by
+  classical
+  intro x hx
+  let cutoff : Real := x + 1
+  let S := (hFinite cutoff).toFinset
+  let w (i : iota) (y : Real) := 1 - a i / y
+  let g (i : iota) (y : Real) := b i * ((abs (w i y) + w i y) / 2)
+  let R (y : Real) := m / 2 * y - S.sum (fun i => g i y)
+  have hG (i : iota) : ContinuousOn (g i) (Ioi (1 : Real)) := by
+    have hw : ContinuousOn (w i) (Ioi (1 : Real)) :=
+      continuousOn_const.sub (continuousOn_const.div continuousOn_id
+        (fun y hy => (zero_lt_one.trans hy).ne'))
+    have hAbs : ContinuousOn (fun y => abs (w i y)) (Ioi (1 : Real)) :=
+      continuous_abs.comp_continuousOn hw
+    exact continuousOn_const.mul ((hAbs.add hw).div_const 2)
+  have hR : ContinuousOn R (Ioi (1 : Real)) :=
+    (continuousOn_const.mul continuousOn_id).sub (continuousOn_finsetSum S (fun i _ => hG i))
+  have hEq : Filter.EventuallyEq (nhds x) (triangularRemainder a b m) R := by
+    have hxCut : x < cutoff := lt_add_of_pos_right x zero_lt_one
+    filter_upwards [isOpen_Ioo.mem_nhds (show Membership.mem (Ioo (1 : Real) cutoff) x
+      from And.intro hx hxCut)] with y hy
+    have hy0 : 0 < y := zero_lt_one.trans hy.1
+    have hterm (i : iota) :
+        (Ioi (a i)).indicator (fun z => b i * (1 - a i / z)) y = g i y := by
+      by_cases h : a i < y
+      case pos =>
+        rw [indicator_of_mem (show Membership.mem (Ioi (a i)) y from h)]
+        have hpos : 0 <= w i y := sub_nonneg.mpr ((div_le_one hy0).mpr h.le)
+        dsimp only [g]
+        rw [abs_of_nonneg hpos]
+        dsimp [w]
+        ring
+      case neg =>
+        rw [indicator_of_notMem (show Not (Membership.mem (Ioi (a i)) y) from h)]
+        have hneg : w i y <= 0 := sub_nonpos.mpr ((one_le_div hy0).mpr (le_of_not_gt h))
+        simp only [g, abs_of_nonpos hneg, neg_add_cancel, zero_div, mul_zero]
+    let term : iota -> Real := fun i => (Ioi (a i)).indicator (fun z => b i * (1 - a i / z)) y
+    have hSum : triangularCoefficientSum a b y = S.sum term := by
+      apply tsum_eq_sum
+      intro i hi
+      have hiCut : Not (a i < cutoff) := fun h => hi ((hFinite cutoff).mem_toFinset.mpr h)
+      exact indicator_of_notMem (fun h => hiCut (lt_trans h hy.2)) _
+    simp only [triangularRemainder, R, hSum, term, hterm]
+  have hAt : ContinuousAt (triangularRemainder a b m) x :=
+    ((hR x hx).continuousAt (isOpen_Ioi.mem_nhds hx)).congr_of_eventuallyEq hEq
+  exact hAt.continuousWithinAt
 
 end Robin1984.GRH

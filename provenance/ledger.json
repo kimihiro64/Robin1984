@@ -1794,6 +1794,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/TriangularHadamard.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Mellin inversion of the triangular kernel applied to the genus-one logarithmic derivative.",
+      "formalization_note": "The zeros at zero and minus one are integrated separately, with a complex Mellin uniqueness argument for the remaining expansion.",
+      "content_basis": "Reviewed the exact exceptional-zero transforms, local Mellin equality, and transfer of the square-root estimate to the pointwise remainder.",
+      "dependency_status": "The checked triangular kernel, the logarithmic Mellin transform, and Mellin uniqueness.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/TriangularMellin.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The Mellin kernel for the triangularly smoothed prime-power sum.",

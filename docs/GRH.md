@@ -247,29 +247,48 @@ R_Z(x)\le C_Z\sqrt{x}.
 \tag{7}
 $$
 
-For the forward direction use Perron's kernel $1/[s(s+1)]$. The
-functional equation and the usual local archimedean bounds for unitary
-cuspidal $L$-functions place the trivial zeros strictly to the left of
-$1/2$. Under RH, shifting to a fixed line between them and $1/2$
-leaves the zero sum
-$\sum_\rho x^\rho/[\rho(\rho+1)]$ in $R_Z$, besides a lower-order
-error. This sum is $O_Z(\sqrt{x})$ by the zero count. For the converse,
-the Mellin transform of $R_Z$ against $x^{-s-1}dx$ on $x\ge1$ is
+Let $F(s)=(s-1)^mZ(s)$ be the pole-cleared uncompleted function. The
+Mellin transform against $x^{-s-1}\,dx$ on $x>1$ is
 $$
-\frac{m}{2(s-1)}+\frac{Z'(s)}{s(s+1)Z(s)} .
+\int_1^\infty R_Z(x)x^{-s-1}\,dx
+=\frac{m}{2(s-1)}+\frac{Z'(s)}{s(s+1)Z(s)}
+=\frac{F'(s)/F(s)+m(s+2)/2}{s(s+1)}
+\qquad (\operatorname{Re}s>1).
 $$
-Again the apparent pole at 1 cancels. A real zero $\beta>1/2$ of
-multiplicity $j$ has residue $j/[\beta(\beta+1)]$ here, hence a
-negative residue for the transform of $C_Z\sqrt{x}-R_Z(x)$. The same
-Landau argument proves there are no zeros to the right of $1/2$,
-including nonreal zeros, and the functional equations give the other
-half. The conjugate pair detects the zeros of both factors, which have
-no poles in the open strip.
+The cancellation at $s=1$ leaves the logarithmic derivative of $F$.
+The eventual upper bound in (7), by Landau's theorem, gives nonvanishing
+of $F$ for $\operatorname{Re}s>1/2$.
 
-Quantifying (7) over all number fields and all normalized unitary
-cuspidal standard $L$-functions gives grand RH in the standard automorphic
-sense. The Lean Challenge states this criterion for a family of paired analytic
-data. The automorphic instantiation is in progress.
+For the forward direction, use the genus-one zero expansion of $F$.
+Write $b$ for its constant logarithmic-derivative term and $m_0,m_{-1}$
+for the multiplicities at $0,-1$. Matching the Mellin transforms gives the following identity for almost every $x>1$.
+$$
+R_Z(x)=\operatorname{Re}\left[
+ b(1-x^{-1})+m(1-\tfrac12x^{-1})
+ +m_0(\log x-1+x^{-1})-m_{-1}x^{-1}\log x
+ +\sum_{\substack{\rho:\,F(\rho)=0\\\rho\notin\{0,-1\}}}
+  \frac{x^\rho-x^{-1}}{\rho(\rho+1)}
+ \right].
+$$
+The sum counts multiplicities. Under right-half-plane nonvanishing, every
+zero in the sum satisfies $\operatorname{Re}\rho\le1/2$. The
+summability of $1/|\rho(\rho+1)|$ and the elementary terms give an
+almost-everywhere square-root bound. Continuity of $R_Z$ gives (7)
+pointwise.
+
+The completed zero condition concerns the pole-cleared completed
+standard $L$-functions. On $\operatorname{Re}s>1/2$, the nonvanishing
+completion factors transfer nonvanishing between the completed pair and
+$F$. The completed functional equation transfers a zero at $s$ to
+a zero of the dual at $1-s$. This argument allows trivial
+zeros of the uncompleted function with real part below $1/2$.
+[Lagarias, §6](https://aif.centre-mersenne.org/item/10.5802/aif.2311.pdf)
+
+Lean proves the completed-zero formulation as `grandRobinCompletedCriterion`
+under the paired Euler and Hadamard data and the completed functional
+equations. The release Challenge still gives its earlier analytic-data
+statement. The instantiation for standard automorphic $L$-functions of
+every rank over every number field remains to be formalized.
 For the trivial Hecke character of a field $K$, use $Z=\zeta_K$ and
 $m=1$. Its logarithmic Euler coefficient at $(N\mathfrak p)^j$ is
 $\log N\mathfrak p$. Thus, for $x\ge1$,

@@ -1,5 +1,4 @@
-import Robin1984.GRH.SmoothedCriterion
-import Robin1984.GRH.SmoothedForward
+import Robin1984.GRH.TriangularHadamard
 
 /-!
 ## Provenance
@@ -184,5 +183,157 @@ theorem grandRobinFamilyCriterion {index coefficients zeros : Type u}
       exact ht.1.symm.trans (hRH pi t ht0 ht1 ht.2)
   exact hTransfer.trans (forall_congr' (fun pi =>
     grandRobinRH_iff_grandRobinBound (realizes pi).admissible))
+
+/-- The completed zero condition for every member of a dual-closed family. -/
+def CompletedFamilyRH {Representation : Type*}
+    (completedL : Representation -> Complex -> Complex) : Prop :=
+  forall pi s, completedL pi s = 0 -> s.re = (1 : Real) / 2
+
+/-- A nonvanishing completion factor on the right and the completed
+functional equation identify the full zero condition with right-half-plane
+nonvanishing of the functions used in the Euler-product criterion. -/
+theorem completedFamilyRH_iff_right_nonvanishing {Representation : Type*}
+    (completedL poleRemoved completionFactor : Representation -> Complex -> Complex)
+    (dual : Representation -> Representation)
+    (functionalEquationFactor : Representation -> Complex -> Complex)
+    (completion : forall pi s, (1 : Real) / 2 < s.re ->
+      completedL pi s = completionFactor pi s * poleRemoved pi s)
+    (completion_ne_zero : forall pi s, (1 : Real) / 2 < s.re ->
+      Not (completionFactor pi s = 0))
+    (functionalEquation : forall pi s,
+      completedL (dual pi) (1 - s) = functionalEquationFactor pi s * completedL pi s) :
+    CompletedFamilyRH completedL <->
+      forall pi s, (1 : Real) / 2 < s.re -> Not (poleRemoved pi s = 0) := by
+  constructor
+  case mp =>
+    intro rh pi s hs hzero
+    have hcompleted : completedL pi s = 0 := by rw [completion pi s hs, hzero, mul_zero]
+    have hline := rh pi s hcompleted
+    linarith
+  case mpr =>
+    intro hnonzero
+    have completed_ne_zero : forall pi s, (1 : Real) / 2 < s.re ->
+        Not (completedL pi s = 0) := by
+      intro pi s hs
+      rw [completion pi s hs]
+      exact mul_ne_zero (completion_ne_zero pi s hs) (hnonzero pi s hs)
+    intro pi s hzero
+    have hr : s.re <= (1 : Real) / 2 :=
+      le_of_not_gt (fun hs => completed_ne_zero pi s hs hzero)
+    have hl : (1 : Real) / 2 <= s.re := by
+      apply le_of_not_gt
+      intro hs
+      have hreflect : (1 : Real) / 2 < (1 - s : Complex).re := by
+        rw [Complex.sub_re, Complex.one_re]
+        linarith
+      have hreflect_zero : completedL (dual pi) (1 - s) = 0 := by
+        rw [functionalEquation pi s, hzero, mul_zero]
+      exact completed_ne_zero (dual pi) (1 - s) hreflect hreflect_zero
+    exact le_antisymm hr hl
+
+/-- The prime-power coefficients and pole removal for a standard L-function
+paired with its contragredient. -/
+structure GrandRobinEulerData (powers : Type*) where
+  normPower : powers -> Real
+  coefficient : powers -> Real
+  poleOrder : Real
+  poleRemoved : Complex -> Complex
+
+/-- The signed triangular prime-power sum is bounded above by a constant
+times the square root of the cutoff, for all sufficiently large cutoffs. -/
+def GrandRobinTriangularBound {powers : Type*}
+    (d : GrandRobinEulerData powers) : Prop :=
+  exists cutoff C : Real, 1 <= cutoff /\
+    forall x : Real, cutoff <= x ->
+      triangularRemainder d.normPower d.coefficient d.poleOrder x <= C * Real.sqrt x
+
+/-- Analytic input about the Euler product and zeros of the
+pole-cleared uncompleted function. The zero list omits zero and minus one,
+whose multiplicities appear separately in the logarithmic derivative. -/
+structure GrandRobinEulerAnalytic {powers zeros : Type*} (d : GrandRobinEulerData powers)
+    (rho : zeros -> Complex) : Prop where
+  normPower_ge_one : forall i, 1 <= d.normPower i
+  locallyFinite : forall T : Real, Set.Finite {i : powers | d.normPower i < T}
+  summableEuler : forall r : Real, 1 < r ->
+    Summable (fun i => norm (d.coefficient i) * (d.normPower i) ^ (-r))
+  analytic : AnalyticOnNhd Complex d.poleRemoved {s : Complex | (1 / 2 : Real) < s.re}
+  nonzero_at_two : Not (d.poleRemoved (2 : Complex) = 0)
+  euler_logDeriv : forall s : Complex, 1 < s.re ->
+    logDeriv d.poleRemoved s = (d.poleOrder : Complex) / (s - 1) -
+      tsum (fun i => (d.coefficient i : Complex) * (d.normPower i : Complex) ^ (-s))
+  zero_is_zero : forall i, d.poleRemoved (rho i) = 0
+  zero_ne_zero : forall i, Not (rho i = 0)
+  zero_ne_neg_one : forall i, Not (rho i + 1 = 0)
+  summableZeros : Summable (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int))
+  hadamard_logDeriv : exists (beta : Complex) (m0 mNeg : Real),
+    forall s : Complex, 1 < s.re -> logDeriv d.poleRemoved s =
+      beta + (m0 : Complex) / s + (mNeg : Complex) * (1 / (s + 1) - 1) +
+        tsum (fun i => 1 / (s - rho i) + 1 / rho i)
+
+/-- For paired analytic Euler data, the triangular inequality is equivalent
+to nonvanishing on the right of the critical line. -/
+theorem grandRobinTriangularBound_iff_right_nonvanishing
+    {powers zeros : Type*} [Countable powers] [Countable zeros]
+    {d : GrandRobinEulerData powers} {rho : zeros -> Complex}
+    (h : GrandRobinEulerAnalytic d rho) :
+    GrandRobinTriangularBound d <->
+      forall s : Complex, (1 / 2 : Real) < s.re -> Not (d.poleRemoved s = 0) := by
+  constructor
+  case mp =>
+    intro hB s hs
+    choose T C hCut using hB
+    exact ne_zero_of_eventual_triangularSquareRootBound
+      d.normPower d.coefficient d.poleOrder h.normPower_ge_one h.locallyFinite
+      h.summableEuler h.analytic h.nonzero_at_two h.euler_logDeriv hCut.1 hCut.2 hs
+  case mpr =>
+    intro hRight
+    have hRho (i : zeros) : (rho i).re <= 1 / 2 :=
+      le_of_not_gt (fun hr => hRight (rho i) hr (h.zero_is_zero i))
+    choose beta m0 mNeg hHadamard using h.hadamard_logDeriv
+    have hCont :=
+      continuousOn_triangularRemainder d.normPower d.coefficient d.poleOrder h.locallyFinite
+    choose C hC using
+      triangularSquareRootBound_of_hadamard d.normPower d.coefficient d.poleOrder d.poleRemoved
+        rho beta m0 mNeg h.normPower_ge_one h.summableEuler h.euler_logDeriv
+        hRho h.zero_ne_zero h.zero_ne_neg_one h.summableZeros hHadamard hCont
+    exact Exists.intro 2 (Exists.intro C
+      (And.intro (by norm_num) (fun x hx => hC x (lt_of_lt_of_le (by norm_num) hx))))
+
+/-- The all-members zero condition for completed L-functions is equivalent
+to the triangular criterion for their paired Euler data when the completed
+functional equation and nonvanishing completion factors are supplied. -/
+theorem grandRobinCompletedCriterion
+    {Representation : Type*} {powers zeros : Representation -> Type*}
+    [forall pi, Countable (powers pi)] [forall pi, Countable (zeros pi)]
+    (completedL completionFactor equationFactor : Representation -> Complex -> Complex)
+    (dual : Representation -> Representation)
+    (data : forall pi, GrandRobinEulerData (powers pi))
+    (rho : forall pi, zeros pi -> Complex)
+    (hData : forall pi, GrandRobinEulerAnalytic (data pi) (rho pi))
+    (hCompletion : forall pi s, (1 / 2 : Real) < s.re ->
+      completedL pi s * completedL (dual pi) s =
+        completionFactor pi s * (data pi).poleRemoved s)
+    (hFactor : forall pi s, (1 / 2 : Real) < s.re -> Not (completionFactor pi s = 0))
+    (hEquation : forall pi s, completedL (dual pi) (1 - s) =
+      equationFactor pi s * completedL pi s) :
+    CompletedFamilyRH completedL <-> forall pi, GrandRobinTriangularBound (data pi) := by
+  have hCompleted := completedFamilyRH_iff_right_nonvanishing
+    completedL completedL (fun _ _ => 1) dual equationFactor
+    (fun _ _ _ => (one_mul _).symm) (fun _ _ _ => one_ne_zero) hEquation
+  rw [hCompleted]
+  constructor
+  case mp =>
+    intro hRH pi
+    apply (grandRobinTriangularBound_iff_right_nonvanishing (hData pi)).mpr
+    intro s hs hn
+    have hProduct := hCompletion pi s hs
+    rw [hn, mul_zero] at hProduct
+    exact mul_ne_zero (hRH pi s hs) (hRH (dual pi) s hs) hProduct
+  case mpr =>
+    intro hBounds pi s hs hZero
+    have hProduct := hCompletion pi s hs
+    rw [hZero, zero_mul] at hProduct
+    have hPair := (grandRobinTriangularBound_iff_right_nonvanishing (hData pi)).mp (hBounds pi) s hs
+    exact mul_ne_zero (hFactor pi s hs) hPair hProduct.symm
 
 end Robin1984.GRH

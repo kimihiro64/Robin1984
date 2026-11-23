@@ -25,7 +25,9 @@ namespace Robin1984.GRH
 noncomputable def realMellinIntegrand (u : Real -> Real) (s : Complex) (x : Real) : Complex :=
   (u x : Complex) * (x : Complex) ^ (-s - 1)
 
-private theorem pointwise_sqrtBound_of_ae {R : Real -> Real} {C : Real}
+/-- A continuous real function satisfies a square-root bound everywhere on
+an open tail if it satisfies the bound almost everywhere there. -/
+theorem pointwise_sqrtBound_of_ae {R : Real -> Real} {C : Real}
     (hContinuity : ContinuousOn R (Ioi 1))
     (hAE : Filter.Eventually (fun x => R x <= C * Real.sqrt x)
       (ae (volume.restrict (Ioi (1 : Real))))) {x : Real} (hx : 1 < x) :
