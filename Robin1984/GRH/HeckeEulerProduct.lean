@@ -566,4 +566,87 @@ theorem heckeCompletedCriterion
   rw [heckePairedEulerProduct_eq K (character i) (poleOrder i) (poleRemoved i) hs]
   exact hEuler i s hs
 
+
+/-- The actual Hecke prime-power coefficients give the growth bound for
+a pole-free paired completion when it is bounded on the middle strip. -/
+theorem entireOrderOne_heckePair_of_stripBound
+    {realPlaces complexPlaces : Type*} [Fintype realPlaces] [Fintype complexPlaces]
+    (chi : UnitaryHeckeCharacter K) {conductor : Real} (hConductor : 0 < conductor)
+    (mu : realPlaces -> Complex) (nu : complexPlaces -> Complex)
+    (hMu : forall i, -(1 : Real) / 2 < (mu i).re)
+    (hNu : forall i, -(1 : Real) / 2 < (nu i).re)
+    {Lambda : Complex -> Complex}
+    (hEntire : Differentiable Complex Lambda)
+    (hCompletion : forall s : Complex, 1 < s.re ->
+      Lambda s = standardCompletionFactor conductor 0 mu nu s *
+        (heckeEulerL K chi s * heckeEulerL K (unitaryHeckeInverse chi) s))
+    (hReflect : forall s : Complex, norm (Lambda (1 - s)) = norm (Lambda s))
+    (hStrip : forall eps : Real, 0 < eps -> exists C : Real, 0 < C /\
+      forall s : Complex, -2 <= s.re -> s.re <= 3 ->
+        norm (Lambda s) <= Real.exp (C * (1 + norm s) ^ (1 + eps))) :
+    Complex.Hadamard.EntireOfOrderAtMost 1 Lambda := by
+  let F : Complex -> Complex := fun _ => 0
+  let d := heckePairedEulerData K chi 0 F
+  refine entireOrderOne_of_standardPairedEulerProduct_and_stripBound d
+    (two_le_heckePrimePowerNorm K) (summable_heckePairedCoefficient K chi (by norm_num))
+    hConductor 0 mu nu hMu hNu hEntire ?_ hReflect hStrip
+  intro s hs
+  have hs1 : 1 < s.re := (by norm_num : (1 : Real) < 3).trans_le hs
+  rw [pow_zero, one_mul, heckePairedEulerProduct_eq K chi 0 F hs1]
+  exact hCompletion s hs1
+
+/-- The pole-free Hecke criterion needs the growth bound for each paired
+completion. The ordinary functions are obtained from the standard factors. -/
+theorem heckePoleFreeCompletedCriterion_of_pairOrder
+    {index : Type*} {realPlaces complexPlaces : index -> Type*}
+    [forall i, Fintype (realPlaces i)] [forall i, Fintype (complexPlaces i)]
+    (character : index -> UnitaryHeckeCharacter K) (dual : index -> index)
+    (completedL equationFactor : index -> Complex -> Complex)
+    (conductor : index -> Real)
+    (mu : forall i, realPlaces i -> Complex) (nu : forall i, complexPlaces i -> Complex)
+    (hConductor : forall i, 0 < conductor i)
+    (hMu : forall i j, -(1 : Real) / 2 < (mu i j).re)
+    (hNu : forall i j, -(1 : Real) / 2 < (nu i j).re)
+    (hPairedOrder : forall i, Complex.Hadamard.EntireOfOrderAtMost 1 (fun s => completedL i s * completedL (dual i) s))
+    (hCompletedEuler : forall i s, 1 < s.re ->
+      completedL i s * completedL (dual i) s =
+        standardCompletionFactor (conductor i) 0 (mu i) (nu i) s *
+          (heckeEulerL K (character i) s * heckeEulerL K (unitaryHeckeInverse (character i)) s))
+    (hEquation : forall i s, completedL (dual i) (1 - s) =
+      equationFactor i s * completedL i s) :
+    CompletedFamilyRH completedL <-> forall i,
+      GrandRobinTriangularBound (heckePairedEulerData K (character i) 0 (fun _ => 0)) := by
+  haveI : Countable (HeckePrimePowers K) := countable_heckePrimePowers K
+  have hOrdinary (i : index) := exists_entireOrderOne_of_standardCompletion_noPole
+    (hConductor i) (mu i) (nu i) (hMu i) (hNu i) (hPairedOrder i)
+  choose F hOrder hFCompletion using hOrdinary
+  let factor (i : index) := standardCompletionFactor (conductor i) 0 (mu i) (nu i)
+  let data (i : index) := heckePairedEulerData K (character i) 0 (F i)
+  have hFactor (i : index) (s : Complex) (hs : (1 : Real) / 2 < s.re) :
+      Not (factor i s = 0) :=
+    standardCompletionFactor_ne_zero (hConductor i) 0 (mu i) (nu i) (hMu i) (hNu i) hs
+  have hSummable (i : index) (r : Real) (hr : 1 < r) :=
+    summable_heckePairedCoefficient K (character i) hr
+  have hEuler (i : index) (s : Complex) (hs : 1 < s.re) :
+      (data i).poleRemoved s = (s - 1) ^ (0 : Nat) * Complex.exp (grandEulerLog (data i) s) := by
+    have hsHalf : (1 : Real) / 2 < s.re := (by norm_num : (1 : Real) / 2 < 1).trans hs
+    change F i s = (s - 1) ^ (0 : Nat) * Complex.exp (grandEulerLog (data i) s)
+    rw [pow_zero, one_mul, heckePairedEulerProduct_eq K (character i) 0 (F i) hs]
+    have h := (hFCompletion i s hsHalf).symm.trans (hCompletedEuler i s hs)
+    change factor i s * F i s = factor i s *
+      (heckeEulerL K (character i) s * heckeEulerL K (unitaryHeckeInverse (character i)) s) at h
+    have hZero : factor i s * (F i s -
+        heckeEulerL K (character i) s * heckeEulerL K (unitaryHeckeInverse (character i)) s) = 0 := by
+      rw [mul_sub, h, sub_self]
+    exact sub_eq_zero.mp ((mul_eq_zero.mp hZero).resolve_left (hFactor i s hsHalf))
+  have hLocal (i : index) (s : Complex) (hs : 1 < s.re) :=
+    grandEulerAnalytic_of_eulerLog (data i) 0 rfl (two_le_heckePrimePowerNorm K)
+      (hSummable i) (hEuler i) hs
+  change CompletedFamilyRH completedL <-> forall i, GrandRobinTriangularBound (data i)
+  exact grandRobinCompletedCriterion_of_entireOrder completedL factor equationFactor dual data
+    (fun _ pn => one_le_two.trans (two_le_heckePrimePowerNorm K pn))
+    (fun _ T => finite_heckePrimePowerNorm_lt K T) hSummable hOrder
+    (fun i s hs => (hLocal i s hs).1) (fun i s hs => (hLocal i s hs).2)
+    hFCompletion hFactor hEquation
+
 end Robin1984.GRH
