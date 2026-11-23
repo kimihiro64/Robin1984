@@ -1479,6 +1479,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeAdelicFourier.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's adelic zeta integrals and Poisson summation in Algebraic Number Theory (1967).",
+      "formalization_note": "Combines archimedean and finite Fourier scaling with Poisson summation for actual translated Hecke test functions.",
+      "content_basis": "Checked the embedding norm, the inverse-adjoint trace frequency and the complete translated Poisson identity.",
+      "dependency_status": "Reuses the Minkowski change of variables, finite Haar scaling and Poisson summation for the finite Tate test.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeArchimedean.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The unitary characters of the real and complex local multiplicative groups and their archimedean Gamma factors in Tate's thesis.",
