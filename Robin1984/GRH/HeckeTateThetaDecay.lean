@@ -110,7 +110,8 @@ theorem exists_commonDenominator_of_compact_finiteIdele_test
   exact hInt
 
 omit [NumberField K] in
-private theorem continuous_heckeInfiniteAdele_mixedSpace :
+/-- The adelic coordinates depend continuously on the infinite adele. -/
+theorem continuous_heckeInfiniteAdele_mixedSpace :
     Continuous (InfiniteAdeleRing.ringEquiv_mixedSpace K) := by
   let E := InfiniteAdeleRing.ringEquiv_mixedSpace K
   change Continuous (fun a : InfiniteAdeleRing K => Prod.mk (E a).1 (E a).2)
@@ -226,8 +227,8 @@ noncomputable def heckeTateThetaAbsTerm
       (InfiniteAdeleRing.ringEquiv_mixedSpace K a.val * NumberField.mixedEmbedding K x))) *
     norm (T (b.val * algebraMap K (TateFiniteAdeles K) x))
 
-/-- The sum of absolute principal terms is summable and decays uniformly with the archimedean scale. -/
-theorem exists_uniform_heckeTateTheta_tsum_bound
+/-- A single summable majorant controls each principal term as the ideles and archimedean scale vary. -/
+theorem exists_summable_heckeTateTheta_majorant
     (CI : Set (Units (InfiniteAdeleRing K))) (hCI : IsCompact CI)
     (CF : Set (Units (TateFiniteAdeles K))) (hCF : IsCompact CF)
     (f : SchwartzMap (NumberField.mixedEmbedding.mixedSpace K) Complex)
@@ -235,12 +236,11 @@ theorem exists_uniform_heckeTateTheta_tsum_bound
     (hST : forall z : TateFiniteAdeles K, Not (Membership.mem S z) -> T z = 0)
     (B : Real) (hB : 0 <= B) (hBT : forall z : TateFiniteAdeles K, norm (T z) <= B)
     (N : Nat) (hN : (Module.finrank Int (NumberField.mixedEmbedding.integerLattice K) : Real) < (N : Real)) :
-    Exists (fun D : Real => And (0 <= D)
+    Exists (fun M : K -> Real => And (Summable M) (And (forall x : K, 0 <= M x)
       (forall (a : Units (InfiniteAdeleRing K)), Membership.mem CI a ->
         forall (b : Units (TateFiniteAdeles K)), Membership.mem CF b ->
-          forall c : Real, 0 < c ->
-            And (Summable (heckeTateThetaAbsTerm f T a b c))
-              (tsum (heckeTateThetaAbsTerm f T a b c) <= D * Inv.inv (c ^ N)))) := by
+          forall c : Real, 0 < c -> forall x : K,
+            heckeTateThetaAbsTerm f T a b c x <= M x * Inv.inv (c ^ N)))) := by
   let R := RingOfIntegers K
   let L := NumberField.mixedEmbedding.integerLattice K
   let e := NumberField.mixedEmbedding K
@@ -268,15 +268,20 @@ theorem exists_uniform_heckeTateTheta_tsum_bound
     rw [Real.rpow_neg (norm_nonneg _), Real.rpow_natCast]
   let Q := A * (norm (e (k d)) ^ N * B)
   have hQ : 0 <= Q := mul_nonneg hA.1 (mul_nonneg (pow_nonneg (norm_nonneg _) _) hB)
-  refine Exists.intro (Q * tsum w) (And.intro (mul_nonneg hQ (tsum_nonneg hw)) ?_)
-  intro a ha b hb c hc
+  let M := Function.extend j (fun z : R => Q * w z) (fun _ : K => (0 : Real))
+  have hM : Summable M := (summable_extend_zero hj).mpr (hSum.mul_left Q)
+  have hAt (z : R) : M (j z) = Q * w z := hj.extend_apply _ _ z
+  have hAway (x : K) (hx : Not (Membership.mem (Set.range j) x)) : M x = 0 :=
+    Function.extend_apply' _ _ x hx
+  have hMN (x : K) : 0 <= M x := by
+    by_cases hx : Membership.mem (Set.range j) x
+    . choose z hz using hx
+      rw [<- hz, hAt]
+      exact mul_nonneg hQ (hw z)
+    . rw [hAway x hx]
+  refine Exists.intro M (And.intro hM (And.intro hMN ?_))
+  intro a ha b hb c hc x
   let g := heckeTateThetaAbsTerm f T a b c
-  have hg (x : K) : 0 <= g x := by
-    change 0 <= heckeTateThetaAbsTerm f T a b c x
-    rw [heckeTateThetaAbsTerm]
-    split
-    . exact le_rfl
-    . exact mul_nonneg (norm_nonneg _) (norm_nonneg _)
   have hZero (x : K) (hx : Not (Membership.mem (Set.range j) x)) : g x = 0 := by
     have hxS : Not (Membership.mem S (b.val * algebraMap K (TateFiniteAdeles K) x)) := by
       intro hs
@@ -340,22 +345,49 @@ theorem exists_uniform_heckeTateTheta_tsum_bound
             _ = Q * (c ^ N * Inv.inv (c ^ N)) *
                 (norm (e (k z)) ^ N * Inv.inv (norm (e (k z)) ^ N)) := by ring
             _ = Q := by rw [hinv _ hcN.ne', hinv _ hzN.ne', mul_one, mul_one]
-  have hM : Summable (fun z : R => q * w z) := hSum.mul_left _
-  have hG : Summable (fun z : R => g (j z)) :=
-    Summable.of_nonneg_of_le (fun z => hg (j z)) hTerm hM
-  have hSu : Summable g := (hj.summable_iff hZero).mp hG
-  refine And.intro hSu ?_
-  have hSupp : Set.Subset (Function.support g) (Set.range j) := by
-    intro x hx
-    by_contra hn
-    exact hx (hZero x hn)
+  change g x <= M x * Inv.inv (c ^ N)
+  by_cases hx : Membership.mem (Set.range j) x
+  . choose z hz using hx
+    rw [<- hz, hAt]
+    calc
+      _ <= q * w z := hTerm z
+      _ = Q * w z * Inv.inv (c ^ N) := by
+        change (Q * Inv.inv (c ^ N)) * w z = _
+        ring
+  . rw [hZero x hx, hAway x hx, zero_mul]
+
+/-- The sum of absolute principal terms is summable and decays uniformly with the archimedean scale. -/
+theorem exists_uniform_heckeTateTheta_tsum_bound
+    (CI : Set (Units (InfiniteAdeleRing K))) (hCI : IsCompact CI)
+    (CF : Set (Units (TateFiniteAdeles K))) (hCF : IsCompact CF)
+    (f : SchwartzMap (NumberField.mixedEmbedding.mixedSpace K) Complex)
+    (T : TateFiniteAdeles K -> Complex) (S : Set (TateFiniteAdeles K)) (hS : IsCompact S)
+    (hST : forall z : TateFiniteAdeles K, Not (Membership.mem S z) -> T z = 0)
+    (B : Real) (hB : 0 <= B) (hBT : forall z : TateFiniteAdeles K, norm (T z) <= B)
+    (N : Nat) (hN : (Module.finrank Int (NumberField.mixedEmbedding.integerLattice K) : Real) < (N : Real)) :
+    Exists (fun D : Real => And (0 <= D)
+      (forall (a : Units (InfiniteAdeleRing K)), Membership.mem CI a ->
+        forall (b : Units (TateFiniteAdeles K)), Membership.mem CF b ->
+          forall c : Real, 0 < c ->
+            And (Summable (heckeTateThetaAbsTerm f T a b c))
+              (tsum (heckeTateThetaAbsTerm f T a b c) <= D * Inv.inv (c ^ N)))) := by
+  choose M hM using exists_summable_heckeTateTheta_majorant CI hCI CF hCF f T S hS hST B hB hBT N hN
+  refine Exists.intro (tsum M) (And.intro (tsum_nonneg hM.2.1) ?_)
+  intro a ha b hb c hc
+  let g := heckeTateThetaAbsTerm f T a b c
+  have hg (x : K) : 0 <= g x := by
+    change 0 <= heckeTateThetaAbsTerm f T a b c x
+    rw [heckeTateThetaAbsTerm]
+    split
+    . exact le_rfl
+    . exact mul_nonneg (norm_nonneg _) (norm_nonneg _)
+  have hx (x : K) : g x <= M x * Inv.inv (c ^ N) := hM.2.2 a ha b hb c hc x
+  have hS' : Summable (fun x : K => M x * Inv.inv (c ^ N)) := hM.1.mul_right _
+  have hG : Summable g := Summable.of_nonneg_of_le hg hx hS'
+  refine And.intro hG ?_
   calc
-    tsum g = tsum (fun z : R => g (j z)) := (hj.tsum_eq hSupp).symm
-    _ <= tsum (fun z : R => q * w z) := hG.tsum_le_tsum hTerm hM
-    _ = (Q * tsum w) * Inv.inv (c ^ N) := by
-      rw [tsum_mul_left]
-      change (Q * Inv.inv (c ^ N)) * tsum w = _
-      ring
+    tsum g <= tsum (fun x : K => M x * Inv.inv (c ^ N)) := hG.tsum_le_tsum hx hS'
+    _ = (tsum M) * Inv.inv (c ^ N) := tsum_mul_right
 
 private theorem norm_heckeLocalAdditiveTateTest_le_one
     (p : HeightOneSpectrum (RingOfIntegers K)) (chi : UnitaryHeckeCharacter K)

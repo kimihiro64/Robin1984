@@ -1029,6 +1029,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeTateMellin.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's thesis, the positive-norm adelic theta integral.",
+      "formalization_note": "Uses local uniform convergence and exponential bounds on the norm-one idele class quotient to prove absolute Mellin integrability.",
+      "content_basis": "Checked continuity on the quotient and convergence of all real exponential moments for the original and Fourier-dual finite tests.",
+      "dependency_status": "Uses the norm-one theta quotient, shared principal-term majorant, and Mathlib exponential integral and product-measure theory.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/Helpers/Event.lean",
       "classification": "Primarily project-original",
       "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
