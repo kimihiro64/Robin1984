@@ -284,11 +284,14 @@ a zero of the dual at $1-s$. This argument allows trivial
 zeros of the uncompleted function with real part below $1/2$.
 [Lagarias, §6](https://aif.centre-mersenne.org/item/10.5802/aif.2311.pdf)
 
-Lean proves the completed-zero formulation as `grandRobinCompletedCriterion`
-under the paired Euler and Hadamard data and the completed functional
-equations. The release Challenge still gives its earlier analytic-data
-statement. The instantiation for standard automorphic $L$-functions of
-every rank over every number field remains to be formalized.
+Lean proves the completed-zero formulation as `grandRobinCompletedCriterion`.
+The theorem `grandRobinCompletedCriterion_of_entireOrder` derives its
+Hadamard expansion and zero-weight summability from entire order at most
+one. It uses the indexed zeros with their multiplicities and treats the
+zeros at $0$ and $-1$ separately. The release Challenge gives the earlier
+analytic-data statement. An application to all standard automorphic
+$L$-functions still needs the Euler data, the growth bound, the completion
+factors, and the completed functional equation for the actual family.
 For the trivial Hecke character of a field $K$, use $Z=\zeta_K$ and
 $m=1$. Its logarithmic Euler coefficient at $(N\mathfrak p)^j$ is
 $\log N\mathfrak p$. Thus, for $x\ge1$,

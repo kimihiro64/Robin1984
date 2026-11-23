@@ -1,3 +1,4 @@
+import PrimeNumberTheoremAnd.Mathlib.Analysis.Complex.HadamardFactorization.Order
 import Robin1984.GRH.DedekindSpectralMellin
 
 /-!
@@ -17,7 +18,7 @@ series and elementary terms. The right-half-plane zero condition bounds
 this series even when it includes trivial zeros to the left of the line.
 -/
 
-open Filter MeasureTheory Set
+open Complex.Hadamard Filter MeasureTheory Set
 
 set_option autoImplicit false
 
@@ -337,5 +338,253 @@ theorem triangularSquareRootBound_of_hadamard
         norm (tsum (fun i => triangularZeroTerm (rho i) y)) := norm_add_le _ _
     _ <= A * Real.sqrt y + 2 * Real.sqrt y * B := add_le_add hE hZ
     _ = (A + 2 * B) * Real.sqrt y := by ring
+
+/-! ## Canonical data from entire order at most one -/
+
+/-- Nonzero complex zeros with their divisor multiplicities. -/
+abbrev entireNonzeroZeroIndex (F : Complex -> Complex) :=
+  Subtype (fun i : divisorZeroIndex F (univ : Set Complex) => Not (i.1 = 0))
+
+/-- The zero corresponding to a nonzero divisor index. -/
+def entireNonzeroZero {F : Complex -> Complex} (i : entireNonzeroZeroIndex F) : Complex :=
+  i.val.1
+
+/-- Each divisor index gives an actual zero. -/
+theorem entireNonzeroZero_is_zero {F : Complex -> Complex} (hF : Differentiable Complex F)
+    (i : entireNonzeroZeroIndex F) : F (entireNonzeroZero i) = 0 := by
+  by_contra h
+  let z := entireNonzeroZero i
+  have ha : AnalyticOnNhd Complex F univ := fun s _ => hF.analyticAt s
+  have ho : analyticOrderAt F z = 0 := analyticOrderAt_eq_zero.mpr (Or.inr h)
+  have hd : MeromorphicOn.divisor F univ z = 0 := by
+    rw [MeromorphicOn.divisor_apply ha.meromorphicOn (mem_univ z),
+      (ha z (mem_univ z)).meromorphicOrderAt_eq, ho]
+    simp
+  have hi : Fin (Int.toNat (MeromorphicOn.divisor F univ z)) := i.val.2
+  rw [hd, Int.toNat_zero] at hi
+  exact Fin.elim0 hi
+
+/-- Every nonzero entire function of order at most one has summable
+reciprocal-square zero norms, with multiplicities. -/
+theorem summable_entireNonzeroZero_inv_sq {F : Complex -> Complex}
+    (hOrder : EntireOfOrderAtMost 1 F) (hNontrivial : exists z, Not (F z = 0)) :
+    Summable (fun i : entireNonzeroZeroIndex F =>
+      (Inv.inv (norm (entireNonzeroZero i))) ^ (2 : Nat)) := by
+  run_tac do
+    let provider := Lean.mkIdent (Lean.Name.str `Complex.Hadamard.EntireOfOrderAtMost
+      ("summable_norm_inv_pow_divisorZeroIndex".push (Char.ofNat 8320)))
+    let hOrder := Lean.mkIdent `hOrder
+    let hNontrivial := Lean.mkIdent `hNontrivial
+    let hProvider := Lean.mkIdent `hProvider
+    Lean.Elab.Tactic.evalTactic
+      ( <- `(tactic| have $hProvider := $provider $hOrder zero_le_one $hNontrivial))
+  rw [Nat.floor_one] at hProvider
+  exact hProvider
+
+/-- The genus-one logarithmic derivative of an entire function of order
+at most one, including the multiplicity at the origin. -/
+theorem entireOfOrderAtMost_one_logDeriv {F : Complex -> Complex}
+    (hOrder : EntireOfOrderAtMost 1 F) (hNontrivial : exists z, Not (F z = 0)) :
+    exists beta : Complex, forall s : Complex, Not (s = 0) -> Not (F s = 0) ->
+      logDeriv F s = beta + (analyticOrderNatAt F 0 : Complex) / s +
+        tsum (fun i : entireNonzeroZeroIndex F =>
+          1 / (s - entireNonzeroZero i) + 1 / entireNonzeroZero i) := by
+  choose P hp using hadamard_factorization_of_order zero_le_one hNontrivial hOrder
+  have hD : P.natDegree <= 1 := Polynomial.natDegree_le_iff_degree_le.mpr
+    (by simpa only [Nat.floor_one, Nat.cast_one] using hp.1)
+  have hC : P.derivative = Polynomial.C (P.coeff 1) := by
+    apply Polynomial.ext
+    intro n
+    cases n with
+    | zero => simp [Polynomial.coeff_derivative]
+    | succ n =>
+      have hN : P.natDegree < n + 1 + 1 := hD.trans_lt (by omega)
+      have h0 : P.coeff (n + 1 + 1) = 0 := Polynomial.coeff_eq_zero_of_natDegree_lt hN
+      simp [Polynomial.coeff_derivative, h0]
+  refine Exists.intro (P.coeff 1) ?_
+  intro s hs hFs
+  let G := divisorCanonicalProduct 1 F (univ : Set Complex)
+  let E := fun z : Complex => Complex.exp (P.eval z)
+  let N := fun z : Complex => z ^ analyticOrderNatAt F 0
+  have hFunctions : F = fun z => (E z * N z) * G z := by
+    funext z
+    simpa only [E, N, G, Nat.floor_one] using hp.2 z
+  have hAway (i : entireNonzeroZeroIndex F) : Not (s = entireNonzeroZero i) := by
+    intro he
+    apply hFs
+    rw [he]
+    exact entireNonzeroZero_is_zero hOrder.differentiable i
+  have hSum := summable_entireNonzeroZero_inv_sq hOrder hNontrivial
+  have hExp : HasDerivAt E (Complex.exp (P.eval s) * P.derivative.eval s) s :=
+    (Complex.hasDerivAt_exp (P.eval s)).comp s (P.hasDerivAt s)
+  have hExpLog : logDeriv E s = P.derivative.eval s := by
+    rw [logDeriv_apply, hExp.deriv]
+    dsimp only [E]
+    field_simp [Complex.exp_ne_zero]
+  have hG : Not (G s = 0) := divisorCanonicalProduct_ne_zero_of_forall_ne 1 F hSum hAway
+  have hGD : DifferentiableAt Complex G s := differentiableAt_divisorCanonicalProduct_univ 1 F hSum s
+  have hN : Not (N s = 0) := pow_ne_zero _ hs
+  have hND : DifferentiableAt Complex N s := differentiableAt_id.pow _
+  have hE : Not (E s = 0) := Complex.exp_ne_zero _
+  have hEN : Not (E s * N s = 0) := mul_ne_zero hE hN
+  have hEND : DifferentiableAt Complex (fun z => E z * N z) s := hExp.differentiableAt.mul hND
+  have hGL : logDeriv G s = tsum (fun i : entireNonzeroZeroIndex F =>
+      1 / (s - entireNonzeroZero i) + 1 / entireNonzeroZero i) :=
+    logDeriv_divisorCanonicalProduct_one_eq_tsum hSum hAway hG
+  calc
+    logDeriv F s = logDeriv (fun z => (E z * N z) * G z) s :=
+      congrArg (fun f : Complex -> Complex => logDeriv f s) hFunctions
+    _ = _ := by
+      rw [logDeriv_mul s hEN hG hEND hGD,
+        logDeriv_mul s hE hN hExp.differentiableAt hND, hExpLog, hC, Polynomial.eval_C, hGL]
+      rw [show logDeriv N s = (analyticOrderNatAt F 0 : Complex) / s from logDeriv_pow s _]
+
+/-- Nonzero divisor indices with the exceptional point minus one removed. -/
+abbrev regularHadamardZeroIndex (F : Complex -> Complex) :=
+  Subtype (fun i : entireNonzeroZeroIndex F => Not (entireNonzeroZero i + 1 = 0))
+
+/-- The indexed zero at a regular index. -/
+def regularHadamardZero {F : Complex -> Complex} (i : regularHadamardZeroIndex F) : Complex :=
+  entireNonzeroZero i.val
+
+private theorem finite_boundedEntireNonzeroZeroIndex (F : Complex -> Complex) :
+    Finite {i : entireNonzeroZeroIndex F // norm (entireNonzeroZero i) <= 2} := by
+  have hBall : Metric.closedBall (0 : Complex) (2 : Real) <= (univ : Set Complex) :=
+    subset_univ _
+  run_tac do
+    let p := Lean.mkIdent (Lean.Name.str `Complex.Hadamard
+      (("finite_divisorZeroIndex".push (Char.ofNat 8320)) ++ "_subtype_norm_le"))
+    let f := Lean.mkIdent `F
+    let h := Lean.mkIdent `hBall
+    Lean.Elab.Tactic.evalTactic (<- `(tactic| exact $p (f := $f) (B := (2 : Real)) $h))
+
+/-- The zero weights of the triangular kernel are summable for an entire
+function of order at most one. -/
+theorem summable_regularHadamardZeroWeight {F : Complex -> Complex}
+    (hOrder : EntireOfOrderAtMost 1 F) (hNontrivial : exists z, Not (F z = 0)) :
+    Summable (fun i : regularHadamardZeroIndex F =>
+      (norm (regularHadamardZero i * (regularHadamardZero i + 1))) ^ (-1 : Int)) := by
+  let S : Set (regularHadamardZeroIndex F) := {i | norm (regularHadamardZero i) <= 2}
+  let w := fun i : regularHadamardZeroIndex F =>
+    (norm (regularHadamardZero i * (regularHadamardZero i + 1))) ^ (-1 : Int)
+  let v := fun i : regularHadamardZeroIndex F =>
+    (Inv.inv (norm (regularHadamardZero i))) ^ (2 : Nat)
+  have : Finite {i : entireNonzeroZeroIndex F // norm (entireNonzeroZero i) <= 2} :=
+    finite_boundedEntireNonzeroZeroIndex F
+  have : Finite S := by
+    apply Finite.of_injective
+      (fun i : S => (Subtype.mk i.val.val i.property :
+        {j : entireNonzeroZeroIndex F // norm (entireNonzeroZero j) <= 2}))
+    intro i j hij
+    have hVal : i.val.val = j.val.val := congrArg
+      (fun t : {k : entireNonzeroZeroIndex F // norm (entireNonzeroZero k) <= 2} => t.val) hij
+    exact Subtype.ext (Subtype.ext hVal)
+  have hv : Summable v :=
+    (summable_entireNonzeroZero_inv_sq hOrder hNontrivial).subtype _
+  apply (summable_subtype_and_compl (f := w) (s := S)).mp
+  refine And.intro (Set.Finite.summable (toFinite S) w) ?_
+  refine Summable.of_nonneg_of_le (g := fun i : (S : Set (regularHadamardZeroIndex F)).compl => w i.val)
+    (f := fun i : S.compl => 2 * v i.val) (fun i => by dsimp [w]; positivity) ?_
+    ((hv.subtype (fun i => Membership.mem S.compl i)).mul_left 2)
+  intro i
+  let z := regularHadamardZero i.val
+  have hz2 : 2 < norm z := lt_of_not_ge i.property
+  have hz0 : 0 < norm z := (by norm_num : (0 : Real) < 2).trans hz2
+  have hshift : norm z <= norm (z + 1) + 1 := by
+    simpa only [add_sub_cancel_right, norm_one] using norm_sub_le (z + 1) (1 : Complex)
+  have hhalf : norm z / 2 <= norm (z + 1) := by linarith only [hz2, hshift]
+  have hproduct : norm z ^ (2 : Nat) / 2 <= norm (z * (z + 1)) := by
+    rw [norm_mul]
+    nlinarith only [mul_le_mul_of_nonneg_left hhalf hz0.le]
+  have hpos : 0 < norm z ^ (2 : Nat) / 2 := by positivity
+  have hrecip := one_div_le_one_div_of_le hpos hproduct
+  change (norm (z * (z + 1))) ^ (-1 : Int) <= 2 * (Inv.inv (norm z)) ^ (2 : Nat)
+  rw [zpow_neg_one, <- one_div]
+  exact hrecip.trans_eq (by
+    field_simp [hz0.ne'])
+
+/-- The zeros counted with multiplicity form a countable index type. -/
+theorem countable_entireNonzeroZeroIndex {F : Complex -> Complex}
+    (hOrder : EntireOfOrderAtMost 1 F) (hNontrivial : exists z, Not (F z = 0)) :
+    Countable (entireNonzeroZeroIndex F) := by
+  let v (i : entireNonzeroZeroIndex F) : NNReal :=
+    Real.toNNReal ((Inv.inv (norm (entireNonzeroZero i))) ^ (2 : Nat))
+  have hv : Summable v := by
+    apply NNReal.summable_coe.mp
+    refine (summable_entireNonzeroZero_inv_sq hOrder hNontrivial).congr ?_
+    intro i
+    exact (Real.coe_toNNReal _ (sq_nonneg _)).symm
+  have hs : Function.support v = univ := by
+    refine Set.eq_univ_of_forall ?_
+    intro i
+    have hn : 0 < norm (entireNonzeroZero i) := norm_pos_iff.mpr i.property
+    have hp : 0 < (Inv.inv (norm (entireNonzeroZero i))) ^ (2 : Nat) := by positivity
+    exact ne_of_gt (Real.toNNReal_pos.mpr hp)
+  have h := Summable.countable_support_nnreal v hv
+  rw [hs] at h
+  exact Set.countable_univ_iff.mp h
+
+/-- The genus-one expansion splits off the zero at minus one in addition
+to the origin. Both terms use their divisor multiplicities. -/
+theorem entireOfOrderAtMost_one_logDeriv_regular {F : Complex -> Complex}
+    (hOrder : EntireOfOrderAtMost 1 F) (hNontrivial : exists z, Not (F z = 0)) :
+    exists (beta : Complex) (m0 mNeg : Nat),
+      forall s : Complex, Not (s = 0) -> Not (F s = 0) ->
+        logDeriv F s = beta + (m0 : Complex) / s +
+          (mNeg : Complex) * (1 / (s + 1) - 1) +
+          tsum (fun i : regularHadamardZeroIndex F =>
+            1 / (s - regularHadamardZero i) + 1 / regularHadamardZero i) := by
+  let A : Set (entireNonzeroZeroIndex F) := {i | entireNonzeroZero i + 1 = 0}
+  have hx (i : A) : entireNonzeroZero i.val = -1 := by
+    have hei : entireNonzeroZero i.val + 1 = 0 := i.property
+    calc
+      _ = entireNonzeroZero i.val + 1 - 1 := (add_sub_cancel_right _ _).symm
+      _ = -1 := by rw [hei, zero_sub]
+  have : Finite {i : entireNonzeroZeroIndex F // norm (entireNonzeroZero i) <= 2} :=
+    finite_boundedEntireNonzeroZeroIndex F
+  have : Finite A := by
+    refine Finite.of_injective (fun i : A => (Subtype.mk i.val (by
+      rw [hx i, norm_neg, norm_one]
+      norm_num) : {j : entireNonzeroZeroIndex F // norm (entireNonzeroZero j) <= 2})) ?_
+    intro i j hij
+    have hv : i.val = j.val := congrArg
+      (fun t : {k : entireNonzeroZeroIndex F // norm (entireNonzeroZero k) <= 2} => t.val) hij
+    exact Subtype.ext hv
+  choose beta hBeta using entireOfOrderAtMost_one_logDeriv hOrder hNontrivial
+  refine Exists.intro beta (Exists.intro (analyticOrderNatAt F 0)
+    (Exists.intro (Nat.card A) ?_))
+  intro s hs hf
+  let f := fun i : entireNonzeroZeroIndex F =>
+    1 / (s - entireNonzeroZero i) + 1 / entireNonzeroZero i
+  have hAway (i : entireNonzeroZeroIndex F) : Not (s = entireNonzeroZero i) := by
+    intro he
+    apply hf
+    rw [he]
+    exact entireNonzeroZero_is_zero hOrder.differentiable i
+  have hSqSum := summable_entireNonzeroZero_inv_sq hOrder hNontrivial
+  have hSum : Summable f := by
+    run_tac do
+      let p := Lean.mkIdent (Lean.Name.str `Complex.Hadamard
+        (("summable_logDerivTerms_divisorZeroIndex".push (Char.ofNat 8320)) ++
+          "_of_summable_inv_sq"))
+      let hh := Lean.mkIdent `hSqSum
+      let ha := Lean.mkIdent `hAway
+      Lean.Elab.Tactic.evalTactic (<- `(tactic| exact $p $hh $ha))
+  have hA : tsum (fun i : A => f i.val) = (Nat.card A : Complex) * (1 / (s + 1) - 1) := by
+    calc
+      _ = tsum (fun _ : A => 1 / (s + 1) - 1) := by
+        apply tsum_congr
+        intro i
+        dsimp only [f]
+        rw [hx i, sub_neg_eq_add]
+        norm_num [sub_eq_add_neg]
+      _ = _ := by rw [tsum_const, nsmul_eq_mul]
+  calc
+    logDeriv F s = beta + (analyticOrderNatAt F 0 : Complex) / s + tsum f := hBeta s hs hf
+    _ = beta + (analyticOrderNatAt F 0 : Complex) / s +
+          (tsum (fun i : A => f i.val) + tsum (fun i : regularHadamardZeroIndex F => f i.val)) :=
+      congrArg (fun z : Complex => beta + (analyticOrderNatAt F 0 : Complex) / s + z)
+        (hSum.tsum_subtype_add_tsum_subtype_compl A).symm
+    _ = _ := by rw [hA, <- add_assoc]; rfl
 
 end Robin1984.GRH

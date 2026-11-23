@@ -336,4 +336,61 @@ theorem grandRobinCompletedCriterion
     have hPair := (grandRobinTriangularBound_iff_right_nonvanishing (hData pi)).mp (hBounds pi) s hs
     exact mul_ne_zero (hFactor pi s hs) hPair hProduct.symm
 
+/-- The entire order-one bound supplies the Hadamard expansion and its
+zero weights for the completed-family triangular criterion. -/
+theorem grandRobinCompletedCriterion_of_entireOrder
+    {Representation : Type*} {powers : Representation -> Type*}
+    [forall pi, Countable (powers pi)]
+    (completedL completionFactor equationFactor : Representation -> Complex -> Complex)
+    (dual : Representation -> Representation)
+    (data : forall pi, GrandRobinEulerData (powers pi))
+    (hNorm : forall pi i, 1 <= (data pi).normPower i)
+    (hFinite : forall pi T, Set.Finite {i : powers pi | (data pi).normPower i < T})
+    (hSummable : forall pi (r : Real), 1 < r ->
+      Summable (fun i => norm ((data pi).coefficient i) * ((data pi).normPower i) ^ (-r)))
+    (hOrder : forall pi, Complex.Hadamard.EntireOfOrderAtMost 1 (data pi).poleRemoved)
+    (hNonzero : forall pi s, 1 < s.re -> Not ((data pi).poleRemoved s = 0))
+    (hEuler : forall pi s, 1 < s.re ->
+      logDeriv (data pi).poleRemoved s = ((data pi).poleOrder : Complex) / (s - 1) -
+        tsum (fun i => ((data pi).coefficient i : Complex) *
+          ((data pi).normPower i : Complex) ^ (-s)))
+    (hCompletion : forall pi s, (1 / 2 : Real) < s.re ->
+      completedL pi s * completedL (dual pi) s =
+        completionFactor pi s * (data pi).poleRemoved s)
+    (hFactor : forall pi s, (1 / 2 : Real) < s.re -> Not (completionFactor pi s = 0))
+    (hEquation : forall pi s, completedL (dual pi) (1 - s) =
+      equationFactor pi s * completedL pi s) :
+    CompletedFamilyRH completedL <-> forall pi, GrandRobinTriangularBound (data pi) := by
+  have hNonzeroTwo (pi : Representation) : Not ((data pi).poleRemoved (2 : Complex) = 0) :=
+    hNonzero pi 2 (by norm_num)
+  have hNT (pi : Representation) : exists z, Not ((data pi).poleRemoved z = 0) :=
+    Exists.intro 2 (hNonzeroTwo pi)
+  let zs : Representation -> Type := fun pi => regularHadamardZeroIndex (data pi).poleRemoved
+  let rho (pi : Representation) : zs pi -> Complex := regularHadamardZero
+  let hCount : forall pi, Countable (zs pi) := fun pi => by
+    have hc : Countable (entireNonzeroZeroIndex (data pi).poleRemoved) :=
+      countable_entireNonzeroZeroIndex (hOrder pi) (hNT pi)
+    change Countable (regularHadamardZeroIndex (data pi).poleRemoved)
+    infer_instance
+  have hData (pi : Representation) : GrandRobinEulerAnalytic (data pi) (rho pi) := by
+    refine {
+      normPower_ge_one := hNorm pi
+      locallyFinite := hFinite pi
+      summableEuler := hSummable pi
+      analytic := fun z _ => (hOrder pi).differentiable.analyticAt z
+      nonzero_at_two := hNonzeroTwo pi
+      euler_logDeriv := hEuler pi
+      zero_is_zero := fun i => entireNonzeroZero_is_zero (hOrder pi).differentiable i.val
+      zero_ne_zero := fun i => i.val.property
+      zero_ne_neg_one := fun i => i.property
+      summableZeros := summable_regularHadamardZeroWeight (hOrder pi) (hNT pi)
+      hadamard_logDeriv := ?_ }
+    choose beta m0 mNeg hm using entireOfOrderAtMost_one_logDeriv_regular (hOrder pi) (hNT pi)
+    refine Exists.intro beta (Exists.intro (m0 : Real) (Exists.intro (mNeg : Real) ?_))
+    intro s hs
+    have hS : Not (s = 0) := Complex.ne_zero_of_re_pos (zero_lt_one.trans hs)
+    simpa only [Complex.ofReal_natCast] using hm s hS (hNonzero pi s hs)
+  exact grandRobinCompletedCriterion completedL completionFactor equationFactor
+    dual data rho hData hCompletion hFactor hEquation
+
 end Robin1984.GRH
