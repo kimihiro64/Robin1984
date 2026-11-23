@@ -52,22 +52,25 @@ constant, harmonic numbers, real logarithm and real power, and
   function of every number field is equivalent to the same corrected
   ideal Robin inequality in every number field.
 
-Both results use a field-dependent norm cutoff. The inequality and proofs
-are described in [the generalized criteria](docs/GRH.md). The Grand RH
-section proves a triangular criterion for a supplied family of completed
-L-functions with standard analytic data. The Hecke specialization constructs
-the Euler factors, conductor, and Gamma shifts from the characters. Each pure
-norm character gives a vertical translate of Dedekind zeta. Lean proves that
-its critical-line property is equivalent to both the corrected ideal Robin
-inequality and the triangular prime-power bound for the field. Lean also
-verifies compactness of the additive adelic quotient, constructs its
-canonical character, and proves Poisson summation on a finite adelic coset.
-For a
-pole-free Hecke pair, normalized reflected Mellin tails with finite
-absolute moments supply the continuation, functional equation, and growth
-bound. Identifying those tails with the completed Hecke products remains
-open in Lean. The full standard automorphic family in every rank and number
-field also remains to be instantiated.
+Both results use a field-dependent norm cutoff. The
+[research paper](paper/robin1984-formalization.tex) gives their full
+proofs and derives the triangular prime-power criterion for the
+standard L-functions of unitary cuspidal representations of
+`GL(n)` in every rank and over every number field. The paper cites
+the classical analytic theorems used for the automorphic family.
+It retains the classical Robin, colossally abundant, and Lagarias
+arguments in appendices.
+
+Lean verifies the corrected ideal equivalences and the triangular
+criterion for an indexed family with the stated analytic data. In
+degree one it constructs Hecke Euler factors, conductors, and Gamma
+shifts, and identifies pure norm twists with translates of Dedekind
+zeta. The checked adelic theory includes the additive character,
+Poisson summation for translated finite test functions, and Fourier
+scaling by the finite idelic norm. The identification of the global
+Mellin tails with the general completed Hecke products and the
+all-rank automorphic instantiation remain open in Lean. See
+[the generalized criteria](docs/GRH.md) for the declarations.
 
 ## Mathematical organization
 
