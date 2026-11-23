@@ -1,8 +1,7 @@
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Robin1984.Equivalence.Theorem
 import Robin1984.GRH.CyclotomicFactorization
-import Robin1984.GRH.DedekindRobinReverse
-import Robin1984.GRH.DedekindRobinSpectralForward
+import Robin1984.GRH.DedekindTriangular
 import Robin1984.GRH.GrandRobin
 import Robin1984.Lagarias.Theorem
 import Robin1984.Public

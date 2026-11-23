@@ -408,9 +408,13 @@ private theorem le_everywhere_of_ae_le_tail {u v : Real -> Real} {X : Real}
   exact (hO.2.1.measure_ne_zero volume (Exists.intro x hO.2.2)) (measure_mono_null hSub hNull)
 
 
-/-- Dedekind RH implies the corrected ideal Robin inequality for this field. -/
-theorem correctedIdealRobin_of_dedekindRH (hRH : DedekindRH K) :
-    CorrectedIdealRobin K := by
+/-- Under Dedekind RH the integrated relative Chebyshev error has a
+primitive tail bounded in absolute value by a constant times x^(-1/2). -/
+theorem exists_dedekindChebyshevPrimitiveTailBound (hRH : DedekindRH K) :
+    exists c B X : Real, 1 < X /\ 0 <= B /\ B < 12 + 3 * Real.log ((discr K).natAbs : Real) /\
+      Tendsto (realPrimitiveFromOne (dedekindChebyshevErrorRatio K)) atTop (nhds c) /\
+      forall t : Real, X <= t ->
+        abs (primitiveTail (dedekindChebyshevErrorRatio K) c t) <= B / Real.sqrt t := by
   choose c hc using exists_dedekindChebyshevPrimitiveLimit K
   choose a ha using ae_dedekindPrimitiveTail_eq_re_spectralTail K hRH hc.2
   let T := primitiveTail (dedekindChebyshevErrorRatio K) c
@@ -451,7 +455,16 @@ theorem correctedIdealRobin_of_dedekindRH (hRH : DedekindRH K) :
       (Real.sqrt_pos.mpr (zero_lt_one.trans h1)).ne'
   have hAll (t : Real) (ht : Y < t) : abs (T t) <= B / Real.sqrt t :=
     le_everywhere_of_ae_le_tail hContinuousT hContinuousB hA ht
-  exact correctedIdealRobin_of_abs_primitiveTail K (X := Y + 1) hB hGap hc.1
-    (fun t ht => hAll t ((lt_add_one Y).trans_le ht))
+  have hY : 1 < Y + 1 := (le_max_left 1 X).trans_lt (lt_add_one Y)
+  exact Exists.intro c (Exists.intro B (Exists.intro (Y + 1)
+    (And.intro hY (And.intro hB (And.intro hGap (And.intro hc.1
+      (fun t ht => hAll t ((lt_add_one Y).trans_le ht))))))))
+
+/-- Dedekind RH implies the corrected ideal Robin inequality for this field. -/
+theorem correctedIdealRobin_of_dedekindRH (hRH : DedekindRH K) :
+    CorrectedIdealRobin K := by
+  choose c B X h using exists_dedekindChebyshevPrimitiveTailBound K hRH
+  exact correctedIdealRobin_of_abs_primitiveTail K (X := X)
+    h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2
 
 end Robin1984.GRH

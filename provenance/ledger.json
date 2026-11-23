@@ -1236,6 +1236,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/DedekindTriangular.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Triangular prime-power smoothing and the primitive-tail bound for the Dedekind Chebyshev error.",
+      "formalization_note": "The two directions use the existing Landau converse and integration by parts on the actual prime-ideal coefficients.",
+      "content_basis": "Reviewed the finite prime-power smoothing integral, the primitive-tail estimate, and both implications for an arbitrary number field.",
+      "dependency_status": "The checked Dedekind continuation, prime-ideal logarithmic derivative and spectral primitive-tail bound.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/DedekindWeightedTail.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Integration by parts for the signed weighted Dedekind Mertens expansion.",

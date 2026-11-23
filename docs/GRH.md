@@ -301,9 +301,12 @@ R_{\zeta_K}(x)
 =\frac1{2x}-\frac1x\int_1^x(\psi_K(t)-t)\,dt .
 $$
 The first equality integrates the indicator of $t\ge (N\mathfrak p)^j$
-over $[1,x]$ in the finite prime-power sum. The triangular and corrected
-ideal criteria both test Dedekind RH in this specialization. The ideal
-criterion uses the Mertens sum built from the same prime powers, with
+over $[1,x]$ in the finite prime-power sum. The theorem
+`dedekindRH_iff_dedekindTriangularRobin` proves both directions for the
+actual prime-ideal powers of each number field.
+`dedekindTriangularRobin_iff_correctedIdealRobin` connects the two
+inequalities for the same field. The ideal criterion uses the Mertens sum
+built from the same prime powers, with
 weights $1/[j(N\mathfrak p)^j]$ and a comparison of positive divisor
 products. Over the cyclotomic fields the shared Dedekind zero condition
 gives Dirichlet GRH. The triangular sum also accepts signed coefficients,
