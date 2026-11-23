@@ -1002,6 +1002,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeTateThetaDecay.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Uniform decay of adelic theta sums on compact idele representatives in Tate's thesis.",
+      "formalization_note": "Combines a common denominator on compact finite supports with archimedean Schwartz decay and summability over one lattice.",
+      "content_basis": "Checked the denominator cover, the uniform inverse norm, the real scaling section, the lattice reindexing, and the specialization to unitary Hecke tests.",
+      "dependency_status": "Uses the norm-one idele class compactness theorem, the finite Tate test, Mathlib's Schwartz seminorms, and lattice power-law summability.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/Helpers/Event.lean",
       "classification": "Primarily project-original",
       "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
