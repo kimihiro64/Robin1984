@@ -17,6 +17,8 @@ The additive Haar character controls the Fourier transform under
 multiplication by an idele. The volume of a dilated integral subgroup
 is determined by the index of its principal residue classes. A local
 uniformizer acts by the reciprocal of the norm of its prime ideal.
+Multiplying these local factors gives the finite idelic norm and the
+normalization for Fourier scaling of a general finite idele.
 -/
 
 set_option autoImplicit false
@@ -332,5 +334,229 @@ theorem heckeFiniteAdditiveModulus_uniformizer_mul_absNorm
         (b.inv q * algebraMap (RingOfIntegers K) (q.adicCompletion K) a)
       rw [hAway q hq, one_mul]
       exact HeightOneSpectrum.coe_algebraMap_mem R K q a
+
+private noncomputable def dilationReal : MonoidHom (Units (FiniteDilationAdeles K)) Real where
+  toFun b := (heckeFiniteAdditiveModulus b : Real)
+  map_one' := by rw [map_one]; rfl
+  map_mul' x y := by rw [map_mul]; rfl
+
+private noncomputable def localAbsoluteValue (p : HeightOneSpectrum (RingOfIntegers K)) :
+    MonoidHom (Units (p.adicCompletion K)) Real where
+  toFun b := norm (b : p.adicCompletion K)
+  map_one' := norm_one
+  map_mul' a b := norm_mul (a : p.adicCompletion K) (b : p.adicCompletion K)
+
+private theorem dilationReal_localIdele_eq_one_of_valuation
+    (p : HeightOneSpectrum (RingOfIntegers K)) (u : Units (p.adicCompletion K))
+    (hu : Valued.v u.val = 1) : dilationReal (heckeFiniteLocalIdele p u) = 1 := by
+  let b := heckeFiniteLocalIdele p u
+  have hUnit := (HeightOneSpectrum.adicCompletionIntegers.mem_units_iff_valued_eq_one
+    (K := K) (v := p) (a := u)).mpr hu
+  have hVal : Membership.mem heckeIntegralFiniteAdeles (b : FiniteDilationAdeles K) := by
+    intro q
+    by_cases hq : q = p
+    . subst q
+      change Membership.mem (p.adicCompletionIntegers K) (b.val p)
+      rw [heckeFiniteLocalIdele_at]
+      exact hUnit.1
+    . change Membership.mem (q.adicCompletionIntegers K) (b.val q)
+      rw [heckeFiniteLocalIdele_away p q hq]
+      exact (q.adicCompletionIntegers K).one_mem
+  have hInv : Membership.mem heckeIntegralFiniteAdeles b.inv := by
+    intro q
+    change Membership.mem (q.adicCompletionIntegers K) ((Inv.inv b : Units (FiniteDilationAdeles K)).val q)
+    rw [show Inv.inv b = heckeFiniteLocalIdele p (Inv.inv u) from
+      (map_inv (heckeFiniteLocalIdele p) u).symm]
+    by_cases hq : q = p
+    . subst q
+      rw [heckeFiniteLocalIdele_at]
+      exact hUnit.2
+    . rw [heckeFiniteLocalIdele_away p q hq]
+      exact (q.adicCompletionIntegers K).one_mem
+  change (heckeFiniteAdditiveModulus b : Real) = 1
+  rw [heckeFiniteAdditiveModulus_eq_one_of_integral b hVal hInv]
+  rfl
+
+omit [MeasurableSpace (FiniteDilationAdeles K)] [BorelSpace (FiniteDilationAdeles K)] in
+private theorem dilationReal_localIdele_uniformizer
+    (p : HeightOneSpectrum (RingOfIntegers K)) (u : Units (p.adicCompletion K))
+    (hu : Valued.v u.val = finiteUniformizerValue) :
+    dilationReal (heckeFiniteLocalIdele p u) = localAbsoluteValue p u := by
+  let q : Real := Ideal.absNorm p.asIdeal
+  have hq : Not (q = 0) := by
+    have h : 1 < (dedekindPrimeNorm K p : Real) := by
+      exact_mod_cast one_lt_dedekindPrimeNorm K p
+    exact (zero_lt_one.trans h).ne'
+  have hProd : q * dilationReal (heckeFiniteLocalIdele p u) = 1 := by
+    have h := congrArg ENNReal.toReal (heckeFiniteAdditiveModulus_uniformizer_mul_absNorm p u hu)
+    change (Ideal.absNorm p.asIdeal : Real) *
+      (heckeFiniteAdditiveModulus (heckeFiniteLocalIdele p u) : Real) = 1
+    simpa only [ENNReal.toReal_mul, ENNReal.toReal_natCast, ENNReal.coe_toReal,
+      ENNReal.toReal_one] using h
+  have hNorm : localAbsoluteValue p u = Inv.inv q := by
+    change norm u.val = Inv.inv q
+    rw [FinitePlace.norm_def, hu, finiteUniformizerValue,
+      WithZeroMulInt.toNNReal_neg_apply _ WithZero.coe_ne_zero, WithZero.unzero_coe]
+    change (((Ideal.absNorm p.asIdeal : NNReal) ^ (-1 : Int) : NNReal) : Real) = _
+    simp [q]
+  rw [hNorm]
+  field_simp [hq]
+  linarith
+
+set_option maxHeartbeats 1200000 in
+/-- The Haar dilation of an idele with one nontrivial coordinate is its
+normalized local absolute value. -/
+theorem heckeFiniteAdditiveModulus_localIdele_eq_norm
+    (p : HeightOneSpectrum (RingOfIntegers K)) (a : Units (p.adicCompletion K)) :
+    (heckeFiniteAdditiveModulus (heckeFiniteLocalIdele p a) : Real) = norm a.val := by
+  let d := (dilationReal (K := K)).comp (heckeFiniteLocalIdele p)
+  let N := localAbsoluteValue p
+  let I := heckeLocalValueIndex p
+  choose v hv using HeightOneSpectrum.valuedAdicCompletion_surjective K p finiteUniformizerValue
+  have hv0 : Not (v = 0) := by
+    intro h
+    rw [h, map_zero] at hv
+    exact WithZero.coe_ne_zero hv.symm
+  let u := Units.mk0 v hv0
+  have hu : Valued.v u.val = finiteUniformizerValue := hv
+  have huI : I u = Multiplicative.ofAdd (-1 : Int) := by
+    apply WithZero.coe_inj.mp
+    rw [coe_heckeLocalValueIndex p u, hu]
+    rfl
+  let n : Int := -(Multiplicative.toAdd (I a))
+  have hPowIndex : I (u ^ n) = I a := by
+    rw [map_zpow, huI]
+    have hAdd : Multiplicative.toAdd (Multiplicative.ofAdd (-1 : Int) ^ n) =
+        Multiplicative.toAdd (I a) := by
+      change n * (-1 : Int) = Multiplicative.toAdd (I a)
+      rw [mul_neg_one]
+      exact neg_neg _
+    exact congrArg Multiplicative.ofAdd hAdd
+  let r := a * Inv.inv (u ^ n)
+  have hrI : I r = 1 := by
+    change I (a * Inv.inv (u ^ n)) = 1
+    rw [map_mul, map_inv, hPowIndex]
+    simp
+  have hrVal : Valued.v r.val = 1 := by
+    rw [<- coe_heckeLocalValueIndex p r, show heckeLocalValueIndex p r = 1 from hrI]
+    rfl
+  have hD : d r = 1 := dilationReal_localIdele_eq_one_of_valuation p r hrVal
+  have hN : N r = 1 := by
+    change norm r.val = 1
+    rw [FinitePlace.norm_def, hrVal]
+    simp
+  have huEq : d u = N u := dilationReal_localIdele_uniformizer p u hu
+  have huUnits : d.toHomUnits u = N.toHomUnits u := Units.ext huEq
+  have hPow : d (u ^ n) = N (u ^ n) := by
+    have hh : d.toHomUnits (u ^ n) = N.toHomUnits (u ^ n) := by
+      rw [map_zpow, map_zpow, huUnits]
+    exact congrArg Units.val hh
+  have ha : r * (u ^ n) = a := by
+    change a * Inv.inv (u ^ n) * (u ^ n) = a
+    rw [mul_assoc, inv_mul_cancel, mul_one]
+  change d a = N a
+  calc
+    d a = d (r * u ^ n) := congrArg d ha.symm
+    _ = d r * d (u ^ n) := map_mul d r (u ^ n)
+    _ = N r * N (u ^ n) := by rw [hD, hN, hPow]
+    _ = N (r * u ^ n) := (map_mul N r (u ^ n)).symm
+    _ = N a := congrArg N ha
+
+
+private def finiteComponent (p : HeightOneSpectrum (RingOfIntegers K)) :
+    MonoidHom (Units (FiniteDilationAdeles K)) (Units (p.adicCompletion K)) where
+  toFun b :=
+    { val := b.val p
+      inv := b.inv p
+      val_inv := congrArg (fun z : FiniteDilationAdeles K => z p) b.val_inv
+      inv_val := congrArg (fun z : FiniteDilationAdeles K => z p) b.inv_val }
+  map_one' := Units.ext rfl
+  map_mul' _ _ := Units.ext rfl
+
+/-- The normalized finite idelic norm is the dilation factor for the additive Haar measure. -/
+theorem heckeFiniteAdditiveModulus_eq_ideleNorm (b : Units (FiniteDilationAdeles K)) :
+    (heckeFiniteAdditiveModulus b : Real) = heckeFiniteIdeleNorm b := by
+  classical
+  have hSupp : Set.Finite (Set.ofPred (fun p : HeightOneSpectrum (RingOfIntegers K) =>
+      Not (Valued.v (b.val p) = 1))) :=
+    Filter.eventually_cofinite.mp (FiniteAdeleRing.isUnit_iff.mp b.isUnit).2
+  let s := hSupp.toFinset
+  let single := fun p : HeightOneSpectrum (RingOfIntegers K) =>
+    heckeFiniteLocalIdele p (finiteComponent p b)
+  let part := s.prod single
+  have hAt (q : HeightOneSpectrum (RingOfIntegers K)) (hq : Membership.mem s q) :
+      finiteComponent q part = finiteComponent q b := by
+    change finiteComponent q (s.prod single) = finiteComponent q b
+    rw [map_prod, Finset.prod_eq_single_of_mem q hq]
+    . apply Units.ext
+      exact heckeFiniteLocalIdele_at q (finiteComponent q b)
+    . intro p _ hp
+      apply Units.ext
+      exact heckeFiniteLocalIdele_away p q (Ne.symm hp) (finiteComponent p b)
+  have hAway (q : HeightOneSpectrum (RingOfIntegers K)) (hq : Not (Membership.mem s q)) :
+      finiteComponent q part = 1 := by
+    change finiteComponent q (s.prod single) = 1
+    rw [map_prod]
+    apply Finset.prod_eq_one
+    intro p hp
+    have hne : Not (q = p) := fun h => hq (by rw [h]; exact hp)
+    apply Units.ext
+    exact heckeFiniteLocalIdele_away p q hne (finiteComponent p b)
+  let rest := b * Inv.inv part
+  have hRestIndex (q : HeightOneSpectrum (RingOfIntegers K)) :
+      Valued.v (finiteComponent q rest).val = 1 := by
+    change Valued.v (finiteComponent q (b * Inv.inv part)).val = 1
+    rw [map_mul, map_inv]
+    by_cases hq : Membership.mem s q
+    . rw [hAt q hq, mul_inv_cancel]
+      exact map_one _
+    . rw [hAway q hq, inv_one, mul_one]
+      by_contra h
+      exact hq (hSupp.mem_toFinset.mpr h)
+  have hRestUnit (q : HeightOneSpectrum (RingOfIntegers K)) :=
+    (HeightOneSpectrum.adicCompletionIntegers.mem_units_iff_valued_eq_one
+      (K := K) (v := q) (a := finiteComponent q rest)).mpr (hRestIndex q)
+  have hv : Membership.mem heckeIntegralFiniteAdeles (rest : FiniteDilationAdeles K) := fun q => (hRestUnit q).1
+  have hi : Membership.mem heckeIntegralFiniteAdeles rest.inv := fun q => (hRestUnit q).2
+  have hD : dilationReal rest = 1 := by
+    change (heckeFiniteAdditiveModulus rest : Real) = 1
+    rw [heckeFiniteAdditiveModulus_eq_one_of_integral rest hv hi]
+    rfl
+  have hb : rest * part = b := by
+    change b * Inv.inv part * part = b
+    rw [mul_assoc, inv_mul_cancel, mul_one]
+  have hFactorSupport : Set.Subset (Function.mulSupport (fun p : HeightOneSpectrum (RingOfIntegers K) =>
+      norm (b.val p))) (Set.ofPred (fun p : HeightOneSpectrum (RingOfIntegers K) =>
+        Not (Valued.v (b.val p) = 1))) := by
+    intro q hq h
+    apply hq
+    change norm (b.val q) = 1
+    rw [FinitePlace.norm_def, h]
+    simp
+  have hn : heckeFiniteIdeleNorm b = s.prod (fun p => norm (b.val p)) :=
+    finprod_eq_prod_of_mulSupport_subset_of_finite _ hFactorSupport hSupp
+  change dilationReal b = heckeFiniteIdeleNorm b
+  calc
+    dilationReal b = dilationReal (rest * part) := congrArg dilationReal hb.symm
+    _ = dilationReal part := by rw [map_mul, hD, one_mul]
+    _ = s.prod (fun p => dilationReal (single p)) := map_prod dilationReal single s
+    _ = s.prod (fun p => norm (b.val p)) := by
+      apply Finset.prod_congr rfl
+      intro p _
+      exact heckeFiniteAdditiveModulus_localIdele_eq_norm p (finiteComponent p b)
+    _ = heckeFiniteIdeleNorm b := hn.symm
+
+/-- Fourier scaling on the finite adeles uses the inverse idelic norm. -/
+theorem heckeFiniteFourierIntegral_translate_ideleNorm
+    (mu : Measure (FiniteDilationAdeles K)) [mu.IsAddHaarMeasure] [mu.Regular]
+    (value : FiniteDilationAdeles K -> Complex) (b : Units (FiniteDilationAdeles K))
+    (y : FiniteDilationAdeles K) :
+    heckeFiniteFourierIntegral mu (fun z => value (z * (b : FiniteDilationAdeles K))) y =
+      HSMul.hSMul (heckeFiniteIdeleNorm (Inv.inv b))
+        (heckeFiniteFourierIntegral mu value (y * b.inv)) := by
+  rw [heckeFiniteFourierIntegral_translate]
+  change HSMul.hSMul ((heckeFiniteAdditiveModulus (Inv.inv b) : NNReal) : Real)
+      (heckeFiniteFourierIntegral mu value (y * b.inv)) = _
+  rw [heckeFiniteAdditiveModulus_eq_ideleNorm]
 
 end Robin1984.GRH
