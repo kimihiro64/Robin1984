@@ -1434,6 +1434,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeConductor.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The conductor of a continuous unitary character of the idele class group over a number field.",
+      "formalization_note": "Proves finite ramification and existence of the least local conductor exponents. Constructs the conductor ideal and proves positivity and invariance of the arithmetic conductor.",
+      "content_basis": "Reviewed the product topology on integral ideles, the local valuation balls, the elementary geometric-sum argument for the circle, and the finite ideal product.",
+      "dependency_status": "Uses pinned Mathlib topology, adeles and ideal norms, and the project definition of a unitary Hecke character.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeEulerProduct.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The unitary Hecke character on the idele class group and the Euler product of its finite local factors.",
