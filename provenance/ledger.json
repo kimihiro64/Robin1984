@@ -1002,12 +1002,30 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeTateDualSupport.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's finite additive Fourier transform, duality of an integral modulus, and the restricted product of local fields.",
+      "formalization_note": "Bounds the Fourier transform of the finite Hecke test by the mass of the finite integral adeles and gives it a compact support.",
+      "content_basis": "Checks Haar translation, principal approximation, fractional trace-dual denominators, and local constancy of both finite tests.",
+      "dependency_status": "Uses the project's additive character, trace dual, conductor modulus, and uniform theta decay.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeTateThetaDecay.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Uniform decay of adelic theta sums on compact idele representatives in Tate's thesis.",
       "formalization_note": "Combines a common denominator on compact finite supports with archimedean Schwartz decay and summability over one lattice.",
       "content_basis": "Checked the denominator cover, the uniform inverse norm, the real scaling section, the lattice reindexing, and the specialization to unitary Hecke tests.",
       "dependency_status": "Uses the norm-one idele class compactness theorem, the finite Tate test, Mathlib's Schwartz seminorms, and lattice power-law summability.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateThetaQuotient.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Tate theta sum over nonzero principal adeles and its descent to the norm-one idele class quotient.",
+      "formalization_note": "Reindexes the principal sum under multiplication by a field unit and transfers uniform bounds to the quotient.",
+      "content_basis": "Checked termwise invariance, the sum reindexing, the multiplicative quotient relation, and the compact-representative estimate.",
+      "dependency_status": "Uses the norm-one compactness and uniform theta estimates and the compact support of the finite Fourier dual.",
       "reviewed": true
     },
     {
