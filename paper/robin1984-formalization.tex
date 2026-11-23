@@ -2596,11 +2596,11 @@ checks out exact reviewed revisions of Comparator, lean4export, Landrun, and
 NanoDa; requires the project's Lean~4.33.1 toolchain; performs the sequential
 project build; and runs the five Comparator stages listed above.  The
 checked-in
-\codelink{.github/workflows/ci.yml}{CI workflow} is the complete executable
-recipe: it additionally validates licensing and release metadata, builds the
-paper and API documentation, transfers the completed Lean artifacts to the
-downstream jobs, and publishes a release only if every dependency job,
-including Comparator, succeeds.
+\codelink{.github/workflows/ci.yml}{CI workflow} validates licensing and
+release metadata, builds the paper, and transfers the completed Lean artifacts
+to Comparator. It publishes a release only after the required jobs succeed.
+API documentation can be generated separately from the \texttt{docbuild}
+project.
 
 \paragraph{Observed cost and hardware.}
 The hosted workflow uses GitHub's standard public

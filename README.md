@@ -243,9 +243,8 @@ advertised theorem statement and the declarations used by that statement,
 audits the Solution proof bodies against the three permitted standard axioms,
 and replays the export through Lean's default kernel. The configuration has no
 definition holes and requires a second replay through the independent NanoDa
-kernel. Linux CI passes the completed root `.lake/build` tree from its build job
-to the documentation and Comparator jobs, avoiding redundant concurrent cold
-builds while retaining the same checks on fresh standalone verifiers.
+kernel. Linux CI passes the completed root `.lake/build` tree to Comparator.
+Standalone verifiers can build the same tree from source.
 It pins the upstream `leanprover/lean4export` v4.33.0 source commit and compiles
 that source unmodified with this repository's exact Lean v4.33.1 toolchain via
 `ELAN_TOOLCHAIN`. This keeps the exporter compatible with the project's
@@ -255,23 +254,13 @@ from every Lean source and build-defining file. A source change therefore
 forces a new kernel build, while documentation-only changes can reuse the exact
 Linux `.olean`s.
 
-API documentation is checked by the Linux CI job and can be built from the
-nested `docbuild` project on a host with a compatible native C toolchain:
+API documentation can be built locally from the nested `docbuild` project on
+a host with a compatible native C toolchain.
 
 ```sh
 cd docbuild
 lake build Robin1984:docs
 ```
-
-doc-gen4 includes every transitive import so that declaration links resolve.
-The project therefore avoids umbrella `import Mathlib` declarations and CI
-caches `docbuild/.lake/build`, allowing later documentation runs to update the
-existing database rather than regenerate every imported module.
-After doc-gen4 finishes, CI replaces its server-oriented root page with the
-committed [offline landing page](assets/api-documentation-index.html) and
-checks every link before uploading the site. The resulting `index.html` works
-when the documentation archive is opened directly after extraction, without a
-web server, iframe, external script or CDN.
 
 The same CI run publishes the compiled research paper as the
 `robin1984-research-paper` artifact. Its cached PDF is keyed only by
@@ -281,17 +270,14 @@ uses the source file's last Git change time as `SOURCE_DATE_EPOCH` and checks
 that the final PDF is nonempty and has resolved references and a positive page
 count.
 
-Successful `main` builds publish an official GitHub release only after every
-job has passed, including Comparator statement matching, NanoDa replay and
-Lean's default-kernel replay. The committed [RELEASE_VERSION](RELEASE_VERSION)
-file supplies the semantic version and must be bumped before a new release;
-CI checks tag collisions before starting the long Lean build. The release
-contains exactly the paper PDF, a compressed Ubuntu `.lake/build` tree, and a
-ZIP of the complete offline-safe API site. The build archive includes the
-project's licensing statement, while the documentation ZIP also includes the
-licence and notice files for Lean and every pinned dependency represented in
-the generated pages. A rerun at an already published commit verifies the
-existing release instead of creating a duplicate.
+Successful `main` builds publish an official GitHub release after the required
+jobs pass, including Comparator statement matching, NanoDa replay and Lean's
+default-kernel replay. The committed [RELEASE_VERSION](RELEASE_VERSION) file
+supplies the semantic version and must be bumped before a new release. CI
+checks tag collisions before starting the Lean build. The release contains
+the paper PDF and a compressed Ubuntu `.lake/build` tree with project licensing
+information. A rerun at an already published commit verifies the existing
+release.
 
 ## Production and review disclosure
 

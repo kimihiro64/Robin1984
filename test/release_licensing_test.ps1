@@ -1,13 +1,33 @@
+param([switch]$ReleaseOnly)
+
 $ErrorActionPreference = 'Stop'
 
 $repositoryRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $testRoot = Join-Path ([IO.Path]::GetTempPath()) (
   'robin1984-release-licensing-' + [Guid]::NewGuid().ToString('N')
 )
-$documentationRoot = Join-Path $testRoot 'documentation'
 $buildRoot = Join-Path $testRoot 'build'
-New-Item -ItemType Directory -Path $documentationRoot -Force | Out-Null
 New-Item -ItemType Directory -Path $buildRoot -Force | Out-Null
+
+& (Join-Path $repositoryRoot 'scripts/prepare-release-licensing.ps1') `
+  -DestinationRoot $buildRoot
+foreach ($required in @(
+  (Join-Path $buildRoot 'licensing/index.html'),
+  (Join-Path $buildRoot 'licensing/Robin1984-Apache-2.0.txt'),
+  (Join-Path $buildRoot 'licensing/Robin1984-LICENSING.md')
+)) {
+  if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
+    throw "Prepared build archive is missing '$required'."
+  }
+}
+
+if ($ReleaseOnly) {
+  Write-Host 'Lean build archive licensing smoke test passed.'
+  return
+}
+
+$documentationRoot = Join-Path $testRoot 'documentation'
+New-Item -ItemType Directory -Path $documentationRoot -Force | Out-Null
 
 $documentationTargets = @(
   'index.html',
@@ -78,18 +98,6 @@ $preparedHash = (Get-FileHash -LiteralPath $licensingIndex -Algorithm SHA256).Ha
 $consumerHash = (Get-FileHash -LiteralPath $licensingIndex -Algorithm SHA256).Hash
 if ($consumerHash -cne $preparedHash) {
   throw 'Release-consumer validation rewrote the prepared licensing bundle.'
-}
-
-& (Join-Path $repositoryRoot 'scripts/prepare-release-licensing.ps1') `
-  -DestinationRoot $buildRoot
-foreach ($required in @(
-  (Join-Path $buildRoot 'licensing/index.html'),
-  (Join-Path $buildRoot 'licensing/Robin1984-Apache-2.0.txt'),
-  (Join-Path $buildRoot 'licensing/Robin1984-LICENSING.md')
-)) {
-  if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
-    throw "Prepared build archive is missing '$required'."
-  }
 }
 
 Write-Host "Release licensing smoke test passed for $($manifestPackages.Count) manifest package entries."
