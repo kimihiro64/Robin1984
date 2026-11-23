@@ -331,6 +331,76 @@ theorem exists_finiteAdele_sub_principal_integral
   rw [one_mul, <- map_mul, sub_mul, hEqE, V.map_sub_swap]
   exact hb p
 
+/-- The finite adeles modulo a principal multiple of the local integer rings
+are represented by principal elements. -/
+theorem exists_finiteAdele_sub_principal_modulus
+    (a : FiniteAdeleRing (RingOfIntegers K) K) (d : K) (hd : Not (d = 0)) :
+    Exists (fun x : K => forall p : HeightOneSpectrum (RingOfIntegers K),
+      Membership.mem (p.adicCompletionIntegers K)
+        ((a p - algebraMap K (p.adicCompletion K) x) /
+          algebraMap K (p.adicCompletion K) d)) := by
+  let A := FiniteAdeleRing (RingOfIntegers K) K
+  let b : A := a * algebraMap K A (Inv.inv d)
+  have h := exists_finiteAdele_sub_principal_integral b
+  choose y hy using h
+  refine Exists.intro (y * d) (fun p => ?_)
+  let e := algebraMap K (p.adicCompletion K)
+  have hp := hy p
+  change Membership.mem (p.adicCompletionIntegers K) (a p * e (Inv.inv d) - e y) at hp
+  have he : (a p - e (y * d)) / e d = a p * e (Inv.inv d) - e y := by
+    have he : Not (e d = 0) := (map_ne_zero_iff e e.injective).mpr hd
+    have hdInv : d * Inv.inv d = 1 := by field_simp [hd]
+    have hdInv' : e (Inv.inv d) * e d = 1 := by
+      rw [mul_comm, <- map_mul, hdInv, map_one]
+    apply (div_eq_iff he).2
+    rw [sub_mul, mul_assoc, hdInv', mul_one, <- map_mul]
+  rw [he]
+  exact hp
+
+/-- The principal elements lying in the scaled finite integer rings are
+exactly the corresponding global principal fractional ideal. -/
+theorem principal_mem_finiteAdele_modulus_iff (x d : K) (hd : Not (d = 0)) :
+    (forall p : HeightOneSpectrum (RingOfIntegers K),
+      Membership.mem (p.adicCompletionIntegers K)
+        (algebraMap K (p.adicCompletion K) x / algebraMap K (p.adicCompletion K) d)) <->
+      Exists (fun b : RingOfIntegers K => x = d * algebraMap (RingOfIntegers K) K b) := by
+  let R := RingOfIntegers K
+  constructor
+  case mp =>
+    intro h
+    have hRange := HeightOneSpectrum.mem_integers_of_valuation_le_one (R := R) K (x / d) (by
+      intro p
+      let e := algebraMap K (p.adicCompletion K)
+      have he : Not (e d = 0) := (map_ne_zero_iff e e.injective).mpr hd
+      have hDiv : e (x / d) = e x / e d := by
+        have hx : x = x / d * d := (div_eq_iff hd).mp (show x / d = x / d from rfl)
+        apply (eq_div_iff he).2
+        rw [<- map_mul, <- hx]
+      have hp := h p
+      change Membership.mem (p.adicCompletionIntegers K) (e x / e d) at hp
+      rw [<- hDiv] at hp
+      change Valued.v ((x / d : K) : p.adicCompletion K) <=
+        (1 : WithZero (Multiplicative Int)) at hp
+      rw [HeightOneSpectrum.adicCompletion.valued_coe] at hp
+      exact hp)
+    choose b hb using hRange
+    exact Exists.intro b ((div_eq_iff hd).mp hb.symm |>.trans (mul_comm _ _))
+  case mpr =>
+    intro h p
+    choose b hb using h
+    have he : Not (algebraMap K (p.adicCompletion K) d = 0) :=
+      (map_ne_zero_iff (algebraMap K (p.adicCompletion K))
+        (algebraMap K (p.adicCompletion K)).injective).mpr hd
+    have hEq : algebraMap K (p.adicCompletion K) x /
+        algebraMap K (p.adicCompletion K) d = algebraMap R (p.adicCompletion K) b := by
+      rw [hb, map_mul]
+      change (algebraMap K (p.adicCompletion K) d * algebraMap R (p.adicCompletion K) b) /
+        algebraMap K (p.adicCompletion K) d = _
+      apply (div_eq_iff he).2
+      exact mul_comm _ _
+    rw [hEq]
+    exact (algebraMap R (p.adicCompletionIntegers K) b).property
+
 /-- The set of finite adeles that are integral at every place is compact. -/
 theorem isCompact_integralFiniteAdeles :
     IsCompact {a : FiniteAdeleRing (RingOfIntegers K) K |
