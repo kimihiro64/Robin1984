@@ -669,14 +669,19 @@ with multiplicity, the expansion is
 Each term \((s-\rho)^{-1}+\rho^{-1}\), divided by \(s(s+1)\),
 has inverse Mellin transform
 \((x^\rho-x^{-1})/(\rho(\rho+1))\).
-The transforms of \(1-x^{-1}\), \(1-\tfrac12x^{-1}\),
-\(\log x-1+x^{-1}\), and \(-x^{-1}\log x\) supply the four
-elementary terms in the inversion of \eqref{eq:grand-mellin-transform}.
+The transforms of \(1-x^{-1}\), \(1-\tfrac12x^{-1}\), and
+\(\log x-1+x^{-1}\) supply the first three elementary terms in
+the inversion of \eqref{eq:grand-mellin-transform}. For the zero
+at \(-1\), the partial fractions are
+\[
+ \frac{1}{s(s+1)^2}=\frac1s-\frac1{s+1}-\frac1{(s+1)^2}.
+\]
 Hence
 \begin{align}
  R_Z(x)=\Re\Bigg[&
  b(1-x^{-1})+m(1-\tfrac12x^{-1})
- +m_0(\log x-1+x^{-1})-m_{-1}x^{-1}\log x
+ +m_0(\log x-1+x^{-1})
+ +m_{-1}(1-x^{-1}-x^{-1}\log x)
  \nonumber\\
  &+\sum_{\rho\notin\{0,-1\}}
              \frac{x^\rho-x^{-1}}{\rho(\rho+1)}\Bigg].
