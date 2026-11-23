@@ -19,7 +19,7 @@
   linkcolor=linkblue,
   citecolor=linkblue,
   urlcolor=linkblue,
-  pdftitle={Robin's 1984 criterion for the Riemann hypothesis},
+  pdftitle={Robin-type criteria for generalized Riemann hypotheses},
   pdfauthor={Jonas Whidden}
 }
 
@@ -71,56 +71,44 @@
 \newcommand{\releasesurl}{%
   https://github.com/kimihiro64/Robin1984/releases}
 
-\title[Robin's 1984 criterion]{Robin's 1984 criterion for the Riemann hypothesis:\\
-a formally verified proof}
+\title[Robin-type criteria for generalized Riemann hypotheses]
+      {Robin-type criteria for Dirichlet, Dedekind, and automorphic
+       Riemann hypotheses}
 \author{Jonas Whidden}
 \thanks{This paper is available under \texttt{Apache-2.0} or
 \texttt{CC-BY-4.0}.}
-\date{September 2026}
-\subjclass[2020]{11M26, 11N37, 03B35}
-\keywords{Riemann hypothesis, sum of divisors, Robin's inequality,
-Lagarias criterion, harmonic numbers, colossally abundant numbers,
-Nicolas criterion, formal verification, Lean}
+\date{November 2026}
+\subjclass[2020]{11M06, 11M26, 11M36, 11N37, 03B35}
+\keywords{Robin's inequality, ideal divisor sums, Dirichlet $L$-functions,
+Dedekind zeta functions, automorphic $L$-functions, Riesz means,
+generalized Riemann hypotheses, formal verification}
 
 \begin{document}
 \raggedbottom
 \begin{abstract}
-Guy Robin proved in 1984 that the Riemann hypothesis is equivalent to the
-strict inequality
-\[
-  \sig(n)<e^{\euler}n\log\log n \qquad(n>5040).
-\]
-We give a detailed mathematical reconstruction paired with a formally verified
-Lean~4 proof.  The argument reduces arbitrary integers to colossally abundant
-extrema, proves the bounded range with exact rational certificates, establishes
-the large-height implication under the Riemann hypothesis through a weighted
-explicit formula and a strict coefficient gap, and proves the converse by
-turning Nicolas--Landau oscillations into least-common-multiple counterexamples.
-We then formalize Lagarias's elementary criterion
-\[
-  \sig(n)\le H_n+e^{H_n}\log H_n\qquad(n\ge1)
-\]
-by reusing the completed Robin implications, proving Lagarias's two harmonic
-comparison estimates, and checking the remaining range $2\le n\le5040$ with
-exact kernel certificates.
-The source-specific weighted formula and oscillation argument are proved in
-repository-owned modules, while substantial foundational analysis is imported
-from pinned public libraries: axiom-free here does not mean dependency-free or
-redeveloped from first principles.
+For a number field \(K\), we prove that the Riemann hypothesis for
+\(\zeta_K\) is equivalent to an eventual bound for the normalized
+sum of the norms of the divisors of an integral ideal. The bound has
+main term \(e^\gamma\kappa_K\log\log N\mathfrak a\) and correction
+\(e^\gamma\kappa_K(12+3\log|D_K|)/\sqrt{\log N\mathfrak a}\),
+where \(\kappa_K\) is the zeta residue at \(1\).
+Cyclotomic factorization gives the equivalent bound for Dirichlet
+GRH, and the all-field quantifier gives Dedekind ERH.
+For the standard \(L\)-functions of unitary cuspidal representations
+of \(\mathrm{GL}_n\) over all number fields, the critical-line
+assertion is equivalent to a one-sided square-root bound for a
+triangular sum over the prime powers of a representation and its
+contragredient. The converse in both settings uses a Mellin
+transform, Landau's theorem, and the sign of the residue at a
+possible real zero.
 
-A declaration-level map connects the exposition to the checked source.
-Comparator verifies that the solution proves the exact Mathlib-only challenge
-statements and respects the configured axiom boundary; Lean's kernel and the
-independent NanoDa kernel then replay the export.  Public source, certificates,
-CI logs, release artifacts, and reproduction instructions make this assurance
-chain inspectable.  The reconstruction used a human-directed automated context
-system to track sources, theorem state, dependencies, numerical evidence, and
-verification status.  The paper documents its role through retained outputs
-and two concrete failure-and-revision cases, without claiming a measured
-productivity advantage.  Reusable outputs include a generic positive-transform
-theorem, multiplicity-aware zero infrastructure, and a theorem-parametric
-finite-certificate checker.  Robin's result remains an equivalence criterion;
-it does not prove the Riemann hypothesis.
+Lean verifies both corrected ideal equivalences, as well as the
+classical Robin, colossally abundant, and Lagarias statements.
+It verifies the triangular criterion for an indexed family with
+the stated standard analytic properties. In the paper those
+properties are supplied by the classical theorems on standard
+\(L\)-functions. Instantiating that family in Lean for all ranks
+remains open.
 \end{abstract}
 \maketitle
 
@@ -132,6 +120,630 @@ the \href{https://www.apache.org/licenses/LICENSE-2.0}{Apache License 2.0} or
 \end{center}
 
 \section{Introduction}
+
+Robin's criterion detects the Riemann hypothesis through the sizes of
+divisor sums~\cite{Robin1984}. We extend the divisor-sum problem to
+integral ideals of a number field \(K\), using the absolute ideal norm
+and the residue of \(\zeta_K\) at \(1\). A logarithmic inequality for
+each local divisor factor allows us to charge the cost of a prime
+power against a single norm budget. This cancels the boundary term in
+the number-field Mertens formula. In the converse direction, an ideal
+formed from all prime powers up to a given norm recovers the same
+weighted prime-ideal error. The resulting fieldwise equivalence gives
+the Dirichlet GRH criterion on cyclotomic fields and the Dedekind ERH
+criterion on all number fields.
+
+For the standard \(L\)-functions of unitary cuspidal automorphic
+representations, conjugation makes the paired logarithmic coefficients
+real, and their signs can vary. We use these coefficients in a
+triangular Riesz sum over prime powers. The same one-sided Mellin
+argument applies to its remainder and to the divisor-sum error.
+The key real poles have a positive residue before subtraction from a
+nonnegative comparison function. This sign also rules out a real
+exceptional zero in the relevant half-plane.
+
+The argument draws on number-field Mertens theorems
+\cite{GarciaLeeNumberFieldMertens}, on smoothed explicit formulas for prime
+ideals~\cite{GrenieMolteniSmoothed}, and on Landau's theorem for
+nonnegative transforms~\cite{Landau1905}. The triangular sum for
+\(\zeta_K\) is the first Riesz mean used by Greni\'e and Molteni,
+divided by \(x\). The all-rank statement applies a one-sided
+converse and an absolute bound for the zero series to the paired
+standard factors. Lagarias's automorphic Li criterion is another
+spectral criterion for standard \(L\)-functions~\cite{LagariasAutomorphicLi}.
+The Alp\"oge--Claude development gives the classical and Dirichlet
+critical-line statements; its release and independent verification
+record specify those quantifiers~\cite{Alpoge2026,Sutherland2026}.
+The equivalences here use the analytic properties cited in their proofs.
+
+The main arguments are given in Sections~\ref{sec:positive-mellin}--%
+\ref{sec:grand-research}. Appendix~\ref{app:classical-criteria} records
+the exact classical Robin cutoff, the colossally abundant reduction,
+and the proof reconstruction. The Lagarias criterion and the
+verification artifacts have their own appendices.
+
+\section{A one-sided Mellin criterion}\label{sec:positive-mellin}
+
+For a real, locally integrable function \(U\) on \([1,\infty)\), write
+\[
+ \mathcal{M}U(s)=\int_1^\infty U(x)x^{-s-1}\,dx
+\]
+where the integral converges absolutely.
+
+\begin{lemma}[Landau's theorem and the sign of a residue]
+\label{lem:one-sided-mellin}
+Suppose \(\mathcal{M}U\) converges absolutely in some right half-plane
+and extends meromorphically to \(\Re s>\alpha\), with every real pole
+there simple and of positive residue. If \(U(x)\le Cx^\alpha\) for
+all sufficiently large \(x\), then \(\mathcal{M}U\) has no pole in
+\(\Re s>\alpha\).
+\end{lemma}
+
+\begin{proof}
+Choose \(X>1\) beyond the cutoff and consider
+\[
+ G(x)=\mathbf{1}_{[X,\infty)}(x)(Cx^\alpha-U(x))\geq0.
+\]
+Its transform continues meromorphically to \(\Re s>\alpha\) as
+\[
+ \mathcal{M}G(s)=\frac{C X^{\alpha-s}}{s-\alpha}
+       -\mathcal{M}U(s)+\int_1^X U(x)x^{-s-1}\,dx.
+\]
+The integral over the compact interval is entire. If a pole of
+\(\mathcal{M}U\) lay to the right of \(\alpha\), the abscissa of
+convergence \(\sigma_c\) of the transform of \(G\) would be at least
+the real part of that pole. Indeed, the convergent transform is
+holomorphic to the right of \(\sigma_c\), and agrees there with the
+meromorphic continuation by uniqueness. Now \(\sigma_c>\alpha\).
+Landau's theorem~\cite{Landau1905}, applied to the Laplace transform
+after \(x=e^u\), forces a singularity at the real point \(\sigma_c\).
+The continuation can only have a simple pole there and its residue is
+negative. As \(s\downarrow\sigma_c\) on the real axis the transform
+would tend to \(-\infty\), contradicting its nonnegative integral.
+\end{proof}
+
+For the inversions below, it suffices to compare absolutely convergent
+transforms on \(\Re s=2\). Under \(x=e^u\) those transforms are
+Fourier transforms of \(L^1\) functions on \(u\geq0\). Uniqueness
+gives equality almost everywhere, which gives pointwise equality
+whenever the two expressions are continuous.
+
+\section{The corrected ideal Robin criterion}\label{sec:grh}
+
+Let \(K\) be a number field with discriminant \(D_K\), ring of
+integers \(\mathcal O_K\), and residue
+\(\kappa_K=\operatorname{Res}_{s=1}\zeta_K(s)>0\).
+We use \(N\) for the absolute ideal norm and \(\gamma\) for the
+Euler--Mascheroni constant. For a nonzero integral ideal
+\(\mathfrak a\), put
+\[
+ \sigma_K(\mathfrak a)=\sum_{\mathfrak d\mid\mathfrak a}N\mathfrak d,
+\]
+where all divisors are integral ideals. A statement about sufficiently
+large \(N\mathfrak a\) allows a threshold depending on \(K\).
+
+\begin{theorem}[Fieldwise corrected ideal Robin criterion]
+\label{thm:ideal-robin}
+All zeros of \(\zeta_K(s)\) in \(0<\Re s<1\) have real part \(1/2\)
+if and only if, for every \(\mathfrak a\) of sufficiently large norm,
+\begin{equation}\label{eq:ideal-robin}
+ \frac{\sigma_K(\mathfrak a)}{N\mathfrak a}
+ \leq e^\gamma\kappa_K
+ \left(\log\log N\mathfrak a+
+           \frac{12+3\log|D_K|}{\sqrt{\log N\mathfrak a}}\right).
+\end{equation}
+\end{theorem}
+
+\subsection{The boundary term in Mertens' formula}
+
+In this section \(q=N\mathfrak p\), with \(\mathfrak p\) a nonzero
+prime ideal. Every prime-power sum is over pairs
+\((\mathfrak p,j)\), \(j\geq1\), counted separately even when their
+norms coincide. Define
+\[
+ \psi_K(x)=\sum_{q^j\leq x}\log q,\qquad
+ E(x)=\psi_K(x)-x,\qquad
+ A(x)=\sum_{q^j\leq x}\frac{1}{jq^j}.
+\]
+For \(x>1\) let \(w(x)=(1+\log x)/\log^2 x\), and set
+\[
+ H(x)=-\int_x^\infty E(t)\frac{w(t)}{t^2}\,dt,\qquad
+ H_0(x)=-\int_x^\infty E(t)\frac{dt}{t^2}.
+\]
+The fixed-field prime ideal theorem gives
+\(E(x)=O_K(xe^{-c_K\sqrt{\log x}})\) for some \(c_K>0\).
+For example, apply the unconditional effective Chebotarev theorem
+to \(K/K\), use partial summation, and include the contributions
+from \(j\geq2\). A possible fixed exceptional zero \(\beta<1\)
+contributes \(O_K(x^\beta)\), which is absorbed in the same
+estimate~\cite{LagariasOdlyzko1977}. In particular the two integrals
+converge absolutely, and the prime-ideal counting function is
+\(O_K(x/\log x)\).
+
+Partial summation of \(\psi_K\) against \(1/(t\log t)\) gives
+\begin{equation}\label{eq:ideal-mertens}
+ A(x)=\gamma+\log\kappa_K+\log\log x+
+             \frac{E(x)}{x\log x}+H(x).
+\end{equation}
+To determine the constant, take logarithms in the third Mertens
+theorem over \(K\)~\cite[Theorem 1]{GarciaLeeNumberFieldMertens}.
+Its prime product, truncated by \(q\leq x\), differs in the
+logarithm from \(A(x)\) by
+\(\sum_{q\leq x}\sum_{j>k(q)}1/(jq^j)\), where
+\(k(q)=\lfloor\log x/\log q\rfloor\). This difference is
+\(O_K(x^{-1/2}/\log x)\). Indeed, the inner tail is
+\(O(q^{-k(q)-1})\). For \(q\leq\sqrt{x}\) we bound it by \(O(1/x)\)
+and count the prime ideals. For \(q>\sqrt{x}\) we bound it by
+\(O(q^{-2})\), whose sum over those prime ideals has the asserted
+order by partial summation. Thus
+\(A(x)-\log\log x\longrightarrow\gamma+\log\kappa_K\).
+Partial summation gives \eqref{eq:ideal-mertens} with this constant
+because \(E(x)/(x\log x)\) and \(H(x)\) tend to zero.
+
+If the exponent of \(\mathfrak p\) in \(\mathfrak a\) is \(k\geq1\),
+then
+\[
+ \log\sum_{j=0}^k q^{-j}-\sum_{j=1}^k\frac{1}{jq^j}
+ =\log(1-q^{-k-1})+\sum_{j>k}\frac{1}{jq^j}.
+\]
+The tail on the right is at most
+\(q^{-k-1}/((k+1)(1-q^{-1}))\leq q^{-k-1}\).
+The entire right side is nonpositive, and its absolute value is
+\(O(q^{-k-1})\) with an absolute implied constant. When \(k=0\)
+the discrepancy on the left is zero.
+
+For \(x=\log N\mathfrak a>1\), the prime powers occurring in the
+local factors of \(\sigma_K(\mathfrak a)/N\mathfrak a\) have total
+cost \(\sum\log q=x\). Their term \(1/(jq^j)\) per unit cost is
+\(1/(q^j\log q^j)\), decreasing with \(q^j\). Subtract
+\((x\log x)^{-1}\) times the cost of each selected prime power.
+The positive terms in the difference can occur only when \(q^j<x\).
+Summing all such terms and adding back the total price yields
+\begin{equation}\label{eq:ideal-supporting-line}
+ \log\frac{\sigma_K(\mathfrak a)}{N\mathfrak a}
+ \leq A(x)+\frac{x-\psi_K(x)}{x\log x}
+ =\gamma+\log\kappa_K+\log\log x+H(x).
+\end{equation}
+
+\subsection{The zero expansion and the explicit coefficient}
+
+Write \((r_1,r_2)\) for the signature of \(K\). We use
+\(\Gamma_{\mathbb R}(s)=\pi^{-s/2}\Gamma(s/2)\) and
+\(\Gamma_{\mathbb C}(s)=2(2\pi)^{-s}\Gamma(s)\).
+The function
+\[
+ \Xi_K(s)=s(s-1)|D_K|^{s/2}
+       \Gamma_{\mathbb R}(s)^{r_1}\Gamma_{\mathbb C}(s)^{r_2}
+       \zeta_K(s)
+\]
+is entire of order at most one, satisfies \(\Xi_K(s)=\Xi_K(1-s)\),
+and has precisely the nontrivial zeros of \(\zeta_K\), counted with
+multiplicity. The prime ideal estimate above bounds the integrated logarithmic
+derivative as the line \(\Re s=1\) is approached from the right.
+This excludes zeros on that line away from the pole, and the
+functional equation gives the boundary at \(\Re s=0\). We use the standard completion
+and its Hadamard product as in~\cite[\S\,3]{GrenieMolteniSmoothed}.
+
+Set \(F_K(s)=(s-1)\zeta_K(s)\) and
+\(\Phi(s)=(F_K'(s)/F_K(s)+1)/s\). Integration of the Dirichlet
+series for \(-\zeta_K'/\zeta_K\) gives, for \(\Re s>1\),
+\[
+ F(s):=\int_1^\infty E(t)t^{-s-1}\,dt
+   =-\frac{\zeta_K'(s)}{s\zeta_K(s)}-\frac{1}{s-1}
+   =-\Phi(s).
+\]
+The prime ideal estimate gives \(F(1)=\int_1^\infty E(t)t^{-2}\,dt\)
+and a removable value at \(s=1\). Fubini's theorem then gives
+\begin{equation}\label{eq:dedekind-h0-transform}
+ \mathcal{M}(xH_0(x))(s)=\frac{F(s)-F(1)}{s-1}
+                         =\frac{\Phi(s)-\Phi(1)}{1-s}.
+\end{equation}
+
+Here is the explicit inversion used for the coefficient. Write
+\(\Xi_K'/\Xi_K(s)=b+\sum_{\rho}
+((s-\rho)^{-1}+\rho^{-1})\). Let \(\psi_\Gamma=\Gamma'/\Gamma\).
+The series
+\(\psi_\Gamma(z)=-\gamma-z^{-1}
+ +\sum_{n\geq1}z/(n(n+z))\) gives
+\[
+ \Phi(s)=\frac{B}{s}+\frac{r_1+r_2-1}{s^2}
+  +\sum_\rho\frac{1}{\rho(s-\rho)}
+  -r_1\sum_{n\geq1}\frac{1}{2n(s+2n)}
+  -r_2\sum_{n\geq1}\frac{1}{n(s+n)}
+\]
+where \(B=b+1-\tfrac12\log|D_K|+\tfrac{r_1}{2}(\gamma+\log\pi)
++r_2(\gamma+\log(2\pi))\). The real-place terms lie on
+the even negative lattice and the complex-place terms on the full
+negative lattice. Taking the divided difference in
+\eqref{eq:dedekind-h0-transform} gives the transform of
+\begin{align}
+ xH_0(x)={}& B+(r_1+r_2-1)(1+\log x)
+       +\sum_\rho\frac{x^\rho}{\rho(1-\rho)}
+ \nonumber\\
+ &-r_1\sum_{n\geq1}\frac{x^{-2n}}{2n(1+2n)}
+  -r_2\sum_{n\geq1}\frac{x^{-n}}{n(1+n)} .
+ \label{eq:dedekind-h0-series}
+\end{align}
+For instance, \((s-\rho)^{-1}\) is the Mellin transform of \(x^\rho\).
+The Hadamard product gives absolute summability of
+\(|\rho(1-\rho)|^{-1}\), since the zero divisor has convergence
+exponent at most one and has no point at \(0\) or \(1\). As
+\(\Re\rho\leq1\), the zero series converges uniformly on compact
+\(x\)-intervals and is absolutely integrable against \(x^{-3}\,dx\).
+The analogous assertions for the two Gamma series follow from
+their \(O(n^{-2})\) coefficients. Uniqueness on \(\Re s=2\)
+and continuity give \eqref{eq:dedekind-h0-series} for \(x>1\).
+
+Now assume Dedekind RH for \(K\). The zero series is bounded in
+absolute value by \(B_K\sqrt{x}\), where
+\[
+ B_K=\sum_\rho \frac{1}{1/4+(\Im\rho)^2}.
+\]
+Subtract the values of \(\Xi_K'/\Xi_K\) at \(2\) and \(-1\).
+The functional equation makes the difference
+\(2\Xi_K'(2)/\Xi_K(2)\). A zero \(1/2+i\tau\) contributes
+\(3/(9/4+\tau^2)\). Since
+\((1/4+\tau^2)^{-1}\leq9/(9/4+\tau^2)\), we obtain
+\[
+ B_K\leq6\Re\frac{\Xi_K'(2)}{\Xi_K(2)}
+       \leq9+3\log|D_K|.
+\]
+For the second inequality, \(\zeta_K'(2)/\zeta_K(2)\leq0\)
+by the Euler product. The two archimedean log derivatives at \(2\)
+are \((-\log\pi-\gamma)/2\) and
+\(-\log(2\pi)+1-\gamma\), both negative. The terms left in the
+upper estimate are \(1/2+1+\tfrac12\log|D_K|\).
+
+In \eqref{eq:dedekind-h0-series} the nonzero-lattice Gamma series
+are bounded and the remaining elementary terms are \(O_K(1+\log x)\).
+Thus \(|H_0(x)|\leq (B_K+1)/\sqrt{x}\) for all sufficiently large
+\(x\). Since \(H_0'(t)=E(t)/t^2\) almost everywhere, integration by
+parts gives \(H(x)=w(x)H_0(x)+\int_x^\infty w'(t)H_0(t)\,dt\).
+For \(t\geq e\), \(|w'(t)|\leq 3/(t\log^2 t)\). Therefore
+\[
+ H(x)\leq\frac{B_K+1}{\sqrt{x}\log x}
+          +\frac{7(B_K+1)}{\sqrt{x}\log^2 x}
+\]
+eventually. In \eqref{eq:ideal-supporting-line}, exponentiation
+multiplies \(\log x\) by \(e^{H(x)}\). The upper estimate on \(H\)
+and \(e^u=1+u+O(u^2)\) for \(u\to0\) bound this by
+\(\log x+(B_K+1+o_K(1))/\sqrt{x}\).
+The strict inequality \(B_K+1\leq 10+3\log|D_K|<
+12+3\log|D_K|\) yields \eqref{eq:ideal-robin}.
+
+\subsection{The converse from least common multiples of ideals}
+
+For \(x>1\), take
+\[
+ \mathfrak L_x=\prod_{\substack{\mathfrak p,\ j\geq1\\q^j\leq x}}\mathfrak p .
+\]
+Its logarithmic norm is \(\psi_K(x)\). The local discrepancy
+computed above, summed with the same cutoff at \(\sqrt{x}\), gives
+\[
+ \log\frac{\sigma_K(\mathfrak L_x)}{N\mathfrak L_x}
+        =A(x)+O_K\!\left(\frac{1}{\sqrt{x}\log x}\right).
+\]
+Since \(\psi_K(x)\sim x\), applying \eqref{eq:ideal-robin} and taking
+logs gives the upper bound
+\(\gamma+\log\kappa_K+\log\log\psi_K(x)
+   +O_K(1/(\sqrt{x}\log x))\).
+Concavity of \(\log\log t\) on \(t>1\) gives
+\(\log\log\psi_K(x)\leq\log\log x+E(x)/(x\log x)\).
+Comparison with \eqref{eq:ideal-mertens} then yields
+\(H(x)\leq C_K/(\sqrt{x}\log x)\) eventually for some \(C_K\).
+
+Let \(u=1/w\). For \(t>1\), \(0\leq u'(t)\leq1/t\).
+Integrating \(H'(t)=w(t)E(t)/t^2\) by parts and using the prime ideal
+estimate at infinity gives
+\[
+ H_0(x)=u(x)H(x)+\int_x^\infty H(t)u'(t)\,dt
+       \leq C'_K x^{-1/2}
+\]
+for all sufficiently large \(x\). This uses the upper bound on \(H\)
+at every step, including the integral with its nonnegative weight.
+
+By \eqref{eq:dedekind-h0-transform},
+\(\mathcal{M}(xH_0(x))\) is meromorphic on \(\Re s>1/2\).
+Its poles there occur exactly at zeros of \(\zeta_K\) in that
+half-plane. The apparent singularity at \(1\) is removable.
+At a real zero \(\beta\in(1/2,1)\) of multiplicity \(j\) the
+transform has residue \(j/[\beta(1-\beta)]>0\).
+Lemma~\ref{lem:one-sided-mellin} excludes all the poles, both real
+and nonreal. Reflection under the functional equation gives Dedekind
+RH. This proves Theorem~\ref{thm:ideal-robin}.
+
+\section{Dirichlet GRH and Dedekind ERH}\label{sec:dirichlet-erh}
+
+\begin{theorem}[Dirichlet GRH]\label{thm:dirichlet-cyclotomic}
+Every zero in \(0<\Re s<1\) of every Dirichlet \(L(s,\chi)\), over
+all positive moduli and all characters, has real part \(1/2\) if
+and only if \eqref{eq:ideal-robin} holds in every cyclotomic field
+\(K=\mathbb Q(\zeta_m)\), \(m\geq1\), with its own norm cutoff.
+\end{theorem}
+
+\begin{proof}
+For \(G=(\mathbb Z/m\mathbb Z)^\times\) and \(\chi\in\widehat G\),
+let \(\chi^*\) denote the primitive character inducing \(\chi\).
+The abelian zeta factorization in this case is
+\begin{equation}\label{eq:cyclotomic-product}
+ \zeta_{\mathbb Q(\zeta_m)}(s)=\prod_{\chi\in\widehat G}L(s,\chi^*).
+\end{equation}
+We check the Euler factors, including primes dividing \(m\).
+For a rational prime \(\ell\), write \(m=\ell^a m'\) with
+\((m',\ell)=1\). The inertia quotient is
+\(G/I_\ell=(\mathbb Z/m'\mathbb Z)^\times\). The class of \(\ell\)
+in this quotient is the Frobenius and has order \(f\), the residue
+degree. There are \(g=|G/I_\ell|/f\) primes over \(\ell\),
+each of norm \(\ell^f\). These assertions follow from cyclotomic
+ramification and the Frobenius action on roots of unity
+\cite[Ch.\,2 and 4]{WashingtonCyclotomic}.
+The primitive character contributes a factor at \(\ell\) exactly
+when \(\chi\) is trivial on \(I_\ell\). Among these characters every
+\(f\)-th root of unity occurs \(g\) times at Frobenius, by restriction
+of characters to its cyclic subgroup. The local product is thus
+\((1-\ell^{-fs})^{-g}\), the Dedekind Euler factor. A trivial inertia
+quotient has \(f=g=1\). Equality for \(\Re s>1\) gives
+\eqref{eq:cyclotomic-product} by continuation.
+
+All the factors in \eqref{eq:cyclotomic-product} are holomorphic
+in the open strip. A zero of any one of them is a zero of the
+product, and every zero of the product comes from a factor.
+Every primitive character occurs in \eqref{eq:cyclotomic-product}
+at its conductor. If \(\chi\) is imprimitive, then
+\[
+ L(s,\chi)=L(s,\chi^*)\prod_{\ell\mid m,\;\ell\nmid
+                  \operatorname{cond}(\chi^*)}
+                    (1-\chi^*(\ell)\ell^{-s}).
+\]
+The extra factors have no zeros for \(\Re s>0\). Thus the open-strip
+assertion for all the cyclotomic zeta functions is equivalent to
+Dirichlet GRH. Apply Theorem~\ref{thm:ideal-robin} in each cyclotomic
+field.
+\end{proof}
+
+\begin{theorem}[Dedekind ERH]\label{thm:dedekind-erh}
+Every zero in \(0<\Re s<1\) of \(\zeta_K(s)\), for every number field
+\(K\), has real part \(1/2\) if and only if \eqref{eq:ideal-robin} holds
+in every number field.
+\end{theorem}
+
+\begin{proof}
+Apply Theorem~\ref{thm:ideal-robin} for each \(K\). The threshold
+in each inequality may depend on \(K\).
+\end{proof}
+
+In particular Dedekind ERH implies Dirichlet GRH. Over a general
+base field, abelian zeta factorization gives the analogous
+implication from all-field Dedekind ERH to the critical-line
+assertion for finite-order Hecke characters. The Dirichlet
+factorization above is the case over \(\mathbb Q\). The next
+criterion treats unitary Hecke characters and higher-rank standard
+functions with the same prime-power kernel.
+
+\section{The triangular criterion for Grand RH}\label{sec:grand-research}
+
+We use the unitary normalization of the standard \(L\)-function
+\(L(s,\pi)\) of a cuspidal automorphic representation of
+\(\mathrm{GL}_n(\mathbb A_K)\), with \(n\geq1\) and \(K\) any number
+field. Its nontrivial zeros are the zeros of the pole-cleared
+completed standard function. The completed functional equation is
+centered at \(1/2\). Write \(\widetilde{\pi}\) for the contragredient.
+A pure imaginary norm character \(|\cdot|_{\mathbb A_K}^{it}\) of
+\(\mathrm{GL}_1\) has \(L(s,\pi)=\zeta_K(s+it)\); its zero condition is
+the same as that of \(\zeta_K\) by vertical translation.
+
+For each \(\pi\) other than those pure norm characters, take
+\(Z(s)=L(s,\pi)L(s,\widetilde{\pi})\). Include the test \(Z=\zeta_K\)
+for each \(K\) to cover all the pure norm characters over \(K\).
+Let \(m\) be the pole order of \(Z\) at \(1\), so \(m=0\) for a
+paired cuspidal product and \(m=1\) for \(\zeta_K\). For \(\Re s>1\),
+write
+\begin{equation}\label{eq:standard-log-derivative}
+ -\frac{Z'}{Z}(s)=
+   \sum_{\mathfrak p}\sum_{j\geq1}
+      b_{\mathfrak p,j}(N\mathfrak p)^{-js}.
+\end{equation}
+Here the sum includes ramified local factors. If
+\(L_{\mathfrak p}(s,\pi)=\prod_{k=1}^n
+ (1-\alpha_{\mathfrak p,k}(N\mathfrak p)^{-s})^{-1}\),
+allowing zero parameters at ramified primes, then
+\(b_{\mathfrak p,j}=2\log N\mathfrak p\,
+ \Re\bigl(\sum_k\alpha_{\mathfrak p,k}^j\bigr)\) for a pair.
+For \(Z=\zeta_K\), \(b_{\mathfrak p,j}=\log N\mathfrak p\).
+The pair is a product of two standard factors, whose individual
+completed zeros are counted with their multiplicities.
+
+\begin{theorem}[Grand RH]\label{thm:grand-triangular}
+Every nontrivial zero of every standard \(L\)-function in this
+unitary cuspidal family has real part \(1/2\) if and only if,
+for every test \(Z\) defined above, there is a real \(C_Z\) such that
+\begin{equation}\label{eq:grand-rh-prime-power}
+ R_Z(x):=\frac{mx}{2}
+  -\sum_{\substack{\mathfrak p,\ j\geq1\\(N\mathfrak p)^j\leq x}}
+    b_{\mathfrak p,j}\left(1-\frac{(N\mathfrak p)^j}{x}\right)
+   \leq C_Z\sqrt{x}
+\end{equation}
+for all sufficiently large \(x\). A term with \((N\mathfrak p)^j=x\)
+has weight zero, so replacing \(\leq x\) by \(<x\) in the index set
+gives the same sum. The constant and the cutoff may depend on \(Z\).
+\end{theorem}
+
+\subsection{Analytic input for the standard family}
+
+We use the standard continuation and functional equation of
+Godement--Jacquet~\cite{GodementJacquet1972} and Tate in degree
+one~\cite{Tate1967}. For the finite Euler products and their
+absolute convergence on \(\Re s>1\), see
+Jacquet--Shalika~\cite{JacquetShalika1981} and the summary over a
+number field in~\cite[\S\,2.1]{ThornerZhaoRankinSelberg}. We use the
+absolute convergence of the logarithmic series and of its derivative
+on \(\Re s>1\). On the set \(I\) of unramified prime-power
+indices \((\mathfrak p,j)\), write \(a_{\mathfrak p,j}\) for the
+standard power sum \(\sum_k\alpha_{\mathfrak p,k}^j\).
+The corresponding self Rankin--Selberg coefficients are
+\(|a_{\mathfrak p,j}|^2\), so at every real \(\sigma>1\),
+\[
+ \sum_I\frac{|a_{\mathfrak p,j}|}{j q^{j\sigma}}
+ \leq
+ \left(\sum_I\frac{|a_{\mathfrak p,j}|^2}{j q^{j\sigma}}\right)^{1/2}
+ \left(\sum_I\frac{1}{j q^{j\sigma}}\right)^{1/2}<\infty,
+ \qquad q=N\mathfrak p.
+\]
+The two factors are finite by the respective log Euler products.
+The extra logarithmic factor from differentiation is absorbed by
+taking absolute convergence at a slightly smaller real part
+still above \(1\). There are finitely many ramified primes, and
+their local log series converge absolutely there by
+\cite[(2.2)]{ThornerZhaoRankinSelberg}. This also gives
+nonvanishing on \(\Re s>1\).
+
+In the same notation, the archimedean factors are products of
+\(\Gamma_{\mathbb R}(s+\mu)\) and \(\Gamma_{\mathbb C}(s+\mu)\),
+with \(\Re\mu>-1/2\) by~\cite[(2.2)]{ThornerZhaoRankinSelberg}.
+The conductor factor is \(Q^{s/2}\) with \(Q>0\).
+The pole-cleared completion has order at most one and satisfies
+the functional equation with a nonzero root number,
+as recorded in~\cite[\S\,2.1]{ThornerZhaoRankinSelberg}.
+For a pair, multiply the completions of the two individual factors.
+For the separate test \(Z=\zeta_K\), use \(\Xi_K\). This gives a
+pole-cleared completed function
+\[
+ s^m Q_Z^{s/2}G_Z(s)F_Z(s),\qquad F_Z(s)=(s-1)^m Z(s),
+\]
+where \(G_Z\) is a product of the indicated Gamma factors.
+The cleared ordinary function \(F_Z\) is entire of order at most
+one. Indeed, the completed function and the reciprocal Gamma and
+conductor factors have order at most one. Division by \(s^m\)
+has this same growth bound outside the unit disk, and the
+singularity at \(0\) is removable for \(F_Z\).
+On \(\Re s>1/2\), every completion factor in this display is
+finite and nonzero. The functional equation sends a completed
+zero at \(s\) to a completed zero of the dual at \(1-s\). Thus
+Grand RH is equivalent to nonvanishing of each \(F_Z\) on
+\(\Re s>1/2\). In the paired case, a zero of either factor
+gives a zero of their product, since both factors are entire.
+
+\subsection{Mellin transform of the prime-power remainder}
+
+For \(v>1\) and \(\Re s>1\),
+\[
+ \int_v^\infty (1-v/x)x^{-s-1}\,dx=\frac{v^{-s}}{s(s+1)}.
+\]
+The absolute convergence of \eqref{eq:standard-log-derivative}
+justifies summing these integrals. Using
+\(F_Z'/F_Z=m/(s-1)+Z'/Z\), we obtain
+\begin{equation}\label{eq:grand-mellin-transform}
+ \mathcal{M}R_Z(s)
+ =\frac{m}{2(s-1)}+\frac{Z'(s)}{s(s+1)Z(s)}
+ =\frac{F_Z'(s)/F_Z(s)+m(s+2)/2}{s(s+1)}.
+\end{equation}
+The pole correction on the prime side cancels the contribution
+of the pole of \(Z\) at \(1\).
+
+If \eqref{eq:grand-rh-prime-power} holds, apply
+Lemma~\ref{lem:one-sided-mellin} with \(\alpha=1/2\).
+On \(\Re s>1/2\) the poles of \eqref{eq:grand-mellin-transform}
+are exactly the zeros of \(F_Z\). At a real zero \(\beta>1/2\)
+of multiplicity \(j\) the residue is \(j/(\beta(\beta+1))>0\).
+The lemma excludes every pole in this half-plane. Completion
+and reflection yield Grand RH.
+
+Conversely, suppose \(F_Z\) is nonvanishing on \(\Re s>1/2\).
+In its genus-one logarithmic derivative expansion let \(b\) be
+the constant term after isolating the zeros at \(0\) and \(-1\).
+Write \(m_0,m_{-1}\) for their multiplicities. With zeros counted
+with multiplicity, the expansion is
+\[
+ \frac{F_Z'}{F_Z}(s)
+   = b+\frac{m_0}{s}+\frac{m_{-1}}{s+1}
+     +\sum_{\rho\notin\{0,-1\}}
+                  \left(\frac{1}{s-\rho}+\frac1\rho\right).
+\]
+Each term \((s-\rho)^{-1}+\rho^{-1}\), divided by \(s(s+1)\),
+has inverse Mellin transform
+\((x^\rho-x^{-1})/(\rho(\rho+1))\).
+The transforms of \(1-x^{-1}\), \(1-\tfrac12x^{-1}\),
+\(\log x-1+x^{-1}\), and \(-x^{-1}\log x\) supply the four
+elementary terms in the inversion of \eqref{eq:grand-mellin-transform}.
+Hence
+\begin{align}
+ R_Z(x)=\Re\Bigg[&
+ b(1-x^{-1})+m(1-\tfrac12x^{-1})
+ +m_0(\log x-1+x^{-1})-m_{-1}x^{-1}\log x
+ \nonumber\\
+ &+\sum_{\rho\notin\{0,-1\}}
+             \frac{x^\rho-x^{-1}}{\rho(\rho+1)}\Bigg].
+ \label{eq:grand-zeros-inversion}
+\end{align}
+The zero weights \(1/|\rho(\rho+1)|\) are summable, since the
+zero divisor of \(F_Z\) has convergence exponent at most one.
+Every \(\Re\rho\leq 1/2\). The zero series is locally uniformly
+convergent and dominated by a constant times \(\sqrt{x}+x^{-1}\).
+These bounds justify termwise transformation at \(\Re s=2\) and
+give pointwise equality by uniqueness and continuity. The prime
+side is continuous even at a prime-power threshold, since the
+weight there is zero. The elementary terms in
+\eqref{eq:grand-zeros-inversion} are \(O_Z(1+\log x)\).
+It follows that \(|R_Z(x)|=O_Z(\sqrt{x})\), proving
+\eqref{eq:grand-rh-prime-power} and the theorem.
+
+\subsection{Specializations}
+
+For \(Z=\zeta_K\), integrating the step function \(\psi_K\) gives
+\[
+ R_{\zeta_K}(x)=\frac{x}{2}-\frac{1}{x}\int_0^x\psi_K(t)\,dt .
+\]
+By the fieldwise arguments in Sections~\ref{sec:grh}
+and~\ref{sec:grand-research}, this triangular bound is
+equivalent to \eqref{eq:ideal-robin} for that field. Restricting
+these equivalent tests to the cyclotomic fields yields
+Theorem~\ref{thm:dirichlet-cyclotomic}. For a
+unitary Hecke character \(\chi\) outside the pure norm family,
+the paired coefficient is
+\[
+ b_{\mathfrak p,j}=2\Re(\alpha_\chi(\mathfrak p)^j)\log N\mathfrak p,
+ \qquad \alpha_\chi(\mathfrak p)=0\text{ at ramified primes}.
+\]
+This is the degree-one case of \eqref{eq:grand-rh-prime-power}.
+Products of unitary cuspidal standard factors inherit the
+completed zero condition from their factors.
+
+\section{Formal verification and source availability}
+\label{sec:formalization-summary}
+
+The Lean counterpart of Theorem~\ref{thm:ideal-robin} is
+\path{dedekindRH_iff_correctedIdealRobin}.
+The statements of Theorems~\ref{thm:dirichlet-cyclotomic}
+and~\ref{thm:dedekind-erh} appear in the Mathlib-only
+\path{Challenge.lean}. Their proofs in \path{Solution.lean} are
+\begin{center}
+\small
+\path{dirichletGRH_iff_cyclotomicCorrectedIdealRobin}\\
+\path{dedekindERH_iff_correctedIdealRobin}.
+\end{center}
+The source proves both implications for the ideal criterion and the
+cyclotomic factorization \eqref{eq:cyclotomic-product}. The release's Comparator
+check covers the two generalized statements and the three classical
+statements. Appendix~\ref{sec:formalization} describes statement
+comparison, axiom audits, and kernel replay.
+
+In the research source,
+\path{grandRH_iff_triangularPrimePowerBound} proves the analytic
+equivalence for an indexed family supplied with its Euler product,
+completion, growth, and functional equation. These hypotheses are
+explicit in \path{HasStandardAutomorphicAnalytics}.
+Section~\ref{sec:grand-research} uses the cited classical theorems to
+supply them in the mathematical argument. Supplying them in Lean for
+the full family of standard automorphic \(L\)-functions remains open.
+The checked Dedekind specialization and work on the rank-one
+construction are described in Appendix~\ref{app:hecke-formalization}.
+
+The source, theorem boundary, and verification instructions are
+available at \url{\repositoryurl}.
+
+\appendix
+
+\section{The classical Robin criteria}\label{app:classical-criteria}
 
 For a positive integer $n$, let
 \[
@@ -201,8 +813,8 @@ Pereira~\cite{CostaPereira1985,CostaPereira1987}.  Our purpose is not to claim
 new priority for those ingredients, but to give a complete proof whose exact
 logical and numerical dependencies have been checked.
 
-The new contribution is consequently one of reconstruction, reusable formal
-infrastructure, and verification.  The analytic argument is carried through
+For the classical criteria, the contribution is a reconstruction with reusable
+formal infrastructure and independent verification. The analytic argument is carried through
 a multiplicity-counted zero divisor; Landau's positive-transform principle is
 isolated as a generic theorem about moment-generating functions; the finite
 range is reduced to a reusable soundness theorem plus exact data; and the
@@ -239,9 +851,9 @@ and
  \Longrightarrow\ \M(L_P)>0\ \text{for arbitrarily large }P.
 \]
 The finite theorem joins the first chain to the exact cutoff $5040$, and the
-LCM identity joins the second chain to literal integer counterexamples.  The
-dedicated main-text account of the Lean organization and checking is confined
-to Section~\ref{sec:formalization}; the appendices contain supporting audits.
+LCM identity joins the second chain to literal integer counterexamples.
+Appendix~\ref{sec:formalization} describes the Lean organization and checking.
+The remaining appendices contain supporting audits.
 
 \section{Roadmap and informal guide}\label{sec:informal}
 
@@ -1672,238 +2284,8 @@ The corresponding Lean declarations are
 forward argument and bounded verification; the converse calls the existing
 LCM oscillation theorem directly.
 
-\section{Extensions to generalized Riemann hypotheses}\label{sec:grh}
-
-The following results concern ideal divisibility and prime-power sums.
-The formal verification inventory in Section~\ref{sec:formalization}
-specifies the results currently checked in Lean.
-
-\begin{theorem}[Corrected ideal Robin criterion]\label{thm:ideal-robin}
-Let $K$ be a number field, let $D_K$ be its discriminant, and write
-$\kappa_K=\operatorname{Res}_{s=1}\zeta_K(s)$. For a nonzero integral
-ideal $\mathfrak a$, write $\sigma_K(\mathfrak a)
-=\sum_{\mathfrak d\mid\mathfrak a}N\mathfrak d$, with the sum over integral
-ideal divisors and $N$ the absolute norm. Then the nontrivial zeros of
-$\zeta_K$ lie on $\operatorname{Re}s=1/2$ if and only if
-\begin{equation}\label{eq:ideal-robin}
-\frac{\sigma_K(\mathfrak a)}{N\mathfrak a}
-\le e^\gamma\kappa_K
-\left(\log\log N\mathfrak a+
-\frac{12+3\log|D_K|}{\sqrt{\log N\mathfrak a}}\right)
-\end{equation}
-for all $\mathfrak a$ of sufficiently large norm, with a threshold
-depending on $K$.
-\end{theorem}
-
-\begin{proof}
-Write $q=N\mathfrak p$ for the norm of a prime ideal. Every sum over $q$
-counts prime ideals with multiplicity of their norms. Put
-\[
- \theta_K(x)=\sum_{q\le x}\log q,\qquad
- \psi_K(x)=\sum_{q^j\le x}\log q,\qquad E(x)=\psi_K(x)-x .
-\]
-Define $A(x)=\sum_{q^j\le x}1/(jq^j)$ and
-\[
- H(x)=-\int_x^\infty E(t)\frac{1+\log t}{t^2\log^2 t}\,dt .
-\]
-Partial summation with the number-field Mertens constant
-\cite{GarciaLeeNumberFieldMertens} gives
-\begin{equation}\label{eq:ideal-mertens}
- A(x)=\gamma+\log\kappa_K+\log\log x+\frac{E(x)}{x\log x}+H(x).
-\end{equation}
-The fixed-field prime ideal theorem with its zero-free-region error
-justifies convergence. A fixed exceptional zero below $1$ is absorbed in
-that error for sufficiently large $x$.
-
-For the forward implication take $x=\log N\mathfrak a$. The local
-factor for an ideal with exponent $k$ at $\mathfrak p$ satisfies
-\[
- \log\sum_{j=0}^k q^{-j}\le\sum_{j=1}^k\frac1{j q^j}.
-\]
-For $k\ge1$, the tail of the logarithmic series is at most
-$q^{-k-1}/((k+1)(1-q^{-1}))\le q^{-k-1}$, and
-$\log(1-q^{-k-1})\le-q^{-k-1}$. The $k=0$ case is equality.
-Each included prime power has cost $\log q$. Its contribution divided
-by cost is $1/(q^j\log(q^j))$, which decreases as $q^j$ increases.
-Subtract the ratio at $x$ times the total cost $x$ and bound the
-remaining contributions by summing over all $q^j\le x$. This gives
-\[
- \log\frac{\sigma_K(\mathfrak a)}{N\mathfrak a}
- \le A(x)+\frac{x-\psi_K(x)}{x\log x}
- = \gamma+\log\kappa_K+\log\log x+H(x).
-\]
-
-Put $T(x)=\int_x^\infty E(t)t^{-2}\,dt$ and
-$F_K(s)=(s-1)\zeta_K(s)$. With
-$\Phi(s)=(F_K'(s)/F_K(s)+1)/s$, the weighted Mellin transform
-of $-T$ is $(\Phi(s)-\Phi(1))/(1-s)$ for $\operatorname{Re}s>1$.
-The Hadamard product for the entire completion $\Xi_K$ supplies
-the completed-zero terms in $\Phi$. The archimedean logarithmic
-derivative contributes digamma terms whose series are supported
-on $-2n$ and $-n$ for $n\ge1$, with the real and complex place
-multiplicities, and a separate term at the origin. Taking the
-divided difference turns the term $1/[\rho(s-\rho)]$ into
-$1/[\rho(1-\rho)(s-\rho)]$. Mellin uniqueness on the line
-$\operatorname{Re}s=2$ identifies $-xT(x)$ almost everywhere
-with the real part of the corresponding power series. Its completed-zero terms are
-$x^\rho/[\rho(1-\rho)]$. The origin contributes a constant and
-a logarithm, and the absolutely summable Gamma terms stay bounded.
-
-Under Dedekind RH the absolute values of the completed-zero terms
-sum to $\sqrt{x} B_K$, where
-$B_K=\sum_\rho(1/4+(\operatorname{Im}\rho)^2)^{-1}$ counts
-multiplicities. Subtract the completed logarithmic derivatives at
-$2$ and $-1$. The functional equation relates these values, and
-each zero contributes $3/(9/4+(\operatorname{Im}\rho)^2)$ to
-the real part of the difference. Comparing summands gives
-\[
- B_K\le 6\operatorname{Re}\frac{\Xi_K'(2)}{\Xi_K(2)}
-      \le 9+3\log|D_K|.
-\]
-At $2$ the two Gamma factors and $\zeta_K'/\zeta_K$ have
-nonpositive real contributions. This leaves the two pole factors
-and the discriminant term in the upper bound.
-The origin and Gamma terms are $O_K(1+\log x)$, so
-$|T(x)|\le (B_K+1)/\sqrt{x}$ almost everywhere beyond a cutoff.
-Continuity of $T$ extends this bound to every sufficiently large $x$. For
-$w(t)=(1+\log t)/\log^2 t$, integration by parts gives
-$H(x)=-w(x)T(x)-\int_x^\infty w'(t)T(t)\,dt$, whence
-\[
- H(x)\le \frac{B_K+1}{\sqrt{x}\log x}
-       +\frac{7(B_K+1)}{\sqrt{x}\log^2 x}
-\]
-eventually. The leading coefficient $B_K+1$ is strictly below
-$12+3\log|D_K|$, so exponentiation gives \eqref{eq:ideal-robin}.
-
-For the reverse direction use
-$\mathfrak L_x=\prod_{q^j\le x}\mathfrak p$.
-Its log norm is $\psi_K(x)$ and its log divisor ratio is
-$A(x)+O_K(1/(\sqrt{x}\log x))$. Indeed the local discrepancy is
-$O(q^{-\lfloor\log x/\log q\rfloor-1})$. For $q\le\sqrt{x}$ use the
-bound $1/x$ and count prime ideals. For the remaining $q\le x$ sum
-$q^{-2}$. Concavity gives
-$\log\log\psi_K(x)\le\log\log x+E(x)/(x\log x)$.
-Applying \eqref{eq:ideal-robin} to $\mathfrak L_x$ in
-\eqref{eq:ideal-mertens} yields $H(x)\le O_K(1/(\sqrt{x}\log x))$.
-With $w(t)=(1+\log t)/\log^2t$, integration by parts gives
-\[
- H_0(x):=-\int_x^\infty E(t)t^{-2}\,dt
-  =\frac{H(x)}{w(x)}+\int_x^\infty H(t)(1/w)'(t)\,dt
-  \le O_K(x^{-1/2}),
-\]
-since $(1/w)'(t)\ge0$. Put
-$F(s)=-\zeta_K'(s)/(s\zeta_K(s))-1/(s-1)$.
-The transform of $H_0(x)$ against $x^{-s}\,dx$ on $x\ge1$ is
-$(F(s)-F(1))/(s-1)$ for $\operatorname{Re}s>1$.
-The transform of $C_Kx^{-1/2}-H_0(x)$, cut off below a fixed large
-$x$ so that the integrand is nonnegative, has the same
-singularities in $\operatorname{Re}s>1/2$ as the negative of that
-Mellin transform. If an off-line zero lies in this half-plane,
-Landau's theorem forces a real singularity at the convergence
-abscissa. At a real zero $\beta$ of multiplicity $j$, the residue is
-$-j/[\beta(1-\beta)]$. The resulting negative divergence contradicts
-nonnegativity of the transform on the real line to its right.
-The functional equation then gives the other half of the strip.
-\end{proof}
-
-\begin{corollary}[Dirichlet GRH and Dedekind ERH]
-Every zero in the open critical strip of every Dirichlet $L$-function,
-over all positive moduli and all characters, has real part $1/2$ if
-and only if \eqref{eq:ideal-robin} holds for every
-$K=\mathbb Q(\zeta_d)$, $d\ge1$. The same inequality over every number
-field $K$ is equivalent to the critical-line assertion for the Dedekind
-zeta function of every number field.
-\end{corollary}
-
-\begin{proof}
-In the cyclotomic case $\zeta_K$ is the product of the primitive
-Dirichlet $L$-functions associated with characters modulo $d$.
-The factors have no poles in the open strip, so the zero condition
-for the product gives the condition for each factor. Every primitive
-Dirichlet character occurs at its conductor. Removing or adding
-the finite Euler factors for imprimitive characters does not change
-the zeros in the open strip. The all-field statement follows by
-applying Theorem~\ref{thm:ideal-robin} to each $K$.
-\end{proof}
-
-\begin{theorem}[Triangular prime-power criterion for grand RH]
-Consider the normalized unitary cuspidal standard automorphic
-$L$-functions of every rank over every number field. For each
-$L(s,\pi)$, put $Z(s)=L(s,\pi)L(s,\tilde\pi)$. Normalize a pure
-norm twist by translation in the imaginary direction, so its paired
-product is $\zeta_K^2$. One can equivalently test $\zeta_K$ because
-the remainder for $\zeta_K^2$ is twice that for $\zeta_K$.
-Write $m$ for the pole order of $Z$ at $1$. For $\Re s>1$ write
-$-Z'(s)/Z(s)=\sum_{\mathfrak p}\sum_{j\geq 1}
- b_{\mathfrak p,j}(N\mathfrak p)^{-js}$, where $\mathfrak p$ ranges
-over the nonzero prime ideals of the field.
-
-Every zero of every pole-cleared completed standard $L$-function in
-this family has real part $1/2$ if and only if, for each $Z$, there is
-a real constant $C_Z$ such that
-\begin{equation}\label{eq:grand-rh-prime-power}
- R_Z(x):=\frac{mx}{2}-
- \sum_{\mathfrak p,j:\,j\geq 1,\,(N\mathfrak p)^j<x}
- b_{\mathfrak p,j}\left(1-\frac{(N\mathfrak p)^j}{x}\right)
- \le C_Z\sqrt{x}
-\end{equation}
-for all sufficiently large $x$.
-\end{theorem}
-
-\begin{proof}
-Conjugation makes $b_{\mathfrak p,j}$ real. The standard Euler
-products, completion, and functional equation are described in
-\cite[\S\,2]{ThornerZhaoRankinSelberg}. Set $F(s)=(s-1)^mZ(s)$.
-This is entire of order at most one. Indeed, one can recover it from
-the pole-cleared completion by reciprocal Gamma and conductor
-factors and division by $s^m$. The reciprocal Gamma functions have
-order one by Euler's product, and division by $s^m$ is bounded on
-the complement of the unit disk. The apparent singularity at zero
-is removable because $F$ is entire.
-
-On $\Re s>1/2$ the completion factors are nonzero, since every
-shifted Gamma argument has positive real part there. The completed
-functional equation relates a zero at $s$ to a zero of the dual at
-$1-s$. These facts transfer the completed zero assertion to
-nonvanishing of $F$ on $\Re s>1/2$, and conversely across the family.
-The archimedean bounds used for the transfer are recorded in
-\cite[\S\,6]{LagariasAutomorphicLi} and
-\cite[\S\,2]{ThornerZhaoRankinSelberg}.
-
-The exact Mellin transform, on $\Re s>1$, is
-\[
- \int_1^\infty R_Z(x)x^{-s-1}\,dx
- =\frac{m}{2(s-1)}+\frac{Z'(s)}{s(s+1)Z(s)}
- =\frac{F'(s)/F(s)+m(s+2)/2}{s(s+1)} .
-\]
-The pole correction cancels the apparent pole at $s=1$. Given
-\eqref{eq:grand-rh-prime-power}, Landau's theorem applied to the
-nonnegative tail of $C_Z\sqrt{x}-R_Z(x)$ forces $F$ to be nonzero
-on $\Re s>1/2$. A real zero $\beta>1/2$ of multiplicity $j$ would
-give the comparison transform residue $-j/[\beta(\beta+1)]$.
-The convergence-abscissa argument also excludes nonreal zeros
-in the same half-plane.
-
-Conversely, suppose $F$ is nonzero on $\Re s>1/2$. In the genus-one
-expansion of its logarithmic derivative let $b$ be the constant
-term, and let $m_0,m_{-1}$ be the zero multiplicities at $0,-1$.
-The divided zero term at $\rho\notin\{0,-1\}$ has inverse
-Mellin transform $(x^\rho-x^{-1})/[\rho(\rho+1)]$.
-Matching transforms gives, for almost every $x>1$,
-\begin{align*}
- R_Z(x)=\Re\Bigg[&
- b(1-x^{-1})+m(1-\tfrac12x^{-1})
- +m_0(\log x-1+x^{-1})-m_{-1}x^{-1}\log x\\
- &+\sum_{\substack{\rho:\,F(\rho)=0\\\rho\notin\{0,-1\}}}
- \frac{x^\rho-x^{-1}}{\rho(\rho+1)}\Bigg].
-\end{align*}
-The summation counts multiplicity. Order at most one implies
-summability of $1/|\rho(\rho+1)|$ away from $0,-1$. Every zero
-appearing in the sum has real part at most $1/2$, so the right
-side is $O_Z(\sqrt{x})$. Continuity of the locally finite
-triangular sum gives the pointwise bound in
-\eqref{eq:grand-rh-prime-power}.
-\end{proof}
+\section{Checked specializations and the Hecke construction}
+\label{app:hecke-formalization}
 
 Degree one includes unitary Hecke $L$-functions. For the trivial
 Hecke character of a field $K$, Lean verifies that the triangular
@@ -2706,10 +3088,10 @@ NanoDa; requires the project's Lean~4.33.1 toolchain; performs the sequential
 project build; and runs the five Comparator stages listed above.  The
 checked-in
 \codelink{.github/workflows/ci.yml}{CI workflow} is the complete executable
-recipe: it additionally validates licensing and release metadata, builds the
-paper and API documentation, transfers the completed Lean artifacts to the
-downstream jobs, and publishes a release only if every dependency job,
-including Comparator, succeeds.
+recipe for the release. It validates licensing and metadata, builds the
+paper and Lean sources, and passes the required artifacts to downstream
+jobs. Publication requires successful statement matching and
+independent kernel replay.
 
 \paragraph{Observed cost and hardware.}
 The hosted workflow uses GitHub's standard public
@@ -2724,8 +3106,8 @@ should be budgeted at roughly two hours; one measured cold build took about
 
 The independent pipeline is longer.  In the representative source-changing
 \runlink{33661242178}{successful run of commit \texttt{4d0b59e}}, the Lean
-job took 1~hour 16~minutes, API documentation 16~minutes 58~seconds,
-Comparator and its two replays 2~hours 39~minutes, and total wall time was
+job took 1~hour 16~minutes, Comparator and its two replays
+2~hours 39~minutes, and total wall time was
 3~hours 56~minutes 59~seconds because downstream jobs overlap.  In a
 \runlink{33477843519}{cache-reusing successful run}, the Lean job fell to
 15~minutes 36~seconds, while Comparator still took 2~hours 17~minutes.
@@ -2769,8 +3151,6 @@ mathematical and scholarly review obligations.  The explicit expansion of
 Mathlib's $\RH$ predicate, the source-to-module table, and the provenance
 ledger make that comparison inspectable rather than implicit.  The present
 status is self-assessed; no independent expert review is claimed.
-
-\appendix
 
 \section{Exact rational coefficient audit}\label{app:coefficients}
 
@@ -3097,6 +3477,41 @@ are the work of the Robin1984 project; credits for external Lean
 infrastructure are recorded above and in the repository metadata.
 
 \begin{thebibliography}{99}
+
+\bibitem{Alpoge2026}
+L. Alp\"oge, \emph{A remark}, 20 November 2026,
+\url{https://alpo.ge/remark.pdf}.
+
+\bibitem{Sutherland2026}
+A. V. Sutherland, \emph{Verification files for the Lean proof of the
+Riemann Hypothesis}, 23 November 2026 record,
+\url{https://math.mit.edu/~drew/grh/}.
+
+\bibitem{GodementJacquet1972}
+R. Godement and H. Jacquet, \emph{Zeta Functions of Simple Algebras},
+Lecture Notes in Mathematics, vol.~260, Springer, 1972.
+\href{https://doi.org/10.1007/BFb0070263}{doi:10.1007/BFb0070263}.
+
+\bibitem{JacquetShalika1981}
+H. Jacquet and J. A. Shalika, \emph{On Euler products and the
+classification of automorphic representations I, II},
+Amer. J. Math. \textbf{103} (1981), 499--558 and 777--815.
+
+\bibitem{LagariasOdlyzko1977}
+J. C. Lagarias and A. M. Odlyzko, \emph{Effective versions of the
+Chebotarev density theorem}, in \emph{Algebraic Number Fields},
+A. Fr\"ohlich (ed.), Academic Press, 1977, pp.~409--464.
+
+\bibitem{Tate1967}
+J. T. Tate, \emph{Fourier analysis in number fields and Hecke's
+zeta-functions}, in \emph{Algebraic Number Theory},
+J. W. S. Cassels and A. Fr\"ohlich (eds.), Academic Press, 1967,
+pp.~305--347.
+
+\bibitem{WashingtonCyclotomic}
+L. C. Washington, \emph{Introduction to Cyclotomic Fields}, 2nd ed.,
+Graduate Texts in Mathematics, vol.~83, Springer, 1997.
+\href{https://doi.org/10.1007/978-1-4612-1934-7}{doi:10.1007/978-1-4612-1934-7}.
 
 \bibitem{GarciaLeeNumberFieldMertens}
 S. R. Garcia and E. S. Lee,
