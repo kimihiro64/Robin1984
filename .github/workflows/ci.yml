@@ -95,11 +95,11 @@ jobs:
       - uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9
         with:
           build: false
-      - name: Fetch the pinned project dependencies
-        run: lake update
-      - name: Fetch the pinned documentation dependencies
-        working-directory: docbuild
-        run: lake update
+      - name: Fetch the pinned project and documentation dependencies
+        run: |
+          lake resolve-deps
+          (cd docbuild && lake resolve-deps)
+          git diff --exit-code -- lean-toolchain lakefile.lean lake-manifest.json docbuild/lean-toolchain docbuild/lakefile.toml docbuild/lake-manifest.json
       - name: Exercise producer and release-consumer packaging
         shell: pwsh
         run: ./test/release_licensing_test.ps1
@@ -224,16 +224,17 @@ jobs:
       - uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9
         with:
           build: false
-      - name: Fetch dependencies and caches
+      - name: Fetch pinned dependencies and caches
         run: |
-          lake update
+          lake resolve-deps
           lake exe cache get
+          git diff --exit-code -- lean-toolchain lakefile.lean lake-manifest.json
       - name: Restore the repository build cache
         id: restore-project-build
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: .lake/build
-          key: robin1984-linux-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', '*.lean', 'Robin1984/**/*.lean') }}
+          key: robin1984-linux-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', '*.lean', 'Robin1984/**/*.lean', 'TauCeti/**/*.lean', 'DedekindZeta/**/*.lean') }}
       - name: Check imports are narrow and nonredundant
         shell: pwsh
         run: ./scripts/check-imports.ps1
@@ -241,13 +242,15 @@ jobs:
         shell: pwsh
         run: ./scripts/check-provenance.ps1
       - name: Build the formalization
-        run: lake build
+        run: |
+          lake build
+          git diff --exit-code -- lean-toolchain lakefile.lean lake-manifest.json
       - name: Save the repository build cache
         if: steps.restore-project-build.outputs.cache-hit != 'true'
         uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: .lake/build
-          key: robin1984-linux-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', '*.lean', 'Robin1984/**/*.lean') }}
+          key: robin1984-linux-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', '*.lean', 'Robin1984/**/*.lean', 'TauCeti/**/*.lean', 'DedekindZeta/**/*.lean') }}
       - name: Upload the built formalization
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
@@ -269,8 +272,12 @@ jobs:
       - uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9
         with:
           build: false
-      - name: Fetch dependencies
-        run: lake update
+      - name: Fetch pinned dependencies and caches
+        run: |
+          lake resolve-deps
+          lake exe cache get
+          (cd docbuild && lake resolve-deps)
+          git diff --exit-code -- lean-toolchain lakefile.lean lake-manifest.json docbuild/lean-toolchain docbuild/lakefile.toml docbuild/lake-manifest.json
       - name: Restore the built formalization
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
@@ -285,7 +292,7 @@ jobs:
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: docbuild/.lake/build
-          key: robin1984-docs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', 'docbuild/lean-toolchain', 'docbuild/lakefile.toml', 'docbuild/lake-manifest.json', '*.lean', 'Robin1984/**/*.lean') }}
+          key: robin1984-docs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', 'docbuild/lean-toolchain', 'docbuild/lakefile.toml', 'docbuild/lake-manifest.json', '*.lean', 'Robin1984/**/*.lean', 'TauCeti/**/*.lean', 'DedekindZeta/**/*.lean') }}
           restore-keys: |
             robin1984-docs-${{ runner.os }}-${{ runner.arch }}-
       - name: Build doc-gen4 output
@@ -295,6 +302,8 @@ jobs:
           DISABLE_EQUATIONS: "1"
           DOCGEN_SRC: github
         run: lake build Robin1984:docs
+      - name: Check the dependency pins
+        run: git diff --exit-code -- lean-toolchain lakefile.lean lake-manifest.json docbuild/lean-toolchain docbuild/lakefile.toml docbuild/lake-manifest.json
       - name: Prepare the offline API-documentation landing page
         shell: pwsh
         run: ./scripts/prepare-api-docs.ps1 -DocumentationRoot docbuild/.lake/build/doc
@@ -303,7 +312,7 @@ jobs:
         uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: docbuild/.lake/build
-          key: robin1984-docs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', 'docbuild/lean-toolchain', 'docbuild/lakefile.toml', 'docbuild/lake-manifest.json', '*.lean', 'Robin1984/**/*.lean') }}
+          key: robin1984-docs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', 'docbuild/lean-toolchain', 'docbuild/lakefile.toml', 'docbuild/lake-manifest.json', '*.lean', 'Robin1984/**/*.lean', 'TauCeti/**/*.lean', 'DedekindZeta/**/*.lean') }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: api-documentation
@@ -322,8 +331,6 @@ jobs:
       - uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9
         with:
           build: false
-      - name: Fetch dependencies
-        run: lake update
       - name: Restore the built formalization
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
