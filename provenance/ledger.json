@@ -1434,6 +1434,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeAdeleLattice.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The additive strong approximation and lattice theorem for number-field adeles in Tate's thesis.",
+      "formalization_note": "Uses the product formula, local finite residue arithmetic, the Chinese remainder theorem, and the archimedean integer lattice to prove discreteness and compactness of the additive adelic quotient.",
+      "content_basis": "Reviewed the open neighborhood at zero, finite valuation approximation, compact product of local integer rings, archimedean reduction, and compactness of the image in the quotient.",
+      "dependency_status": "Uses pinned Mathlib adeles, quotients, and the mixed embedding, with the verified local arithmetic and idelic product formula in HeckeEulerProduct.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeArchimedean.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The unitary characters of the real and complex local multiplicative groups and their archimedean Gamma factors in Tate's thesis.",

@@ -1038,25 +1038,30 @@ open MeasureTheory Topology
 variable {K : Type*} [Field K] [NumberField K]
 variable (p : HeightOneSpectrum (RingOfIntegers K))
 
-private theorem exists_lt_one_adicCompletionIntegers_sub
-    (b : p.adicCompletionIntegers K) :
+/-- A global integer approximates a local integer to any prescribed
+nonzero valuation bound at most one. -/
+theorem exists_adicCompletionIntegers_approximation
+    (b : p.adicCompletionIntegers K) (r : p.adicCompletion K) (hr : Not (r = 0))
+    (hrBound : (Valued.v : Valuation (p.adicCompletion K) (WithZero (Multiplicative Int)))
+      r <= 1) :
     Exists (fun a : RingOfIntegers K =>
       (Valued.v : Valuation (p.adicCompletion K) (WithZero (Multiplicative Int)))
         ((algebraMap (RingOfIntegers K) (p.adicCompletion K) a) -
-          (b : p.adicCompletion K)) < 1) := by
+          (b : p.adicCompletion K)) < Valued.v r) := by
   let V := (Valued.v : Valuation (p.adicCompletion K) (WithZero (Multiplicative Int)))
+  have hrV : Not (V r = 0) := (V.ne_zero_iff).mpr hr
+  have hrRestricted : Not (V.restrict r = 0) := fun h => hrV (V.restrict_eq_zero_iff.mp h)
   have hnear : Filter.Eventually (fun x : p.adicCompletion K =>
-      V (x - (b : p.adicCompletion K)) < 1) (nhds (b : p.adicCompletion K)) := by
+      V (x - (b : p.adicCompletion K)) < V r) (nhds (b : p.adicCompletion K)) := by
     apply Valued.mem_nhds.mpr
-    refine Exists.intro 1 ?_
+    refine Exists.intro (Units.mk0 (V.restrict r) hrRestricted) ?_
     intro x hx
-    change V.restrict (x - (b : p.adicCompletion K)) < 1 at hx
-    change V (x - (b : p.adicCompletion K)) < 1
-    exact V.restrict_lt_one_iff.mp hx
+    change V.restrict (x - (b : p.adicCompletion K)) < V.restrict r at hx
+    exact V.restrict_lt_iff.mp hx
   have hK := (HeightOneSpectrum.denseRange_algebraMap (K := K) p).mem_nhds hnear
   choose k hk using hK
   let x := algebraMap K (p.adicCompletion K) k
-  have hx : V (x - (b : p.adicCompletion K)) < 1 := hk
+  have hx : V (x - (b : p.adicCompletion K)) < V r := hk
   have hb : V (b : p.adicCompletion K) <= 1 := b.property
   have hX : V x <= 1 := by
     calc
@@ -1064,19 +1069,19 @@ private theorem exists_lt_one_adicCompletionIntegers_sub
         rw [sub_add_cancel]
       _ <= max (V (x - (b : p.adicCompletion K))) (V (b : p.adicCompletion K)) :=
         V.map_add _ _
-      _ <= 1 := max_le (le_of_lt hx) hb
+      _ <= 1 := max_le ((le_of_lt hx).trans hrBound) hb
   have hvK : p.valuation K k <= 1 := by
     rw [<- HeightOneSpectrum.valuedAdicCompletion_eq_valuation' (v := p)]
     exact hX
-  have hO := p.exists_valuation_sub_lt_of_integer hvK 1
+  have hO := p.exists_valuation_sub_lt_of_integer hvK (Units.mk0 (V r) hrV)
   choose a ha using hO
   refine Exists.intro a ?_
-  have ha' : V (algebraMap (RingOfIntegers K) (p.adicCompletion K) a - x) < 1 := by
+  have ha' : V (algebraMap (RingOfIntegers K) (p.adicCompletion K) a - x) < V r := by
     rw [IsScalarTower.algebraMap_apply (RingOfIntegers K) K (p.adicCompletion K)]
     dsimp [x]
     rw [<- map_sub]
     let z := algebraMap (RingOfIntegers K) K a - k
-    change Valued.v (z : p.adicCompletion K) < (1 : WithZero (Multiplicative Int))
+    change Valued.v (z : p.adicCompletion K) < V r
     rw [HeightOneSpectrum.valuedAdicCompletion_eq_valuation' (v := p)]
     exact ha
   let A := algebraMap (RingOfIntegers K) (p.adicCompletion K) a
@@ -1085,7 +1090,17 @@ private theorem exists_lt_one_adicCompletionIntegers_sub
         V ((A - x) + (x - (b : p.adicCompletion K))) := by
       rw [sub_add_sub_cancel]
     _ <= max (V (A - x)) (V (x - (b : p.adicCompletion K))) := V.map_add _ _
-    _ < 1 := max_lt ha' hx
+    _ < V r := max_lt ha' hx
+
+private theorem exists_lt_one_adicCompletionIntegers_sub
+    (b : p.adicCompletionIntegers K) :
+    Exists (fun a : RingOfIntegers K =>
+      (Valued.v : Valuation (p.adicCompletion K) (WithZero (Multiplicative Int)))
+        ((algebraMap (RingOfIntegers K) (p.adicCompletion K) a) -
+          (b : p.adicCompletion K)) < 1) := by
+  have h := exists_adicCompletionIntegers_approximation p b (1 : p.adicCompletion K)
+    one_ne_zero (by simp)
+  simpa only [map_one] using h
 
 
 
