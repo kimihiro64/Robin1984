@@ -1,5 +1,6 @@
 import Mathlib.Analysis.Normed.Group.FunctionSeries
 import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
+import Mathlib.MeasureTheory.Group.Integral
 import Mathlib.MeasureTheory.Integral.Prod
 import Robin1984.GRH.HeckeTateThetaQuotient
 
@@ -256,5 +257,115 @@ theorem integrable_heckeTateThetaNormOneClass_dual_expMoment
     ((continuous_heckeFiniteFourierIntegral_TateTest nu chi).comp continuous_neg) W hW
     (fun y hy => hV.2 (-y) (hV' y hy)) _ ENNReal.toReal_nonneg
     (fun y => norm_heckeFiniteFourierIntegral_TateTest_le nu chi (-y)) a
+
+/-- The restriction of a unitary Hecke character to norm one is a continuous class character. -/
+noncomputable def heckeNormOneClassCharacter (chi : UnitaryHeckeCharacter K) :
+    ContinuousMonoidHom (heckeNormOneIdeleClass K) Circle := by
+  let H := heckeNormOneIdeles K
+  let P := heckePrincipalNormOneIdele K
+  let f := chi.val.toMonoidHom.comp H.subtype
+  have h : P.range <= f.ker := by
+    intro a ha
+    choose b hb using ha
+    rw [<- hb]
+    exact chi.property b
+  refine { toMonoidHom := QuotientGroup.lift P.range f h, continuous_toFun := ?_ }
+  apply (QuotientGroup.isQuotientMap_mk P.range).continuous_iff.mpr
+  exact chi.val.continuous.comp continuous_subtype_val
+
+/-- Evaluating the class character on a representative recovers the Hecke character. -/
+@[simp] theorem heckeNormOneClassCharacter_mk (chi : UnitaryHeckeCharacter K)
+    (a : heckeNormOneIdeles K) :
+    heckeNormOneClassCharacter chi
+      (QuotientGroup.mk' (heckePrincipalNormOneIdele K).range a) = chi.val a.val := rfl
+
+/-- A nontrivial unitary character has zero integral against a left-invariant measure. -/
+theorem integral_continuousCircleCharacter_eq_zero
+    {G : Type*} [Group G] [TopologicalSpace G] [MeasurableSpace G]
+    [BorelSpace G] [IsTopologicalGroup G]
+    (mu : Measure G) [mu.IsMulLeftInvariant]
+    (chi : ContinuousMonoidHom G Circle)
+    (b : G) (hb : Not (chi b = 1)) :
+    (integral mu (fun a => ((chi a : Circle) : Complex))) = 0 := by
+  let F (a : G) : Complex := chi a
+  let I : Complex := integral mu F
+  have h : integral mu (fun a => F (b * a)) = integral mu F :=
+    integral_mul_left_eq_self F b
+  have hMul : (fun a => F (b * a)) = (fun a => F b * F a) := by
+    funext a
+    change ((chi (b * a) : Circle) : Complex) = _
+    rw [map_mul]
+    rfl
+  rw [hMul, integral_const_mul] at h
+  change F b * I = I at h
+  have hNe : Not (F b = 1) := by
+    intro hOne
+    apply hb
+    exact Subtype.ext hOne
+  have hZero : (F b - 1) * I = 0 := by rw [sub_mul, one_mul, h, sub_self]
+  exact (mul_eq_zero.mp hZero).resolve_left (sub_ne_zero.mpr hNe)
+
+private abbrev ClassCoordinates (K : Type*) [Field K] [NumberField K] :=
+  Prod Real (heckeNormOneIdeleClass K)
+
+/-- The positive logarithmic-norm half of product measure on the class coordinates. -/
+noncomputable def heckePositiveThetaMeasure
+    [MeasurableSpace (heckeNormOneIdeleClass K)]
+    (mu : Measure (heckeNormOneIdeleClass K)) : Measure (ClassCoordinates K) :=
+  (volume.restrict (Set.Ioi (0 : Real))).prod mu
+
+/-- The positive theta integral weighted by a norm-one Hecke class character. -/
+noncomputable def heckeTateThetaMellinTail
+    [MeasurableSpace (heckeNormOneIdeleClass K)]
+    (mu : Measure (heckeNormOneIdeleClass K))
+    (f : SchwartzMap (mixedEmbedding.mixedSpace K) Complex)
+    (T : TateFiniteAdeles K -> Complex) (chi : UnitaryHeckeCharacter K) :
+    Complex -> Complex :=
+  heckeMellinTail (heckePositiveThetaMeasure mu)
+    (fun p => ((heckeNormOneClassCharacter chi p.2 : Circle) : Complex) *
+      heckeTateThetaNormOneClass f T p.1 p.2) (fun p => Real.exp p.1)
+
+/-- Absolute moments of the theta series give an entire character-weighted Mellin tail. -/
+theorem differentiable_heckeTateThetaMellinTail
+    [MeasurableSpace (heckeNormOneIdeleClass K)] [BorelSpace (heckeNormOneIdeleClass K)]
+    (mu : Measure (heckeNormOneIdeleClass K)) [IsFiniteMeasure mu]
+    (f : SchwartzMap (mixedEmbedding.mixedSpace K) Complex)
+    (T : TateFiniteAdeles K -> Complex) (hT : Continuous T)
+    (S : Set (TateFiniteAdeles K)) (hS : IsCompact S)
+    (hST : forall z, Not (Membership.mem S z) -> T z = 0)
+    (B : Real) (hB : 0 <= B) (hBT : forall z, norm (T z) <= B)
+    (chi : UnitaryHeckeCharacter K) :
+    Differentiable Complex (heckeTateThetaMellinTail mu f T chi) := by
+  let q := heckeNormOneClassCharacter chi
+  let r (p : ClassCoordinates K) := Real.exp p.1
+  have hr : Continuous r := Real.continuous_exp.comp continuous_fst
+  have hq : Continuous (fun p : ClassCoordinates K => ((q p.2 : Circle) : Complex)) :=
+    continuous_subtype_val.comp (q.continuous.comp continuous_snd)
+  have hF := hq.mul (continuous_heckeTateThetaNormOneClass_joint f T hT S hS hST B hB hBT)
+  have hPos : Filter.Eventually (fun t : Real => 0 < t)
+      (ae (volume.restrict (Set.Ioi (0 : Real)))) := ae_restrict_mem measurableSet_Ioi
+  have hP : Filter.Eventually (fun p : ClassCoordinates K => 0 < p.1)
+      (ae (heckePositiveThetaMeasure mu)) := by
+    change Filter.Eventually (fun p : ClassCoordinates K => 0 < p.1)
+      (ae ((volume.restrict (Set.Ioi (0 : Real))).prod mu))
+    have hSet : MeasurableSet (Set.ofPred (fun p : ClassCoordinates K => 0 < p.1)) :=
+      measurableSet_Ioi.preimage measurable_fst
+    exact (Measure.ae_prod_iff_ae_ae hSet).mpr
+      (hPos.mono (fun _ ht => Filter.Eventually.of_forall (fun _ => ht)))
+  have hRadius : Filter.Eventually (fun p => 1 <= r p) (ae (heckePositiveThetaMeasure mu)) :=
+    hP.mono (fun p hp => Real.one_le_exp_iff.mpr hp.le)
+  apply differentiable_heckeMellinTail _ _ r
+    hF.measurable.aestronglyMeasurable hr.measurable.aemeasurable hRadius
+  intro a
+  have hEq : (fun p : ClassCoordinates K =>
+      norm (((q p.2 : Circle) : Complex) * heckeTateThetaNormOneClass f T p.1 p.2) * r p ^ a) =
+      (fun p : ClassCoordinates K => norm (heckeTateThetaNormOneClass f T p.1 p.2) * r p ^ a) := by
+    funext p
+    rw [norm_mul, Circle.norm_coe, one_mul]
+  change Integrable (fun p : ClassCoordinates K =>
+    norm (((q p.2 : Circle) : Complex) * heckeTateThetaNormOneClass f T p.1 p.2) * r p ^ a)
+    (heckePositiveThetaMeasure mu)
+  rw [hEq]
+  exact integrable_heckeTateThetaNormOneClass_expMoment mu f T hT S hS hST B hB hBT a
 
 end Robin1984.GRH

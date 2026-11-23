@@ -2405,9 +2405,16 @@ and boundedness for the finite Fourier dual.
 its zero term removed to the norm-one class quotient. It proves
 uniform exponential decay in the logarithmic norm parameter for
 the original and dual tests. These are the large-norm estimates
-used in Tate's Mellin argument~\cite{Tate1967}. Formalizing the
-quotient Mellin integral and its unfolding into the Hecke Euler
-product remains in progress.
+used in Tate's Mellin argument~\cite{Tate1967}.
+\path{Robin1984/GRH/HeckeTateMellin.lean} proves joint continuity on
+the norm-one class quotient and absolute Mellin integrability at
+every real exponent for both tests. A unitary Hecke character
+descends to this quotient. Its integral against invariant measure
+vanishes if the restriction is nontrivial. The module also proves
+that the character-weighted positive tail defines an entire function
+of the Mellin parameter. The identification of the two tails with the
+completed Hecke Euler product still requires the quotient measure
+formula, the Poisson decomposition, and the local zeta integrals.
 
 For the pole-free case, Lean also constructs the entire continuation
 from a Mellin tail
