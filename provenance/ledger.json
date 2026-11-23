@@ -1461,6 +1461,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeAdelePoisson.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Poisson summation for a Schwartz function on the archimedean adeles and one finite adelic coset.",
+      "formalization_note": "Identifies the principal points of the coset with an ideal lattice and uses the actual finite adelic character in the trace-dual sum.",
+      "content_basis": "Reviewed finite strong approximation, the translated lattice sum, the trace dual and covolume, and the negative-frequency phase in the finite character.",
+      "dependency_status": "Uses the vendored DedekindZeta lattice Poisson theorem and the verified Robin1984 finite trace-duality bridge.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeAdeleTraceDual.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The trace pairing and annihilators of compact open finite adelic subgroups in Tate's thesis.",
