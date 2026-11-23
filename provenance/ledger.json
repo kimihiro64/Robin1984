@@ -993,6 +993,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeIdeleClassCompactness.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Compactness of norm-one idele classes via Dirichlet's unit theorem and finiteness of the ideal class group, as in Tate's thesis.",
+      "formalization_note": "Constructs compact representatives for the quotient of norm-one ideles by principal ideles.",
+      "content_basis": "Checked bounds on the unit logarithm fundamental domain, the compact finite unit kernel, and the finite cover indexed by ideal classes.",
+      "dependency_status": "Uses Mathlib's unit and class group theorems and the project's finite idele ideal correspondence and adelic product formula.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/Helpers/Event.lean",
       "classification": "Primarily project-original",
       "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",

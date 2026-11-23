@@ -1,6 +1,5 @@
 import Robin1984.Equivalence.Theorem
-import Robin1984.GRH.HeckeAdelicFourier
-import Robin1984.GRH.HeckeFiniteIdealClass
+import Robin1984.GRH.HeckeIdeleClassCompactness
 import Robin1984.Lagarias.Theorem
 import Robin1984.Mathlib
 import Robin1984.Public
