@@ -288,10 +288,17 @@ Lean proves the completed-zero formulation as `grandRobinCompletedCriterion`.
 The theorem `grandRobinCompletedCriterion_of_entireOrder` derives its
 Hadamard expansion and zero-weight summability from entire order at most
 one. It uses the indexed zeros with their multiplicities and treats the
-zeros at $0$ and $-1$ separately. The release Challenge gives the earlier
-analytic-data statement. An application to all standard automorphic
-$L$-functions still needs the Euler data, the growth bound, the completion
-factors, and the completed functional equation for the actual family.
+zeros at $0$ and $-1$ separately. In `AutomorphicCompletion.lean`,
+`grandRobinCompletedCriterion_of_standardCompletion` starts from the
+order-one bound for the pole-cleared completed functions. Lean proves
+the order-one bound for the reciprocal Gamma factors, the resulting
+growth bound for the pole-cleared ordinary function, and the
+nonvanishing of the completion factor to the right of $1/2$.
+
+The release Challenge gives the earlier analytic-data statement. For
+the full standard automorphic family, Lean still needs the actual
+$L$-functions, their Euler data, completed order bounds, and functional
+equations.
 For the trivial Hecke character of a field $K$, use $Z=\zeta_K$ and
 $m=1$. Its logarithmic Euler coefficient at $(N\mathfrak p)^j$ is
 $\log N\mathfrak p$. Thus, for $x\ge1$,

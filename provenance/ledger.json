@@ -1038,6 +1038,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/AutomorphicCompletion.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Euler's product for the reciprocal Gamma function, the standard automorphic completion, and the completed-family triangular criterion.",
+      "formalization_note": "Proves order at most one for the reciprocal Gamma factors, removes the archimedean factors, and applies the completed-family equivalence to paired Euler data.",
+      "content_basis": "Reviewed the Euler product limit and growth bound, the finite products of Gamma factors, the identity theorem and growth transfer, and the exact completed-family consumer.",
+      "dependency_status": "Uses Mathlib's Gamma sequence, the pinned entire-order predicate and the Robin1984 completed-family criterion.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/DedekindDeLaValleePoussin.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The de la Vallee Poussin trigonometric argument for zeta nonvanishing on the line of absolute convergence.",
