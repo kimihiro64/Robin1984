@@ -2360,8 +2360,24 @@ For every such $b$ and every archimedean Schwartz function $f$,
     \widehat f(c_K(e_K(\xi)))
     \int_{\mathbb A_{K,f}} T_\chi(zb)\psi_f(-\xi_f z)\,d\mu_f(z).
 \]
-The next step for the Mellin argument is to express the Fourier transform
-of these dilates using the idelic norm.
+\path{Robin1984/GRH/HeckeFiniteHaarDilation.lean} identifies the
+additive Haar modulus of a finite idele with its finite idelic norm.
+\path{Robin1984/GRH/HeckeAdelicFourier.lean} applies the resulting
+change of variables together with the archimedean Fourier scaling
+to prove the Poisson formula with both idele components dilated.
+
+For the multiplicative quotient,
+\path{Robin1984/GRH/HeckeFiniteIdealClass.lean} proves the
+surjective finite-idele map onto nonzero fractional ideals and
+identifies its compact kernel as the integral finite units.
+Using Dirichlet's unit theorem and the finiteness of the ideal
+class group, \path{Robin1984/GRH/HeckeIdeleClassCompactness.lean}
+constructs a compact set of norm-one ideles meeting every
+norm-one idele class. It also proves that the principal
+subgroup is closed and discrete. The compact representatives
+supply the domain for uniform theta estimates in Tate's Mellin
+argument~\cite{Tate1967}. Those estimates and the unfolding
+identity with the Hecke Euler product remain to be verified in Lean.
 
 For the pole-free case, Lean also constructs the entire continuation
 from a Mellin tail
