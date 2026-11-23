@@ -298,14 +298,132 @@ noncomputable def heckePrincipalResidueCoset (d : RingOfIntegers K)
   heckeFiniteAdelePrincipalCoset (heckePrincipalResidueCenter d c)
     (algebraMap (RingOfIntegers K) K d)
 
-/-- The residue-class cosets of a nonzero principal ideal partition the
-integral finite adeles. -/
-theorem heckePrincipalResidueCosets_partition
-    (d : RingOfIntegers K) (hd : Not (d = 0)) :
-    And (Pairwise (fun c j => Disjoint (heckePrincipalResidueCoset d c)
-      (heckePrincipalResidueCoset d j)))
-      (Set.iUnion (heckePrincipalResidueCoset d) =
+private noncomputable def idealResidueCenter (I : Ideal (RingOfIntegers K))
+    (i : HasQuotient.Quotient (RingOfIntegers K) I) : HeckeFiniteAdeles K :=
+  algebraMap K (HeckeFiniteAdeles K) (algebraMap (RingOfIntegers K) K
+    (Classical.choose (Ideal.Quotient.mk_surjective i)))
+
+private noncomputable def idealResidueCoset
+    (I : Ideal (RingOfIntegers K)) (D : AddSubgroup (HeckeFiniteAdeles K))
+    (i : HasQuotient.Quotient (RingOfIntegers K) I) : Set (HeckeFiniteAdeles K) :=
+  Set.image (fun z => idealResidueCenter I i + z) (D : Set (HeckeFiniteAdeles K))
+
+omit [MeasurableSpace (HeckeFiniteAdeles K)] [BorelSpace (HeckeFiniteAdeles K)] in
+private theorem idealResidueCosets_partition
+    (I : Ideal (RingOfIntegers K)) (D : AddSubgroup (HeckeFiniteAdeles K))
+    (hD : D <= heckeIntegralFiniteAdeles)
+    (hCoeff : forall b : RingOfIntegers K,
+      Membership.mem D (algebraMap K (HeckeFiniteAdeles K) (algebraMap (RingOfIntegers K) K b)) <->
+        Membership.mem I b)
+    (hApprox : forall a : HeckeFiniteAdeles K, Membership.mem heckeIntegralFiniteAdeles a ->
+      exists b : RingOfIntegers K,
+        Membership.mem D (a - algebraMap K (HeckeFiniteAdeles K) (algebraMap (RingOfIntegers K) K b))) :
+    And (Pairwise (fun i j => Disjoint (idealResidueCoset I D i) (idealResidueCoset I D j)))
+      (Set.iUnion (idealResidueCoset I D) =
         (heckeIntegralFiniteAdeles (K := K) : Set (HeckeFiniteAdeles K))) := by
+  let R := RingOfIntegers K
+  let e := algebraMap R K
+  let g := algebraMap K (HeckeFiniteAdeles K)
+  let H : AddSubgroup (HeckeFiniteAdeles K) := heckeIntegralFiniteAdeles
+  let Q := HasQuotient.Quotient R I
+  let repr (c : Q) := Classical.choose (Ideal.Quotient.mk_surjective c)
+  have hRepr (c : Q) : Ideal.Quotient.mk I (repr c) = c :=
+    Classical.choose_spec (Ideal.Quotient.mk_surjective c)
+  let rho (c : Q) := idealResidueCenter I c
+  let C (c : Q) := idealResidueCoset I D c
+  have hG (b : R) : Membership.mem H (g (e b)) :=
+    fun p => HeightOneSpectrum.coe_algebraMap_mem R K p b
+  constructor
+  . intro i j hne
+    apply Set.disjoint_left.mpr
+    intro a ha hb
+    choose x hx using ha
+    choose y hy using hb
+    have hEq : rho i + x = rho j + y := hx.2.trans hy.2.symm
+    have hDiff : rho i - rho j = y - x := by
+      calc
+        rho i - rho j = (rho i + x) - (rho j + x) := by abel
+        _ = y - x := by rw [hEq]; abel
+    have hIn : Membership.mem D (g (e (repr i - repr j))) := by
+      rw [map_sub e, map_sub g]
+      change Membership.mem D (rho i - rho j)
+      rw [hDiff]
+      exact D.sub_mem hy.1 hx.1
+    apply hne
+    have hRel := (Ideal.Quotient.eq (I := I)).mpr ((hCoeff _).mp hIn)
+    rw [hRepr, hRepr] at hRel
+    exact hRel
+  . ext a
+    constructor
+    . intro ha
+      choose i hi using Set.mem_iUnion.mp ha
+      choose x hx using hi
+      rw [<- hx.2]
+      exact H.add_mem (hG (repr i)) (hD hx.1)
+    . intro ha
+      choose b hb using hApprox a ha
+      let i := Ideal.Quotient.mk I b
+      have hbI : Membership.mem I (b - repr i) :=
+        (Ideal.Quotient.eq (I := I)).mp (hRepr i).symm
+      have hShift := (hCoeff (b - repr i)).mpr hbI
+      rw [map_sub e, map_sub g] at hShift
+      change Membership.mem D (g (e b) - rho i) at hShift
+      have hz : Membership.mem D (a - rho i) := by
+        have hEq : a - rho i = (a - g (e b)) + (g (e b) - rho i) := by abel
+        rw [hEq]
+        exact D.add_mem hb hShift
+      have hzEq : rho i + (a - rho i) = a :=
+        (add_comm _ _).trans (sub_add_cancel _ _)
+      exact Set.mem_iUnion.mpr (Exists.intro i (Exists.intro (a - rho i) (And.intro hz hzEq)))
+
+set_option maxHeartbeats 700000 in
+/-- A subgroup covered by integral principal residue classes has reciprocal ideal norm mass. -/
+theorem heckeFiniteAdeleHaar_of_ideal_kernel
+    (I : Ideal (RingOfIntegers K)) (hI : Not (I = 0))
+    (D : AddSubgroup (HeckeFiniteAdeles K)) (hD : D <= heckeIntegralFiniteAdeles) (hOpen : IsOpen (D : Set (HeckeFiniteAdeles K)))
+    (hCoeff : forall b : RingOfIntegers K,
+      Membership.mem D (algebraMap K (HeckeFiniteAdeles K) (algebraMap (RingOfIntegers K) K b)) <->
+        Membership.mem I b)
+    (hApprox : forall a : HeckeFiniteAdeles K, Membership.mem heckeIntegralFiniteAdeles a ->
+      exists b : RingOfIntegers K,
+        Membership.mem D (a - algebraMap K (HeckeFiniteAdeles K) (algebraMap (RingOfIntegers K) K b))) :
+    (Ideal.absNorm I : ENNReal) * heckeFiniteAdeleHaar (D : Set (HeckeFiniteAdeles K)) = 1 := by
+  let Q := HasQuotient.Quotient (RingOfIntegers K) I
+  let mu : Measure (HeckeFiniteAdeles K) := heckeFiniteAdeleHaar
+  let : Measure.IsAddLeftInvariant mu := heckeFiniteAdeleHaar_isAddLeftInvariant
+  let : I.toAddSubgroup.FiniteIndex := Ideal.finiteIndex hI
+  let : Finite Q := inferInstanceAs (Finite (HasQuotient.Quotient (RingOfIntegers K) I.toAddSubgroup))
+  let : Fintype Q := Fintype.ofFinite Q
+  let rho (i : Q) := idealResidueCenter I i
+  let C (i : Q) := idealResidueCoset I D i
+  have hParts := idealResidueCosets_partition I D hD hCoeff hApprox
+  have hMeas (i : Q) : MeasurableSet (C i) :=
+    ((Homeomorph.addLeft (rho i)).isOpenMap _ hOpen).measurableSet
+  have hVol (i : Q) : mu (C i) = mu (D : Set (HeckeFiniteAdeles K)) := by
+    have hp := (measurePreserving_add_left mu (rho i)).measure_preimage (hMeas i).nullMeasurableSet
+    have hPre : Set.preimage (fun z => rho i + z) (C i) = (D : Set (HeckeFiniteAdeles K)) :=
+      Set.preimage_image_eq _ (fun _ _ h => add_left_cancel h)
+    rw [hPre] at hp
+    exact hp.symm
+  have hNorm : Ideal.absNorm I = Nat.card Q := rfl
+  change (Ideal.absNorm I : ENNReal) * mu (D : Set (HeckeFiniteAdeles K)) = 1
+  calc
+    _ = tsum (fun _ : Q => mu (D : Set (HeckeFiniteAdeles K))) := by
+      rw [tsum_fintype, Finset.sum_const, Finset.card_univ, nsmul_eq_mul, hNorm,
+        Nat.card_eq_fintype_card]
+    _ = tsum (fun i : Q => mu (C i)) := tsum_congr (fun i => (hVol i).symm)
+    _ = mu (Set.iUnion C) := (measure_iUnion hParts.1 hMeas).symm
+    _ = 1 := by rw [hParts.2]; exact heckeFiniteAdeleHaar_integral
+
+private theorem heckePrincipalResidueConditions
+    (d : RingOfIntegers K) (hd : Not (d = 0)) :
+    let e := algebraMap (RingOfIntegers K) K
+    let g := algebraMap K (HeckeFiniteAdeles K)
+    let D := heckeScaledIntegralFiniteAdeles (e d)
+    let I := Ideal.span ({d} : Set (RingOfIntegers K))
+    And (forall b : RingOfIntegers K, Membership.mem D (g (e b)) <-> Membership.mem I b)
+      (forall a : HeckeFiniteAdeles K, Membership.mem heckeIntegralFiniteAdeles a ->
+        exists b : RingOfIntegers K, Membership.mem D (a - g (e b))) := by
   let R := RingOfIntegers K
   let A := HeckeFiniteAdeles K
   let e := algebraMap R K
@@ -313,18 +431,12 @@ theorem heckePrincipalResidueCosets_partition
   let dd := e d
   let H : AddSubgroup A := heckeIntegralFiniteAdeles
   let D := heckeScaledIntegralFiniteAdeles dd
-  let I : Ideal R := Ideal.span {d}
-  let Q := HasQuotient.Quotient R I
+  let I := Ideal.span ({d} : Set R)
   have hD : Not (dd = 0) := (map_ne_zero_iff e (FaithfulSMul.algebraMap_injective R K)).mpr hd
-  let repr (c : Q) := heckePrincipalResidueRepresentative d c
-  have hRepr (c : Q) : Ideal.Quotient.mk I (repr c) = c :=
-    Classical.choose_spec (Ideal.Quotient.mk_surjective c)
-  let rho (c : Q) := heckePrincipalResidueCenter d c
-  let C (c : Q) := heckePrincipalResidueCoset d c
-  have hHtoD : D <= H := heckeScaledIntegralFiniteAdeles_le d
-  have hG (b : R) : Membership.mem H (g (e b)) :=
-    fun p => HeightOneSpectrum.coe_algebraMap_mem R K p b
-  have hCoeff (b : R) : Membership.mem D (g (e b)) <-> Membership.mem I b := by
+  change And (forall b : R, Membership.mem D (g (e b)) <-> Membership.mem I b)
+    (forall a : A, Membership.mem H a -> exists b : R, Membership.mem D (a - g (e b)))
+  constructor
+  . intro b
     rw [mem_heckeScaledIntegralFiniteAdeles_iff dd hD]
     change (forall p : HeightOneSpectrum R, Membership.mem (p.adicCompletionIntegers K)
       (algebraMap K (p.adicCompletion K) (e b) / algebraMap K (p.adicCompletion K) dd)) <-> _
@@ -333,67 +445,37 @@ theorem heckePrincipalResidueCosets_partition
     intro y
     rw [<- map_mul]
     exact (FaithfulSMul.algebraMap_injective R K).eq_iff
-  have hDisjoint : Pairwise (fun c j : Q => Disjoint (C c) (C j)) := by
-    intro c j hne
-    apply Set.disjoint_left.mpr
-    intro a ha hb
-    choose x hx using ha
-    choose y hy using hb
-    have hEq : rho c + x = rho j + y := hx.2.trans hy.2.symm
-    have hDiff : rho c - rho j = y - x := by
-      calc
-        rho c - rho j = (rho c + x) - (rho j + x) := by abel
-        _ = y - x := by rw [hEq]; abel
-    have hIn : Membership.mem D (g (e (repr c - repr j))) := by
-      rw [map_sub e, map_sub g]
-      change Membership.mem D (rho c - rho j)
-      rw [hDiff]
-      exact D.sub_mem hy.1 hx.1
-    apply hne
-    have hRel := (Ideal.Quotient.eq (I := I)).mpr ((hCoeff _).mp hIn)
-    rw [hRepr, hRepr] at hRel
-    exact hRel
-  have hCover : Set.iUnion C = (H : Set A) := by
-    ext a
-    constructor
-    case mp =>
-      intro ha
-      choose c hc using Set.mem_iUnion.mp ha
-      choose x hx using hc
-      rw [<- hx.2]
-      exact H.add_mem (hG (repr c)) (hHtoD hx.1)
-    case mpr =>
-      intro ha
-      choose x hx using exists_finiteAdele_sub_principal_modulus a dd hD
-      have hIn : Membership.mem D (a - g x) :=
-        (mem_heckeScaledIntegralFiniteAdeles_iff dd hD _).mpr hx
-      have hxH : Membership.mem H (g x) := by
-        have hh := H.sub_mem ha (hHtoD hIn)
-        rw [sub_sub_cancel] at hh
-        exact hh
-      have hxR : Exists (fun b : R => x = e b) := by
-        have hLoc : forall p : HeightOneSpectrum R, Membership.mem (p.adicCompletionIntegers K)
-            (algebraMap K (p.adicCompletion K) x / algebraMap K (p.adicCompletion K) 1) := by
-          intro p
-          rw [map_one, div_one]
-          exact hxH p
-        simpa only [one_mul] using
-          (principal_mem_finiteAdele_modulus_iff x 1 one_ne_zero).mp hLoc
-      choose b hb using hxR
-      let i := Ideal.Quotient.mk I b
-      have hbI : Membership.mem I (b - repr i) :=
-        (Ideal.Quotient.eq (I := I)).mp (hRepr i).symm
-      have hShift := (hCoeff (b - repr i)).mpr hbI
-      rw [map_sub e, map_sub g, <- hb] at hShift
-      change Membership.mem D (g x - rho i) at hShift
-      have hz : Membership.mem D (a - rho i) := by
-        have hEq : a - rho i = (a - g x) + (g x - rho i) := by abel
-        rw [hEq]
-        exact D.add_mem hIn hShift
-      have hzEq : rho i + (a - rho i) = a :=
-        (add_comm _ _).trans (sub_add_cancel _ _)
-      exact Set.mem_iUnion.mpr (Exists.intro i (Exists.intro (a - rho i) (And.intro hz hzEq)))
-  exact And.intro hDisjoint hCover
+  . intro a ha
+    choose x hx using exists_finiteAdele_sub_principal_modulus a dd hD
+    have hIn : Membership.mem D (a - g x) :=
+      (mem_heckeScaledIntegralFiniteAdeles_iff dd hD (a - g x)).mpr hx
+    have hxH : Membership.mem H (g x) := by
+      have hDle : D <= H := heckeScaledIntegralFiniteAdeles_le d
+      have hSub : Membership.mem H (a - (a - g x)) := H.sub_mem ha (hDle hIn)
+      rwa [sub_sub_cancel] at hSub
+    have hxR : Exists (fun b : R => x = e b) := by
+      have hLoc : forall p : HeightOneSpectrum R, Membership.mem (p.adicCompletionIntegers K)
+          (algebraMap K (p.adicCompletion K) x / algebraMap K (p.adicCompletion K) 1) := by
+        intro p
+        rw [map_one, div_one]
+        exact hxH p
+      simpa only [one_mul] using
+        (principal_mem_finiteAdele_modulus_iff x 1 one_ne_zero).mp hLoc
+    choose b hb using hxR
+    exact Exists.intro b (by rw [<- hb]; exact hIn)
+
+/-- The residue-class cosets of a nonzero principal ideal partition the
+integral finite adeles. -/
+theorem heckePrincipalResidueCosets_partition
+    (d : RingOfIntegers K) (hd : Not (d = 0)) :
+    And (Pairwise (fun c j => Disjoint (heckePrincipalResidueCoset d c)
+      (heckePrincipalResidueCoset d j)))
+      (Set.iUnion (heckePrincipalResidueCoset d) =
+        (heckeIntegralFiniteAdeles (K := K) : Set (HeckeFiniteAdeles K))) := by
+  let I := Ideal.span ({d} : Set (RingOfIntegers K))
+  let D := heckeScaledIntegralFiniteAdeles (algebraMap (RingOfIntegers K) K d)
+  have h := heckePrincipalResidueConditions d hd
+  exact idealResidueCosets_partition I D (heckeScaledIntegralFiniteAdeles_le d) h.1 h.2
 
 /-- Scaling the compact open integral finite adeles by a principal
 integer divides their Haar mass by the norm of its principal ideal. -/
@@ -403,43 +485,14 @@ theorem heckeFiniteAdeleHaar_scaledIntegral_mass
       heckeFiniteAdeleHaar (heckeScaledIntegralFiniteAdeles
         (algebraMap (RingOfIntegers K) K d) : Set (HeckeFiniteAdeles K)) = 1 := by
   let R := RingOfIntegers K
-  let A := HeckeFiniteAdeles K
   let e := algebraMap R K
-  let dd := e d
-  let H : AddSubgroup A := heckeIntegralFiniteAdeles
-  let D := heckeScaledIntegralFiniteAdeles dd
-  let I : Ideal R := Ideal.span {d}
-  let Q := HasQuotient.Quotient R I
-  let mu : Measure A := heckeFiniteAdeleHaar
-  let : Measure.IsAddLeftInvariant mu := heckeFiniteAdeleHaar_isAddLeftInvariant
-  have hD : Not (dd = 0) := (map_ne_zero_iff e (FaithfulSMul.algebraMap_injective R K)).mpr hd
+  let I := Ideal.span ({d} : Set R)
+  let D := heckeScaledIntegralFiniteAdeles (e d)
   have hI : Not (I = 0) := fun h => hd (Ideal.span_singleton_eq_bot.mp h)
-  let : I.toAddSubgroup.FiniteIndex := Ideal.finiteIndex hI
-  let : Finite Q := inferInstanceAs (Finite (HasQuotient.Quotient R I.toAddSubgroup))
-  let : Fintype Q := Fintype.ofFinite Q
-  let rho (c : Q) := heckePrincipalResidueCenter d c
-  let C (c : Q) := heckePrincipalResidueCoset d c
-  have hParts := heckePrincipalResidueCosets_partition d hd
-  have hDisjoint : Pairwise (fun c j : Q => Disjoint (C c) (C j)) := hParts.1
-  have hCover : Set.iUnion C = (H : Set A) := hParts.2
-  have hDOpen : IsOpen (D : Set A) := isOpen_heckeScaledIntegralFiniteAdeles dd hD
-  have hMeas (i : Q) : MeasurableSet (C i) :=
-    ((Homeomorph.addLeft (rho i)).isOpenMap _ hDOpen).measurableSet
-  have hVol (i : Q) : mu (C i) = mu (D : Set A) := by
-    have hp := (measurePreserving_add_left mu (rho i)).measure_preimage (hMeas i).nullMeasurableSet
-    have hPre : Set.preimage (fun z : A => rho i + z) (C i) = (D : Set A) :=
-      Set.preimage_image_eq _ (fun _ _ h => add_left_cancel h)
-    rw [hPre] at hp
-    exact hp.symm
-  have hNorm : Ideal.absNorm I = Nat.card Q := rfl
-  change (Ideal.absNorm I : ENNReal) * mu (D : Set A) = 1
-  calc
-    _ = tsum (fun _ : Q => mu (D : Set A)) := by
-      rw [tsum_fintype, Finset.sum_const, Finset.card_univ, nsmul_eq_mul, hNorm,
-        Nat.card_eq_fintype_card]
-    _ = tsum (fun i : Q => mu (C i)) := tsum_congr (fun i => (hVol i).symm)
-    _ = mu (Set.iUnion C) := (measure_iUnion hDisjoint hMeas).symm
-    _ = 1 := by rw [hCover]; exact heckeFiniteAdeleHaar_integral
+  have hD : Not (e d = 0) := (map_ne_zero_iff e (FaithfulSMul.algebraMap_injective R K)).mpr hd
+  have h := heckePrincipalResidueConditions d hd
+  exact heckeFiniteAdeleHaar_of_ideal_kernel I hI D (heckeScaledIntegralFiniteAdeles_le d)
+    (isOpen_heckeScaledIntegralFiniteAdeles (e d) hD) h.1 h.2
 
 omit [MeasurableSpace (HeckeFiniteAdeles K)] [BorelSpace (HeckeFiniteAdeles K)] in
 private theorem principalFiniteChar_scaledIntegral_iff

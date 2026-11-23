@@ -1506,6 +1506,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeFiniteHaarDilation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Distributive Haar characters for additive Haar measure and normalized local valuations of number fields.",
+      "formalization_note": "Proves Fourier scaling on the finite adeles and computes the additive Haar modulus from integral principal residue classes and local uniformizers.",
+      "content_basis": "Checked the change of variables, principal approximation, residue-class volumes, and the valuation criterion for the single-place uniformizer.",
+      "dependency_status": "Reuses Mathlib's distributive Haar character, the chosen finite additive Haar measure, and the standard local uniformizer normalization.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeFiniteTateTest.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Tate's finite test functions, local conductor congruences, and adelic Poisson summation.",
