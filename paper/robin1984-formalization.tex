@@ -1950,6 +1950,25 @@ function $f$ on the weighted Minkowski space,
 Here $x_f$ is the finite component of the principal adele, $e_K$ weights
 the complex coordinates by $\sqrt{2}$, and $c_K$ conjugates those coordinates.
 
+The finite Tate test $T_\chi$ is the product of the integral-coordinate
+indicators at unramified places and the inverse local character on the unit
+group at ramified places, extended by zero there off the units.
+For every $b\in\mathbb A_{K,f}^{\times}$, clearing a principal denominator
+reduces $z\mapsto T_\chi(zb)$ to a function supported on
+$\widehat{\mathcal O}_K$ and constant modulo a nonzero principal ideal.
+Pulling the finite residue-class expansion back through the rescaling
+gives a finite sum of principal coset indicators.
+For every such $b$ and every archimedean Schwartz function $f$,
+\path{Robin1984/GRH/HeckeFiniteTateTest.lean} proves
+\[
+  \sum_{x\in K} f(e_K(x))T_\chi(x_f b)
+  = \frac{1}{\sqrt{|D_K|}}\sum_{\xi\in K}
+    \widehat f(c_K(e_K(\xi)))
+    \int_{\mathbb A_{K,f}} T_\chi(zb)\psi_f(-\xi_f z)\,d\mu_f(z).
+\]
+The next step for the Mellin argument is to express the Fourier transform
+of these dilates using the idelic norm.
+
 For the pole-free case, Lean also constructs the entire continuation
 from a Mellin tail
 $A_i(s)=\int_X f_i(x)e^{s\log r(x)}\,dM(x)$ and the reflected tail of

@@ -1509,8 +1509,8 @@
       "path": "Robin1984/GRH/HeckeFiniteTateTest.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Tate's finite test functions, local conductor congruences, and adelic Poisson summation.",
-      "formalization_note": "Extends the local Tate densities to the additive fields, expands the finite test through principal cosets, and proves Poisson summation for the actual test.",
-      "content_basis": "Reviewed the additive local densities, conductor congruences, finite residue-class expansion, finite Haar integrability, and application of the rectangle Poisson formula.",
+      "formalization_note": "Extends the local Tate densities to the additive fields, expands the finite test and its idele translates through principal cosets, and proves Poisson summation for them.",
+      "content_basis": "Reviewed the additive local densities, conductor congruences, finite residue-class expansion, denominator clearing for finite ideles, finite Haar integrability, and application of the rectangle Poisson formula.",
       "dependency_status": "Reuses the proved local Euler-factor tests, conductor ideal, finite adele Haar normalization, and adelic Poisson summation for finite sums of rectangles.",
       "reviewed": true
     },

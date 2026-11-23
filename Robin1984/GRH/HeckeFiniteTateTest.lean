@@ -6,7 +6,7 @@ import Robin1984.GRH.HeckeConductor
 
 - Classification: **Standard mathematical formalization**.
 - Mathematical source: Tate's finite test functions, local conductor congruences, and adelic Poisson summation.
-- Formalization note: Extends the local Tate densities to the additive fields, expands the finite test through principal cosets, and proves Poisson summation for the actual test.
+- Formalization note: Extends the local Tate densities to the additive fields, expands the finite test and its idele translates through principal cosets, and proves Poisson summation for them.
 - PROVENANCE-END
 -/
 
@@ -16,9 +16,10 @@ import Robin1984.GRH.HeckeConductor
 At an unramified place the additive test is the indicator of the integral
 elements. At a ramified place it is the inverse local character on the
 unit shell. The finite adelic product is constant on the cosets of a
-nonzero principal ideal contained in the conductor ideal. Its finite
-coset expansion gives Poisson summation with the actual finite Fourier
-integral for every archimedean Schwartz function.
+nonzero principal ideal contained in the conductor ideal. The finite
+test and each finite idele translate have finite coset expansions.
+These give Poisson summation with the actual finite Fourier integral
+for every archimedean Schwartz function.
 -/
 
 set_option autoImplicit false
@@ -253,24 +254,106 @@ theorem exists_principal_modulus_heckeFiniteAdditiveTateTest (chi : UnitaryHecke
     have hy : Not (Membership.mem H y) := fun hy => hx (hIff.mpr hy)
     rw [heckeFiniteAdditiveTateTest, heckeFiniteAdditiveTateTest, if_neg hx, if_neg hy]
 
+private theorem heckeIntegralFiniteAdeles_mul_mem {x y : FiniteTateAdeles K}
+    (hx : Membership.mem heckeIntegralFiniteAdeles x)
+    (hy : Membership.mem heckeIntegralFiniteAdeles y) :
+    Membership.mem heckeIntegralFiniteAdeles (x * y) :=
+  fun p => (p.adicCompletionIntegers K).mul_mem _ _ (hx p) (hy p)
+
+private theorem exists_principal_multiple_mem_heckeIntegralFiniteAdeles (b : FiniteTateAdeles K) :
+    exists j : RingOfIntegers K, And (Not (j = 0))
+      (Membership.mem heckeIntegralFiniteAdeles
+        (b * algebraMap K (FiniteTateAdeles K) (algebraMap (RingOfIntegers K) K j))) := by
+  choose j hj using exists_finiteAdele_integral_multiple b
+  exact Exists.intro j (And.intro hj.1 hj.2)
+
+set_option maxHeartbeats 700000 in
+/-- A principal rescaling of an idele translate of the finite Tate test is
+supported on the integral adeles and invariant under a principal modulus. -/
+private theorem exists_integral_rescaling_finiteTateTest
+    (chi : UnitaryHeckeCharacter K) (b : Units (FiniteTateAdeles K)) :
+    exists j : RingOfIntegers K, And (Not (j = 0))
+      (exists d : RingOfIntegers K, And (Not (d = 0))
+        (let V (z : FiniteTateAdeles K) := heckeFiniteAdditiveTateTest chi
+              (z * algebraMap K (FiniteTateAdeles K) (Inv.inv (algebraMap (RingOfIntegers K) K j)) * (b : FiniteTateAdeles K))
+         And
+           (forall z : FiniteTateAdeles K, Not (Membership.mem heckeIntegralFiniteAdeles z) -> V z = 0)
+           (forall z w : FiniteTateAdeles K,
+             Membership.mem (heckeScaledIntegralFiniteAdeles (algebraMap (RingOfIntegers K) K (d * j)))
+               (z - w) -> V z = V w))) := by
+  let R := RingOfIntegers K
+  let g := algebraMap K (FiniteTateAdeles K)
+  let r := algebraMap R K
+  let H : AddSubgroup (FiniteTateAdeles K) := heckeIntegralFiniteAdeles
+  choose j hj using exists_principal_multiple_mem_heckeIntegralFiniteAdeles ((b.inv : FiniteTateAdeles K))
+  choose e he using exists_principal_multiple_mem_heckeIntegralFiniteAdeles (b : FiniteTateAdeles K)
+  choose d hd using exists_principal_modulus_heckeFiniteAdditiveTateTest chi
+  have hjK : Not (r j = 0) :=
+    (map_ne_zero_iff r (FaithfulSMul.algebraMap_injective R K)).mpr hj.1
+  have hInverse : Inv.inv (r j) * r j = 1 := by field_simp [hjK]
+  have hScalar : g (Inv.inv (r j)) * g (r j) = 1 := by
+    rw [<- map_mul, hInverse, map_one]
+  let u : FiniteTateAdeles K := g (Inv.inv (r j)) * (b : FiniteTateAdeles K)
+  have hUnit : u * (b.inv * g (r j)) = 1 := by
+    calc
+      u * (b.inv * g (r j)) = (g (Inv.inv (r j)) * g (r j)) * ((b : FiniteTateAdeles K) * b.inv) := by
+        dsimp only [u]
+        ac_rfl
+      _ = 1 := by rw [hScalar, b.val_inv, mul_one]
+  let D := (d * e) * j
+  have hM : Not (d * e = 0) := mul_ne_zero hd.1 he.1
+  refine Exists.intro j (And.intro hj.1 (Exists.intro (d * e) (And.intro hM (And.intro ?_ ?_))))
+  . intro z hz
+    have hZero : Not (Membership.mem H (z * u)) := by
+      intro hzu
+      have hback := heckeIntegralFiniteAdeles_mul_mem hzu hj.2
+      rw [mul_assoc, hUnit, mul_one] at hback
+      exact hz hback
+    change heckeFiniteAdditiveTateTest chi (z * g (Inv.inv (r j)) * (b : FiniteTateAdeles K)) = 0
+    rw [mul_assoc]
+    exact if_neg hZero
+  . intro z w hzw
+    change heckeFiniteAdditiveTateTest chi (z * g (Inv.inv (r j)) * (b : FiniteTateAdeles K)) =
+      heckeFiniteAdditiveTateTest chi (w * g (Inv.inv (r j)) * (b : FiniteTateAdeles K))
+    rw [mul_assoc z, mul_assoc w]
+    apply hd.2
+    rw [<- sub_mul]
+    choose v hv using AddSubgroup.mem_map.mp hzw
+    refine AddSubgroup.mem_map.mpr (Exists.intro (v * ((b : FiniteTateAdeles K) * g (r e)))
+      (And.intro (heckeIntegralFiniteAdeles_mul_mem hv.1 he.2) ?_))
+    have hDiff : v * g (r D) = z - w := hv.2
+    change v * ((b : FiniteTateAdeles K) * g (r e)) * g (r d) = (z - w) * u
+    rw [<- hDiff]
+    have hCancel : g (r j) * g (Inv.inv (r j)) = 1 := by rw [mul_comm, hScalar]
+    symm
+    calc
+      v * g (r D) * u =
+          (v * ((b : FiniteTateAdeles K) * g (r e)) * g (r d)) *
+            (g (r j) * g (Inv.inv (r j))) := by
+        dsimp only [D, u]
+        rw [map_mul r, map_mul r, map_mul g, map_mul g]
+        ac_rfl
+      _ = _ := by rw [hCancel, mul_one]
+
 variable [MeasurableSpace (FiniteTateAdeles K)] [BorelSpace (FiniteTateAdeles K)]
 
 set_option maxHeartbeats 800000 in
-/-- The finite Tate test is a finite linear combination of principal coset indicators. -/
-theorem heckeFiniteAdditiveTateTest_eq_sum_principalCosets (chi : UnitaryHeckeCharacter K) :
-    exists d : RingOfIntegers K, And (Not (d = 0))
-      (exists centers : Finset (FiniteTateAdeles K),
-        forall x : FiniteTateAdeles K,
-          heckeFiniteAdditiveTateTest chi x = centers.sum (fun a =>
-            heckeFiniteAdditiveTateTest chi a *
-              (heckeFiniteAdelePrincipalCoset a (algebraMap (RingOfIntegers K) K d)).indicator
-                (fun _ => (1 : Complex)) x)) := by
+/-- A test supported on the integral adeles and constant modulo a principal
+ideal is a finite sum of indicators of its residue classes. -/
+theorem exists_principalCoset_expansion_of_supported
+    (value : FiniteTateAdeles K -> Complex) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (hsupport : forall x : FiniteTateAdeles K, Not (Membership.mem heckeIntegralFiniteAdeles x) -> value x = 0)
+    (hmod : forall x y : FiniteTateAdeles K,
+      Membership.mem (heckeScaledIntegralFiniteAdeles (algebraMap (RingOfIntegers K) K d))
+        (x - y) -> value x = value y) :
+    exists centers : Finset (FiniteTateAdeles K), forall x : FiniteTateAdeles K,
+      value x = centers.sum (fun a =>
+        value a * (heckeFiniteAdelePrincipalCoset a (algebraMap (RingOfIntegers K) K d)).indicator
+          (fun _ => (1 : Complex)) x) := by
+  classical
   let R := RingOfIntegers K
   let A := FiniteTateAdeles K
   let H : AddSubgroup A := heckeIntegralFiniteAdeles
-  let value := heckeFiniteAdditiveTateTest chi
-  choose d hD using exists_principal_modulus_heckeFiniteAdditiveTateTest chi
-  have hd : Not (d = 0) := hD.1
   let D := heckeScaledIntegralFiniteAdeles (algebraMap R K d)
   let I : Ideal R := Ideal.span {d}
   let Q := HasQuotient.Quotient R I
@@ -294,7 +377,7 @@ theorem heckeFiniteAdditiveTateTest_eq_sum_principalCosets (chi : UnitaryHeckeCh
     toFun := rho
     inj' := hInj }
   let centers : Finset A := Finset.univ.map emb
-  refine Exists.intro d (And.intro hd (Exists.intro centers ?_))
+  refine Exists.intro centers ?_
   intro x
   dsimp only [centers]
   rw [Finset.sum_map]
@@ -309,7 +392,7 @@ theorem heckeFiniteAdditiveTateTest_eq_sum_principalCosets (chi : UnitaryHeckeCh
       choose z hz using hi
       have hzX : rho i + z = x := hz.2
       have hDiff : x - rho i = z := by rw [<- hzX, add_sub_cancel_left]
-      apply hD.2 x (rho i)
+      apply hmod x (rho i)
       rw [hDiff]
       exact hz.1
     . intro j _ hji
@@ -319,8 +402,7 @@ theorem heckeFiniteAdditiveTateTest_eq_sum_principalCosets (chi : UnitaryHeckeCh
     . intro h
       exact False.elim (h (Finset.mem_univ i))
   case neg =>
-    have hZero : value x = 0 := by rw [show value x = heckeFiniteAdditiveTateTest chi x from rfl,
-      heckeFiniteAdditiveTateTest, if_neg hx]
+    have hZero : value x = 0 := hsupport x hx
     rw [hZero]
     symm
     apply Finset.sum_eq_zero
@@ -331,6 +413,106 @@ theorem heckeFiniteAdditiveTateTest_eq_sum_principalCosets (chi : UnitaryHeckeCh
       rw [hCover] at hU
       exact hx hU
     rw [Set.indicator_of_notMem hNo, mul_zero]
+
+/-- The finite Tate test is a finite linear combination of principal coset indicators. -/
+theorem heckeFiniteAdditiveTateTest_eq_sum_principalCosets (chi : UnitaryHeckeCharacter K) :
+    exists d : RingOfIntegers K, And (Not (d = 0))
+      (exists centers : Finset (FiniteTateAdeles K),
+        forall x : FiniteTateAdeles K,
+          heckeFiniteAdditiveTateTest chi x = centers.sum (fun a =>
+            heckeFiniteAdditiveTateTest chi a *
+              (heckeFiniteAdelePrincipalCoset a (algebraMap (RingOfIntegers K) K d)).indicator
+                (fun _ => (1 : Complex)) x)) := by
+  choose d hd using exists_principal_modulus_heckeFiniteAdditiveTateTest chi
+  have hsupport (x : FiniteTateAdeles K)
+      (hx : Not (Membership.mem heckeIntegralFiniteAdeles x)) :
+      heckeFiniteAdditiveTateTest chi x = 0 := by
+    rw [heckeFiniteAdditiveTateTest, if_neg hx]
+  exact Exists.intro d (And.intro hd.1
+    (exists_principalCoset_expansion_of_supported (heckeFiniteAdditiveTateTest chi)
+      d hd.1 hsupport hd.2))
+
+set_option maxHeartbeats 1000000 in
+/-- Each finite idele translate of the finite Tate test is a finite sum of
+principal coset indicators. -/
+theorem heckeFiniteAdditiveTateTest_translate_eq_sum_principalCosets
+    (chi : UnitaryHeckeCharacter K) (b : Units (FiniteTateAdeles K)) :
+    exists d : RingOfIntegers K, And (Not (d = 0))
+      (exists centers : Finset (FiniteTateAdeles K), forall x : FiniteTateAdeles K,
+        heckeFiniteAdditiveTateTest chi (x * (b : FiniteTateAdeles K)) =
+          centers.sum (fun a =>
+            heckeFiniteAdditiveTateTest chi (a * (b : FiniteTateAdeles K)) *
+              (heckeFiniteAdelePrincipalCoset a (algebraMap (RingOfIntegers K) K d)).indicator
+                (fun _ => (1 : Complex)) x)) := by
+  classical
+  let R := RingOfIntegers K
+  let r := algebraMap R K
+  let g := algebraMap K (FiniteTateAdeles K)
+  let C (a : FiniteTateAdeles K) (m : R) := heckeFiniteAdelePrincipalCoset a (r m)
+  choose j hj using exists_integral_rescaling_finiteTateTest chi b
+  choose d hd using hj.2
+  let c := g (r j)
+  let ci := g (Inv.inv (r j))
+  let V (z : FiniteTateAdeles K) := heckeFiniteAdditiveTateTest chi (z * ci * (b : FiniteTateAdeles K))
+  have hjK : Not (r j = 0) :=
+    (map_ne_zero_iff r (FaithfulSMul.algebraMap_injective R K)).mpr hj.1
+  have hInverse : r j * Inv.inv (r j) = 1 := by field_simp [hjK]
+  have hcc : c * ci = 1 := by
+    change g (r j) * g (Inv.inv (r j)) = 1
+    rw [<- map_mul, hInverse, map_one]
+  have hci : ci * c = 1 := by rw [mul_comm, hcc]
+  have hm : Not (d * j = 0) := mul_ne_zero hd.1 hj.1
+  choose centers hCenters using
+    exists_principalCoset_expansion_of_supported V (d * j) hm hd.2.1 hd.2.2
+  have hProduct : forall z : FiniteTateAdeles K, z * g (r (d * j)) = z * g (r d) * c := by
+    intro z
+    change z * g (r (d * j)) = z * g (r d) * g (r j)
+    rw [map_mul r, map_mul g, mul_assoc]
+  have hCoset (a x : FiniteTateAdeles K) :
+      Membership.mem (C a (d * j)) (x * c) <-> Membership.mem (C (a * ci) d) x := by
+    constructor
+    . intro hx
+      choose y hy using hx
+      choose z hz using AddSubgroup.mem_map.mp hy.1
+      have hzY : z * g (r (d * j)) = y := hz.2
+      have hyA : a + y = x * c := hy.2
+      refine Exists.intro (z * g (r d))
+        (And.intro (AddSubgroup.mem_map.mpr (Exists.intro z (And.intro hz.1 rfl))) ?_)
+      have hScaled := congrArg (fun t : FiniteTateAdeles K => t * ci) hyA
+      rwa [<- hzY, hProduct, add_mul, mul_assoc (z * g (r d)), mul_assoc x, hcc,
+        mul_one, mul_one] at hScaled
+    . intro hx
+      choose y hy using hx
+      choose z hz using AddSubgroup.mem_map.mp hy.1
+      have hzY : z * g (r d) = y := hz.2
+      have hyA : a * ci + y = x := hy.2
+      refine Exists.intro (z * g (r (d * j)))
+        (And.intro (AddSubgroup.mem_map.mpr (Exists.intro z (And.intro hz.1 rfl))) ?_)
+      have hScaled := congrArg (fun t : FiniteTateAdeles K => t * c) hyA
+      rwa [<- hzY, add_mul, mul_assoc a, hci, mul_one, <- hProduct] at hScaled
+  let emb : Function.Embedding (FiniteTateAdeles K) (FiniteTateAdeles K) := {
+    toFun := fun a => a * ci
+    inj' := by
+      intro a a' h
+      change a * ci = a' * ci at h
+      have h' := congrArg (fun t : FiniteTateAdeles K => t * c) h
+      simpa only [mul_assoc, hci, mul_one] using h' }
+  refine Exists.intro d (And.intro hd.1 (Exists.intro (centers.map emb) ?_))
+  intro x
+  rw [Finset.sum_map]
+  have hv : V (x * c) = heckeFiniteAdditiveTateTest chi (x * (b : FiniteTateAdeles K)) := by
+    change heckeFiniteAdditiveTateTest chi (x * c * ci * (b : FiniteTateAdeles K)) = _
+    rw [mul_assoc x c ci, hcc, mul_one]
+  rw [<- hv, hCenters]
+  apply Finset.sum_congr rfl
+  intro a ha
+  change V a * (C a (d * j)).indicator (fun _ => (1 : Complex)) (x * c) =
+    V a * (C (a * ci) d).indicator (fun _ => (1 : Complex)) x
+  congr 1
+  by_cases hx : Membership.mem (C a (d * j)) (x * c)
+  . rw [Set.indicator_of_mem hx, Set.indicator_of_mem ((hCoset a x).mp hx)]
+  . rw [Set.indicator_of_notMem hx,
+      Set.indicator_of_notMem (fun h => hx ((hCoset a x).mpr h))]
 
 omit [MeasurableSpace (FiniteTateAdeles K)] [BorelSpace (FiniteTateAdeles K)] in
 private theorem isOpen_heckeFiniteAdelePrincipalCoset (a : FiniteTateAdeles K) (d : K) (hd : Not (d = 0)) :
@@ -435,25 +617,25 @@ private theorem finiteTateIntegral_eq_sum
       rw [integral_const_mul, integral_indicator (hMeas a)]
 
 set_option maxHeartbeats 2000000 in
-/-- Poisson summation for the finite Tate test and an archimedean Schwartz function. -/
-theorem tsum_heckeFiniteAdditiveTateTest_eq_fourierIntegral
-    (chi : UnitaryHeckeCharacter K)
+private theorem tsum_finiteTateTest_eq_fourierIntegral_of_expansion
+    (value : FiniteTateAdeles K -> Complex)
+    (d : RingOfIntegers K) (hd : Not (d = 0)) (centers : Finset (FiniteTateAdeles K))
+    (hCenter : forall x : FiniteTateAdeles K,
+      value x = centers.sum (fun a => value a *
+        (heckeFiniteAdelePrincipalCoset a (algebraMap (RingOfIntegers K) K d)).indicator
+          (fun _ => (1 : Complex)) x))
     (f : SchwartzMap (DedekindZeta.Theta.minkowskiSpace K) Complex) :
     tsum (fun x : K => f (DedekindZeta.Theta.eEmb K x) *
-        heckeFiniteAdditiveTateTest chi (algebraMap K (FiniteTateAdeles K) x)) =
+        value (algebraMap K (FiniteTateAdeles K) x)) =
       tsum (fun t : K =>
         let y := DedekindZeta.Theta.conjMink K (DedekindZeta.Theta.eEmb K t)
         Inv.inv (Real.sqrt (abs (NumberField.discr K : Real)) : Complex) *
           FourierTransform.fourier (f : DedekindZeta.Theta.minkowskiSpace K -> Complex) y *
           integral heckeFiniteAdeleHaar (fun z : FiniteTateAdeles K =>
-            heckeFiniteAdditiveTateTest chi z * (heckeFiniteAdelePrincipalChar (-t) z : Complex))) := by
+            value z * (heckeFiniteAdelePrincipalChar (-t) z : Complex))) := by
   let A := FiniteTateAdeles K
   let V := DedekindZeta.Theta.minkowskiSpace K
-  let value := heckeFiniteAdditiveTateTest chi
   let g := algebraMap K A
-  choose d hD using heckeFiniteAdditiveTateTest_eq_sum_principalCosets chi
-  have hd := hD.1
-  choose centers hCenter using hD.2
   let F (a : A) : SchwartzMap V Complex := HSMul.hSMul (value a) f
   have hPr (x : K) :
       f (DedekindZeta.Theta.eEmb K x) * value (g x) =
@@ -488,5 +670,41 @@ theorem tsum_heckeFiniteAdditiveTateTest_eq_fourierIntegral
   refine (tsum_heckeAdeleFiniteRectangles_eq_fourierIntegral centers (fun a => a)
     (fun _ => d) (fun _ _ => hd) F).trans ?_
   exact tsum_congr hFr
+
+/-- Poisson summation for the finite Tate test and an archimedean Schwartz function. -/
+theorem tsum_heckeFiniteAdditiveTateTest_eq_fourierIntegral
+    (chi : UnitaryHeckeCharacter K)
+    (f : SchwartzMap (DedekindZeta.Theta.minkowskiSpace K) Complex) :
+    tsum (fun x : K => f (DedekindZeta.Theta.eEmb K x) *
+        heckeFiniteAdditiveTateTest chi (algebraMap K (FiniteTateAdeles K) x)) =
+      tsum (fun t : K =>
+        let y := DedekindZeta.Theta.conjMink K (DedekindZeta.Theta.eEmb K t)
+        Inv.inv (Real.sqrt (abs (NumberField.discr K : Real)) : Complex) *
+          FourierTransform.fourier (f : DedekindZeta.Theta.minkowskiSpace K -> Complex) y *
+          integral heckeFiniteAdeleHaar (fun z : FiniteTateAdeles K =>
+            heckeFiniteAdditiveTateTest chi z * (heckeFiniteAdelePrincipalChar (-t) z : Complex))) := by
+  choose d hd using heckeFiniteAdditiveTateTest_eq_sum_principalCosets chi
+  choose centers hCenter using hd.2
+  exact tsum_finiteTateTest_eq_fourierIntegral_of_expansion
+    (heckeFiniteAdditiveTateTest chi) d hd.1 centers hCenter f
+
+/-- Poisson summation for any finite idele translate of the finite Tate test
+and any archimedean Schwartz function. -/
+theorem tsum_heckeFiniteAdditiveTateTest_translate_eq_fourierIntegral
+    (chi : UnitaryHeckeCharacter K) (b : Units (FiniteTateAdeles K))
+    (f : SchwartzMap (DedekindZeta.Theta.minkowskiSpace K) Complex) :
+    tsum (fun x : K => f (DedekindZeta.Theta.eEmb K x) *
+        heckeFiniteAdditiveTateTest chi (algebraMap K (FiniteTateAdeles K) x * (b : FiniteTateAdeles K))) =
+      tsum (fun t : K =>
+        let y := DedekindZeta.Theta.conjMink K (DedekindZeta.Theta.eEmb K t)
+        Inv.inv (Real.sqrt (abs (NumberField.discr K : Real)) : Complex) *
+          FourierTransform.fourier (f : DedekindZeta.Theta.minkowskiSpace K -> Complex) y *
+          integral heckeFiniteAdeleHaar (fun z : FiniteTateAdeles K =>
+            heckeFiniteAdditiveTateTest chi (z * (b : FiniteTateAdeles K)) * (heckeFiniteAdelePrincipalChar (-t) z : Complex))) := by
+  choose d hd using heckeFiniteAdditiveTateTest_translate_eq_sum_principalCosets chi b
+  choose centers hCenter using hd.2
+  exact tsum_finiteTateTest_eq_fourierIntegral_of_expansion
+    (fun z => heckeFiniteAdditiveTateTest chi (z * (b : FiniteTateAdeles K)))
+    d hd.1 centers hCenter f
 
 end Robin1984.GRH
