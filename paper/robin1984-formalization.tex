@@ -527,12 +527,26 @@ in each inequality may depend on \(K\).
 \end{proof}
 
 In particular Dedekind ERH implies Dirichlet GRH. Over a general
-base field, abelian zeta factorization gives the analogous
-implication from all-field Dedekind ERH to the critical-line
-assertion for finite-order Hecke characters. The Dirichlet
-factorization above is the case over \(\mathbb Q\). The next
-criterion treats unitary Hecke characters and higher-rank standard
-functions with the same prime-power kernel.
+base field \(K\), a finite-order Hecke character factors through
+the Galois group of a finite abelian extension \(E/K\) by global
+reciprocity~\cite{ArtinTateCFT}. The Artin factorization is
+\[
+  \zeta_E(s)=\prod_{\eta\in\widehat{\operatorname{Gal}(E/K)}}L(s,\eta),
+\]
+where the factors are the Hecke \(L\)-functions with their primitive
+local factors, and the trivial factor is \(\zeta_K(s)\).
+All the factors are holomorphic in \(0<\Re s<1\). Thus a zero
+off the critical line of any one factor would be a zero of
+\(\zeta_E\) there. The trivial Hecke character over each \(K\)
+gives the converse. Dedekind ERH is therefore equivalent to the
+critical-line assertion over all fields for finite-order Hecke
+characters. Brauer induction and induction invariance of Artin
+\(L\)-functions write each Artin \(L\)-function as a quotient of
+products of such Hecke factors over intermediate fields
+\cite{BrauerArtin1947}. This also excludes Artin zeros and poles
+off the critical line in the open critical strip under Dedekind ERH.
+The next criterion includes Hecke characters of infinite order
+and higher-rank standard functions.
 
 \section{The triangular criterion for Grand RH}\label{sec:grand-research}
 
@@ -3526,6 +3540,16 @@ Riemann Hypothesis}, 23 November 2026 record,
 S.~Slijep\v{c}evi\'c,
 \emph{Outline of Alp\"oge's proof of the generalised Riemann hypothesis},
 21 November 2026, \url{https://hexagonmath.org/pdf/2611.00812}.
+
+\bibitem{ArtinTateCFT}
+E.~Artin and J.~Tate, \emph{Class field theory},
+AMS Chelsea Publishing, Providence, RI, 2009.
+\url{https://doi.org/10.1090/chel/366}.
+
+\bibitem{BrauerArtin1947}
+R.~Brauer, \emph{On Artin's \(L\)-series with general group characters},
+Ann. of Math. (2) \textbf{48} (1947), no.~2, 502--514.
+\url{https://doi.org/10.2307/1969183}.
 
 \bibitem{GodementJacquet1972}
 R. Godement and H. Jacquet, \emph{Zeta Functions of Simple Algebras},
