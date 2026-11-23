@@ -492,6 +492,68 @@ theorem heckeCompletedCriterion_of_characterParameters
     intro i p
     exact (show -(1 : Real) / 2 < 0 by norm_num).trans_le (heckePairedComplexShift_re_nonneg (character i) p)
 
+/-- The triangular inequality for the paired prime-power coefficients
+of a unitary Hecke character, with the indicated pole order. -/
+def HeckeTriangularBound {K : Type*} [Field K] [NumberField K]
+    (chi : UnitaryHeckeCharacter K) (poleOrder : Nat) : Prop :=
+  exists cutoff C : Real, 1 <= cutoff /\
+    forall x : Real, cutoff <= x ->
+      triangularRemainder (fun pn : HeckePrimePowers K => (dedekindPrimePowerNorm K pn : Real))
+        (heckePairedCoefficient K chi) poleOrder x <= C * Real.sqrt x
+
+/-- A pole-free completed Hecke family needs only the Euler-product
+identification, order-one completed functions, and the completed functional
+equation. The ordinary entire functions are derived by dividing out the
+conductor and Gamma factors. -/
+theorem heckePoleFreeCompletedCriterion
+    {K : Type*} [Field K] [NumberField K] {index : Type*}
+    (character : index -> UnitaryHeckeCharacter K) (dual : index -> index)
+    (completedL equationFactor : index -> Complex -> Complex)
+    (hOrder : forall i, Complex.Hadamard.EntireOfOrderAtMost 1 (completedL i))
+    (hCompletedEuler : forall i s, 1 < s.re ->
+      completedL i s * completedL (dual i) s =
+        heckePairedCompletionFactor (character i) 0 s *
+          (heckeEulerL K (character i) s * heckeEulerL K (unitaryHeckeInverse (character i)) s))
+    (hEquation : forall i s, completedL (dual i) (1 - s) =
+      equationFactor i s * completedL i s) :
+    CompletedFamilyRH completedL <-> forall i, HeckeTriangularBound (character i) 0 := by
+  classical
+  have hPos (i : index) : 0 < heckeArithmeticConductor (character i) ^ 2 :=
+    pow_pos (heckeArithmeticConductor_pos (character i)) _
+  have hReal (i : index) (p : PairedRealHeckePlaces K) :
+      -(1 : Real) / 2 < (heckePairedRealShift (character i) p).re :=
+    (show -(1 : Real) / 2 < 0 by norm_num).trans_le (heckePairedRealShift_re_nonneg (character i) p)
+  have hComplex (i : index) (p : PairedComplexHeckePlaces K) :
+      -(1 : Real) / 2 < (heckePairedComplexShift (character i) p).re :=
+    (show -(1 : Real) / 2 < 0 by norm_num).trans_le (heckePairedComplexShift_re_nonneg (character i) p)
+  have hOrdinary (i : index) : exists F : Complex -> Complex,
+      Complex.Hadamard.EntireOfOrderAtMost 1 F /\
+      forall s : Complex, (1 : Real) / 2 < s.re ->
+        completedL i s * completedL (dual i) s =
+          heckePairedCompletionFactor (character i) 0 s * F s :=
+    exists_entireOrderOne_of_standardPairedCompletion_noPole (hPos i)
+      (heckePairedRealShift (character i)) (heckePairedComplexShift (character i))
+      (hReal i) (hComplex i) (hOrder i) (hOrder (dual i))
+  choose F hFOrder hFCompletion using hOrdinary
+  have hEuler (i : index) (s : Complex) (hs : 1 < s.re) :
+      F i s = (s - 1) ^ (0 : Nat) *
+        (heckeEulerL K (character i) s * heckeEulerL K (unitaryHeckeInverse (character i)) s) := by
+    have hsHalf : (1 : Real) / 2 < s.re := by linarith only [hs]
+    have hNonzero : Not (heckePairedCompletionFactor (character i) 0 s = 0) :=
+      standardCompletionFactor_ne_zero (hPos i) 0
+        (heckePairedRealShift (character i)) (heckePairedComplexShift (character i))
+        (hReal i) (hComplex i) hsHalf
+    rw [pow_zero, one_mul]
+    have h := (hFCompletion i s hsHalf).symm.trans (hCompletedEuler i s hs)
+    have hZero : heckePairedCompletionFactor (character i) 0 s * (F i s -
+          heckeEulerL K (character i) s * heckeEulerL K (unitaryHeckeInverse (character i)) s) = 0 := by
+      rw [mul_sub, h, sub_self]
+    exact sub_eq_zero.mp ((mul_eq_zero.mp hZero).resolve_left hNonzero)
+  change CompletedFamilyRH completedL <->
+    forall i, GrandRobinTriangularBound (heckePairedEulerData K (character i) 0 (F i))
+  exact heckeCompletedCriterion_of_characterParameters character dual completedL F equationFactor
+    (fun _ => 0) (fun i => (hFOrder i).differentiable) hOrder hEuler hFCompletion hEquation
+
 /-! ## Radial Gaussian transforms -/
 
 /-- The radial Gaussian Mellin transform for a complex exponent. -/

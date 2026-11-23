@@ -637,4 +637,30 @@ theorem grandRobinCompletedCriterion_of_standardCompletion
     (fun pi _ hs => standardCompletionFactor_ne_zero (hConductor pi) (originOrder pi)
       (mu pi) (nu pi) (hMu pi) (hNu pi) hs) hEquation
 
+/-- A pole-free completed product of order at most one determines
+an entire ordinary function of order at most one. -/
+theorem exists_entireOrderOne_of_standardPairedCompletion_noPole
+    {realPlaces complexPlaces : Type*} [Fintype realPlaces] [Fintype complexPlaces]
+    {conductor : Real} (hConductor : 0 < conductor)
+    (mu : realPlaces -> Complex) (nu : complexPlaces -> Complex)
+    (hMu : forall i, -(1 : Real) / 2 < (mu i).re)
+    (hNu : forall i, -(1 : Real) / 2 < (nu i).re)
+    {Lambda dual : Complex -> Complex} (hLambda : EntireOfOrderAtMost 1 Lambda)
+    (hDual : EntireOfOrderAtMost 1 dual) :
+    exists F : Complex -> Complex, EntireOfOrderAtMost 1 F /\
+      forall s : Complex, (1 : Real) / 2 < s.re ->
+        Lambda s * dual s = standardCompletionFactor conductor 0 mu nu s * F s := by
+  have hProduct : EntireOfOrderAtMost 1 (fun s => Lambda s * dual s) :=
+    entireOrderOne_mul hLambda hDual
+  let Q := standardReciprocalArchimedeanFactor conductor mu nu
+  have hQ : EntireOfOrderAtMost 1 Q :=
+    entireOrderOne_standardReciprocalArchimedeanFactor hConductor mu nu
+  refine Exists.intro (fun s => (Lambda s * dual s) * Q s)
+    (And.intro (entireOrderOne_mul hProduct hQ) ?_)
+  intro s hs
+  change Lambda s * dual s = standardCompletionFactor conductor 0 mu nu s *
+    ((Lambda s * dual s) * standardReciprocalArchimedeanFactor conductor mu nu s)
+  rw [mul_left_comm, standardCompletionFactor_mul_reciprocal hConductor 0 mu nu hMu hNu hs,
+    pow_zero, mul_one]
+
 end Robin1984.GRH
