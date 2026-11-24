@@ -76,20 +76,17 @@ private theorem secondCountableTopology_adelicMatrix
     (SecondCountableTopology (Fin n -> Fin n -> Prod (InfiniteAdeleRing K) (TestFinite K)))
 
 set_option maxHeartbeats 450000 in
-/-- The time-parameter integral of a countably indexed matrix theta
-series is measurable when the terms are summable and the data are measurable. -/
-theorem measurable_godementJacquetThetaCurve
+/-- The adelic theta series is jointly measurable in the determinant
+parameter and both quotient variables when its terms are summable. -/
+theorem measurable_godementJacquetThetaSeries
     (K : Type*) [Field K] [NumberField K] (n : Nat) (I : Type*) [Countable I]
     [MeasurableSpace (CurveGroup K n)] [BorelSpace (CurveGroup K n)]
     [MeasurableSpace (CurveMatrix K n)] [BorelSpace (CurveMatrix K n)]
-    (nu : Measure (CurveGroup K n)) [SFinite nu]
     (P : I -> Matrix (Fin n) (Fin n) K)
     (Phi : CurveMatrix K n -> Complex) (hPhi : Measurable Phi)
-    (c f : CurveGroup K n -> Complex) (hc : Measurable c) (hf : Measurable f)
     (hs : forall t A B, Summable (fun i : I => godementJacquetDoubleThetaTerm K n Phi t A B (P i))) :
-    Measurable (fun t : Real => integral (nu.prod nu)
-      (fun p : Prod (CurveGroup K n) (CurveGroup K n) =>
-        tsum (fun i : I => godementJacquetDoubleThetaTerm K n Phi t p.1 p.2 (P i)) * (c p.1 * f p.2))) := by
+    Measurable (fun q : Prod Real (Prod (CurveGroup K n) (CurveGroup K n)) =>
+      tsum (fun i : I => godementJacquetDoubleThetaTerm K n Phi q.1 q.2.1 q.2.2 (P i))) := by
   let A := AdeleRing (RingOfIntegers K) K
   let G := CurveGroup K n
   let M := CurveMatrix K n
@@ -124,8 +121,28 @@ theorem measurable_godementJacquetThetaCurve
       ((hLeft.mul hTime).mul continuous_const).mul hRight
     change Measurable (Function.comp Phi W)
     exact hPhi.comp hW.measurable
+  exact measurable_complex_tsum_of_summable Z hT (fun q => hs q.1 q.2.1 q.2.2)
+
+set_option maxHeartbeats 450000 in
+/-- The time-parameter integral of a countably indexed matrix theta
+series is measurable when the terms are summable and the data are measurable. -/
+theorem measurable_godementJacquetThetaCurve
+    (K : Type*) [Field K] [NumberField K] (n : Nat) (I : Type*) [Countable I]
+    [MeasurableSpace (CurveGroup K n)] [BorelSpace (CurveGroup K n)]
+    [MeasurableSpace (CurveMatrix K n)] [BorelSpace (CurveMatrix K n)]
+    (nu : Measure (CurveGroup K n)) [SFinite nu]
+    (P : I -> Matrix (Fin n) (Fin n) K)
+    (Phi : CurveMatrix K n -> Complex) (hPhi : Measurable Phi)
+    (c f : CurveGroup K n -> Complex) (hc : Measurable c) (hf : Measurable f)
+    (hs : forall t A B, Summable (fun i : I => godementJacquetDoubleThetaTerm K n Phi t A B (P i))) :
+    Measurable (fun t : Real => integral (nu.prod nu)
+      (fun p : Prod (CurveGroup K n) (CurveGroup K n) =>
+        tsum (fun i : I => godementJacquetDoubleThetaTerm K n Phi t p.1 p.2 (P i)) * (c p.1 * f p.2))) := by
+  let G := CurveGroup K n
+  let X := Prod Real (Prod G G)
+  let Z (i : I) (q : X) := godementJacquetDoubleThetaTerm K n Phi q.1 q.2.1 q.2.2 (P i)
   have hSum : Measurable (fun q : X => tsum (fun i : I => Z i q)) :=
-    measurable_complex_tsum_of_summable Z hT (fun q => hs q.1 q.2.1 q.2.2)
+    measurable_godementJacquetThetaSeries K n I P Phi hPhi hs
   let B (q : X) := tsum (fun i : I => Z i q) * (c q.2.1 * f q.2.2)
   have hB : Measurable B :=
     hSum.mul ((hc.comp (measurable_fst.comp measurable_snd)).mul
