@@ -131,6 +131,77 @@ theorem exists_disjoint_additiveCoset_partition
       rw [hc.2]
       exact hxC
 
+/-- A compactly supported function invariant under an open additive
+subgroup is a finite linear combination of that subgroup's coset indicators. -/
+theorem exists_additiveCoset_indicator_expansion
+    {G V : Type*} [AddCommGroup G] [TopologicalSpace G] [IsTopologicalAddGroup G] [AddCommMonoid V]
+    (H : AddSubgroup G) (hOpen : IsOpen (H : Set G))
+    (F : G -> V) (S : Set G) (hS : IsCompact S)
+    (hZero : forall x, Not (Membership.mem S x) -> F x = 0)
+    (hF : forall x b, Membership.mem H b -> F (x + b) = F x) :
+    Exists (fun T : Finset (Set G) => Exists (fun a : Set G -> G =>
+      And (forall C, Membership.mem T C -> C = additiveSubgroupCoset H (a C))
+        (forall x, F x = T.sum (fun C => C.indicator (fun _ => F (a C)) x)))) := by
+  let U : Set G := Set.ofPred (fun x => Not (F x = 0))
+  have hCOpen (x : G) : IsOpen (additiveSubgroupCoset H x) :=
+    (Homeomorph.addLeft x).isOpenMap _ hOpen
+  have hCmem (x : G) : Membership.mem (additiveSubgroupCoset H x) x :=
+    Exists.intro 0 (And.intro H.zero_mem (add_zero x))
+  have hCeq {x y : G} (hy : Membership.mem (additiveSubgroupCoset H x) y) : F y = F x := by
+    choose b hb using hy
+    rw [<- hb.2]
+    exact hF x b hb.1
+  have hCompl : IsOpen U.compl := by
+    apply isOpen_iff_mem_nhds.mpr
+    intro x hx
+    have hx0 : F x = 0 := not_not.mp hx
+    apply Filter.mem_of_superset ((hCOpen x).mem_nhds (hCmem x))
+    intro y hy
+    change Not (Not (F y = 0))
+    exact not_not.mpr ((hCeq hy).trans hx0)
+  have hUS : U <= S := by
+    intro x hx
+    by_contra hxs
+    exact hx (hZero x hxs)
+  have hU : IsCompact U := hS.of_isClosed_subset (isOpen_compl_iff.mp hCompl) hUS
+  have hStable : forall x, Membership.mem U x -> forall b, Membership.mem H b ->
+      Membership.mem U (x + b) := by
+    intro x hx b hb
+    change Not (F (x + b) = 0)
+    rw [hF x b hb]
+    exact hx
+  choose T hT using exists_disjoint_additiveCoset_partition H hOpen U hU hStable
+  let a (C : Set G) := if h : Membership.mem T C then Classical.choose (hT.1 C h) else 0
+  have hA (C : Set G) (hC : Membership.mem T C) : C = additiveSubgroupCoset H (a C) := by
+    change C = additiveSubgroupCoset H (if h : Membership.mem T C then Classical.choose (hT.1 C h) else 0)
+    rw [dif_pos hC]
+    exact (Classical.choose_spec (hT.1 C hC)).2
+  refine Exists.intro T (Exists.intro a (And.intro hA ?_))
+  intro x
+  by_cases hx : Membership.mem U x
+  . have hx' := hx
+    rw [hT.2.2] at hx'
+    choose C hXC using Set.mem_iUnion.mp hx'
+    choose hC hxC using Set.mem_iUnion.mp hXC
+    rw [Finset.sum_eq_single_of_mem C hC, Set.indicator_of_mem hxC]
+    . apply hCeq
+      rw [<- hA C hC]
+      exact hxC
+    . intro D hD hNe
+      apply Set.indicator_of_notMem
+      intro hxD
+      exact Set.disjoint_left.mp (hT.2.1 D hD C hC hNe) hxD hxC
+  . have hx0 : F x = 0 := not_not.mp hx
+    rw [hx0]
+    symm
+    apply Finset.sum_eq_zero
+    intro C hC
+    apply Set.indicator_of_notMem
+    intro hxC
+    apply hx
+    rw [hT.2.2]
+    exact Set.mem_iUnion.mpr (Exists.intro C (Set.mem_iUnion.mpr (Exists.intro hC hxC)))
+
 variable (K : Type*) [Field K] [NumberField K]
 
 private abbrev FiniteAdeles (K : Type*) [Field K] [NumberField K] :=
@@ -348,5 +419,22 @@ theorem exists_disjoint_principalRectangles_mulVec_preimage
         have he : a + w = M.val.mulVec x := hw.2
         rw [<- add_assoc, he]))
   exact Exists.intro b (And.intro hb.1 (exists_disjoint_additiveCoset_partition H hO S hSc hStable))
+
+omit [DecidableEq I] in
+/-- A periodic, compactly supported function on a finite adelic vector
+space expands into principal rectangle indicators with the given modulus. -/
+theorem exists_finiteAdelePrincipalRectangle_indicator_expansion
+    {V : Type*} [AddCommMonoid V] (d : K) (hd : Not (d = 0))
+    (F : (I -> FiniteAdeles K) -> V)
+    (S : Set (I -> FiniteAdeles K)) (hS : IsCompact S)
+    (hZero : forall x, Not (Membership.mem S x) -> F x = 0)
+    (hF : forall x w, (forall i, Membership.mem (heckeScaledIntegralFiniteAdeles d) (w i)) ->
+      F (x + w) = F x) :
+    Exists (fun T : Finset (Set (I -> FiniteAdeles K)) =>
+      Exists (fun a : Set (I -> FiniteAdeles K) -> I -> FiniteAdeles K =>
+        And (forall C, Membership.mem T C -> C = finiteAdelePrincipalRectangle K I (a C) d)
+          (forall x, F x = T.sum (fun C => C.indicator (fun _ => F (a C)) x)))) :=
+  exists_additiveCoset_indicator_expansion (scaledFiniteAdeleVectorSubgroup K I d)
+    (isOpen_scaledFiniteAdeleVectorSubgroup K I d hd) F S hS hZero hF
 
 end Robin1984.GRH
