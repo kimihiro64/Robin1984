@@ -403,4 +403,112 @@ theorem exists_godementJacquetMatrixRectangle_weightedDecay
     _ <= L ^ k * S :=
       mul_le_mul_of_nonneg_left (SchwartzMap.norm_pow_mul_le_seminorm Real f (N * k + m) x) (pow_nonneg hL _)
 
+private abbrev SectionAdeles (K : Type*) [Field K] [NumberField K] :=
+  AdeleRing (RingOfIntegers K) K
+private abbrev SectionFiniteAdeles (K : Type*) [Field K] [NumberField K] :=
+  FiniteAdeleRing (RingOfIntegers K) K
+
+/-- The logarithmic determinant section has trivial finite matrix component. -/
+theorem adelicDeterminantSection_map_finite
+    (K : Type*) [Field K] [NumberField K] (n : Nat) (t : Real) :
+    Matrix.GeneralLinearGroup.map (RingHom.snd (InfiniteAdeleRing K) (SectionFiniteAdeles K))
+      (adelicDeterminantSection K n (Multiplicative.ofAdd t)) = 1 := by
+  let u := heckeIdelicExpSection K (t / (n : Real))
+  let g : RingHom (SectionAdeles K) (SectionFiniteAdeles K) :=
+    RingHom.snd (InfiniteAdeleRing K) (SectionFiniteAdeles K)
+  apply Units.ext
+  change (Matrix.scalar (Fin n) u.val).map g = 1
+  rw [Matrix.scalar_apply]
+  apply Matrix.ext
+  intro i j
+  change g (Matrix.diagonal (fun _ : Fin n => u.val) i j) =
+    (1 : Matrix (Fin n) (Fin n) (SectionFiniteAdeles K)) i j
+  by_cases h : i = j
+  . subst j
+    rw [Matrix.diagonal_apply_eq, Matrix.one_apply_eq]
+    rfl
+  . rw [Matrix.diagonal_apply_ne _ h, Matrix.one_apply_ne h, map_zero]
+
+/-- The archimedean matrix coordinates are multiplied by the exact
+central scale of the determinant section. -/
+theorem heckeAdeleMinkowskiVector_adelicDeterminantSection_mul
+    (K : Type*) [Field K] [NumberField K] (n : Nat) (t : Real)
+    (M : AdelicGeneralLinearGroup K n) :
+    heckeAdeleMinkowskiVector K (MatrixRectangleIndex n)
+      (adelicDeterminantSection K n (Multiplicative.ofAdd t) * M).val.vec =
+      HSMul.hSMul (Real.exp ((t / (n : Real)) / (Module.finrank Rat K : Real)))
+        (heckeAdeleMinkowskiVector K (MatrixRectangleIndex n) M.val.vec) := by
+  let c := Real.exp ((t / (n : Real)) / (Module.finrank Rat K : Real))
+  let T := DedekindZeta.Theta.toMinkowski K
+  let e := heckeAdeleMixedCoordinate K
+  let u := heckeIdelicExpSection K (t / (n : Real))
+  let E := InfiniteAdeleRing.ringEquiv_mixedSpace K
+  let J := MatrixRectangleIndex n
+  have hArch : e u.val = algebraMap Real (mixedEmbedding.mixedSpace K) c := by
+    change E (E.symm (algebraMap Real (mixedEmbedding.mixedSpace K) c)) = _
+    exact E.apply_symm_apply _
+  apply (PiLp.continuousLinearEquiv 2 Real (fun _ : J => DedekindZeta.Theta.minkowskiSpace K)).injective
+  funext i
+  change T (e ((Matrix.scalar (Fin n) u.val * M.val) i.2 i.1)) =
+    HSMul.hSMul c (T (e (M.val i.2 i.1)))
+  have hEntry :
+      e ((Matrix.scalar (Fin n) u.val * M.val) i.2 i.1) =
+        HSMul.hSMul c (e (M.val i.2 i.1)) := by
+    rw [Matrix.scalar_apply, Matrix.diagonal_mul]
+    change e (u.val * M.val i.2 i.1) = _
+    rw [map_mul, hArch]
+    exact (Algebra.smul_def c (e (M.val i.2 i.1))).symm
+  exact (congrArg T hEntry).trans (map_smul T _ _)
+
+/-- Moving the positive central scalar to the front isolates all time
+dependence from the finite component of an invertible theta argument. -/
+theorem godementJacquetThetaArgument_center
+    (K : Type*) [Field K] [NumberField K] (n : Nat) (t : Real)
+    (A B : (adelicDeterminantLogNorm K n).ker) (P : Matrix.GeneralLinearGroup (Fin n) K) :
+    Inv.inv A.val * adelicDeterminantSection K n (Multiplicative.ofAdd t) *
+        adelicPrincipalGeneralLinear K n P * B.val =
+      adelicDeterminantSection K n (Multiplicative.ofAdd t) *
+        (Inv.inv A.val * adelicPrincipalGeneralLinear K n P * B.val) := by
+  rw [(adelicDeterminantSection_commute K n (Multiplicative.ofAdd t) (Inv.inv A.val)).eq.symm]
+  simp only [mul_assoc]
+
+/-- The finite matrix argument is independent of logarithmic determinant time. -/
+theorem godementJacquetThetaArgument_map_finite
+    (K : Type*) [Field K] [NumberField K] (n : Nat) (t : Real)
+    (A B : (adelicDeterminantLogNorm K n).ker) (P : Matrix.GeneralLinearGroup (Fin n) K) :
+    let g : RingHom (SectionAdeles K) (SectionFiniteAdeles K) :=
+      RingHom.snd (InfiniteAdeleRing K) (SectionFiniteAdeles K)
+    Matrix.GeneralLinearGroup.map g
+        (Inv.inv A.val * adelicDeterminantSection K n (Multiplicative.ofAdd t) *
+          adelicPrincipalGeneralLinear K n P * B.val) =
+      Matrix.GeneralLinearGroup.map g (Inv.inv A.val * adelicPrincipalGeneralLinear K n P * B.val) := by
+  let g : RingHom (SectionAdeles K) (SectionFiniteAdeles K) :=
+    RingHom.snd (InfiniteAdeleRing K) (SectionFiniteAdeles K)
+  let G := Matrix.GeneralLinearGroup.map (n := Fin n) g
+  let z := adelicDeterminantSection K n (Multiplicative.ofAdd t)
+  let Y := Inv.inv A.val * adelicPrincipalGeneralLinear K n P * B.val
+  have hz : G z = 1 := adelicDeterminantSection_map_finite K n t
+  change G (Inv.inv A.val * z * adelicPrincipalGeneralLinear K n P * B.val) = G Y
+  calc
+    _ = G (z * Y) := congrArg G (godementJacquetThetaArgument_center K n t A B P)
+    _ = G z * G Y := map_mul G _ _
+    _ = G Y := (congrArg (fun x => x * G Y) hz).trans (one_mul _)
+
+/-- At nonnegative time the archimedean norm is at least its value
+with the central scalar removed. -/
+theorem norm_godementJacquetThetaArgument_ge_base
+    (K : Type*) [Field K] [NumberField K] (n : Nat) (t : Real) (ht : 0 <= t)
+    (A B : (adelicDeterminantLogNorm K n).ker) (P : Matrix.GeneralLinearGroup (Fin n) K) :
+    norm (heckeAdeleMinkowskiVector K (MatrixRectangleIndex n)
+      (Inv.inv A.val * adelicPrincipalGeneralLinear K n P * B.val).val.vec) <=
+    norm (heckeAdeleMinkowskiVector K (MatrixRectangleIndex n)
+      (Inv.inv A.val * adelicDeterminantSection K n (Multiplicative.ofAdd t) *
+          adelicPrincipalGeneralLinear K n P * B.val).val.vec) := by
+  rw [godementJacquetThetaArgument_center K n t A B P,
+    heckeAdeleMinkowskiVector_adelicDeterminantSection_mul K n t, norm_smul,
+    Real.norm_of_nonneg (Real.exp_nonneg _)]
+  have hScale : 1 <= Real.exp ((t / (n : Real)) / (Module.finrank Rat K : Real)) :=
+    Real.one_le_exp_iff.mpr (div_nonneg (div_nonneg ht (Nat.cast_nonneg _)) (Nat.cast_nonneg _))
+  simpa only [one_mul] using mul_le_mul_of_nonneg_right hScale (norm_nonneg _)
+
 end Robin1984.GRH
