@@ -1,5 +1,5 @@
 import DedekindZeta.GammaIntegral
-import Robin1984.GRH.HeckeArchimedean
+import Robin1984.GRH.HeckeAdelicFourier
 
 /-!
 # The archimedean Tate integral
@@ -550,5 +550,362 @@ theorem integral_heckeTateInfiniteWeight
     integral_withDensity_eq_integral_toReal_smul hd hD, hEq]
   exact And.intro hIntegrable hFormula
 
+section InfiniteUnitMeasure
+
+variable [MeasurableSpace (Units (mixedEmbedding.mixedSpace K))]
+  [BorelSpace (Units (mixedEmbedding.mixedSpace K))]
+
+theorem measurableEmbedding_heckeInfiniteUnitVal :
+    MeasurableEmbedding (fun a : Units (mixedEmbedding.mixedSpace K) => a.val) :=
+  Units.isOpenEmbedding_val.measurableEmbedding
+
+/-- The normalized multiplicative archimedean measure on the unit group. -/
+def heckeInfiniteUnitMeasure (K : Type*) [Field K] [NumberField K]
+    [MeasurableSpace (Units (mixedEmbedding.mixedSpace K))] :
+    Measure (Units (mixedEmbedding.mixedSpace K)) :=
+  Measure.comap (fun a : Units (mixedEmbedding.mixedSpace K) => a.val)
+    (DedekindZeta.GammaIntegral.mulHaar K)
+
+/-- The normalized measure is supported on the units, so the unit inclusion
+pushes the group measure to the full mixed-space density. -/
+theorem map_heckeInfiniteUnitMeasure_val
+    (K : Type*) [Field K] [NumberField K]
+    [MeasurableSpace (Units (mixedEmbedding.mixedSpace K))]
+    [BorelSpace (Units (mixedEmbedding.mixedSpace K))] :
+    Measure.map (fun a : Units (mixedEmbedding.mixedSpace K) => a.val)
+      (heckeInfiniteUnitMeasure K) = DedekindZeta.GammaIntegral.mulHaar K := by
+  let f (a : Units (mixedEmbedding.mixedSpace K)) := a.val
+  let H := DedekindZeta.GammaIntegral.mulHaar K
+  let bad := Compl.compl (Set.range f)
+  have hf : MeasurableEmbedding f := measurableEmbedding_heckeInfiniteUnitVal
+  have hBad : MeasurableSet bad := hf.measurableSet_range.compl
+  have hNull : H bad = 0 := by
+    change (volume.withDensity (fun x : mixedEmbedding.mixedSpace K =>
+      ENNReal.ofReal ((2 / Real.pi) ^ nrComplexPlaces K * Inv.inv (mixedEmbedding.norm x)))) bad = 0
+    rw [withDensity_apply _ hBad]
+    have hZero : Filter.EventuallyEq (ae (volume.restrict bad))
+        (fun x : mixedEmbedding.mixedSpace K =>
+          ENNReal.ofReal ((2 / Real.pi) ^ nrComplexPlaces K * Inv.inv (mixedEmbedding.norm x)))
+        (fun _ => 0) := by
+      apply (ae_restrict_mem hBad).mono
+      intro x hx
+      have hn : mixedEmbedding.norm x = 0 := by
+        by_contra h
+        exact hx (isUnit_mixedSpace_of_norm_ne_zero h)
+      simp [hn]
+    rw [lintegral_congr_ae hZero]
+    simp
+  change Measure.map f (Measure.comap f H) = H
+  rw [hf.map_comap]
+  exact Measure.restrict_eq_self_of_ae_mem (ae_iff.mpr hNull)
+
+/-- The archimedean unit measure is invariant under multiplication by
+any infinite unit. -/
+theorem isMulRightInvariant_heckeInfiniteUnitMeasure :
+    (heckeInfiniteUnitMeasure K).IsMulRightInvariant := by
+  constructor
+  intro a
+  let f (x : Units (mixedEmbedding.mixedSpace K)) := x.val
+  let T (x : Units (mixedEmbedding.mixedSpace K)) := x * a
+  let t (x : mixedEmbedding.mixedSpace K) := x * a.val
+  let H := DedekindZeta.GammaIntegral.mulHaar K
+  let M := heckeInfiniteUnitMeasure K
+  have hf : MeasurableEmbedding f := measurableEmbedding_heckeInfiniteUnitVal
+  have ht : Measurable t := (continuous_mul_const a.val).measurable
+  have hT : Measurable T := (continuous_mul_const a).measurable
+  have hEq : Function.comp f T = Function.comp t f := rfl
+  have hNorm : Not (mixedEmbedding.norm a.val = 0) := by
+    let e := InfiniteAdeleRing.ringEquiv_mixedSpace K
+    let b := Units.map e.symm.toMonoidHom a
+    have hA : e b.val = a.val := e.apply_symm_apply a.val
+    rw [<- hA, mixedEmbedding_norm_infiniteIdele]
+    exact (heckeInfiniteIdeleNorm_pos b).ne'
+  have hMul : Measure.map t H = H := by
+    change Measure.map (fun x : mixedEmbedding.mixedSpace K => x * a.val)
+      (DedekindZeta.mixedMulHaar K) = DedekindZeta.mixedMulHaar K
+    exact DedekindZeta.mixedMulHaar_map_mul_right K hNorm
+  have hMap : Measure.map f M = H := map_heckeInfiniteUnitMeasure_val K
+  change Measure.map T M = M
+  have hImages : Measure.map f (Measure.map T M) = Measure.map f M := by
+    rw [Measure.map_map hf.measurable hT, hEq, <- Measure.map_map ht hf.measurable, hMap, hMul]
+  have ho := congrArg (Measure.comap f) hImages
+  rw [hf.comap_map, hf.comap_map] at ho
+  exact ho
+
+end InfiniteUnitMeasure
+
+section QuadraticExponent
+
+open Function
+
+variable {E F : Type*} [NormedAddCommGroup E] [NormedSpace Real E]
+  [NormedAddCommGroup F] [NormedSpace Real F]
+
+private theorem temperateGrowth_fderiv {f : E -> F} (h : f.HasTemperateGrowth) :
+    (fderiv Real f).HasTemperateGrowth := by
+  refine And.intro (h.1.fderiv_right (by simp)) ?_
+  intro n
+  choose k C hC using h.2 (n + 1)
+  exact Exists.intro k (Exists.intro C (fun x => by
+    rw [norm_iteratedFDeriv_fderiv]
+    exact hC x))
+
+set_option backward.isDefEq.respectTransparency false in
+set_option maxHeartbeats 1200000 in
+private theorem iteratedFDeriv_exp_factor {q : E -> Real}
+    (hq : q.HasTemperateGrowth) (n : Nat) :
+    exists g : E -> ContinuousMultilinearMap Real (fun _ : Fin n => E) Real,
+      And g.HasTemperateGrowth
+        (forall x, iteratedFDeriv Real n (fun y => Real.exp (q y)) x = HSMul.hSMul (Real.exp (q x)) (g x)) := by
+  let f (x : E) := Real.exp (q x)
+  have hF (x : E) : HasFDerivAt f (HSMul.hSMul (f x) (fderiv Real q x)) x := by
+    have hqd : DifferentiableAt Real q x := hq.1.differentiable (by simp) x
+    exact hqd.hasFDerivAt.exp
+  induction n with
+  | zero =>
+    let L := (continuousMultilinearCurryFin0 Real E Real).symm
+    refine Exists.intro (fun _ => L 1) (And.intro (HasTemperateGrowth.const _) ?_)
+    intro x
+    rw [iteratedFDeriv_zero_eq_comp, Function.comp_apply]
+    change L (f x) = HSMul.hSMul (f x) (L 1)
+    have h := map_smul L (f x) (1 : Real)
+    simpa only [smul_eq_mul, mul_one] using h
+  | succ n hPrev =>
+    choose g hg using hPrev
+    let L := (continuousMultilinearCurryLeftEquiv Real (fun _ : Fin (n + 1) => E) Real).symm
+    let B := ContinuousLinearMap.smulRightL Real E
+      (ContinuousMultilinearMap Real (fun _ : Fin n => E) Real)
+    let A (x : E) := fderiv Real g x + B (fderiv Real q x) (g x)
+    have hD : (fderiv Real q).HasTemperateGrowth := temperateGrowth_fderiv hq
+    have hB := @ContinuousLinearMap.bilinear_hasTemperateGrowth Real E
+      (ContinuousLinearMap (RingHom.id Real) E Real)
+      (ContinuousMultilinearMap Real (fun _ : Fin n => E) Real)
+      (ContinuousLinearMap (RingHom.id Real) E (ContinuousMultilinearMap Real (fun _ : Fin n => E) Real))
+      _ _ _ _ _ _ _ _ _ _ _ _ _ B (fderiv Real q) g hD hg.1
+    have hA : A.HasTemperateGrowth := (temperateGrowth_fderiv hg.1).add hB
+    have hLC := @ContinuousLinearMap.hasTemperateGrowth
+      (ContinuousLinearMap (RingHom.id Real) E (ContinuousMultilinearMap Real (fun _ : Fin n => E) Real))
+      (ContinuousMultilinearMap Real (fun _ : Fin (n + 1) => E) Real)
+      _ _ _ _ L.toContinuousLinearEquiv.toContinuousLinearMap
+    have hLA := hLC.comp hA
+    refine Exists.intro (fun x => L (A x)) (And.intro hLA ?_)
+    intro x
+    have hgEq : iteratedFDeriv Real n f = fun y => HSMul.hSMul (f y) (g y) := funext hg.2
+    have hgd : DifferentiableAt Real g x := hg.1.1.differentiable (by simp) x
+    rw [iteratedFDeriv_succ_eq_comp_left, Function.comp_apply]
+    change L (fderiv Real (iteratedFDeriv Real n f) x) = HSMul.hSMul (f x) (L (A x))
+    have hL : L (HSMul.hSMul (f x) (A x)) = HSMul.hSMul (f x) (L (A x)) :=
+      map_smul L (f x) (A x)
+    rw [hgEq, fderiv_fun_smul (hF x).differentiableAt hgd, (hF x).fderiv, <- hL]
+    congr 1
+    ext y
+    simp only [A, B, _root_.add_apply, _root_.smul_apply,
+      ContinuousLinearMap.smulRight_apply, ContinuousLinearMap.smulRightL_apply_apply,
+      smul_add, smul_smul, smul_eq_mul]
+
+private theorem pow_mul_exp_neg_quadratic_le (a : Real) (ha : 0 < a)
+    (r : Real) (hr : 0 <= r) (n : Nat) :
+    (1 + r) ^ n * Real.exp (-a * r ^ 2) <=
+      Real.exp a * (2 / a) ^ n * (n.factorial : Real) := by
+  let t := a * (1 + r ^ 2)
+  have ht : 0 <= t := mul_nonneg ha.le (by positivity)
+  have hBase : 1 + r <= (2 / a) * t := by
+    have he : (2 / a) * t = 2 * (1 + r ^ 2) := by
+      dsimp only [t]
+      field_simp [ha.ne']
+    rw [he]
+    nlinarith [sq_nonneg (r - 1)]
+  have hn : 0 < (n.factorial : Real) := by exact_mod_cast Nat.factorial_pos n
+  have hExp : t ^ n <= Real.exp t * (n.factorial : Real) := by
+    have h := mul_le_mul_of_nonneg_right (Real.pow_div_factorial_le_exp t ht n) hn.le
+    have hEq : t ^ n / (n.factorial : Real) * (n.factorial : Real) = t ^ n := by
+      field_simp [hn.ne']
+    rwa [hEq] at h
+  have hT : t ^ n * Real.exp (-t) <= (n.factorial : Real) := by
+    calc
+      _ <= (Real.exp t * (n.factorial : Real)) * Real.exp (-t) :=
+        mul_le_mul_of_nonneg_right hExp (Real.exp_nonneg _)
+      _ = _ := by
+        rw [Real.exp_neg]
+        field_simp [Real.exp_ne_zero]
+  calc
+    _ <= ((2 / a) * t) ^ n * Real.exp (-a * r ^ 2) := by
+      gcongr
+    _ = (Real.exp a * (2 / a) ^ n) * (t ^ n * Real.exp (-t)) := by
+      rw [show -a * r ^ 2 = a + -t by dsimp [t]; ring, Real.exp_add, mul_pow]
+      ring
+    _ <= _ := mul_le_mul_of_nonneg_left hT (by positivity)
+
+/-- A smooth temperate exponent bounded above by a negative quadratic gives
+a Schwartz function after exponentiation. -/
+private def schwartzExp_of_negativeQuadratic {q : E -> Real}
+    (hq : q.HasTemperateGrowth) {a : Real} (ha : 0 < a)
+    (hNeg : forall x, q x <= -a * norm x ^ 2) :
+    SchwartzMap E Real where
+  toFun x := Real.exp (q x)
+  smooth' := Real.contDiff_exp.comp hq.1
+  decay' k n := by
+    choose g hg using iteratedFDeriv_exp_factor hq n
+    choose d C hC using hg.1.2 0
+    have hNorm (x : E) : norm (g x) <= (max C 0) * (1 + norm x) ^ d := by
+      have h := hC x
+      rw [norm_iteratedFDeriv_zero] at h
+      exact h.trans (mul_le_mul_of_nonneg_right (le_max_left _ _) (by positivity))
+    refine Exists.intro
+      ((max C 0) * (Real.exp a * (2 / a) ^ (k + d) * ((k + d).factorial : Real))) ?_
+    intro x
+    have hS : norm (HSMul.hSMul (Real.exp (q x)) (g x)) = Real.exp (q x) * norm (g x) := by
+      have h := norm_smul (Real.exp (q x)) (g x)
+      simpa only [Real.norm_of_nonneg (Real.exp_nonneg _)] using h
+    rw [hg.2 x, hS]
+    calc
+      _ <= (1 + norm x) ^ k * (Real.exp (-a * norm x ^ 2) * ((max C 0) * (1 + norm x) ^ d)) := by
+        gcongr
+        . exact le_add_of_nonneg_left (by norm_num)
+        . exact hNeg x
+        . exact hNorm x
+      _ = (max C 0) * ((1 + norm x) ^ (k + d) * Real.exp (-a * norm x ^ 2)) := by
+        rw [pow_add]
+        ring
+      _ <= _ := mul_le_mul_of_nonneg_left (pow_mul_exp_neg_quadratic_le a ha _ (norm_nonneg _) _)
+        (le_max_right _ _)
+
+
+end QuadraticExponent
+
+section TateSchwartz
+
+open Function
+
+private abbrev TateRealPlaces (K : Type*) [Field K] := {v : InfinitePlace K // v.IsReal}
+private abbrev TateComplexPlaces (K : Type*) [Field K] := {v : InfinitePlace K // v.IsComplex}
+
+private def realTateCoordinate (v : TateRealPlaces K) :
+    ContinuousLinearMap (RingHom.id Real) (mixedEmbedding.mixedSpace K) Real :=
+  (ContinuousLinearMap.proj v).comp
+    (ContinuousLinearMap.fst Real (TateRealPlaces K -> Real) (TateComplexPlaces K -> Complex))
+
+private def complexTateCoordinate (v : TateComplexPlaces K) :
+    ContinuousLinearMap (RingHom.id Real) (mixedEmbedding.mixedSpace K) Complex :=
+  (ContinuousLinearMap.proj v).comp
+    (ContinuousLinearMap.snd Real (TateRealPlaces K -> Real) (TateComplexPlaces K -> Complex))
+
+private theorem temperateGrowth_finset_prod {T X : Type*} [NormedAddCommGroup X]
+    [NormedSpace Real X] (S : Finset T) (f : T -> X -> Complex)
+    (hf : forall i, Membership.mem S i -> (f i).HasTemperateGrowth) :
+    (fun x : X => S.prod (fun i => f i x)).HasTemperateGrowth := by
+  classical
+  induction S using Finset.induction_on with
+  | empty =>
+    simp only [Finset.prod_empty]
+    exact HasTemperateGrowth.const (1 : Complex)
+  | insert i S hi ih =>
+    simp only [Finset.prod_insert hi]
+    exact (hf i (Finset.mem_insert_self i S)).mul
+      (ih (fun j hj => hf j (Finset.mem_insert_of_mem hj)))
+
+private theorem normSq_le_tateQuadratic (x : mixedEmbedding.mixedSpace K) :
+    norm x ^ 2 <= (Finset.univ.sum (fun v : TateRealPlaces K => (x.1 v) ^ 2)) +
+      2 * (Finset.univ.sum (fun v : TateComplexPlaces K => norm (x.2 v) ^ 2)) := by
+  classical
+  let R := Finset.univ.sum (fun v : TateRealPlaces K => (x.1 v) ^ 2)
+  let C := Finset.univ.sum (fun v : TateComplexPlaces K => norm (x.2 v) ^ 2)
+  have hR : 0 <= R := Finset.sum_nonneg (fun _ _ => sq_nonneg _)
+  have hC : 0 <= C := Finset.sum_nonneg (fun _ _ => sq_nonneg _)
+  have hRle : norm x.1 <= Real.sqrt (R + 2 * C) := by
+    apply (pi_norm_le_iff_of_nonneg (Real.sqrt_nonneg _)).mpr
+    intro v
+    apply Real.le_sqrt_of_sq_le
+    rw [Real.norm_eq_abs, sq_abs]
+    have hv : (x.1 v) ^ 2 <= R :=
+      Finset.single_le_sum (fun (w : TateRealPlaces K) _ => sq_nonneg (x.1 w)) (Finset.mem_univ v)
+    linarith
+  have hCle : norm x.2 <= Real.sqrt (R + 2 * C) := by
+    apply (pi_norm_le_iff_of_nonneg (Real.sqrt_nonneg _)).mpr
+    intro v
+    apply Real.le_sqrt_of_sq_le
+    have hv : norm (x.2 v) ^ 2 <= C :=
+      Finset.single_le_sum (fun (w : TateComplexPlaces K) _ => sq_nonneg (norm (x.2 w))) (Finset.mem_univ v)
+    linarith
+  have hNorm : norm x <= Real.sqrt (R + 2 * C) := by
+    rw [Prod.norm_def]
+    exact max_le hRle hCle
+  exact (Real.le_sqrt (norm_nonneg _) (by linarith)).mp hNorm
+
+set_option maxHeartbeats 1400000 in
+/-- The polynomial Gaussian used in the Tate integral is a Schwartz test on the
+full archimedean mixed space. -/
+theorem exists_heckeTateInfiniteSchwartz (chi : UnitaryHeckeCharacter K) :
+    exists f : SchwartzMap (mixedEmbedding.mixedSpace K) Complex,
+      forall x, f x = heckeTateInfiniteTest chi x := by
+  classical
+  let qr (x : mixedEmbedding.mixedSpace K) :=
+    Finset.univ.sum (fun v : TateRealPlaces K => (x.1 v) ^ 2)
+  let qc (x : mixedEmbedding.mixedSpace K) :=
+    Finset.univ.sum (fun v : TateComplexPlaces K => norm (x.2 v) ^ 2)
+  let q (x : mixedEmbedding.mixedSpace K) := -Real.pi * (qr x + 2 * qc x)
+  have hqr : qr.HasTemperateGrowth := by
+    apply HasTemperateGrowth.sum
+    intro v _
+    exact (realTateCoordinate v).hasTemperateGrowth.pow 2
+  have hqc : qc.HasTemperateGrowth := by
+    apply HasTemperateGrowth.sum
+    intro v _
+    have hNorm : (fun z : Complex => norm z ^ 2).HasTemperateGrowth := hasTemperateGrowth_norm_sq Complex
+    exact hNorm.comp (complexTateCoordinate v).hasTemperateGrowth
+  have hq : q.HasTemperateGrowth :=
+    (HasTemperateGrowth.const (-Real.pi)).mul (hqr.add ((HasTemperateGrowth.const (2 : Real)).mul hqc))
+  have hNeg (x : mixedEmbedding.mixedSpace K) : q x <= -Real.pi * norm x ^ 2 :=
+    mul_le_mul_of_nonpos_left (normSq_le_tateQuadratic x) (neg_nonpos.mpr Real.pi_pos.le)
+  let P (x : mixedEmbedding.mixedSpace K) :=
+    (Finset.univ.prod (fun v : TateRealPlaces K =>
+      realTatePolynomial (realInfiniteHeckeParameters chi v.property).1 (x.1 v))) *
+    (Finset.univ.prod (fun v : TateComplexPlaces K =>
+      complexTatePolynomial (complexInfiniteHeckeParameters chi v.property).1 (x.2 v)))
+  have hR (v : TateRealPlaces K) :
+      (fun x : mixedEmbedding.mixedSpace K =>
+        realTatePolynomial (realInfiniteHeckeParameters chi v.property).1 (x.1 v)).HasTemperateGrowth :=
+    (Complex.hasTemperateGrowth_ofReal.comp (realTateCoordinate v).hasTemperateGrowth).pow _
+  have hC (v : TateComplexPlaces K) :
+      (fun x : mixedEmbedding.mixedSpace K =>
+        complexTatePolynomial (complexInfiniteHeckeParameters chi v.property).1 (x.2 v)).HasTemperateGrowth := by
+    let m := (complexInfiniteHeckeParameters chi v.property).1
+    change (fun x : mixedEmbedding.mixedSpace K => complexTatePolynomial m (x.2 v)).HasTemperateGrowth
+    by_cases h : 0 <= m
+    case pos =>
+      simp only [complexTatePolynomial, if_pos h]
+      have hConj : (fun z : Complex => starRingEnd Complex z).HasTemperateGrowth :=
+        Complex.conjCLE.toContinuousLinearMap.hasTemperateGrowth
+      exact (hConj.comp (complexTateCoordinate v).hasTemperateGrowth).pow _
+    case neg =>
+      simp only [complexTatePolynomial, if_neg h]
+      exact (complexTateCoordinate v).hasTemperateGrowth.pow _
+  have hPoly : P.HasTemperateGrowth :=
+    (temperateGrowth_finset_prod Finset.univ _ (fun v _ => hR v)).mul
+      (temperateGrowth_finset_prod Finset.univ _ (fun v _ => hC v))
+  let G : SchwartzMap (mixedEmbedding.mixedSpace K) Complex :=
+    SchwartzMap.postcompCLM Complex.ofRealCLM (schwartzExp_of_negativeQuadratic hq Real.pi_pos hNeg)
+  refine Exists.intro (SchwartzMap.smulLeftCLM Complex P G) ?_
+  intro x
+  rw [SchwartzMap.smulLeftCLM_apply hPoly]
+  change P x * (Real.exp (q x) : Complex) = _
+  have hGaussian :
+      (Real.exp (q x) : Complex) =
+        (Finset.univ.prod (fun v : TateRealPlaces K =>
+          (Real.exp (-Real.pi * (x.1 v) ^ 2) : Complex))) *
+        (Finset.univ.prod (fun v : TateComplexPlaces K =>
+          (Real.exp (-2 * Real.pi * norm (x.2 v) ^ 2) : Complex))) := by
+    rw [<- Complex.ofReal_prod, <- Complex.ofReal_prod, <- Complex.ofReal_mul,
+      <- Real.exp_sum, <- Real.exp_sum, <- Real.exp_add]
+    congr 2
+    unfold q qr qc
+    rw [<- Finset.mul_sum, <- Finset.mul_sum]
+    ring
+  rw [hGaussian]
+  simp only [P, heckeTateInfiniteTest, realTatePlaceTest, complexTatePlaceTest,
+    Finset.prod_mul_distrib]
+  ring
+
+end TateSchwartz
 
 end Robin1984.GRH
