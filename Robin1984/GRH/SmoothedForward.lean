@@ -51,14 +51,12 @@ theorem pointwise_sqrtBound_of_ae {R : Real -> Real} {C : Real}
       (Set.nonempty_of_mem (Metric.mem_ball_self heps.1))
   exact hBall (measure_mono_null heps.2 hNull)
 
-/-- An exact canonical zero expansion of the Mellin transform, with a
-real zero sum and a controlled residual term, implies the triangular
-square-root bound. -/
-theorem triangularSquareRootBound_of_canonicalMellin
+/-- Mellin inversion recovers the exact triangular zero expansion almost everywhere
+on the positive tail, before taking absolute values of its zero terms. -/
+theorem ae_eq_triangularZeroSeries_of_canonicalMellin
     {iota : Type*} [Countable iota] (rho : iota -> Complex) (e : Equiv iota iota)
     (hConj : forall i, rho (e i) = (starRingEnd Complex) (rho i))
     {R E : Real -> Real} (hRMeas : Measurable R) (hEMeas : Measurable E)
-    (hRCont : ContinuousOn R (Ioi 1))
     (hRho : forall i, (rho i).re <= 1 / 2)
     (hRho0 : forall i, Not (rho i = 0)) (hRho1 : forall i, Not (rho i + 1 = 0))
     (hSummable : Summable (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int)))
@@ -70,10 +68,8 @@ theorem triangularSquareRootBound_of_canonicalMellin
       integral (volume.restrict (Ioi (1 : Real))) (realMellinIntegrand R s) =
         integral (volume.restrict (Ioi (1 : Real))) (realMellinIntegrand E s) +
           tsum (fun i => 1 / (s - rho i) + 1 / rho i) / (s * (s + 1)))
-    {C : Real} (hEBound : forall x : Real, 1 < x -> E x <= C * Real.sqrt x)
-    {x : Real} (hx : 1 < x) :
-    R x <= (C + 2 * tsum (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int))) *
-      Real.sqrt x := by
+    : Filter.EventuallyEq (ae (volume.restrict (Ioi (1 : Real)))) R
+      (fun x => E x + (tsum (fun i => triangularZeroTerm (rho i) x)).re) := by
   let mu := volume.restrict (Ioi (1 : Real))
   let S := fun x : Real => tsum (fun i => triangularZeroTerm (rho i) x)
   let U : Real -> Real := fun x => R x - E x - (S x).re
@@ -141,11 +137,43 @@ theorem triangularSquareRootBound_of_canonicalMellin
     rw [hExponent]
     exact (hUAll s hs).2
   have hAE := ae_zero_of_verticalMellin_eq_zero hUMeas 2 hWeight hVertical
+  filter_upwards [hAE] with y hy
+  change R y - E y - (S y).re = 0 at hy
+  change R y = E y + (S y).re
+  linarith only [hy]
+
+/-- An exact canonical zero expansion of the Mellin transform, with a
+real zero sum and a controlled residual term, implies the triangular
+square-root bound. -/
+theorem triangularSquareRootBound_of_canonicalMellin
+    {iota : Type*} [Countable iota] (rho : iota -> Complex) (e : Equiv iota iota)
+    (hConj : forall i, rho (e i) = (starRingEnd Complex) (rho i))
+    {R E : Real -> Real} (hRMeas : Measurable R) (hEMeas : Measurable E)
+    (hRCont : ContinuousOn R (Ioi 1))
+    (hRho : forall i, (rho i).re <= 1 / 2)
+    (hRho0 : forall i, Not (rho i = 0)) (hRho1 : forall i, Not (rho i + 1 = 0))
+    (hSummable : Summable (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int)))
+    (hRInt : forall s : Complex, 1 < s.re -> Integrable (realMellinIntegrand R s)
+      (volume.restrict (Ioi (1 : Real))))
+    (hEInt : forall s : Complex, 1 < s.re -> Integrable (realMellinIntegrand E s)
+      (volume.restrict (Ioi (1 : Real))))
+    (hEq : forall s : Complex, 1 < s.re ->
+      integral (volume.restrict (Ioi (1 : Real))) (realMellinIntegrand R s) =
+        integral (volume.restrict (Ioi (1 : Real))) (realMellinIntegrand E s) +
+          tsum (fun i => 1 / (s - rho i) + 1 / rho i) / (s * (s + 1)))
+    {C : Real} (hEBound : forall x : Real, 1 < x -> E x <= C * Real.sqrt x)
+    {x : Real} (hx : 1 < x) :
+    R x <= (C + 2 * tsum (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int))) *
+      Real.sqrt x := by
+  let mu := volume.restrict (Ioi (1 : Real))
+  let S := fun x : Real => tsum (fun i => triangularZeroTerm (rho i) x)
+  have hAE := ae_eq_triangularZeroSeries_of_canonicalMellin rho e hConj hRMeas hEMeas
+    hRho hRho0 hRho1 hSummable hRInt hEInt hEq
   have hTail : Filter.Eventually (fun x : Real => 1 < x) (ae mu) :=
     ae_restrict_mem measurableSet_Ioi
   apply pointwise_sqrtBound_of_ae hRCont _ hx
   filter_upwards [hAE, hTail] with y hy hyTail
-  change R y - E y - (S y).re = 0 at hy
+  change R y = E y + (S y).re at hy
   have hNorm : norm (S y) <= (2 * Real.sqrt y) *
       tsum (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int)) :=
     norm_tsum_triangularZeroTerm_le rho hRho hSummable hyTail.le
