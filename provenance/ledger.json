@@ -1794,6 +1794,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetThetaDualDecay.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Fourier closure of adelic Schwartz functions and the positive-time theta estimates in Godement and Jacquet, Zeta Functions of Simple Algebras.",
+      "formalization_note": "Proves that the self-dual Fourier transform of a Schwartz rectangle is a finite sum of such rectangles and gives rapid positive-time decay of its invertible theta integral.",
+      "content_basis": "Factors the Fourier transform at every adelic matrix, expands the periodic finite coefficient on disjoint rectangles, and sums the square-integrable theta bounds.",
+      "dependency_status": "Uses the proved matrix Fourier identity, finite Fourier expansion, archimedean Schwartz closure, and Haar volume estimates for the invertible theta kernel.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetThetaKernel.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, together with Tonelli's theorem and geometric-series estimates.",

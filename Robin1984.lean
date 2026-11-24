@@ -18,6 +18,7 @@ import Robin1984.GRH.GodementJacquetProductLattice
 import Robin1984.GRH.GodementJacquetSchwartzDilation
 import Robin1984.GRH.GodementJacquetSingularOrbits
 import Robin1984.GRH.GodementJacquetThetaDecay
+import Robin1984.GRH.GodementJacquetThetaDualDecay
 import Robin1984.GRH.GodementJacquetThetaKernel
 import Robin1984.GRH.GodementJacquetThetaL2Decay
 import Robin1984.GRH.GodementJacquetThetaLatticeDecay
