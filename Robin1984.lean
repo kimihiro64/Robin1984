@@ -5,6 +5,7 @@ import Robin1984.GRH.DirichletMultiplicityArithmetic
 import Robin1984.GRH.HeckeTateAdelicEuler
 import Robin1984.GRH.HeckeTateClassPoisson
 import Robin1984.GRH.HeckeTateContinuation
+import Robin1984.GRH.HeckeTateFiniteFourier
 import Robin1984.GRH.HeckeTateInfiniteFourier
 import Robin1984.GRH.HeckeTateMellin
 import Robin1984.GRH.HeckeTateQuotientIntegration

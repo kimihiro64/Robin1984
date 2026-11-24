@@ -1119,6 +1119,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeTateFiniteFourier.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The finite local Fourier transforms in Tate's thesis.",
+      "formalization_note": "Identifies the finite Tate Fourier transform with the inverse-character test scaled by the different and conductor.",
+      "content_basis": "Computes the conductor exponents and the arithmetic norm, proves the trace-dual lattice and exact Fourier support, and evaluates the transform by unit covariance.",
+      "dependency_status": "Uses the established Tate test, the additive finite Haar measure, the number-field trace pairing, and the standard fractional ideal norm.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeTateInfiniteFourier.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The real and complex local Fourier transforms in Tate's thesis.",
