@@ -1485,4 +1485,198 @@ theorem integral_godementJacquetPositiveSingularTheta_eq_zero
 
 end RationalSingularIndex
 
+section RationalMatrixSplit
+
+universe u
+
+variable {K : Type u} [Field K] {n : Nat}
+
+private theorem matrix_eq_zero_of_rank_eq_zero
+    (P : Matrix (Fin n) (Fin n) K) (hP : P.rank = 0) : P = 0 := by
+  have hRange : LinearMap.range P.mulVecLin = Bot.bot := Submodule.finrank_eq_zero.mp hP
+  have hLin : P.mulVecLin = 0 := LinearMap.range_eq_bot.mp hRange
+  apply Matrix.toLin'.injective
+  rw [Matrix.toLin'_apply', Matrix.toLin'_apply', Matrix.mulVecLin_zero, hLin]
+
+/-- Every rational matrix of positive size is invertible, singular of
+positive rank, or the zero matrix. -/
+def godementJacquetRationalMatrixSplitEquiv (hn : 0 < n) :
+    Equiv (Sum (Matrix.GeneralLinearGroup (Fin n) K)
+      (Sum (GodementJacquetPositiveSingularMatrix K n) Unit)) (Matrix (Fin n) (Fin n) K) := by
+  let : Nonempty (Fin n) := Nonempty.intro (Fin.mk 0 hn)
+  let RationalGL := Matrix.GeneralLinearGroup (Fin n) K
+  let S := GodementJacquetPositiveSingularMatrix K n
+  let right : Sum S Unit -> Matrix (Fin n) (Fin n) K := Sum.elim Subtype.val (fun _ => 0)
+  let f : Sum RationalGL (Sum S Unit) -> Matrix (Fin n) (Fin n) K := Sum.elim Units.val right
+  have hZero : (0 : Matrix (Fin n) (Fin n) K).det = 0 := Matrix.det_zero
+  have hDetRight (P : Sum S Unit) : (right P).det = 0 := by
+    cases P with
+    | inl P => exact P.property.1
+    | inr _ => exact hZero
+  have hDetLeft (P : RationalGL) : Not (P.val.det = 0) :=
+    ((Matrix.isUnit_iff_isUnit_det P.val).mp P.isUnit).ne_zero
+  have hNotZero (P : S) : Not (P.val = 0) := by
+    intro hp
+    have hr := P.property.2
+    rw [hp, Matrix.rank_zero] at hr
+    exact (Nat.lt_irrefl 0) hr
+  have hIRight : Function.Injective right := by
+    intro A B h
+    cases A with
+    | inl A =>
+      cases B with
+      | inl B => exact congrArg Sum.inl (Subtype.ext h)
+      | inr _ => exact False.elim (hNotZero A h)
+    | inr A =>
+      cases B with
+      | inl B => exact False.elim (hNotZero B h.symm)
+      | inr B => exact congrArg Sum.inr (Subsingleton.elim A B)
+  refine Equiv.ofBijective f (And.intro ?_ ?_)
+  . intro A B h
+    cases A with
+    | inl A =>
+      cases B with
+      | inl B => exact congrArg Sum.inl (Units.ext h)
+      | inr B => exact False.elim (hDetLeft A ((congrArg Matrix.det h).trans (hDetRight B)))
+    | inr A =>
+      cases B with
+      | inl B => exact False.elim (hDetLeft B ((congrArg Matrix.det h.symm).trans (hDetRight A)))
+      | inr B => exact congrArg Sum.inr (hIRight h)
+  . intro P
+    by_cases hd : P.det = 0
+    . by_cases hr : P.rank = 0
+      . exact Exists.intro (Sum.inr (Sum.inr ())) (matrix_eq_zero_of_rank_eq_zero P hr).symm
+      . exact Exists.intro (Sum.inr (Sum.inl (Subtype.mk P (And.intro hd (Nat.pos_of_ne_zero hr))))) rfl
+    . have hP := (Matrix.isUnit_iff_isUnit_det P).mpr (isUnit_iff_ne_zero.mpr hd)
+      exact Exists.intro (Sum.inl hP.unit) hP.unit_spec
+
+/-- The partition of rational matrices splits any convergent theta sum
+into its invertible, positive-rank singular, and zero contributions. -/
+theorem godementJacquetRationalMatrixTsum_split (hn : 0 < n)
+    (f : Matrix (Fin n) (Fin n) K -> Complex) (hf : Summable f) :
+    tsum f = (tsum (fun A : Matrix.GeneralLinearGroup (Fin n) K => f A.val)) +
+      ((tsum (fun A : GodementJacquetPositiveSingularMatrix K n => f A.val)) + f 0) := by
+  let RationalGL := Matrix.GeneralLinearGroup (Fin n) K
+  let S := GodementJacquetPositiveSingularMatrix K n
+  let e := godementJacquetRationalMatrixSplitEquiv (K := K) hn
+  let g := f.comp e
+  let right : Sum S Unit -> Complex := g.comp Sum.inr
+  have h := hf.comp_injective e.injective
+  have hleft : Summable (g.comp (Sum.inl : RationalGL -> Sum RationalGL (Sum S Unit))) :=
+    h.comp_injective Sum.inl_injective
+  have hright : Summable right := h.comp_injective Sum.inr_injective
+  have hpos : Summable (right.comp (Sum.inl : S -> Sum S Unit)) :=
+    hright.comp_injective Sum.inl_injective
+  have hzero : Summable (right.comp (Sum.inr : Unit -> Sum S Unit)) :=
+    hright.comp_injective Sum.inr_injective
+  rw [<- e.tsum_eq f]
+  change tsum g = _
+  rw [Summable.tsum_sum hleft hright]
+  change _ + tsum right = _
+  rw [Summable.tsum_sum hpos hzero]
+  have hUnit : tsum (fun u : Unit => right (Sum.inr u)) = f 0 :=
+    tsum_eq_single () (fun u hu => False.elim (hu (Subsingleton.elim u ())))
+  rw [hUnit]
+  rfl
+
+section FullCuspidalTheta
+
+variable [NumberField K]
+
+/-- Under absolute integrability the full rational theta integral equals its
+invertible part. The proper unipotent periods remove the positive-rank terms
+and the average of the cusp form removes the zero matrix term. -/
+theorem integral_godementJacquetFullTheta_eq_invertible_of_cuspidal (hn : 0 < n)
+    [MeasurableSpace (NormGroup K n)] [BorelSpace (NormGroup K n)]
+    (mu : Measure (NormGroup K n)) [SFinite mu] [mu.IsMulLeftInvariant]
+    (D : Set (NormGroup K n)) (hD : MeasurableSet D)
+    (hUnique : forall g : NormGroup K n, ExistsUnique
+      (fun gamma : (adelicPrincipalDeterminantOne K n).range => Membership.mem D (gamma.val * g)))
+    [MeasurableSpace (Matrix (Fin n) (Fin n) (Adeles K))]
+    [BorelSpace (Matrix (Fin n) (Fin n) (Adeles K))]
+    (phi : Matrix (Fin n) (Fin n) (Adeles K) -> Complex) (hPhi : Measurable phi)
+    (cusp : NormGroup K n -> Complex) (hCusp : Measurable cusp)
+    (hInvariant : forall gamma : (adelicPrincipalDeterminantOne K n).range, forall g,
+      cusp (gamma.val * g) = cusp g)
+    (hPeriods : HasGodementJacquetVanishingUnipotentPeriods cusp)
+    (hCuspInt : IntegrableOn cusp D mu) (hMean : integral (mu.restrict D) cusp = 0)
+    (hSum : forall g : NormGroup K n,
+      Summable (fun P : Matrix (Fin n) (Fin n) K =>
+        phi (g.val.inv * P.map (algebraMap K (Adeles K)))))
+    (hAbs : lintegral (mu.restrict D) (fun g : NormGroup K n =>
+      tsum (fun P : Matrix (Fin n) (Fin n) K =>
+        enorm (phi (g.val.inv * P.map (algebraMap K (Adeles K))) * cusp g))) <
+      (Top.top : ENNReal)) :
+    integral (mu.restrict D) (fun g : NormGroup K n =>
+      (tsum (fun P : Matrix (Fin n) (Fin n) K =>
+        phi (g.val.inv * P.map (algebraMap K (Adeles K))))) * cusp g) =
+    integral (mu.restrict D) (fun g : NormGroup K n =>
+      (tsum (fun P : Matrix.GeneralLinearGroup (Fin n) K =>
+        phi (g.val.inv * P.val.map (algebraMap K (Adeles K))))) * cusp g) := by
+  let G := NormGroup K n
+  let M := Matrix (Fin n) (Fin n) K
+  let R := Matrix.GeneralLinearGroup (Fin n) K
+  let S := GodementJacquetPositiveSingularMatrix K n
+  let m := mu.restrict D
+  let f := algebraMap K (Adeles K)
+  let KPhi (P : M) (g : G) := phi (g.val.inv * P.map f)
+  let F (P : M) (g : G) := KPhi P g * cusp g
+  let RTerm (g : G) := (tsum (fun P : R => KPhi P.val g)) * cusp g
+  let STerm (g : G) := (tsum (fun P : S => KPhi P.val g)) * cusp g
+  let ZTerm (g : G) := phi 0 * cusp g
+  let : Countable K := (Module.finBasis Rat K).equivFun.injective.countable
+  let : Countable M := inferInstanceAs (Countable (Fin n -> Fin n -> K))
+  let : SecondCountableTopology (AdelicGeneralLinearGroup K n) :=
+    secondCountableTopology_adelicGeneralLinearGroup K n
+  let : SecondCountableTopology G :=
+    (Topology.IsEmbedding.subtypeVal : Topology.IsEmbedding (fun g : G => g.val)).secondCountableTopology
+  have hF (P : M) : Measurable (F P) := by
+    have hc : Continuous (fun g : G => g.val.inv * P.map f) :=
+      (Units.continuous_val.comp continuous_subtype_val.inv).mul continuous_const
+    exact (hPhi.comp hc.measurable).mul hCusp
+  have hAbsSub {A : Type u} (i : A -> M) (hi : Function.Injective i) :
+      lintegral m (fun g => tsum (fun a => enorm (F (i a) g))) < Top.top := by
+    apply lt_of_le_of_lt (lintegral_mono (fun g => ?_)) hAbs
+    exact ENNReal.summable.tsum_le_tsum_of_inj i hi
+      (fun _ _ => zero_le) (fun _ => le_rfl) ENNReal.summable
+  have hIntSub {A : Type u} (i : A -> M) (hi : Function.Injective i) :
+      Integrable (fun g : G => (tsum (fun a => KPhi (i a) g)) * cusp g) m := by
+    let : Countable A := hi.countable
+    have hSumF (g : G) : Summable (fun a => F (i a) g) :=
+      ((hSum g).mul_right (cusp g)).comp_injective hi
+    have hMeas := measurable_complexTsum_of_summable (fun a => F (i a)) (fun a => hF (i a)) hSumF
+    have hInt : Integrable (fun g : G => tsum (fun a => F (i a) g)) m :=
+      And.intro hMeas.aestronglyMeasurable
+        (lt_of_le_of_lt (lintegral_mono (fun g => enorm_tsum_le_tsum_enorm)) (hAbsSub i hi))
+    simpa only [F, tsum_mul_right] using hInt
+  have hRInt : Integrable RTerm m := hIntSub (fun P : R => P.val) Units.val_injective
+  have hSInt : Integrable STerm m := hIntSub (fun P : S => P.val) Subtype.val_injective
+  have hZInt : Integrable ZTerm m := hCuspInt.smul (phi 0)
+  have hSZ : integral m STerm = 0 :=
+    integral_godementJacquetPositiveSingularTheta_eq_zero mu D hD hUnique phi hPhi cusp hCusp
+      hInvariant hPeriods (fun g => (hSum g).comp_injective (Subtype.val_injective (p := fun Q : M =>
+        And (Q.det = 0) (0 < Q.rank)))) (hAbsSub (fun P : S => P.val) Subtype.val_injective)
+  have hZZ : integral m ZTerm = 0 := by
+    change integral m (fun g => phi 0 * cusp g) = 0
+    rw [integral_const_mul, hMean, mul_zero]
+  have hSplit (g : G) : (tsum (fun P : M => KPhi P g)) * cusp g =
+      RTerm g + (STerm g + ZTerm g) := by
+    rw [godementJacquetRationalMatrixTsum_split hn (fun P : M => KPhi P g) (hSum g)]
+    have hMapZero : (0 : M).map f = 0 := Matrix.ext (fun _ _ => map_zero f)
+    simp only [RTerm, STerm, ZTerm, KPhi, hMapZero, Matrix.mul_zero, add_mul]
+    rfl
+  change integral m (fun g : G => (tsum (fun P : M => KPhi P g)) * cusp g) = integral m RTerm
+  simp_rw [hSplit]
+  calc
+    integral m (fun g => RTerm g + (STerm g + ZTerm g)) =
+        integral m RTerm + integral m (fun g => STerm g + ZTerm g) :=
+      integral_add hRInt (hSInt.add hZInt)
+    _ = integral m RTerm + (integral m STerm + integral m ZTerm) :=
+      congrArg (fun z : Complex => integral m RTerm + z) (integral_add hSInt hZInt)
+    _ = _ := by rw [hSZ, hZZ, add_zero, add_zero]
+
+end FullCuspidalTheta
+
+end RationalMatrixSplit
+
 end Robin1984.GRH
