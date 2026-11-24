@@ -2900,9 +2900,17 @@ every real exponent for both tests. A unitary Hecke character
 descends to this quotient. Its integral against invariant measure
 vanishes if the restriction is nontrivial. The module also proves
 that the character-weighted positive tail defines an entire function
-of the Mellin parameter. The identification of the two tails with the
-completed Hecke Euler product still requires the quotient measure
-formula, the Poisson decomposition, and the local zeta integrals.
+of the Mellin parameter. The module
+\path{HeckeTateQuotientIntegration.lean} proves the product formula
+for the full quotient measure using a Borel fundamental domain.
+The module \path{HeckeTateZetaUnfolding.lean} identifies the
+principal-idele orbit sum with the actual theta series and unfolds
+the weighted zeta integral under integrability. Its integrand uses
+the full character, including its value on the exponential norm
+section. To identify the resulting tails with the completed Hecke
+Euler product, the remaining inputs are integrability of the
+specific zeta test, the quotient Poisson decomposition, and the
+assembled archimedean and finite zeta integrals.
 
 For the pole-free case, Lean also constructs the entire continuation
 from a Mellin tail
