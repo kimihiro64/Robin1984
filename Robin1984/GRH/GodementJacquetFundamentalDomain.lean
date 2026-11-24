@@ -1,6 +1,7 @@
 import Mathlib.MeasureTheory.Group.FundamentalDomain
 import Mathlib.Topology.Compactness.Lindelof
 import Robin1984.GRH.GodementJacquetCoordinates
+import Robin1984.GRH.GodementJacquetSingularOrbits
 import Robin1984.GRH.HeckeTateAdelicEuler
 
 /-!
@@ -1122,5 +1123,237 @@ theorem exists_measurable_godementJacquetUnipotentRepresentative
     Quotient.mk_surjective (sectionQuotient_isLocalHomeomorph K r k)
 
 end UnipotentRepresentatives
+
+section AdditiveQuotientAction
+
+variable {A G : Type*} [AddCommGroup A] [Group G]
+variable [MeasurableSpace G] [MeasurableMul G]
+
+private abbrev AddClasses (D : AddSubgroup A) := HasQuotient.Quotient A D
+
+/-- A group of additive translations which is trivial on the rational
+orbits descends to an action by the quotient of its rational subgroup. -/
+theorem exists_leftOrbitAddQuotientMulAction
+    (D : AddSubgroup A) (U : Subgroup G) (alpha : MonoidHom (Multiplicative A) G)
+    (hNorm : forall (a : Multiplicative A) (u : U),
+      Membership.mem U (alpha a * u.val * Inv.inv (alpha a)))
+    (hRat : forall d : A, Membership.mem D d ->
+      Membership.mem U (alpha (Multiplicative.ofAdd d))) :
+    Exists (fun act : MulAction (Multiplicative (AddClasses D)) (LeftOrbit U) =>
+      forall (a : A) (g : G),
+        act.smul (Multiplicative.ofAdd (QuotientAddGroup.mk' D a))
+          (Quotient.mk (MulAction.orbitRel U G) g) =
+        Quotient.mk (MulAction.orbitRel U G) (alpha (Multiplicative.ofAdd a) * g)) := by
+  let q := Quotient.mk (MulAction.orbitRel U G)
+  let E (a : Multiplicative A) :=
+    leftOrbitNormalizerEquiv U (alpha a) (hNorm a) (fun u => by
+      simpa only [map_inv, inv_inv] using hNorm (Inv.inv a) u)
+  let f : MonoidHom (Multiplicative A) (Equiv.Perm (LeftOrbit U)) :=
+    { toFun := fun a => (E a).toEquiv
+      map_one' := by
+        ext x
+        refine Quotient.inductionOn x ?_
+        intro g
+        change q (alpha 1 * g) = q g
+        rw [map_one, one_mul]
+      map_mul' := by
+        intro a b
+        ext x
+        refine Quotient.inductionOn x ?_
+        intro g
+        change q (alpha (a * b) * g) = q (alpha a * (alpha b * g))
+        rw [map_mul, mul_assoc] }
+  let F := MonoidHom.toAdditiveRight f
+  have hker : D <= F.ker := by
+    intro d hd
+    change F d = 0
+    change f (Multiplicative.ofAdd d) = (1 : Equiv.Perm (LeftOrbit U))
+    ext x
+    refine Quotient.inductionOn x ?_
+    intro g
+    change q (alpha (Multiplicative.ofAdd d) * g) = q g
+    exact Quotient.sound (Exists.intro
+      (Subtype.mk (alpha (Multiplicative.ofAdd d)) (hRat d hd)) rfl)
+  let lifted := QuotientAddGroup.lift D F hker
+  let fQ := AddMonoidHom.toMultiplicativeLeft lifted
+  let act : MulAction (Multiplicative (AddClasses D)) (LeftOrbit U) :=
+    { smul := fun a x => fQ a x
+      one_smul := by
+        intro x
+        change fQ 1 x = x
+        rw [map_one]
+        rfl
+      mul_smul := by
+        intro a b x
+        change fQ (a * b) x = fQ a (fQ b x)
+        rw [map_mul]
+        rfl }
+  refine Exists.intro act ?_
+  intro a g
+  change (Additive.toMul (lifted (QuotientAddGroup.mk' D a))) (q g) = _
+  rw [show lifted (QuotientAddGroup.mk' D a) = F a from rfl]
+  rfl
+
+omit [MeasurableMul G] in
+/-- Measurable choices of representatives give joint measurability of
+the descended translations. -/
+theorem measurable_leftOrbitAddQuotientMulAction
+    {D : AddSubgroup A} {U : Subgroup G} {alpha : MonoidHom (Multiplicative A) G}
+    [MeasurableSpace A] [MeasurableSpace (AddClasses D)]
+    (hAlpha : Measurable (fun a : A => alpha (Multiplicative.ofAdd a)))
+    (hMul : Measurable (fun p : Prod G G => p.1 * p.2))
+    (act : MulAction (Multiplicative (AddClasses D)) (LeftOrbit U))
+    (hAct : forall (a : A) (g : G),
+      act.smul (Multiplicative.ofAdd (QuotientAddGroup.mk' D a))
+        (Quotient.mk (MulAction.orbitRel U G) g) =
+      Quotient.mk (MulAction.orbitRel U G) (alpha (Multiplicative.ofAdd a) * g))
+    (sA : AddClasses D -> A) (hsA : Measurable sA)
+    (hrA : Function.RightInverse sA (QuotientAddGroup.mk' D))
+    (sG : LeftOrbit U -> G) (hsG : Measurable sG)
+    (hrG : Function.RightInverse sG (Quotient.mk (MulAction.orbitRel U G))) :
+    Measurable (fun p : Prod (AddClasses D) (LeftOrbit U) =>
+      act.smul (Multiplicative.ofAdd p.1) p.2) := by
+  let q := Quotient.mk (MulAction.orbitRel U G)
+  have hq : Measurable q := fun _ hs => measurableSet_quotient.mp hs
+  have hProduct : Measurable (fun p : Prod (AddClasses D) (LeftOrbit U) =>
+      alpha (Multiplicative.ofAdd (sA p.1)) * sG p.2) :=
+    hMul.comp ((hAlpha.comp (hsA.comp measurable_fst)).prodMk (hsG.comp measurable_snd))
+  have he : (fun p : Prod (AddClasses D) (LeftOrbit U) =>
+      act.smul (Multiplicative.ofAdd p.1) p.2) =
+      (fun p => q (alpha (Multiplicative.ofAdd (sA p.1)) * sG p.2)) := by
+    funext p
+    have hp := hAct (sA p.1) (sG p.2)
+    rw [hrA p.1, hrG p.2] at hp
+    exact hp
+  rw [he]
+  exact hq.comp hProduct
+
+/-- Each descended translation preserves the quotient of left Haar measure. -/
+theorem measurePreserving_leftOrbitAddQuotientMulAction
+    {D : AddSubgroup A} {U : Subgroup G} [Countable U]
+    (alpha : MonoidHom (Multiplicative A) G)
+    (hNorm : forall (a : Multiplicative A) (u : U),
+      Membership.mem U (alpha a * u.val * Inv.inv (alpha a)))
+    (act : MulAction (Multiplicative (AddClasses D)) (LeftOrbit U))
+    (hAct : forall (a : A) (g : G),
+      act.smul (Multiplicative.ofAdd (QuotientAddGroup.mk' D a))
+        (Quotient.mk (MulAction.orbitRel U G) g) =
+      Quotient.mk (MulAction.orbitRel U G) (alpha (Multiplicative.ofAdd a) * g))
+    (mu : Measure G) [mu.IsMulLeftInvariant]
+    (W : Set G) (hW : MeasurableSet W)
+    (hUnique : forall g : G, ExistsUnique (fun u : U => Membership.mem W (u.val * g)))
+    (c : Multiplicative (AddClasses D)) :
+    let nu := (mu.restrict W).map (Quotient.mk (MulAction.orbitRel U G))
+    MeasurePreserving (act.smul c) nu nu := by
+  choose a ha using QuotientAddGroup.mk'_surjective D (Multiplicative.toAdd c)
+  have hc : c = Multiplicative.ofAdd (QuotientAddGroup.mk' D a) :=
+    (congrArg Multiplicative.ofAdd ha).symm
+  let t := Multiplicative.ofAdd a
+  have hi (u : U) : Membership.mem U (Inv.inv (alpha t) * u.val * alpha t) := by
+    simpa only [map_inv, inv_inv] using hNorm (Inv.inv t) u
+  let E := leftOrbitNormalizerEquiv U (alpha t) (hNorm t) hi
+  have he : act.smul c = (E : LeftOrbit U -> LeftOrbit U) := by
+    funext x
+    refine Quotient.inductionOn x ?_
+    intro g
+    rw [hc]
+    exact hAct a g
+  rw [he]
+  exact measurePreserving_leftOrbitNormalizerEquiv U mu W hW hUnique
+    (alpha t) (hNorm t) hi
+
+end AdditiveQuotientAction
+
+section PrincipalRankTransport
+
+variable {K : Type*} [Field K] [NumberField K] {n r k : Nat}
+
+private abbrev AdelicScalars (K : Type*) [Field K] [NumberField K] := AdeleRing (RingOfIntegers K) K
+private abbrev DeterminantNormOneGroup (K : Type*) [Field K] [NumberField K] (n : Nat) :=
+  (adelicDeterminantLogNorm K n).ker
+private abbrev RationalRankBlockGL (K : Type*) [Field K] (r k : Nat) :=
+  Matrix.GeneralLinearGroup (Sum (Fin r) (Fin k)) K
+
+/-- The entrywise principal embedding on the determinant-norm-one group is faithful. -/
+theorem adelicPrincipalDeterminantOne_injective :
+    Function.Injective (adelicPrincipalDeterminantOne K n) := by
+  intro g h he
+  apply Units.ext
+  apply Matrix.ext
+  intro i j
+  apply AdeleRing.algebraMap_injective (RingOfIntegers K) K
+  exact congrArg (fun x : DeterminantNormOneGroup K n => x.val.val i j) he
+
+/-- The rational rank coordinates, embedded in the norm-one adelic group. -/
+def godementJacquetPrincipalRankTransport
+    (e : Equiv (Fin n) (Sum (Fin r) (Fin k))) (a : Matrix.GeneralLinearGroup (Fin n) K) :
+    MonoidHom (RationalRankBlockGL K r k) (DeterminantNormOneGroup K n) :=
+  (adelicPrincipalDeterminantOne K n).comp (godementJacquetRankTransport e a).toMonoidHom
+
+theorem godementJacquetPrincipalRankTransport_injective
+    (e : Equiv (Fin n) (Sum (Fin r) (Fin k))) (a : Matrix.GeneralLinearGroup (Fin n) K) :
+    Function.Injective (godementJacquetPrincipalRankTransport e a) :=
+  adelicPrincipalDeterminantOne_injective.comp (godementJacquetRankTransport e a).injective
+
+/-- The transported subgroup consists of exactly the rational elements
+of the adelic group fixing the given rational matrix on the left. -/
+theorem mem_godementJacquetPrincipalSingularStabilizer_iff
+    (P : Matrix (Fin n) (Fin n) K) (e : Equiv (Fin n) (Sum (Fin r) (Fin k)))
+    (a b : Matrix.GeneralLinearGroup (Fin n) K)
+    (h : a.val * P * b.val = (godementJacquetRankProjection K r k).submatrix e e)
+    (x : DeterminantNormOneGroup K n) :
+    Membership.mem ((godementJacquetProjectionStabilizer K r k).map
+      (godementJacquetPrincipalRankTransport e a)) x <->
+    And (Membership.mem (adelicPrincipalDeterminantOne K n).range x)
+      (x.val.val * P.map (algebraMap K (AdelicScalars K)) = P.map (algebraMap K (AdelicScalars K))) := by
+  let f := algebraMap K (AdelicScalars K)
+  let FM : RingHom (Matrix (Fin n) (Fin n) K) (Matrix (Fin n) (Fin n) (AdelicScalars K)) :=
+    RingHom.mapMatrix f
+  let T := godementJacquetRankTransport e a
+  let principal := adelicPrincipalDeterminantOne K n
+  have hInj : Function.Injective FM := by
+    intro g z hg
+    apply Matrix.ext
+    intro i j
+    apply AdeleRing.algebraMap_injective (RingOfIntegers K) K
+    exact congrArg (fun X : Matrix (Fin n) (Fin n) (AdelicScalars K) => X i j) hg
+  have hFix (z : Matrix.GeneralLinearGroup (Fin n) K) :
+      (principal z).val.val * P.map f = P.map f <-> z.val * P = P := by
+    change FM z.val * FM P = FM P <-> _
+    rw [<- map_mul, hInj.eq_iff]
+  constructor
+  . intro hx
+    choose u hu using hx
+    have hu' : principal (T u) = x := hu.2
+    have hFixP := (godementJacquetRankTransport_mul_eq_iff P e a b h u).mpr hu.1
+    refine And.intro (Exists.intro (T u) hu') ?_
+    rw [<- hu']
+    exact (hFix (T u)).mpr hFixP
+  . intro hx
+    choose z hz using hx.1
+    have hFixP : z.val * P = P := (hFix z).mp (by rw [hz]; exact hx.2)
+    let u := T.symm z
+    have hu : T u = z := T.apply_symm_apply z
+    refine Exists.intro u (And.intro ?_ ?_)
+    . apply (godementJacquetRankTransport_mul_eq_iff P e a b h u).mp
+      change (T u).val * P = P
+      rwa [hu]
+    . change principal (T u) = x
+      rwa [hu]
+
+/-- Subgroups transported from rational rank coordinates remain discrete. -/
+theorem discreteTopology_godementJacquetPrincipalRankSubgroup
+    (e : Equiv (Fin n) (Sum (Fin r) (Fin k)))
+    (a : Matrix.GeneralLinearGroup (Fin n) K) (S : Subgroup (RationalRankBlockGL K r k)) :
+    DiscreteTopology (S.map (godementJacquetPrincipalRankTransport e a)) := by
+  apply SetLike.isDiscrete_iff_discreteTopology.mp
+  have hP : IsDiscrete (SetLike.coe (adelicPrincipalDeterminantOne K n).range) :=
+    SetLike.isDiscrete_iff_discreteTopology.mpr (discreteTopology_adelicPrincipalDeterminantOne K n)
+  apply hP.mono
+  intro g hg
+  choose u hu using hg
+  exact Exists.intro ((godementJacquetRankTransport e a) u) hu.2
+
+end PrincipalRankTransport
 
 end Robin1984.GRH
