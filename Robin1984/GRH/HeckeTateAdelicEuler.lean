@@ -153,5 +153,238 @@ theorem integral_heckeTateWeightedProductTest
   refine And.intro (hA.1.mul_prod hF.1) ?_
   rw [integral_prod_mul, hA.2, hF.2]
 
+variable (K : Type*) [Field K] [NumberField K]
+
+private abbrev TateProductGlobalAdeles :=
+  AdeleRing (RingOfIntegers K) K
+
+private def heckeTateGlobalFromProduct
+    (p : Prod (Units (TateEulerMixedSpace K)) (Units (TateEulerFiniteAdeles K))) :
+    Units (TateProductGlobalAdeles K) :=
+  heckeInfiniteIdeleInclusion K
+    (Units.map (InfiniteAdeleRing.ringEquiv_mixedSpace K).symm.toMonoidHom p.1) *
+  heckeFiniteIdeleInclusion p.2
+
+private def heckeTateProductFromGlobal (a : Units (TateProductGlobalAdeles K)) :
+    Prod (Units (TateEulerMixedSpace K)) (Units (TateEulerFiniteAdeles K)) :=
+  Prod.mk
+    (Units.map (InfiniteAdeleRing.ringEquiv_mixedSpace K).toMonoidHom
+      (Units.map (RingHom.fst (InfiniteAdeleRing K) (TateEulerFiniteAdeles K)).toMonoidHom a))
+    (Units.map (RingHom.snd (InfiniteAdeleRing K) (TateEulerFiniteAdeles K)).toMonoidHom a)
+
+private theorem heckeTateGlobalFromProduct_val
+    (p : Prod (Units (TateEulerMixedSpace K)) (Units (TateEulerFiniteAdeles K))) :
+    (heckeTateGlobalFromProduct K p).val =
+      Prod.mk ((InfiniteAdeleRing.ringEquiv_mixedSpace K).symm p.1.val) p.2.val := by
+  apply Prod.ext
+  . exact mul_one _
+  . exact one_mul _
+
+private theorem continuous_heckeTateGlobalFromProduct :
+    Continuous (heckeTateGlobalFromProduct K) := by
+  let e := InfiniteAdeleRing.ringEquiv_mixedSpace K
+  let F := TateEulerFiniteAdeles K
+  let I := InfiniteAdeleRing K
+  have hArch : Continuous (fun a : Units (TateEulerMixedSpace K) =>
+      heckeInfiniteIdeleInclusion K (Units.map e.symm.toMonoidHom a)) := by
+    have hCont : Continuous (fun a : I => Prod.mk a (1 : F)) :=
+      continuous_id.prodMk continuous_const
+    have h : Continuous (heckeInfiniteIdeleInclusion K) := Units.continuous_map hCont
+    exact h.comp (Units.continuous_map (continuous_heckeInfiniteAdele_mixedSpace_symm K))
+  have hFinite : Continuous (fun a : Units F => heckeFiniteIdeleInclusion a) := by
+    let incl : MonoidHom F (TateProductGlobalAdeles K) :=
+      (1 : MonoidHom F I).prod (MonoidHom.id F)
+    have hEq : (fun a : Units F => heckeFiniteIdeleInclusion a) = Units.map incl := by
+      funext a
+      apply Units.ext
+      rfl
+    rw [hEq]
+    exact Units.continuous_map (continuous_const.prodMk continuous_id)
+  exact (hArch.comp continuous_fst).mul (hFinite.comp continuous_snd)
+
+private theorem continuous_heckeTateProductFromGlobal :
+    Continuous (heckeTateProductFromGlobal K) := by
+  let I := InfiniteAdeleRing K
+  let F := TateEulerFiniteAdeles K
+  have hArch : Continuous (Units.map (RingHom.fst I F).toMonoidHom) :=
+    Units.continuous_map (continuous_fst : Continuous (fun p : Prod I F => p.1))
+  have hFinite : Continuous (Units.map (RingHom.snd I F).toMonoidHom) :=
+    Units.continuous_map (continuous_snd : Continuous (fun p : Prod I F => p.2))
+  exact ((Units.continuous_map (continuous_heckeInfiniteAdele_mixedSpace (K := K))).comp
+    hArch).prodMk hFinite
+
+/-- Splitting the full ideles into their mixed archimedean units and finite
+ideles is a homeomorphism in the actual unit-group topologies. -/
+def heckeTateProductIdelesHomeomorph :
+    Homeomorph (Prod (Units (TateEulerMixedSpace K)) (Units (TateEulerFiniteAdeles K)))
+      (Units (TateProductGlobalAdeles K)) where
+  toFun := heckeTateGlobalFromProduct K
+  invFun := heckeTateProductFromGlobal K
+  left_inv p := by
+    apply Prod.ext
+    . apply Units.ext
+      let e := InfiniteAdeleRing.ringEquiv_mixedSpace K
+      change e (heckeTateGlobalFromProduct K p).val.1 = p.1.val
+      rw [heckeTateGlobalFromProduct_val]
+      exact e.apply_symm_apply p.1.val
+    . apply Units.ext
+      change (heckeTateGlobalFromProduct K p).val.2 = p.2.val
+      rw [heckeTateGlobalFromProduct_val]
+  right_inv a := by
+    apply Units.ext
+    rw [heckeTateGlobalFromProduct_val]
+    apply Prod.ext
+    . let e := InfiniteAdeleRing.ringEquiv_mixedSpace K
+      change e.symm (e a.val.1) = a.val.1
+      exact e.symm_apply_apply a.val.1
+    . rfl
+  continuous_toFun := continuous_heckeTateGlobalFromProduct K
+  continuous_invFun := continuous_heckeTateProductFromGlobal K
+
+theorem heckeTateProductIdelesHomeomorph_mul
+    (p q : Prod (Units (TateEulerMixedSpace K)) (Units (TateEulerFiniteAdeles K))) :
+    heckeTateProductIdelesHomeomorph K (p * q) =
+      heckeTateProductIdelesHomeomorph K p * heckeTateProductIdelesHomeomorph K q := by
+  change heckeTateGlobalFromProduct K (p * q) =
+    heckeTateGlobalFromProduct K p * heckeTateGlobalFromProduct K q
+  unfold heckeTateGlobalFromProduct
+  change heckeInfiniteIdeleInclusion K
+    (Units.map (InfiniteAdeleRing.ringEquiv_mixedSpace K).symm.toMonoidHom (p.1 * q.1)) *
+      heckeFiniteIdeleInclusion (p.2 * q.2) = _
+  simp only [map_mul]
+  ac_rfl
+
+section ProductMeasure
+
+variable [MeasurableSpace (Units (TateEulerMixedSpace K))]
+  [BorelSpace (Units (TateEulerMixedSpace K))]
+
+private theorem sFinite_heckeInfiniteUnitMeasure : SFinite (heckeInfiniteUnitMeasure K) := by
+  let H := DedekindZeta.GammaIntegral.mulHaar K
+  let _ : SFinite H :=
+    sFinite_of_absolutelyContinuous (withDensity_absolutelyContinuous volume _)
+  let j (a : Units (TateEulerMixedSpace K)) := a.val
+  have hj : MeasurableEmbedding j := measurableEmbedding_heckeInfiniteUnitVal
+  let nu (n : Nat) := Measure.comap j (sfiniteSeq H n)
+  have hn (n : Nat) : IsFiniteMeasure (nu n) := by
+    constructor
+    suffices nu n Set.univ <= sfiniteSeq H n Set.univ from
+      lt_of_le_of_lt this (measure_lt_top _ _)
+    dsimp only [nu]
+    rw [Measure.comap_apply j hj.injective (fun _ => hj.measurableSet_image.mpr)
+      _ MeasurableSet.univ]
+    exact measure_mono (Set.subset_univ _)
+  refine SFinite.mk (Exists.intro nu (And.intro hn ?_))
+  apply Measure.ext
+  intro s hs
+  have hjS : MeasurableSet (j '' s) := hj.measurableSet_image.mpr hs
+  change Measure.comap j H s = Measure.sum nu s
+  rw [Measure.comap_apply j hj.injective (fun _ => hj.measurableSet_image.mpr) _ hs,
+    Measure.sum_apply _ hs, <- sum_sfiniteSeq H, Measure.sum_apply _ hjS]
+  congr 1
+  funext n
+  exact (Measure.comap_apply j hj.injective (fun _ => hj.measurableSet_image.mpr) _ hs).symm
+
+variable [MeasurableSpace (Units (TateEulerFiniteAdeles K))]
+  [BorelSpace (Units (TateEulerFiniteAdeles K))]
+  [MeasurableSpace (Units (TateProductGlobalAdeles K))]
+  [BorelSpace (Units (TateProductGlobalAdeles K))]
+
+/-- The multiplicative coordinate map is a measurable equivalence. -/
+def heckeTateProductIdelesMeasurableEquiv :
+    MeasurableEquiv
+      (Prod (Units (TateEulerMixedSpace K)) (Units (TateEulerFiniteAdeles K)))
+      (Units (TateProductGlobalAdeles K)) := by
+  let _ : SecondCountableTopology (Units (TateEulerMixedSpace K)) :=
+    Units.isOpenEmbedding_val.isEmbedding.secondCountableTopology
+  exact (heckeTateProductIdelesHomeomorph K).toMeasurableEquiv
+
+/-- The normalized full idelic measure given by the archimedean and finite
+multiplicative measures. -/
+def heckeTateProductIdelicMeasure (mu : Measure (Units (TateEulerFiniteAdeles K))) :
+    Measure (Units (TateProductGlobalAdeles K)) :=
+  Measure.map (heckeTateProductIdelesHomeomorph K) ((heckeInfiniteUnitMeasure K).prod mu)
+
+variable [MeasurableSpace (TateEulerFiniteAdeles K)] [BorelSpace (TateEulerFiniteAdeles K)]
+
+/-- The absolutely convergent Tate integral on the full ideles is the standard
+product of the archimedean Gamma factors and the Hecke Euler product. -/
+theorem integral_heckeTateProductIdelicMeasure
+    [MeasurableSpace (Units (FractionalIdeal (nonZeroDivisors (RingOfIntegers K)) K))]
+    [MeasurableSingletonClass (Units (FractionalIdeal (nonZeroDivisors (RingOfIntegers K)) K))]
+    (mu : Measure (Units (TateEulerFiniteAdeles K))) [SFinite mu] [mu.IsMulLeftInvariant]
+    (hUnit : mu (heckeIntegralFiniteUnitGroup (K := K) : Set (Units (TateEulerFiniteAdeles K))) = 1)
+    (chi : UnitaryHeckeCharacter K)
+    (f : SchwartzMap (TateEulerMixedSpace K) Complex)
+    (hf : forall x, f x = heckeTateInfiniteTest chi x)
+    {s : Complex} (hs : 1 < s.re) :
+    let Z := fun a => heckeTateZetaWeight chi s a *
+      heckeTateAdditiveIdelicTest f (heckeFiniteAdditiveTateTest chi) a
+    let nu := heckeTateProductIdelicMeasure K mu
+    And (Integrable Z nu)
+      (integral nu Z =
+        ((Finset.univ.prod (fun v : {w : InfinitePlace K // w.IsReal} =>
+          DedekindZeta.LReal (s + realInfiniteHeckeShift chi v.property))) *
+        (Finset.univ.prod (fun v : {w : InfinitePlace K // w.IsComplex} =>
+          DedekindZeta.LComplex (s + complexInfiniteHeckeShift chi v.property)))) *
+        heckeEulerL K chi s) := by
+  let E := TateEulerMixedSpace K
+  let F := TateEulerFiniteAdeles K
+  let e := InfiniteAdeleRing.ringEquiv_mixedSpace K
+  let j : Prod (Units E) (Units F) -> Prod E (Units F) :=
+    Prod.map (fun a : Units E => a.val) id
+  let H := (heckeInfiniteUnitMeasure K).prod mu
+  let T := heckeTateProductIdelesHomeomorph K
+  let Z : Units (TateProductGlobalAdeles K) -> Complex := fun a =>
+    heckeTateZetaWeight chi s a *
+      heckeTateAdditiveIdelicTest f (heckeFiniteAdditiveTateTest chi) a
+  let W := heckeTateWeightedProductTest chi s
+  let _ : SFinite (heckeInfiniteUnitMeasure K) := sFinite_heckeInfiniteUnitMeasure K
+  have hVal : MeasurableEmbedding (fun a : Units E => a.val) :=
+    measurableEmbedding_heckeInfiniteUnitVal
+  have hId : MeasurableEmbedding (id : Units F -> Units F) := MeasurableEmbedding.id
+  have hj : MeasurableEmbedding j := hVal.prodMap hId
+  have hT : MeasurableEmbedding T :=
+    (heckeTateProductIdelesMeasurableEquiv K).measurableEmbedding
+  have hMap : Measure.map j H = (DedekindZeta.GammaIntegral.mulHaar K).prod mu := by
+    change Measure.map (Prod.map (fun a : Units E => a.val) id)
+      ((heckeInfiniteUnitMeasure K).prod mu) = _
+    rw [<- Measure.map_prod_map _ _ hVal.measurable hId.measurable,
+      map_heckeInfiniteUnitMeasure_val, Measure.map_id]
+  have hFun : Z.comp T = W.comp j := by
+    funext p
+    have hp : IsUnit p.1.val := p.1.isUnit
+    have hu : hp.unit = p.1 := Units.ext hp.unit_spec
+    change Z (T p) =
+      (dite (IsUnit p.1.val)
+        (fun hx => heckeTateZetaWeight chi s
+          (heckeInfiniteIdeleInclusion K (Units.map e.symm.toMonoidHom hx.unit) *
+            heckeFiniteIdeleInclusion p.2) *
+          (heckeTateInfiniteTest chi p.1.val *
+            heckeFiniteAdditiveTateTest chi p.2.val))
+        (fun _ => 0))
+    rw [dif_pos hp, hu]
+    change heckeTateZetaWeight chi s (heckeTateGlobalFromProduct K p) *
+      heckeTateAdditiveIdelicTest f (heckeFiniteAdditiveTateTest chi)
+        (heckeTateGlobalFromProduct K p) = _
+    unfold heckeTateAdditiveIdelicTest
+    rw [heckeTateGlobalFromProduct_val]
+    change _ * (f (e (e.symm p.1.val)) * _) = _
+    rw [e.apply_symm_apply, hf]
+    rfl
+  have hValFormula := integral_heckeTateWeightedProductTest mu hUnit chi hs
+  change And (Integrable Z (Measure.map T H)) _
+  refine And.intro ?_ ?_
+  . rw [hT.integrable_map_iff, hFun, <- hj.integrable_map_iff, hMap]
+    exact hValFormula.1
+  . change integral (Measure.map T H) Z = _
+    rw [hT.integral_map Z]
+    change integral H (Z.comp T) = _
+    rw [hFun]
+    change integral H (fun p => W (j p)) = _
+    rw [<- hj.integral_map W, hMap]
+    exact hValFormula.2
+
+end ProductMeasure
 
 end Robin1984.GRH
