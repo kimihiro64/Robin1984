@@ -8,6 +8,7 @@ import Robin1984.GRH.HeckeTateContinuation
 import Robin1984.GRH.HeckeTateFiniteFourier
 import Robin1984.GRH.HeckeTateInfiniteFourier
 import Robin1984.GRH.HeckeTateMellin
+import Robin1984.GRH.HeckeTateMellinReflection
 import Robin1984.GRH.HeckeTateQuotientIntegration
 import Robin1984.GRH.MultiplicityArithmetic
 import Robin1984.GRH.MultiplicityDivisor

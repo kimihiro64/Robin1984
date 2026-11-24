@@ -263,15 +263,17 @@ private theorem radialWeightedTheta_reflect
 /-- For a Hecke character nontrivial on the norm-one classes, the adelic
 zeta integral is the sum of two positive Mellin tails. The two correction
 terms from the Poisson formula have zero Haar integral. -/
-theorem integral_heckeTateClassZeta_eq_two_mellinTails
+theorem integral_heckeTateClassZeta_eq_two_mellinTails_of_logCharacter
     [MeasurableSpace (TClass K)] [BorelSpace (TClass K)]
     [MeasurableSpace (TFinite K)] [BorelSpace (TFinite K)]
     (mu : Measure (TClass K)) [IsFiniteMeasure mu] [mu.IsMulLeftInvariant]
     (hInv : MeasurePreserving Inv.inv mu mu)
     (chi : UnitaryHeckeCharacter K) (z : TClass K)
     (hz : Not (heckeNormOneClassCharacter chi z = 1))
-    (f : SchwartzMap (TMixed K) Complex) :
-    exists tau : Real, forall s : Complex, 1 < s.re ->
+    (f : SchwartzMap (TMixed K) Complex) (tau : Real)
+    (hTau : forall t : Real, (chi.val (heckeIdelicExpSection K t) : Complex) =
+      Complex.exp (((tau * t : Real) : Complex) * Complex.I))
+    (s : Complex) (hs : 1 < s.re) :
       integral (volume.prod mu)
         (heckeTateClassZetaIntegrand chi s f (heckeFiniteAdditiveTateTest chi)) =
         heckeTateThetaMellinTail mu f (heckeFiniteAdditiveTateTest chi) chi
@@ -285,9 +287,6 @@ theorem integral_heckeTateClassZeta_eq_two_mellinTails
     change heckeNormOneClassCharacter (unitaryHeckeInverse chi) z = 1 at h
     rw [heckeNormOneClassCharacter_inverse_apply] at h
     simpa only [inv_inv, inv_one] using congrArg Inv.inv h
-  choose tau hTau using exists_heckeTateClassZeta_mellinTail_shift chi
-  refine Exists.intro tau ?_
-  intro s hs
   let a := s + (tau : Complex) * Complex.I
   let P := heckePositiveThetaMeasure mu
   let fD := heckeTateDualInfiniteTest f
@@ -301,7 +300,7 @@ theorem integral_heckeTateClassZeta_eq_two_mellinTails
   let E1 (p : TCoordinates K) := W (-a) p * (f 0 * T 0)
   have hEq : heckeTateClassZetaIntegrand chi s f T = F := by
     funext p
-    rw [heckeTateClassZetaIntegrand, hTau.1 p.1]
+    rw [heckeTateClassZetaIntegrand, hTau p.1]
     have hExp : (s * (p.1 : Complex)) + ((tau * p.1 : Real) : Complex) * Complex.I =
         a * (p.1 : Complex) := by dsimp only [a]; push_cast; ring
     rw [<- Complex.exp_add, hExp]
@@ -351,6 +350,29 @@ theorem integral_heckeTateClassZeta_eq_two_mellinTails
   change integral P D = _ at hR
   change integral P F + integral P D = _
   rw [hL, hR]
+
+/-- For a Hecke character nontrivial on the norm-one classes, the adelic
+zeta integral is the sum of two positive Mellin tails. The two correction
+terms from the Poisson formula have zero Haar integral. -/
+theorem integral_heckeTateClassZeta_eq_two_mellinTails
+    [MeasurableSpace (TClass K)] [BorelSpace (TClass K)]
+    [MeasurableSpace (TFinite K)] [BorelSpace (TFinite K)]
+    (mu : Measure (TClass K)) [IsFiniteMeasure mu] [mu.IsMulLeftInvariant]
+    (hInv : MeasurePreserving Inv.inv mu mu)
+    (chi : UnitaryHeckeCharacter K) (z : TClass K)
+    (hz : Not (heckeNormOneClassCharacter chi z = 1))
+    (f : SchwartzMap (TMixed K) Complex) :
+    exists tau : Real, forall s : Complex, 1 < s.re ->
+      integral (volume.prod mu)
+        (heckeTateClassZetaIntegrand chi s f (heckeFiniteAdditiveTateTest chi)) =
+        heckeTateThetaMellinTail mu f (heckeFiniteAdditiveTateTest chi) chi
+          (s + (tau : Complex) * Complex.I) +
+        heckeTateThetaMellinTail mu (heckeTateDualInfiniteTest f) (heckeTateDualFiniteTest chi)
+          (unitaryHeckeInverse chi) (1 - (s + (tau : Complex) * Complex.I)) := by
+  choose tau hTau using exists_heckeTateClassZeta_mellinTail_shift chi
+  exact Exists.intro tau (fun s hs =>
+    integral_heckeTateClassZeta_eq_two_mellinTails_of_logCharacter
+      mu hInv chi z hz f tau hTau.1 s hs)
 
 /-- The actual Gamma-completed Hecke Euler product has an entire continuation
 when the character is nontrivial on the norm-one idele classes. -/

@@ -1146,6 +1146,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeTateMellinReflection.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's thesis, the Mellin transform of the adelic Poisson formula.",
+      "formalization_note": "Constructs the conductor-shifted reflection and conjugation of the canonical norm-one theta averages and identifies their full Mellin integrals with the two tails.",
+      "content_basis": "Combines the finite Fourier dilation and the archimedean phase with translation invariance, character orthogonality, and Bochner integral change of variables.",
+      "dependency_status": "Uses the proved finite and archimedean Fourier identities, norm-one Poisson summation, and absolute Mellin moments.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeTateQuotientIntegration.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Tate's unfolding of the multiplicative idele integral over principal ideles and the logarithmic norm.",
