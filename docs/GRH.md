@@ -348,17 +348,29 @@ those coordinates, and $(d)^\vee$ is the trace-dual ideal. The finite
 additive Haar measure $\mu_f$ gives $\widehat{\mathcal O}_K$ mass one and
 satisfies $N((d))\mu_f(d\widehat{\mathcal O}_K)=1$.
 
-The theorem `heckeCompletedCriterion_of_characterParameters` uses these
-inputs and the proved Euler factors with supplied global analytic data.
-For the pole-free case, `heckePoleFreeCompletedCriterion_of_mellinTails`
-constructs the completed functions from reflected Mellin tails
-$A_i(s)=\int_X f_i(x)e^{s\log r(x)}\,dM(x)$. It takes $r\ge1$ almost
-everywhere and finite absolute moments $\int_X |f_i(x)|r(x)^a\,dM(x)$
-for every $a\in\mathbb R$. With the normalized dual root factors, Lean
-proves entireness and the functional equation. The moments at $a=3$
-bound each completed function on $-2\le\operatorname{Re}s\le3$. The
-remaining global identity identifies the constructed pair with the
-standard completed Hecke product on $\operatorname{Re}s>1$.
+The standard completed Hecke family is constructed in
+`HeckeTateFunctionalEquation.lean`. For a character nontrivial on
+the norm-one idele classes, put $Q_\chi=|D_K|N\mathfrak f_\chi$.
+The entire function $\Lambda_\chi(s)$ agrees on $\operatorname{Re}s>1$
+with $Q_\chi^{s/2}$ times the local Gamma factors and $L(s,\chi)$. Lean
+proves $\Lambda_{\chi^{-1}}(1-s)=\epsilon_\chi\Lambda_\chi(s)$ with
+$|\epsilon_\chi|=1$. The positive Mellin moments supply the middle-strip
+bound, and the paired completion has order at most one.
+
+For $x\ge1$ the pole-free remainder is
+$$
+R_\chi(x)=-\sum_{\substack{\mathfrak p\text{ prime},\ j\ge1\\
+                     (N\mathfrak p)^j<x}}
+       c_\chi(\mathfrak p,j)\left(1-\frac{(N\mathfrak p)^j}{x}\right).
+$$
+Each character has its own cutoff and constant in $R_\chi(x)\le C\sqrt{x}$.
+Characters trivial on norm-one classes are exactly the norm twists.
+Their pole-cleared completions are the entire Dedekind completion
+translated by $s\mapsto s+it$. The theorem
+`exists_heckeStandardCompletedFamily_triangularCriterion` verifies
+that all these degree-one completions have zeros on the critical line
+exactly when the Dedekind triangular bound and every pole-free paired
+bound hold.
 
 The Challenge states the critical-line condition directly for every
 pole-cleared completed L-function in the supplied family. The Solution

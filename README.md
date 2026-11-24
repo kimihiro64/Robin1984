@@ -144,13 +144,14 @@ equivalences in ordinary mathematics and gives the citations for the
 automorphic analytic inputs. The classical Robin, colossally abundant,
 and Lagarias arguments appear in its appendices.
 
-Lean verifies both corrected ideal equivalences. It also proves the
-triangular equivalence for a family supplied with the analytic data in
-`HasStandardAutomorphicAnalytics`. The all-rank instantiation is still
-open in Lean. The rank-one development now reaches entire adelic Mellin
-tails on the idele class quotient. The identification with the completed
-Hecke Euler products is still in progress. See
-[the generalized criteria](docs/GRH.md) for the declarations.
+Lean verifies both corrected ideal equivalences and the triangular
+equivalence for a family supplied with `HasStandardAutomorphicAnalytics`.
+It constructs the standard completed rank-one family over every number
+field, including unitary norm twists. Its critical-line assertion is
+equivalent to the Dedekind triangular bound for the field together with
+the paired triangular bound for every unitary Hecke character nontrivial
+on norm-one idele classes. The higher-rank instantiation remains open in
+Lean. See [the generalized criteria](docs/GRH.md) for the declarations.
 
 ## Critical-line zeros and multiplicity
 

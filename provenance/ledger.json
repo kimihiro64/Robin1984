@@ -1128,6 +1128,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeTateFunctionalEquation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's thesis on Hecke L-functions and the Dedekind zeta specialization.",
+      "formalization_note": "Constructs the standard rank-one completions and proves their familywise triangular criterion, including all imaginary norm twists.",
+      "content_basis": "Constructs the completed Hecke family from the canonical Tate theta averages, verifies the unit root factor and strip bound, and handles norm twists by vertical translation.",
+      "dependency_status": "Uses the proved Tate Euler integral, the conductor-shifted Poisson and Mellin identities, the paired triangular criterion, and the proved Dedekind completion.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeTateInfiniteFourier.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The real and complex local Fourier transforms in Tate's thesis.",

@@ -105,9 +105,10 @@ possible real zero.
 Lean verifies both corrected ideal equivalences, as well as the
 classical Robin, colossally abundant, and Lagarias statements.
 It verifies the triangular criterion for an indexed family with
-the stated standard analytic properties. In the paper those
-properties are supplied by the classical theorems on standard
-\(L\)-functions. Instantiating that family in Lean for all ranks
+the stated standard analytic properties and constructs the
+standard rank-one family over every number field. The
+higher-rank analytic inputs in the paper come from the classical
+theorems on standard \(L\)-functions. Their instantiation in Lean
 remains open.
 \end{abstract}
 \maketitle
@@ -737,7 +738,16 @@ the paired coefficient is
  b_{\mathfrak p,j}=2\Re(\alpha_\chi(\mathfrak p)^j)\log N\mathfrak p,
  \qquad \alpha_\chi(\mathfrak p)=0\text{ at ramified primes}.
 \]
-This is the degree-one case of \eqref{eq:grand-rh-prime-power}.
+This is the pole-free degree-one case of
+\eqref{eq:grand-rh-prime-power}. The remaining unitary Hecke
+characters are the norm twists \(\chi_t=|\cdot|^{it}\). Their
+pole-cleared completions are translates of the Dedekind
+completion by \(s\mapsto s+it\). It follows that for a fixed
+\(K\) the critical-line condition for the entire rank-one family
+is equivalent to the Dedekind triangular bound together with
+the paired triangular bound for each unitary Hecke character
+nontrivial on norm-one idele classes. This specialization is
+verified in Appendix~\ref{app:hecke-formalization}.
 Products of unitary cuspidal standard factors inherit the
 completed zero condition from their factors.
 
@@ -2917,24 +2927,90 @@ of the Mellin parameter. The module
 for the full quotient measure using a Borel fundamental domain.
 The module \path{HeckeTateZetaUnfolding.lean} identifies the
 principal-idele orbit sum with the actual theta series and unfolds
-the weighted zeta integral under integrability. Its integrand uses
-the full character, including its value on the exponential norm
-section. To identify the resulting tails with the completed Hecke
-Euler product, the remaining inputs are integrability of the
-specific zeta test, the quotient Poisson decomposition, and the
-assembled archimedean and finite zeta integrals.
+the weighted zeta integral. For the canonical polynomial Gaussian and
+finite Tate test, \path{HeckeTateAdelicEuler.lean} proves its equality
+on \(\Re s>1\) with the Gamma factors times the Hecke Euler product.
+The quotient Poisson identity in \path{HeckeTateClassPoisson.lean}
+keeps the two terms at zero. Averaging against a character nontrivial
+on norm-one idele classes makes both terms vanish.
 
-For the pole-free case, Lean also constructs the entire continuation
-from a Mellin tail
-$A_i(s)=\int_X f_i(x)e^{s\log r(x)}\,dM(x)$ and the reflected tail of
-the dual. The construction assumes $r\ge1$ almost everywhere and
-finite absolute moments $\int_X |f_i(x)|r(x)^a\,dM(x)$ for every
-$a\in\mathbb R$. Unit-modulus root factors with
-$\epsilon_i\epsilon_{\widetilde i}=1$ give the functional equation.
-On $-2\le\Re s\le3$, the moments at $a=3$ bound both tails. The
-Euler product and Gamma factors then give order at most one for the
-pair. The remaining global identity on $\Re s>1$ identifies the
-constructed pair with the standard completed Hecke product.
+\paragraph{The conductor in the functional equation.}
+Write \(Q_\chi=|D_K|N\mathfrak f_\chi\). Choose finite ideles \(d,c\)
+representing the different and conductor ideals and put \(b=dc\).
+\path{HeckeTateFiniteFourier.lean} proves
+\[
+   T_\chi^{\mathrm D}(y)
+      =T_\chi^{\mathrm D}(b^{-1})T_{\chi^{-1}}(by),
+   \qquad |b|_f=Q_\chi^{-1},
+\]
+where \(T_\chi^{\mathrm D}\) is the finite Fourier test with the
+discriminant normalization and trace sign of the Poisson formula.
+To prove the first identity, trace duality identifies the annihilator
+of the integral adeles with the inverse different. Translation by
+the conductor forces \(by\) to be integral on the support of the
+transform. At every ramified place, covariance under local units
+forces \(by\) to be a unit. On that support one can match the
+ramified coordinates by an integral finite idele, and covariance
+determines the transform from its value at \(b^{-1}\).
+\path{HeckeTateInfiniteFourier.lean} computes the archimedean
+Fourier test as \(P_\chi f_{\chi^{-1}}\), where
+\[
+  P_\chi=(-i)^{\sum_{v\ \mathrm{real}}\epsilon_v
+                       +\sum_{v\ \mathrm{complex}}|m_v|}
+\]
+for the real parities \(\epsilon_v\) and complex angular weights \(m_v\).
+
+Let \(a(t)\) be the positive archimedean section of norm \(e^t\)
+with finite component one, and let \(G_\chi(t)\) be the canonical
+theta sum averaged against \(\chi\) on the norm-one class group.
+With \(\beta=\log|b|_f=-\log Q_\chi\), the idele \(a(-\beta)b\)
+has norm one. Haar invariance under multiplication by its class \(w\)
+gives the shifted identity
+\[
+  G_\chi(t)=k_\chi e^{-t}G_{\chi^{-1}}(\beta-t),\qquad
+  k_\chi=P_\chi T_\chi^{\mathrm D}(b^{-1})\chi^{-1}(w^{-1}).
+\]
+The finite translation changes the logarithmic norm by \(\beta\).
+The factor \(\chi^{-1}(w^{-1})\) comes from translating the
+character in the averaging integral.
+
+\paragraph{The completed family.}
+Write \(\chi(a(t))=e^{i\tau_\chi t}\) with \(\tau_\chi\in\mathbb R\).
+The entire completion is
+\[
+  \Lambda_\chi(s)=e^{-s\beta/2}
+      \int_{\mathbb R}e^{st}\chi(a(t))G_\chi(t)\,dt .
+\]
+Fubini's theorem and reflection express the full integral as
+two positive Mellin tails at \(s+i\tau_\chi\) and
+\(1-s-i\tau_\chi\). The absolute moments for all real exponents
+justify both tails and their derivatives. On \(\Re s>1\), the
+unfolded Euler integral identifies \(\Lambda_\chi\) with
+\(Q_\chi^{s/2}\) times the Gamma factors and \(L(s,\chi)\).
+Changing variables \(u=\beta-t\) in the full integral gives
+\[
+  \Lambda_\chi(s)=\omega_\chi\Lambda_{\chi^{-1}}(1-s),\qquad
+  \omega_\chi=k_\chi\exp(-\beta/2+i\tau_\chi\beta).
+\]
+The canonical tests and norm-section character for \(\chi^{-1}\)
+are the complex conjugates of those for \(\chi\). Consequently,
+\(\Lambda_{\chi^{-1}}(\bar s)=\overline{\Lambda_\chi(s)}\).
+Applying the reflected conjugate identity twice gives
+\(\Lambda_\chi(s)=|\omega_\chi|^2\Lambda_\chi(s)\).
+The completed Euler product is nonzero for \(\Re s>1\), so
+\(|\omega_\chi|=1\).
+
+On \(-2\le\Re s\le3\) the moments at exponent \(3\) bound both
+tails, and the conductor exponential is bounded by
+\(\exp(3|\beta|/2)\). The paired product has order at most one by
+the Euler and Gamma bounds and the completed functional equation.
+The paired triangular criterion therefore applies without an
+additional analytic premise for these characters. If the restriction
+to norm-one classes is trivial, the character is determined by
+its values on \(a(t)\) and is a norm twist. The pole-cleared
+completion is then the translated Dedekind completion, for which
+the Dedekind triangular criterion applies. The full degree-one
+result is in \path{HeckeTateFunctionalEquation.lean}.
 
 A weighted all-ideal bound can also be obtained when the
 logarithmic Euler coefficients are nonnegative. For unitary Hecke
@@ -2952,14 +3028,16 @@ weighted comparison are recorded in \path{docs/GRH.md}.
 Lean~4.33.1 and Mathlib~\cite{Lean4,Mathlib} verify the three classical
 Robin and Lagarias equivalences and both corrected ideal Robin
 equivalences in Section~\ref{sec:grh}. The automated statement boundary
-compares the same five declarations. The Grand RH declaration in
+compares these five declarations, the Grand RH criterion, and the four
+multiplicity criteria. The Grand RH declaration in
 \path{Solution.lean} proves the equivalence between the completed
 critical-line condition and the triangular bound for any supplied
 standard family satisfying the stated analytic hypotheses. It uses
 the Euler products and Gamma factors to supply the inputs of
-\path{grandRobinCompletedCriterion_of_entireOrder}. The formal
-instantiation of those analytic hypotheses for the full standard
-automorphic family remains open.
+\path{grandRobinCompletedCriterion_of_entireOrder}. The rank-one
+criterion uses the completions constructed in
+Appendix~\ref{app:hecke-formalization}. Native instantiation of the
+analytic hypotheses in higher ranks remains open.
 
 The three classical equivalence declarations have the
 mathematical types
