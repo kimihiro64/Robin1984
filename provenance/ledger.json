@@ -1740,6 +1740,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetThetaDecay.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Schwartz decay of the adelic matrix theta kernel.",
+      "formalization_note": "Bounds archimedean and finite determinant norms and derives uniform weighted decay for each invertible term of a Schwartz rectangle.",
+      "content_basis": "Uses the determinant expansion at every place, compact finite support and a common denominator, the determinant norm of the normalized theta argument, and the Schwartz seminorm bounds.",
+      "dependency_status": "Uses verified determinant coordinates, finite principal rectangles, adelic Minkowski coordinates, and pinned Mathlib norm and Schwartz seminorm estimates.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetThetaMellin.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Mellin reflection of the adelic matrix theta integral.",
