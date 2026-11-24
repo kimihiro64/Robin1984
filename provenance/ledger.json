@@ -1749,6 +1749,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetThetaLatticeDecay.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and inverse-power sums over shifted Euclidean lattices.",
+      "formalization_note": "Bounds the positive-time invertible theta curve using the time-zero lattice weight and proves summability of that weight at each pair of quotient representatives.",
+      "content_basis": "Combines the exact central scaling, finite principal-rectangle pullbacks, shifted product-lattice summability, and a norm bound for the inverse archimedean matrix dilation.",
+      "dependency_status": "Uses the verified theta determinant and weighted Schwartz estimates and Mathlib shifted lattice and integral estimates. The quotient integral uses a stated integrable time-zero weight.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetThetaMellin.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Mellin reflection of the adelic matrix theta integral.",
