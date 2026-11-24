@@ -303,6 +303,89 @@ theorem godementJacquetSelfDualMatrixFourier_thetaDilation
     HSMul.hSMul r (c * godementJacquetMatrixFourier K phi (v.val * Y * a.val.val))
   exact (congrArg (fun z : Complex => c * z) h').trans (mul_smul_comm _ _ _)
 
+set_option maxHeartbeats 1200000 in
+/-- Poisson reflection for the adelic matrix theta series of a Schwartz
+rectangle. Both series over rational matrices converge absolutely. -/
+theorem godementJacquetMatrixRectangle_thetaReflection
+    (hn : 0 < n) (t : Multiplicative Real) (A B : NormOneGroup K n)
+    (a : MatrixEntryIndex n -> FiniteAdeles K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (f : SchwartzMap (ArchVector K (MatrixEntryIndex n)) Complex) :
+    let phi := godementJacquetMatrixRectangle K a d f
+    let u := Inv.inv A.val * adelicDeterminantSection K n t
+    let v := Inv.inv B.val * adelicDeterminantSection K n (Inv.inv t)
+    let p := algebraMap K (GlobalAdeles K)
+    let P := fun X : Matrix (Fin n) (Fin n) K => phi (u.val * X.map p * B.val.val)
+    let Q := fun Y : Matrix (Fin n) (Fin n) K =>
+      godementJacquetSelfDualMatrixFourier K phi (v.val * Y.map p * A.val.val)
+    let scale := Real.toNNReal (Real.exp (-((n : Real) * Multiplicative.toAdd t)))
+    And (Summable P) (And (Summable Q) (tsum P = HSMul.hSMul scale (tsum Q))) := by
+  let phi := godementJacquetMatrixRectangle K a d f
+  let u := Inv.inv A.val * adelicDeterminantSection K n t
+  let v := Inv.inv B.val * adelicDeterminantSection K n (Inv.inv t)
+  let p := algebraMap K (GlobalAdeles K)
+  let scale := Real.toNNReal (Real.exp (-((n : Real) * Multiplicative.toAdd t)))
+  let psi := fun X : Matrix (Fin n) (Fin n) (GlobalAdeles K) => phi (u.val * X * B.val.val)
+  let P := fun X : Matrix (Fin n) (Fin n) K => psi (X.map p)
+  let Q := fun Y : Matrix (Fin n) (Fin n) K =>
+    godementJacquetSelfDualMatrixFourier K psi (Y.map p)
+  let D := fun Y : Matrix (Fin n) (Fin n) K =>
+    godementJacquetSelfDualMatrixFourier K phi (v.val * Y.map p * A.val.val)
+  let M := godementJacquetMatrixDilation u B.val
+  have hParts := exists_godementJacquetMatrixRectangle_dilate_sum K M a d hd f
+  let b := Classical.choose hParts
+  have hb : Not (b = 0) := (Classical.choose_spec hParts).1
+  choose r c g hrect using (Classical.choose_spec hParts).2
+  let s : Finset (Fin r) := Finset.univ
+  let F (i : Fin r) := godementJacquetMatrixRectangle K (c i) b g
+  have hpsi : psi = fun X => s.sum (fun i => F i X) := by
+    funext X
+    have hM : godementJacquetMatrixFromVec (M.val.mulVec X.vec) =
+        u.val * X * B.val.val := by
+      apply Matrix.vec_inj.mp
+      rw [godementJacquetMatrixFromVec_vec, godementJacquetMatrixDilation_vec]
+    exact (congrArg phi hM).symm.trans (hrect X)
+  have hP (X : Matrix (Fin n) (Fin n) K) :
+      P X = s.sum (fun i => F i (X.map p)) := congrFun hpsi (X.map p)
+  have hQ (Y : Matrix (Fin n) (Fin n) K) :
+      Q Y = s.sum (fun i => godementJacquetSelfDualMatrixFourier K (F i) (Y.map p)) := by
+    change godementJacquetSelfDualMatrixFourier K psi (Y.map p) = _
+    rw [hpsi]
+    exact godementJacquetSelfDualMatrixFourier_finsetSum K s F
+      (fun i _ => integrable_godementJacquetMatrixRectangle_fromVec K (c i) b hb g) _
+  have hSP (i : Fin r) : Summable (fun X : Matrix (Fin n) (Fin n) K => F i (X.map p)) :=
+    summable_godementJacquetMatrixRectangle K (c i) b hb g
+  have hSQ (i : Fin r) : Summable (fun Y : Matrix (Fin n) (Fin n) K =>
+      godementJacquetSelfDualMatrixFourier K (F i) (Y.map p)) :=
+    summable_godementJacquetSelfDualMatrixFourier_rectangle K (c i) b hb g
+  have hSumP : Summable P := (summable_sum (s := s) (fun i _ => hSP i)).congr (fun X => (hP X).symm)
+  have hSumQ : Summable Q := (summable_sum (s := s) (fun i _ => hSQ i)).congr (fun Y => (hQ Y).symm)
+  have hPoisson : tsum P = tsum Q := calc
+    _ = tsum (fun X : Matrix (Fin n) (Fin n) K => s.sum (fun i => F i (X.map p))) := tsum_congr hP
+    _ = s.sum (fun i => tsum (fun X : Matrix (Fin n) (Fin n) K => F i (X.map p))) :=
+      Summable.tsum_finsetSum (fun i _ => hSP i)
+    _ = s.sum (fun i => tsum (fun Y : Matrix (Fin n) (Fin n) K =>
+        godementJacquetSelfDualMatrixFourier K (F i) (Y.map p))) :=
+      Finset.sum_congr rfl (fun i _ =>
+        tsum_godementJacquetMatrixRectangle_eq_normalizedFourier K (c i) b hb g)
+    _ = tsum (fun Y : Matrix (Fin n) (Fin n) K => s.sum (fun i =>
+        godementJacquetSelfDualMatrixFourier K (F i) (Y.map p))) :=
+      (Summable.tsum_finsetSum (fun i _ => hSQ i)).symm
+    _ = _ := (tsum_congr hQ).symm
+  have hReflection (Y : Matrix (Fin n) (Fin n) K) : Q Y = HSMul.hSMul scale (D Y) :=
+    godementJacquetSelfDualMatrixFourier_thetaDilation K n hn t A B phi
+      (continuous_godementJacquetMatrixRectangle K a d hd f) (Y.map p)
+  have hScale : Not (scale = 0) :=
+    (Real.toNNReal_pos.mpr (Real.exp_pos _)).ne'
+  have hSumScaled : Summable (fun Y => HSMul.hSMul scale (D Y)) := hSumQ.congr hReflection
+  have hSumD : Summable D := (Summable.const_smul (Inv.inv scale) hSumScaled).congr (fun Y => by
+    rw [smul_smul]
+    simp [hScale])
+  refine And.intro hSumP (And.intro hSumD ?_)
+  calc
+    tsum P = tsum Q := hPoisson
+    _ = tsum (fun Y => HSMul.hSMul scale (D Y)) := tsum_congr hReflection
+    _ = HSMul.hSMul scale (tsum D) := Summable.tsum_const_smul scale hSumD
+
 end FourierCovariance
 
 end Robin1984.GRH
