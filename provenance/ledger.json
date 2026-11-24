@@ -1659,6 +1659,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetMatrixMeasure.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the determinant change of variables for additive Haar measure on adelic matrices.",
+      "formalization_note": "Derives matrix Haar dilation from the rank-one multiplier by constructing unit pivots and proving measure preservation of adelic block shears.",
+      "content_basis": "Uses local unit pivots, block elimination, and product measure invariance to prove the determinant scaling law from scalar dilation.",
+      "dependency_status": "Uses the pinned Mathlib restricted product, matrix determinant and product measure APIs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetSingularOrbits.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the rank decomposition of the singular-matrix terms.",
