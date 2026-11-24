@@ -1650,6 +1650,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetCoordinates.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the determinant-norm coordinates in the global zeta integral.",
+      "formalization_note": "Splits the adelic general linear group by its positive determinant norm and rewrites the global zeta integral as a logarithmic Mellin integral.",
+      "content_basis": "Uses the group of unit adelic matrices, the product formula, the central logarithmic section, and the invariant product measure to rewrite the Godement-Jacquet integral.",
+      "dependency_status": "Uses pinned Mathlib general linear group, Haar and Fubini APIs and the verified principal adele and idele norm theorems.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeAdeleHaar.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Additive Haar measure and Fourier integration over the compact open integral finite adeles.",
