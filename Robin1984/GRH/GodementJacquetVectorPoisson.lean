@@ -78,18 +78,19 @@ private def vectorProductLatticeEquiv {E : Type*} [NormedAddCommGroup E] [Normed
 
 /-- Periodisation over the product ideal lattice for a finite adelic
 rectangle with a common nonzero denominator. -/
-theorem tsum_finiteAdelePrincipalVectorCoset_eq_periodisation
+private theorem principalVectorCosetSummable_periodisation
     (a : I -> VecFiniteAdeles K) (d : RingOfIntegers K) (hd : Not (d = 0))
     (x0 : I -> K)
     (hx0 : forall i, InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d) (x0 i))
     (f : SchwartzMap (PiLp 2 (fun _ : I => ArchCoordinate K)) Complex) :
-    tsum (fun x : Subtype (fun x : I -> K => forall i,
-      InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d) (x i)) =>
-        f (heckePrincipalMinkowskiVector K I x.val)) =
+    let C := Subtype (fun x : I -> K => forall i,
+      InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d) (x i))
+    let U := fun x : C => f (heckePrincipalMinkowskiVector K I x.val)
+    And (Summable U) (tsum U =
       DedekindZeta.PoissonSummation.periodisation
         (euclideanProductZLattice I (DedekindZeta.Theta.idealLattice K
           (Ideal.span (Set.singleton d) : Ideal (RingOfIntegers K)))) f
-        (heckePrincipalMinkowskiVector K I x0) := by
+        (heckePrincipalMinkowskiVector K I x0)) := by
   let R := RingOfIntegers K
   let J : FractionalIdeal (nonZeroDivisors R) K := (Ideal.span (Set.singleton d) : Ideal R)
   let M := (J : Submodule R K)
@@ -115,36 +116,72 @@ theorem tsum_finiteAdelePrincipalVectorCoset_eq_periodisation
   have hI : Not (J = 0) := FractionalIdeal.coeIdeal_ne_zero.mpr hJ
   let : DiscreteTopology L := DedekindZeta.Theta.discreteTopology_idealLattice K J hI
   let : IsZLattice Real L := DedekindZeta.Theta.isZLattice_idealLattice K J hI
-  rw [DedekindZeta.PoissonSummation.periodisation_apply,
-    <- Q.tsum_eq, <- P.symm.tsum_eq (fun x : C => f (heckePrincipalMinkowskiVector K I x.val))]
-  apply tsum_congr
-  intro y
-  congr 1
-  apply (PiLp.continuousLinearEquiv 2 Real (fun _ : I => ArchCoordinate K)).injective
-  funext i
-  change DedekindZeta.Theta.eEmb K ((y i).val + x0 i) =
-    DedekindZeta.Theta.eEmb K (x0 i) + DedekindZeta.Theta.eEmb K (y i).val
-  have he := map_add (DedekindZeta.Theta.eEmbHom K) (y i).val (x0 i)
-  rw [DedekindZeta.Theta.eEmbHom_apply, DedekindZeta.Theta.eEmbHom_apply,
-    DedekindZeta.Theta.eEmbHom_apply] at he
-  rw [he, add_comm]
+  let F := P.trans Q
+  let xA := heckePrincipalMinkowskiVector K I x0
+  let G (y : euclideanProductZLattice I L) : Complex := f (xA + y.val)
+  have hS : Summable G :=
+    DedekindZeta.PoissonSummation.summable_periodisation (euclideanProductZLattice I L) f xA
+  have hF (x : C) : G (F x) = f (heckePrincipalMinkowskiVector K I x.val) := by
+    change f (xA + (F x).val) = f (heckePrincipalMinkowskiVector K I x.val)
+    apply congrArg (f : PiLp 2 (fun _ : I => ArchCoordinate K) -> Complex)
+    apply (PiLp.continuousLinearEquiv 2 Real (fun _ : I => ArchCoordinate K)).injective
+    funext i
+    change DedekindZeta.Theta.eEmb K (x0 i) + DedekindZeta.Theta.eEmb K (x.val i - x0 i) =
+      DedekindZeta.Theta.eEmb K (x.val i)
+    have he := map_add (DedekindZeta.Theta.eEmbHom K) (x0 i) (x.val i - x0 i)
+    rw [add_comm (x0 i), sub_add_cancel] at he
+    simpa only [DedekindZeta.Theta.eEmbHom_apply] using he.symm
+  constructor
+  . exact (F.summable_iff.mpr hS).congr hF
+  . calc
+      _ = tsum (fun x : C => G (F x)) := tsum_congr (fun x => (hF x).symm)
+      _ = tsum G := F.tsum_eq G
+      _ = _ := (DedekindZeta.PoissonSummation.periodisation_apply
+        (euclideanProductZLattice I L) f xA).symm
 
+/-- The principal Schwartz sum is absolutely convergent. -/
+theorem summable_finiteAdelePrincipalVectorCoset
+    (a : I -> VecFiniteAdeles K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (x0 : I -> K)
+    (hx0 : forall i, InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d) (x0 i))
+    (f : SchwartzMap (PiLp 2 (fun _ : I => ArchCoordinate K)) Complex) :
+    Summable (fun x : Subtype (fun x : I -> K => forall i,
+      InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d) (x i)) =>
+        f (heckePrincipalMinkowskiVector K I x.val)) :=
+  (principalVectorCosetSummable_periodisation K I a d hd x0 hx0 f).1
+
+/-- The principal Schwartz sum is the shifted lattice periodisation. -/
+theorem tsum_finiteAdelePrincipalVectorCoset_eq_periodisation
+    (a : I -> VecFiniteAdeles K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (x0 : I -> K)
+    (hx0 : forall i, InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d) (x0 i))
+    (f : SchwartzMap (PiLp 2 (fun _ : I => ArchCoordinate K)) Complex) :
+    tsum (fun x : Subtype (fun x : I -> K => forall i,
+      InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d) (x i)) =>
+        f (heckePrincipalMinkowskiVector K I x.val)) =
+      DedekindZeta.PoissonSummation.periodisation
+        (euclideanProductZLattice I (DedekindZeta.Theta.idealLattice K
+          (Ideal.span (Set.singleton d) : Ideal (RingOfIntegers K)))) f
+        (heckePrincipalMinkowskiVector K I x0) :=
+  (principalVectorCosetSummable_periodisation K I a d hd x0 hx0 f).2
+
+set_option maxHeartbeats 1000000 in
 /-- The shifted Poisson formula for a finite adelic rectangle, with
 frequencies indexed by vectors in the field trace-dual ideal. -/
-theorem tsum_finiteAdelePrincipalVectorCoset_eq_traceDualFourier
+private theorem principalVectorCosetSummable_traceDualFourier
     (a : I -> VecFiniteAdeles K) (d : RingOfIntegers K) (hd : Not (d = 0))
     (x0 : I -> K)
     (hx0 : forall i, InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d) (x0 i))
     (f : SchwartzMap (PiLp 2 (fun _ : I => ArchCoordinate K)) Complex) :
     let J := Ideal.span (Set.singleton d)
-    tsum (fun x : Subtype (fun x : I -> K => forall i,
-      InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d) (x i)) =>
-        f (heckePrincipalMinkowskiVector K I x.val)) =
-    tsum (fun t : I -> (DedekindZeta.Theta.dualIdeal K J : Submodule (RingOfIntegers K) K) =>
+    let U := fun t : I -> (DedekindZeta.Theta.dualIdeal K J : Submodule (RingOfIntegers K) K) =>
       let y := heckeConjMinkowskiVector K I (heckePrincipalMinkowskiVector K I (fun i => (t i).val))
       (Real.fourierChar (inner Real (heckePrincipalMinkowskiVector K I x0) y) : Complex) *
         (Inv.inv (((DedekindZeta.Theta.covolume K J) ^ Fintype.card I : Real) : Complex) *
-          FourierTransform.fourier (f : PiLp 2 (fun _ : I => ArchCoordinate K) -> Complex) y)) := by
+          FourierTransform.fourier (f : PiLp 2 (fun _ : I => ArchCoordinate K) -> Complex) y)
+    And (Summable U) (tsum (fun x : Subtype (fun x : I -> K => forall i,
+      InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d) (x i)) =>
+        f (heckePrincipalMinkowskiVector K I x.val)) = tsum U) := by
   let R := RingOfIntegers K
   let J : Ideal R := Ideal.span (Set.singleton d)
   let J' : FractionalIdeal (nonZeroDivisors R) K := J
@@ -165,12 +202,37 @@ theorem tsum_finiteAdelePrincipalVectorCoset_eq_traceDualFourier
   let E := E1.trans (E2.toEquiv.trans E3)
   let Eprod := (Equiv.piCongrRight (fun _ : I => E)).trans
     (vectorProductLatticeEquiv I (DedekindZeta.PoissonSummation.dualLattice L))
-  dsimp only
-  rw [tsum_finiteAdelePrincipalVectorCoset_eq_periodisation K I a d hd x0 hx0 f]
-  rw [DedekindZeta.PoissonSummation.periodisation_apply,
-    poisson_euclideanProductZLattice I L (Module.finBasis Int L) f,
-    DedekindZeta.Theta.covolume_idealLattice K J hJ, <- Eprod.tsum_eq]
-  rfl
+  constructor
+  . have hSum := DedekindZeta.PoissonSummation.summable_periodisation_fourier
+      (euclideanProductZLattice I L) f (heckePrincipalMinkowskiVector K I x0)
+    rw [dualLattice_euclideanProductZLattice I L,
+      covolume_euclideanProductZLattice I L (Module.finBasis Int L),
+      DedekindZeta.Theta.covolume_idealLattice K J hJ] at hSum
+    simp only [Circle.smul_def, smul_eq_mul] at hSum
+    exact Eprod.summable_iff.mpr hSum
+  . dsimp only
+    rw [tsum_finiteAdelePrincipalVectorCoset_eq_periodisation K I a d hd x0 hx0 f]
+    rw [DedekindZeta.PoissonSummation.periodisation_apply,
+      poisson_euclideanProductZLattice I L (Module.finBasis Int L) f,
+      DedekindZeta.Theta.covolume_idealLattice K J hJ, <- Eprod.tsum_eq]
+    rfl
+
+/-- Shifted adelic rectangle Poisson summation over the trace-dual ideal. -/
+theorem tsum_finiteAdelePrincipalVectorCoset_eq_traceDualFourier
+    (a : I -> VecFiniteAdeles K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (x0 : I -> K)
+    (hx0 : forall i, InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d) (x0 i))
+    (f : SchwartzMap (PiLp 2 (fun _ : I => ArchCoordinate K)) Complex) :
+    let J := Ideal.span (Set.singleton d)
+    tsum (fun x : Subtype (fun x : I -> K => forall i,
+      InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d) (x i)) =>
+        f (heckePrincipalMinkowskiVector K I x.val)) =
+    tsum (fun t : I -> (DedekindZeta.Theta.dualIdeal K J : Submodule (RingOfIntegers K) K) =>
+      let y := heckeConjMinkowskiVector K I (heckePrincipalMinkowskiVector K I (fun i => (t i).val))
+      (Real.fourierChar (inner Real (heckePrincipalMinkowskiVector K I x0) y) : Complex) *
+        (Inv.inv (((DedekindZeta.Theta.covolume K J) ^ Fintype.card I : Real) : Complex) *
+          FourierTransform.fourier (f : PiLp 2 (fun _ : I => ArchCoordinate K) -> Complex) y)) :=
+  (principalVectorCosetSummable_traceDualFourier K I a d hd x0 hx0 f).2
 
 private theorem coe_addChar_finset_sum {A B : Type*} [AddCommMonoid A]
     (chi : AddChar A Circle) (s : Finset B) (v : B -> A) :
@@ -264,13 +326,13 @@ private theorem traceDualVector_indicator_eq_rectangleFourierIntegral
 
 /-- Poisson summation for a Schwartz function on the archimedean
 product multiplied by the indicator of a finite adelic rectangle. -/
-theorem tsum_finiteAdelePrincipalVectorCoset_eq_fourierIntegral
+private theorem principalVectorCosetSummable_fourierIntegral
     (a : I -> VecFiniteAdeles K) (d : RingOfIntegers K) (hd : Not (d = 0))
     (f : SchwartzMap (PiLp 2 (fun _ : I => ArchCoordinate K)) Complex) :
-    tsum (fun x : Subtype (fun x : I -> K => forall i,
+    let V := heckeAdeleVectorRectangleFourierIntegral K I a d f
+    And (Summable V) (tsum (fun x : Subtype (fun x : I -> K => forall i,
       InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d) (x i)) =>
-        f (heckePrincipalMinkowskiVector K I x.val)) =
-      tsum (heckeAdeleVectorRectangleFourierIntegral K I a d f) := by
+        f (heckePrincipalMinkowskiVector K I x.val)) = tsum V) := by
   let R := RingOfIntegers K
   let J : Ideal R := Ideal.span (Set.singleton d)
   let D := (DedekindZeta.Theta.dualIdeal K J : Submodule R K)
@@ -281,31 +343,57 @@ theorem tsum_finiteAdelePrincipalVectorCoset_eq_fourierIntegral
   have hRep : forall i, Exists (InFiniteAdelePrincipalCoset (a i) (e d)) :=
     fun i => exists_finiteAdele_sub_principal_modulus (a i) (e d) hD
   choose x0 hx0 using hRep
-  rw [tsum_finiteAdelePrincipalVectorCoset_eq_traceDualFourier K I a d hd x0 hx0 f]
   let E : Equiv (I -> D) T :=
     { toFun := fun t => Subtype.mk (fun i => (t i).val) (fun i => (t i).property)
       invFun := fun t i => Subtype.mk (t.val i) (t.property i)
       left_inv := fun _ => rfl
       right_inv := fun _ => rfl }
   let G := heckeAdeleVectorTraceDualFourierValue K I a d f
-  calc
-    _ = tsum (fun t : T => G t.val) := by
-      rw [<- E.tsum_eq]
-      apply tsum_congr
-      intro t
-      have hPhase (i : I) :
-          (Real.fourierChar (Algebra.trace Rat K ((t i).val * x0 i) : Real) : Complex) =
-            (heckeFiniteAdelePrincipalChar (-(t i).val) (a i) : Complex) := by
-        have h := heckeAdeleAddChar_finiteCoset_eq (a i) d hd (x0 i) (hx0 i)
-          (-(t i).val) (D.neg_mem (t i).property)
-        rw [mul_neg, map_neg (Algebra.trace Rat K), Rat.cast_neg, neg_neg, mul_comm (x0 i) (t i).val] at h
-        exact congrArg (fun z : Circle => (z : Complex)) h.symm
-      dsimp only
-      rw [inner_heckePrincipalMinkowskiVector_conj_eq_trace_sum, coe_addChar_finset_sum]
-      have hProd := Finset.prod_congr (rfl : Finset.univ = (Finset.univ : Finset I))
-        (fun i _ => hPhase i)
-      exact congrArg (fun z : Complex => z * _) hProd
-    _ = _ := (tsum_subtype T G).trans
-      (tsum_congr (traceDualVector_indicator_eq_rectangleFourierIntegral K I a d hd f))
+  let U (t : I -> D) : Complex :=
+    let y := heckeConjMinkowskiVector K I (heckePrincipalMinkowskiVector K I (fun i => (t i).val))
+    (Real.fourierChar (inner Real (heckePrincipalMinkowskiVector K I x0) y) : Complex) *
+      (Inv.inv (((DedekindZeta.Theta.covolume K J) ^ Fintype.card I : Real) : Complex) *
+        FourierTransform.fourier (f : PiLp 2 (fun _ : I => ArchCoordinate K) -> Complex) y)
+  have hUG (t : I -> D) : U t = G (E t).val := by
+    have hPhase (i : I) :
+        (Real.fourierChar (Algebra.trace Rat K ((t i).val * x0 i) : Real) : Complex) =
+          (heckeFiniteAdelePrincipalChar (-(t i).val) (a i) : Complex) := by
+      have h := heckeAdeleAddChar_finiteCoset_eq (a i) d hd (x0 i) (hx0 i)
+        (-(t i).val) (D.neg_mem (t i).property)
+      rw [mul_neg, map_neg (Algebra.trace Rat K), Rat.cast_neg, neg_neg, mul_comm (x0 i) (t i).val] at h
+      exact congrArg (fun z : Circle => (z : Complex)) h.symm
+    dsimp only [U]
+    rw [inner_heckePrincipalMinkowskiVector_conj_eq_trace_sum, coe_addChar_finset_sum]
+    have hProd := Finset.prod_congr (rfl : Finset.univ = (Finset.univ : Finset I))
+      (fun i _ => hPhase i)
+    exact congrArg (fun z : Complex => z * _) hProd
+  have hDual := principalVectorCosetSummable_traceDualFourier K I a d hd x0 hx0 f
+  have hU : Summable U := hDual.1
+  have hG : Summable (fun t : T => G t.val) := E.summable_iff.mp (hU.congr hUG)
+  have hV := traceDualVector_indicator_eq_rectangleFourierIntegral K I a d hd f
+  constructor
+  . exact (summable_subtype_iff_indicator.mp hG).congr hV
+  . calc
+      _ = tsum U := hDual.2
+      _ = tsum (fun t : I -> D => G (E t).val) := tsum_congr hUG
+      _ = tsum (fun t : T => G t.val) := E.tsum_eq (fun t : T => G t.val)
+      _ = _ := (tsum_subtype T G).trans (tsum_congr hV)
+
+/-- The normalized Fourier sum of a Schwartz rectangle is absolutely convergent. -/
+theorem summable_heckeAdeleVectorRectangleFourierIntegral
+    (a : I -> VecFiniteAdeles K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (f : SchwartzMap (PiLp 2 (fun _ : I => ArchCoordinate K)) Complex) :
+    Summable (heckeAdeleVectorRectangleFourierIntegral K I a d f) :=
+  (principalVectorCosetSummable_fourierIntegral K I a d hd f).1
+
+/-- Poisson summation for a Schwartz rectangle with the normalized Fourier integral. -/
+theorem tsum_finiteAdelePrincipalVectorCoset_eq_fourierIntegral
+    (a : I -> VecFiniteAdeles K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (f : SchwartzMap (PiLp 2 (fun _ : I => ArchCoordinate K)) Complex) :
+    tsum (fun x : Subtype (fun x : I -> K => forall i,
+      InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d) (x i)) =>
+        f (heckePrincipalMinkowskiVector K I x.val)) =
+      tsum (heckeAdeleVectorRectangleFourierIntegral K I a d f) :=
+  (principalVectorCosetSummable_fourierIntegral K I a d hd f).2
 
 end Robin1984.GRH
