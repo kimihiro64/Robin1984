@@ -39,35 +39,44 @@ noncomputable def grandEulerLog {powers : Type*} (d : GrandRobinEulerData powers
     (s : Complex) : Complex :=
   tsum (fun i => grandPrimePowerLogTerm d i s)
 
-private theorem hasDerivAt_grandPrimePowerLogTerm {powers : Type*}
-    (d : GrandRobinEulerData powers) (i : powers) (hTwo : 2 <= d.normPower i) (s : Complex) :
-    HasDerivAt (grandPrimePowerLogTerm d i)
-      (-((d.coefficient i : Complex) * (d.normPower i : Complex) ^ (-s))) s := by
-  have hq : 0 < d.normPower i := (by norm_num : (0 : Real) < 2).trans_le hTwo
-  have hlog : 0 < Real.log (d.normPower i) :=
+private noncomputable def complexPrimePowerLogTerm {powers : Type*}
+    (q : powers -> Real) (b : powers -> Complex) (i : powers) (s : Complex) : Complex :=
+  (b i / (Real.log (q i) : Complex)) * (q i : Complex) ^ (-s)
+
+/-- The convergent ordinary Euler logarithm with possibly complex coefficients. -/
+noncomputable def complexPrimePowerEulerLog {powers : Type*}
+    (q : powers -> Real) (b : powers -> Complex) (s : Complex) : Complex :=
+  tsum (fun i => complexPrimePowerLogTerm q b i s)
+
+private theorem hasDerivAt_complexPrimePowerLogTerm {powers : Type*}
+    (q : powers -> Real) (b : powers -> Complex) (i : powers) (hTwo : 2 <= q i) (s : Complex) :
+    HasDerivAt (complexPrimePowerLogTerm q b i)
+      (-(b i * (q i : Complex) ^ (-s))) s := by
+  have hq : 0 < q i := (by norm_num : (0 : Real) < 2).trans_le hTwo
+  have hlog : 0 < Real.log (q i) :=
     Real.log_pos ((by norm_num : (1 : Real) < 2).trans_le hTwo)
   have hd := ((hasDerivAt_neg' s).const_cpow
-    (c := (d.normPower i : Complex)) (Or.inl (Complex.ofReal_ne_zero.mpr hq.ne'))).const_mul
-      ((d.coefficient i : Complex) / (Real.log (d.normPower i) : Complex))
-  change HasDerivAt (grandPrimePowerLogTerm d i) _ s at hd
+    (c := (q i : Complex)) (Or.inl (Complex.ofReal_ne_zero.mpr hq.ne'))).const_mul
+      (b i / (Real.log (q i) : Complex))
+  change HasDerivAt (complexPrimePowerLogTerm q b i) _ s at hd
   convert hd using 1
   rw [<- Complex.ofReal_log hq.le]
   field_simp [Complex.ofReal_ne_zero.mpr hlog.ne']
 
-private theorem norm_grandPrimePowerLogTerm_le {powers : Type*}
-    (d : GrandRobinEulerData powers) (i : powers) (hTwo : 2 <= d.normPower i)
+private theorem norm_complexPrimePowerLogTerm_le {powers : Type*}
+    (q : powers -> Real) (b : powers -> Complex) (i : powers) (hTwo : 2 <= q i)
     {a : Real} {s : Complex} (hs : a <= s.re) :
-    norm (grandPrimePowerLogTerm d i s) <=
-      (Real.log 2) ^ (-1 : Int) * (norm (d.coefficient i) * d.normPower i ^ (-a)) := by
-  have hq : 0 < d.normPower i := (by norm_num : (0 : Real) < 2).trans_le hTwo
-  have hlog : 0 < Real.log (d.normPower i) :=
+    norm (complexPrimePowerLogTerm q b i s) <=
+      (Real.log 2) ^ (-1 : Int) * (norm (b i) * q i ^ (-a)) := by
+  have hq : 0 < q i := (by norm_num : (0 : Real) < 2).trans_le hTwo
+  have hlog : 0 < Real.log (q i) :=
     Real.log_pos ((by norm_num : (1 : Real) < 2).trans_le hTwo)
   have h2 : 0 < Real.log 2 := Real.log_pos (by norm_num)
   have hLog := Real.log_le_log (by norm_num : (0 : Real) < 2) hTwo
-  rw [grandPrimePowerLogTerm, norm_mul, norm_div, Complex.norm_real, Complex.norm_real,
+  rw [complexPrimePowerLogTerm, norm_mul, norm_div, Complex.norm_real,
     Real.norm_of_nonneg hlog.le, Complex.norm_cpow_eq_rpow_re_of_pos hq, Complex.neg_re]
   calc
-    _ <= (norm (d.coefficient i) / Real.log 2) * d.normPower i ^ (-a) :=
+    _ <= (norm (b i) / Real.log 2) * q i ^ (-a) :=
       mul_le_mul (div_le_div_of_nonneg_left (norm_nonneg _) h2 hLog)
         (Real.rpow_le_rpow_of_exponent_le ((by norm_num : (1 : Real) <= 2).trans hTwo)
           (neg_le_neg hs)) (Real.rpow_nonneg hq.le _) (div_nonneg (norm_nonneg _) h2.le)
@@ -75,6 +84,89 @@ private theorem norm_grandPrimePowerLogTerm_le {powers : Type*}
 
 /-- The Euler log differentiates termwise on the ordinary half-plane of
 absolute convergence. -/
+theorem hasDerivAt_complexPrimePowerEulerLog {powers : Type*} [Countable powers]
+    (q : powers -> Real) (b : powers -> Complex) (hTwo : forall i, 2 <= q i)
+    (hSummable : forall r : Real, 1 < r ->
+      Summable (fun i => norm (b i) * q i ^ (-r)))
+    {s : Complex} (hs : 1 < s.re) :
+    HasDerivAt (complexPrimePowerEulerLog q b)
+      (-tsum (fun i => b i * (q i : Complex) ^ (-s))) s := by
+  choose a ha using exists_between hs
+  let D : Set Complex := {z | a < z.re}
+  have hOpen : IsOpen D := isOpen_lt continuous_const Complex.continuous_re
+  have hsD : Membership.mem D s := ha.2
+  have hSumm := (hSummable a ha.1).mul_left ((Real.log 2) ^ (-1 : Int))
+  have hDiff (i : powers) : DifferentiableOn Complex (complexPrimePowerLogTerm q b i) D :=
+    fun z _ => (hasDerivAt_complexPrimePowerLogTerm q b i (hTwo i) z).differentiableAt.differentiableWithinAt
+  have hBound (i : powers) (z : Complex) (hz : Membership.mem D z) :=
+    norm_complexPrimePowerLogTerm_le q b i (hTwo i) (show a < z.re from hz).le
+  have hSum := hasSum_deriv_of_summable_norm hSumm hDiff hOpen hBound hsD
+  have hL : DifferentiableAt Complex (complexPrimePowerEulerLog q b) s :=
+    (differentiableOn_tsum_of_summable_norm hSumm hDiff hOpen hBound).differentiableAt
+      (hOpen.mem_nhds hsD)
+  have hLocal (i : powers) := (hasDerivAt_complexPrimePowerLogTerm q b i (hTwo i) s).deriv
+  change HasSum (fun i => deriv (complexPrimePowerLogTerm q b i) s) (deriv (complexPrimePowerEulerLog q b) s) at hSum
+  simp only [hLocal] at hSum
+  have hDeriv : deriv (complexPrimePowerEulerLog q b) s =
+      -tsum (fun i => b i * (q i : Complex) ^ (-s)) := by
+    rw [<- hSum.tsum_eq, tsum_neg]
+  rw [<- hDeriv]
+  exact hL.hasDerivAt
+
+/-- The exponential Euler product gives right-half-plane nonvanishing
+and the required logarithmic derivative of the pole-cleared function. -/
+theorem complexEulerAnalytic_of_eulerLog {powers : Type*} [Countable powers]
+    (q : powers -> Real) (b : powers -> Complex) (F : Complex -> Complex) (m : Nat)
+    (hTwo : forall i, 2 <= q i)
+    (hSummable : forall r : Real, 1 < r ->
+      Summable (fun i => norm (b i) * q i ^ (-r)))
+    (hEuler : forall z : Complex, 1 < z.re ->
+      F z = (z - 1) ^ m * Complex.exp (complexPrimePowerEulerLog q b z))
+    {s : Complex} (hs : 1 < s.re) :
+    And (Not (F s = 0))
+      (logDeriv F s = (m : Complex) / (s - 1) -
+        tsum (fun i => b i * (q i : Complex) ^ (-s))) := by
+  have hs1 : Not (s - 1 = 0) := by
+    intro hz
+    have hr := congrArg Complex.re (sub_eq_zero.mp hz)
+    rw [Complex.one_re] at hr
+    exact (ne_of_gt hs) hr
+  have hPow := pow_ne_zero m hs1
+  have hExp := Complex.exp_ne_zero (complexPrimePowerEulerLog q b s)
+  refine And.intro (by rw [hEuler s hs]; exact mul_ne_zero hPow hExp) ?_
+  have hNear : Filter.EventuallyEq (nhds s) F
+      (fun z => (z - 1) ^ m * Complex.exp (complexPrimePowerEulerLog q b z)) := by
+    filter_upwards [(isOpen_lt continuous_const Complex.continuous_re).mem_nhds hs] with z hz
+    exact hEuler z hz
+  have hD1 : HasDerivAt (fun z : Complex => z - 1) 1 s := (hasDerivAt_id s).sub_const 1
+  have hDL := hasDerivAt_complexPrimePowerEulerLog q b hTwo hSummable hs
+  have hDE : HasDerivAt (fun z => Complex.exp (complexPrimePowerEulerLog q b z))
+      (Complex.exp (complexPrimePowerEulerLog q b s) *
+        (-tsum (fun i => b i * (q i : Complex) ^ (-s)))) s :=
+    (Complex.hasDerivAt_exp (complexPrimePowerEulerLog q b s)).comp s hDL
+  rw [(logDeriv_congr_nhds hNear).eq_of_nhds,
+    logDeriv_mul (f := fun z : Complex => (z - 1) ^ m)
+      (g := fun z => Complex.exp (complexPrimePowerEulerLog q b z)) s hPow hExp
+      (hD1.differentiableAt.pow m) hDE.differentiableAt]
+  have hLP : logDeriv (fun z : Complex => (z - 1) ^ m) s = (m : Complex) / (s - 1) := by
+    rw [logDeriv_fun_pow hD1.differentiableAt, logDeriv_apply, hD1.deriv, mul_one_div]
+  have hLE : logDeriv (fun z => Complex.exp (complexPrimePowerEulerLog q b z)) s =
+      -tsum (fun i => b i * (q i : Complex) ^ (-s)) := by
+    rw [logDeriv_apply, hDE.deriv]
+    exact (div_eq_iff hExp).mpr (mul_comm _ _)
+  rw [hLP, hLE]
+  exact (sub_eq_add_neg _ _).symm
+
+private theorem norm_grandPrimePowerLogTerm_le {powers : Type*}
+    (d : GrandRobinEulerData powers) (i : powers) (hTwo : 2 <= d.normPower i)
+    {a : Real} {s : Complex} (hs : a <= s.re) :
+    norm (grandPrimePowerLogTerm d i s) <=
+      (Real.log 2) ^ (-1 : Int) * (norm (d.coefficient i) * d.normPower i ^ (-a)) := by
+  simpa only [Complex.norm_real, grandPrimePowerLogTerm, complexPrimePowerLogTerm] using
+    norm_complexPrimePowerLogTerm_le d.normPower
+      (fun i => (d.coefficient i : Complex)) i hTwo hs
+
+/-- The paired Euler logarithm differentiates termwise on the ordinary half-plane. -/
 theorem hasDerivAt_grandEulerLog {powers : Type*} [Countable powers]
     (d : GrandRobinEulerData powers) (hTwo : forall i, 2 <= d.normPower i)
     (hSummable : forall r : Real, 1 < r ->
@@ -82,30 +174,11 @@ theorem hasDerivAt_grandEulerLog {powers : Type*} [Countable powers]
     {s : Complex} (hs : 1 < s.re) :
     HasDerivAt (grandEulerLog d)
       (-tsum (fun i => (d.coefficient i : Complex) * (d.normPower i : Complex) ^ (-s))) s := by
-  choose a ha using exists_between hs
-  let D : Set Complex := {z | a < z.re}
-  have hOpen : IsOpen D := isOpen_lt continuous_const Complex.continuous_re
-  have hsD : Membership.mem D s := ha.2
-  have hSumm := (hSummable a ha.1).mul_left ((Real.log 2) ^ (-1 : Int))
-  have hDiff (i : powers) : DifferentiableOn Complex (grandPrimePowerLogTerm d i) D :=
-    fun z _ => (hasDerivAt_grandPrimePowerLogTerm d i (hTwo i) z).differentiableAt.differentiableWithinAt
-  have hBound (i : powers) (z : Complex) (hz : Membership.mem D z) :=
-    norm_grandPrimePowerLogTerm_le d i (hTwo i) (show a < z.re from hz).le
-  have hSum := hasSum_deriv_of_summable_norm hSumm hDiff hOpen hBound hsD
-  have hL : DifferentiableAt Complex (grandEulerLog d) s :=
-    (differentiableOn_tsum_of_summable_norm hSumm hDiff hOpen hBound).differentiableAt
-      (hOpen.mem_nhds hsD)
-  have hLocal (i : powers) := (hasDerivAt_grandPrimePowerLogTerm d i (hTwo i) s).deriv
-  change HasSum (fun i => deriv (grandPrimePowerLogTerm d i) s) (deriv (grandEulerLog d) s) at hSum
-  simp only [hLocal] at hSum
-  have hDeriv : deriv (grandEulerLog d) s =
-      -tsum (fun i => (d.coefficient i : Complex) * (d.normPower i : Complex) ^ (-s)) := by
-    rw [<- hSum.tsum_eq, tsum_neg]
-  rw [<- hDeriv]
-  exact hL.hasDerivAt
+  exact hasDerivAt_complexPrimePowerEulerLog d.normPower (fun i => (d.coefficient i : Complex))
+    hTwo (by simpa only [Complex.norm_real] using hSummable) hs
 
-/-- The exponential Euler product gives right-half-plane nonvanishing
-and the required logarithmic derivative of the pole-cleared function. -/
+/-- The paired exponential Euler product gives the right-half-plane nonvanishing
+and logarithmic derivative. -/
 theorem grandEulerAnalytic_of_eulerLog {powers : Type*} [Countable powers]
     (d : GrandRobinEulerData powers) (m : Nat) (hPole : d.poleOrder = (m : Real))
     (hTwo : forall i, 2 <= d.normPower i)
@@ -117,36 +190,9 @@ theorem grandEulerAnalytic_of_eulerLog {powers : Type*} [Countable powers]
     And (Not (d.poleRemoved s = 0))
       (logDeriv d.poleRemoved s = (d.poleOrder : Complex) / (s - 1) -
         tsum (fun i => (d.coefficient i : Complex) * (d.normPower i : Complex) ^ (-s))) := by
-  have hs1 : Not (s - 1 = 0) := by
-    intro hz
-    have hr := congrArg Complex.re (sub_eq_zero.mp hz)
-    rw [Complex.one_re] at hr
-    exact (ne_of_gt hs) hr
-  have hPow := pow_ne_zero m hs1
-  have hExp := Complex.exp_ne_zero (grandEulerLog d s)
-  refine And.intro (by rw [hEuler s hs]; exact mul_ne_zero hPow hExp) ?_
-  have hNear : Filter.EventuallyEq (nhds s) d.poleRemoved
-      (fun z => (z - 1) ^ m * Complex.exp (grandEulerLog d z)) := by
-    filter_upwards [(isOpen_lt continuous_const Complex.continuous_re).mem_nhds hs] with z hz
-    exact hEuler z hz
-  have hD1 : HasDerivAt (fun z : Complex => z - 1) 1 s := (hasDerivAt_id s).sub_const 1
-  have hDL := hasDerivAt_grandEulerLog d hTwo hSummable hs
-  have hDE : HasDerivAt (fun z => Complex.exp (grandEulerLog d z))
-      (Complex.exp (grandEulerLog d s) *
-        (-tsum (fun i => (d.coefficient i : Complex) * (d.normPower i : Complex) ^ (-s)))) s :=
-    (Complex.hasDerivAt_exp (grandEulerLog d s)).comp s hDL
-  rw [(logDeriv_congr_nhds hNear).eq_of_nhds,
-    logDeriv_mul (f := fun z : Complex => (z - 1) ^ m)
-      (g := fun z => Complex.exp (grandEulerLog d z)) s hPow hExp
-      (hD1.differentiableAt.pow m) hDE.differentiableAt]
-  have hLP : logDeriv (fun z : Complex => (z - 1) ^ m) s = (m : Complex) / (s - 1) := by
-    rw [logDeriv_fun_pow hD1.differentiableAt, logDeriv_apply, hD1.deriv, mul_one_div]
-  have hLE : logDeriv (fun z => Complex.exp (grandEulerLog d z)) s =
-      -tsum (fun i => (d.coefficient i : Complex) * (d.normPower i : Complex) ^ (-s)) := by
-    rw [logDeriv_apply, hDE.deriv]
-    exact (div_eq_iff hExp).mpr (mul_comm _ _)
-  rw [hLP, hLE, hPole, Complex.ofReal_natCast]
-  exact (sub_eq_add_neg _ _).symm
+  rw [hPole, Complex.ofReal_natCast]
+  exact complexEulerAnalytic_of_eulerLog d.normPower (fun i => (d.coefficient i : Complex))
+    d.poleRemoved m hTwo (by simpa only [Complex.norm_real] using hSummable) hEuler hs
 
 /-- For a standard family with the exponential Euler product, the
 criterion derives both nonvanishing and the logarithmic derivative on

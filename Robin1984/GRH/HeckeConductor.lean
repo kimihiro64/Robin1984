@@ -130,9 +130,20 @@ private theorem continuous_finiteIntegralAdeleHom (K : Type*) [Field K] [NumberF
 private abbrev FiniteIntegralIdeleDomain (K : Type*) [Field K] [NumberField K] :=
   (p : HeightOneSpectrum (RingOfIntegers K)) -> Units (p.adicCompletionIntegers K)
 
-private noncomputable def finiteIntegralIdeleHom (K : Type*) [Field K] [NumberField K] :
+/-- Include the product of local integral units in the full idele group. -/
+noncomputable def finiteIntegralIdeleHom (K : Type*) [Field K] [NumberField K] :
     MonoidHom (FiniteIntegralIdeleDomain K) (Units (AdeleRing (RingOfIntegers K) K)) :=
   (Units.map (finiteIntegralAdeleHom K)).comp (MulEquiv.piUnits.symm.toMonoidHom)
+
+/-- The infinite component of an integral finite idele is one. -/
+theorem finiteIntegralIdeleHom_infinite (K : Type*) [Field K] [NumberField K]
+    (u : FiniteIntegralIdeleDomain K) :
+    ((finiteIntegralIdeleHom K u).val).1 = 1 := rfl
+
+/-- Its finite component at a place is the given local integral unit. -/
+theorem finiteIntegralIdeleHom_finite_apply (K : Type*) [Field K] [NumberField K]
+    (u : FiniteIntegralIdeleDomain K) (p : HeightOneSpectrum (RingOfIntegers K)) :
+    ((finiteIntegralIdeleHom K u).val).2 p = ((u p).val : p.adicCompletion K) := rfl
 
 private theorem continuous_finiteIntegralIdeleHom (K : Type*) [Field K] [NumberField K] :
     Continuous (finiteIntegralIdeleHom K) := by
@@ -464,5 +475,89 @@ theorem heckeArithmeticConductor_inverse {K : Type*} [Field K] [NumberField K]
     heckeArithmeticConductor (unitaryHeckeInverse chi) = heckeArithmeticConductor chi := by
   rw [heckeArithmeticConductor, heckeConductorIdeal_inverse]
   rfl
+
+open scoped Classical
+
+private theorem continuousHom_pi_mulSingle_product
+    {I : Type*} {G : I -> Type*} [forall i, CommMonoid (G i)]
+    [forall i, TopologicalSpace (G i)]
+    {M : Type*} [CommMonoid M] [TopologicalSpace M] [T2Space M]
+    (phi : MonoidHom (forall i, G i) M) (hPhi : Continuous phi)
+    (S : Finset I) (u : forall i, G i)
+    (hOff : forall i, Not (Membership.mem S i) -> phi (Pi.mulSingle i (u i)) = 1) :
+    phi u = S.prod (fun i => phi (Pi.mulSingle i (u i))) := by
+  classical
+  let part (T : Finset I) := T.prod (fun i => Pi.mulSingle i (u i))
+  have hAt (T : Finset I) (i : I) (hi : Membership.mem T i) : part T i = u i := by
+    unfold part
+    have hOther (j : I) (_hj : Membership.mem T j) (hji : Not (j = i)) :
+        (Pi.mulSingle j (u j) : forall p, G p) i = 1 :=
+      Pi.mulSingle_eq_of_ne (Ne.symm hji) (u j)
+    rw [Finset.prod_apply, Finset.prod_eq_single_of_mem i hi hOther, Pi.mulSingle_eq_same]
+  have hLimit : Tendsto part atTop (nhds u) := by
+    apply tendsto_pi_nhds.mpr
+    intro i
+    refine tendsto_const_nhds.congr' ?_
+    filter_upwards [eventually_ge_atTop ({i} : Finset I)] with T hT
+    exact (hAt T i (hT (Finset.mem_singleton_self i))).symm
+  have hV : Tendsto (fun T => phi (part T)) atTop (nhds (phi u)) :=
+    hPhi.continuousAt.tendsto.comp hLimit
+  have he : Filter.EventuallyEq atTop
+      (fun _ : Finset I => S.prod (fun i => phi (Pi.mulSingle i (u i))))
+      (fun T => phi (part T)) := by
+    filter_upwards [eventually_ge_atTop S] with T hST
+    unfold part
+    rw [map_prod]
+    exact Finset.prod_subset hST (fun i _ hNot => hOff i hNot)
+  exact tendsto_nhds_unique hV (tendsto_const_nhds.congr' he)
+
+/-- The value of a Hecke character on the integral finite ideles is the
+product of its values on the finitely many ramified coordinates. -/
+theorem heckeCharacter_on_integralFiniteIdeles_eq_product {K : Type*} [Field K] [NumberField K]
+    (chi : UnitaryHeckeCharacter K) (u : FiniteIntegralIdeleDomain K) :
+    chi.val (finiteIntegralIdeleHom K u) =
+      (finite_heckeRamifiedPlaces chi).toFinset.prod (fun p =>
+        chi.val (finiteIntegralIdeleHom K (Pi.mulSingle p (u p)))) := by
+  classical
+  let phi : MonoidHom (FiniteIntegralIdeleDomain K) Circle :=
+    chi.val.toMonoidHom.comp (finiteIntegralIdeleHom K)
+  apply continuousHom_pi_mulSingle_product phi
+    (chi.val.continuous.comp (continuous_finiteIntegralIdeleHom K))
+  intro p hp
+  have hUnram : HeckeUnramifiedAt chi p := by
+    by_contra hn
+    apply hp
+    exact (Set.Finite.mem_toFinset _).mpr hn
+  let a : Units (p.adicCompletion K) :=
+    Units.map (p.adicCompletionIntegers K).subtype.toMonoidHom (u p)
+  have hv : (Valued.v (a : p.adicCompletion K) : WithZero (Multiplicative Int)) = 1 := by
+    have hv1 : (Valued.v (a : p.adicCompletion K) : WithZero (Multiplicative Int)) <= 1 :=
+      (u p).val.property
+    have hv2 : (Valued.v ((Inv.inv a : Units (p.adicCompletion K)) : p.adicCompletion K) :
+        WithZero (Multiplicative Int)) <= 1 := (u p).inv.property
+    have hMul : (Valued.v (a : p.adicCompletion K) : WithZero (Multiplicative Int)) *
+        Valued.v ((Inv.inv a : Units (p.adicCompletion K)) : p.adicCompletion K) = 1 := by
+      rw [<- Valuation.map_mul, <- Units.val_mul, mul_inv_cancel, Units.val_one, map_one]
+    exact le_antisymm hv1 (by
+      calc
+        1 = _ := hMul.symm
+        _ <= _ := mul_le_of_le_one_right zero_le hv2)
+  change chi.val (finiteIntegralIdeleHom K (Pi.mulSingle p (u p))) = 1
+  rw [finiteIntegralIdeleHom_mulSingle p (u p) a rfl]
+  exact hUnram a hv
+
+/-- Evaluate an integral finite idele by the local components at its ramified places. -/
+theorem heckeCharacter_on_integralFiniteIdeles_eq_local_product
+    {K : Type*} [Field K] [NumberField K]
+    (chi : UnitaryHeckeCharacter K) (u : FiniteIntegralIdeleDomain K) :
+    chi.val (finiteIntegralIdeleHom K u) =
+      (finite_heckeRamifiedPlaces chi).toFinset.prod (fun p =>
+        chi.val (localIdeleHom K p
+          (Units.map (p.adicCompletionIntegers K).subtype.toMonoidHom (u p)))) := by
+  rw [heckeCharacter_on_integralFiniteIdeles_eq_product]
+  apply Finset.prod_congr rfl
+  intro p _
+  rw [finiteIntegralIdeleHom_mulSingle p (u p)
+    (Units.map (p.adicCompletionIntegers K).subtype.toMonoidHom (u p)) rfl]
 
 end Robin1984.GRH

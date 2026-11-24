@@ -1038,6 +1038,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeTateFiniteIntegral.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's finite local tests and multiplicative Haar measure on integral-unit cosets.",
+      "formalization_note": "Under absolute convergence, the actual finite Tate density integrates as a sum over the nonzero fractional ideals.",
+      "content_basis": "Finite-unit character covariance and the counting pushforward of Haar measure with unit-subgroup mass one.",
+      "dependency_status": "Uses the actual finite Tate test, finite norm, and the ideal homomorphism.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeTateFundamentalDomain.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Fundamental domains for discrete principal ideles in Tate's quotient integration.",

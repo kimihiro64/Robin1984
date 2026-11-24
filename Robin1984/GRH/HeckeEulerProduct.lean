@@ -422,6 +422,68 @@ expressed as the exponential of its prime-power logarithm. -/
 noncomputable def heckeEulerL (chi : UnitaryHeckeCharacter K) (s : Complex) : Complex :=
   Complex.exp (tsum (fun pn => heckeEulerLogTerm K chi pn s))
 
+/-- The individual Hecke prime-power coefficient, including complex characters. -/
+noncomputable def heckePrimePowerCoefficient (chi : UnitaryHeckeCharacter K)
+    (pn : HeckePrimePowers K) : Complex :=
+  heckeLocalParameter chi pn.1 ^ (pn.2 + 1) *
+    (Real.log (dedekindPrimeNorm K pn.1 : Real) : Complex)
+
+/-- Absolute convergence of the individual Hecke logarithmic derivative. -/
+theorem summable_heckePrimePowerCoefficient (chi : UnitaryHeckeCharacter K)
+    {r : Real} (hr : 1 < r) :
+    Summable (fun pn : HeckePrimePowers K =>
+      norm (heckePrimePowerCoefficient K chi pn) * (dedekindPrimePowerNorm K pn : Real) ^ (-r)) := by
+  have hs : 1 < (r : Complex).re := by simpa only [Complex.ofReal_re] using hr
+  refine Summable.of_nonneg_of_le (fun pn =>
+    mul_nonneg (norm_nonneg _) (Real.rpow_nonneg (by positivity) _)) ?_
+    (summable_norm_dedekindPrimePowerTerm K hs)
+  intro pn
+  have hn : 0 < (dedekindPrimePowerNorm K pn : Real) :=
+    (by norm_num : (0 : Real) < 2).trans_le (two_le_heckePrimePowerNorm K pn)
+  have hp : 0 <= (dedekindPrimeNorm K pn.1 : Real) := by positivity
+  have hEq : dedekindPrimePowerTerm K pn.1 pn.2 (r : Complex) =
+      (Real.log (dedekindPrimeNorm K pn.1 : Real) : Complex) *
+        ((dedekindPrimePowerNorm K pn : Real) : Complex) ^ (-(r : Complex)) := by
+    unfold dedekindPrimePowerTerm dedekindPrimePowerNorm
+    rw [Complex.ofReal_log hp, Complex.ofReal_natCast, Complex.ofReal_natCast]
+  rw [hEq, norm_mul, Complex.norm_real, Complex.norm_cpow_eq_rpow_re_of_pos hn,
+    Complex.neg_re, Complex.ofReal_re, heckePrimePowerCoefficient, norm_mul, Complex.norm_real]
+  exact mul_le_mul_of_nonneg_right
+    (mul_le_of_le_one_left (norm_nonneg _)
+      (norm_pow_heckeLocalParameter_le_one K chi pn.1 (pn.2 + 1)))
+    (Real.rpow_nonneg hn.le _)
+
+/-- The ordinary right-half-plane log derivative of each Hecke Euler series. -/
+theorem logDeriv_heckeEulerL (chi : UnitaryHeckeCharacter K) {s : Complex}
+    (hs : 1 < s.re) :
+    logDeriv (heckeEulerL K chi) s =
+      -tsum (fun pn : HeckePrimePowers K => heckePrimePowerCoefficient K chi pn *
+        ((dedekindPrimePowerNorm K pn : Real) : Complex) ^ (-s)) := by
+  let _ : Countable (HeckePrimePowers K) := countable_heckePrimePowers K
+  let q (pn : HeckePrimePowers K) : Real := dedekindPrimePowerNorm K pn
+  let b := heckePrimePowerCoefficient K chi
+  have hEuler (z : Complex) (_hz : 1 < z.re) :
+      heckeEulerL K chi z = (z - 1) ^ (0 : Nat) *
+        Complex.exp (complexPrimePowerEulerLog q b z) := by
+    rw [pow_zero, one_mul, heckeEulerL]
+    apply congrArg Complex.exp
+    change tsum (fun pn => heckeEulerLogTerm K chi pn z) =
+      tsum (fun pn => (b pn / (Real.log (q pn) : Complex)) * (q pn : Complex) ^ (-z))
+    refine tsum_congr (fun pn => ?_)
+    have hp : (0 : Real) < Real.log (dedekindPrimeNorm K pn.1 : Real) :=
+      Real.log_pos (by exact_mod_cast one_lt_dedekindPrimeNorm K pn.1)
+    have hLog : (Real.log (q pn) : Complex) =
+        ((pn.2 + 1 : Nat) : Complex) * (Real.log (dedekindPrimeNorm K pn.1 : Real) : Complex) := by
+      dsimp [q, dedekindPrimePowerNorm]
+      rw [Nat.cast_pow, Real.log_pow, Complex.ofReal_mul, Complex.ofReal_natCast]
+    have hb : b pn = heckeLocalParameter chi pn.1 ^ (pn.2 + 1) *
+        (Real.log (dedekindPrimeNorm K pn.1 : Real) : Complex) := rfl
+    rw [heckeEulerLogTerm, hLog, hb, mul_div_mul_right _ _ (Complex.ofReal_ne_zero.mpr hp.ne')]
+  have h := complexEulerAnalytic_of_eulerLog q b (heckeEulerL K chi) 0
+    (two_le_heckePrimePowerNorm K)
+    (fun r hr => summable_heckePrimePowerCoefficient K chi hr) hEuler hs
+  simpa only [Nat.cast_zero, zero_div, zero_sub] using h.2
+
 private theorem norm_heckeEulerLogTerm_le (chi : UnitaryHeckeCharacter K)
     (pn : HeckePrimePowers K) (s : Complex) :
     norm (heckeEulerLogTerm K chi pn s) <=
