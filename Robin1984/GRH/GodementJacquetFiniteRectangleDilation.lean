@@ -300,7 +300,7 @@ theorem isCompact_finiteAdelePrincipalRectangle (a : I -> FiniteAdeles K) (d : K
     IsCompact (finiteAdelePrincipalRectangle K I a d) :=
   (isCompact_scaledFiniteAdeleVectorSubgroup K I d).image (continuous_const.add continuous_id)
 
-variable [Fintype I]
+variable [Fintype I] [DecidableEq I]
 
 private def finiteAdeleMulVecHomeomorph (M : Units (Matrix I I (FiniteAdeles K))) :
     Homeomorph (I -> FiniteAdeles K) (I -> FiniteAdeles K) where
