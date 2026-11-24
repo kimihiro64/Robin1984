@@ -1047,6 +1047,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeTateContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's analytic continuation of completed Hecke L-functions.",
+      "formalization_note": "Splits the class theta integral by logarithmic norm and constructs the entire completion for characters nontrivial on the norm-one idele classes.",
+      "content_basis": "Reflects the negative half by Poisson summation and cancels both zero terms by Haar character orthogonality.",
+      "dependency_status": "Uses the proved Euler integral, class Poisson formula, and absolute moments of the positive Mellin tails.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeTateDualSupport.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Tate's finite additive Fourier transform, duality of an integral modulus, and the restricted product of local fields.",
