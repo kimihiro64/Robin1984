@@ -3036,13 +3036,41 @@ standard family satisfying the stated analytic hypotheses. It uses
 the Euler products and Gamma factors to supply the inputs of
 \path{grandRobinCompletedCriterion_of_entireOrder}. The rank-one
 criterion uses the completions constructed in
-Appendix~\ref{app:hecke-formalization}. In higher ranks, the module
-\path{GodementJacquetThetaMellin.lean} proves that the integrated theta
-series equals its invertible part under absolute integrability, vanishing
-unipotent periods, and zero mean. It also proves the resulting Mellin
-reflection. The higher-rank analytic instantiation still requires proofs
-of the requisite cuspidal estimates and the local and global Euler-product
-input.
+Appendix~\ref{app:hecke-formalization}. In higher ranks,
+\path{GodementJacquetThetaDualDecay.lean} proves that the self-dual Fourier
+transform of an adelic Schwartz rectangle is a finite sum of Schwartz
+rectangles. The trace pairing transposes the matrix frequency and applies
+conjugation in the archimedean Minkowski coordinates. The finite Fourier
+coefficient is compactly supported and periodic modulo a principal
+open subgroup, so it is constant on each rectangle of a finite disjoint
+partition. This gives the decomposition at every adelic matrix.
+
+For a fixed $\sigma$-finite bi-invariant Haar measure $\mu$ on the norm-one
+group and a measurable fundamental domain $D$, write
+\[
+ \mathcal T^\times_\Phi(t;c,f) =
+ \int_{D\times D}\sum_{P\in\operatorname{GL}_n(K)}
+   \Phi(A^{-1}z_t P B)c(A)f(B)\,d\mu(A)\,d\mu(B),
+ \qquad |\det z_t|_{\mathbb A}=e^t .
+\]
+Suppose $c$ and $f$ descend to the quotient and are square-integrable
+on $D$. Applying the checked positive-time estimates for $\Phi$ and
+$\widehat\Phi$ then gives, for each $\beta>0$, a constant $C_\beta$ such that
+\[
+ |\mathcal T^\times_\Phi(t;c,f)|
+ +|\mathcal T^\times_{\widehat\Phi}(t;f,c)|
+ \le C_\beta e^{-\beta t}\qquad(t\ge0).
+\]
+The time-zero lattice majorants are integrable by the dyadic Haar volume
+bound and Cauchy--Schwarz on the quotient. The finite rectangle
+decomposition permits the same estimate for the dual test.
+
+The module \path{GodementJacquetThetaMellin.lean} proves that the integrated
+full theta series equals its invertible part under absolute integrability,
+vanishing unipotent periods, and zero mean. It also proves the resulting
+Mellin reflection. The higher-rank instantiation still requires proofs of
+absolute convergence for the full cuspidal theta integrals and of the local
+and global Euler-product input.
 
 The three classical equivalence declarations have the
 mathematical types

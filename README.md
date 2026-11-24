@@ -152,12 +152,18 @@ equivalent to the Dedekind triangular bound for the field together with
 the paired triangular bound for every unitary Hecke character nontrivial
 on norm-one idele classes.
 
-For higher ranks, Lean verifies the Godement–Jacquet theta cancellation
-under absolute integrability, vanishing unipotent periods, and zero mean.
-It also verifies the resulting reflection of the log Mellin transform.
-Constructing the higher-rank analytic data still requires the actual
-cuspidal estimates and the local and global Euler-product input. See
-[the generalized criteria](docs/GRH.md) for the declarations.
+For higher ranks, Lean proves that the self-dual Fourier transform of a
+Schwartz rectangle is a finite sum of Schwartz rectangles. The invertible
+theta integrals for the original test and its Fourier transform both decay
+as $O(e^{-\beta t})$ for every $\beta>0$ as $t\to+\infty$, given a measurable
+fundamental domain, bi-invariant Haar measure, and square-integrable quotient
+functions. [Fourier closure and dual decay](Robin1984/GRH/GodementJacquetThetaDualDecay.lean)
+
+The full theta cancellation and log Mellin reflection use absolute
+integrability, vanishing unipotent periods, and zero mean. The higher-rank
+instantiation still requires the corresponding absolute convergence of the
+full cuspidal theta integrals and the local and global Euler-product input.
+[Generalized criteria](docs/GRH.md)
 
 ## Critical-line zeros and multiplicity
 
