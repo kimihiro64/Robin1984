@@ -35,13 +35,13 @@ namespace Robin1984.GRH
 open MeasureTheory Topology
 open scoped Classical
 
-/-- A discrete subgroup of a second-countable topological group admits
-a Borel fundamental domain for left translation. -/
-theorem exists_isFundamentalDomain_of_discreteSubgroup
+/-- A discrete subgroup has a Borel set containing exactly one point in each left orbit. -/
+theorem exists_measurableFundamentalRepresentatives_of_discreteSubgroup
     {G : Type*} [Group G] [TopologicalSpace G] [IsTopologicalGroup G]
     [MeasurableSpace G] [BorelSpace G] [SecondCountableTopology G]
-    (H : Subgroup G) [DiscreteTopology H] (mu : Measure G) :
-    Exists (fun S : Set G => And (MeasurableSet S) (IsFundamentalDomain H S mu)) := by
+    (H : Subgroup G) [DiscreteTopology H] :
+    Exists (fun S : Set G => And (MeasurableSet S)
+      (forall x : G, ExistsUnique (fun h : H => Membership.mem S (HSMul.hSMul h x)))) := by
   have hSingleton : IsOpen ({(1 : H)} : Set H) := isOpen_discrete _
   choose V hV using (isOpen_induced_iff (f := fun h : H => (h : G))).mp hSingleton
   have hOneV : Membership.mem V (1 : G) := by
@@ -110,7 +110,7 @@ theorem exists_isFundamentalDomain_of_discreteSubgroup
       choose a ha using hk.2
       exact Set.mem_iUnion.mpr (Exists.intro k
         (Set.mem_iUnion.mpr (Exists.intro hk.1 (Set.mem_iUnion.mpr (Exists.intro a ha)))))
-  refine Exists.intro S (And.intro hS (IsFundamentalDomain.mk' hS.nullMeasurableSet ?_))
+  refine Exists.intro S (And.intro hS ?_)
   intro x
   let P (n : Nat) := Exists (fun h : H => Membership.mem (W (c n)) (SMul.smul h x))
   have hP : Exists P := by
@@ -152,6 +152,61 @@ theorem exists_isFundamentalDomain_of_discreteSubgroup
   have he := hUniqueInW (c i) hj.1 haT.1 hbH
   apply Subtype.ext
   exact mul_right_cancel he
+
+/-- Exact Borel representatives give a measurable section of the quotient
+by a countable subgroup acting by left translation. -/
+theorem exists_measurable_leftOrbitSection
+    {G : Type*} [Group G] [MeasurableSpace G] [MeasurableMul G]
+    (H : Subgroup G) [Countable H] (S : Set G) (hS : MeasurableSet S)
+    (hUnique : forall x : G, ExistsUnique (fun h : H => Membership.mem S (h.val * x))) :
+    let q := Quotient.mk (MulAction.orbitRel H G)
+    Exists (fun f : Quotient (MulAction.orbitRel H G) -> G =>
+      And (Measurable f) (Function.RightInverse f q)) := by
+  let q := Quotient.mk (MulAction.orbitRel H G)
+  have hRep (y : Quotient (MulAction.orbitRel H G)) : Exists (fun x : G =>
+      And (Membership.mem S x) (q x = y)) := by
+    refine Quotient.inductionOn y ?_
+    intro x
+    choose h hh using (hUnique x).exists
+    refine Exists.intro (h.val * x) (And.intro hh (Quotient.sound ?_))
+    exact Exists.intro h rfl
+  choose f hf using hRep
+  refine Exists.intro f (And.intro ?_ (fun x => (hf x).2))
+  apply measurable_from_quotient.mpr
+  intro B hB
+  have hB' : Set.preimage (Function.comp f q) B =
+      Set.iUnion (fun h : H => Set.preimage (MeasurableEquiv.mulLeft h.val) (Inter.inter S B)) := by
+    ext x
+    have hr := Quotient.exact (hf (q x)).2
+    change Exists (fun h : H => h.val * x = f (q x)) at hr
+    choose h hh using hr
+    constructor
+    . intro hx
+      have hxB : Membership.mem B (f (q x)) := hx
+      refine Set.mem_iUnion.mpr (Exists.intro h ?_)
+      change And (Membership.mem S (h.val * x)) (Membership.mem B (h.val * x))
+      rw [hh]
+      exact And.intro (hf (q x)).1 hxB
+    . intro hx
+      choose g hg using Set.mem_iUnion.mp hx
+      change And (Membership.mem S (g.val * x)) (Membership.mem B (g.val * x)) at hg
+      have hSx : Membership.mem S (h.val * x) := by rw [hh]; exact (hf (q x)).1
+      have he := (hUnique x).unique hSx hg.1
+      change Membership.mem B (f (q x))
+      rw [<- hh, he]
+      exact hg.2
+  rw [hB']
+  exact MeasurableSet.iUnion (fun h => (MeasurableEquiv.mulLeft h.val).measurable (hS.inter hB))
+
+/-- A discrete subgroup of a second-countable topological group admits
+a Borel fundamental domain for left translation. -/
+theorem exists_isFundamentalDomain_of_discreteSubgroup
+    {G : Type*} [Group G] [TopologicalSpace G] [IsTopologicalGroup G]
+    [MeasurableSpace G] [BorelSpace G] [SecondCountableTopology G]
+    (H : Subgroup G) [DiscreteTopology H] (mu : Measure G) :
+    Exists (fun S : Set G => And (MeasurableSet S) (IsFundamentalDomain H S mu)) := by
+  choose S hS using exists_measurableFundamentalRepresentatives_of_discreteSubgroup H
+  exact Exists.intro S (And.intro hS.1 (IsFundamentalDomain.mk' hS.1.nullMeasurableSet hS.2))
 
 open NumberField IsDedekindDomain
 
@@ -934,5 +989,138 @@ theorem measurePreserving_godementJacquetUnipotentClassLeviEquiv
   exact MonoidHom.measurePreserving (f := e.toMonoidHom) hC e.surjective rfl
 
 end UnipotentHaar
+
+section UnipotentRepresentatives
+
+variable (r k : Nat)
+
+/-- The principal additive lattice in a rectangular adelic matrix block is discrete. -/
+theorem discreteTopology_godementJacquetPrincipalMatrixBlock :
+    DiscreteTopology (godementJacquetPrincipalMatrixBlock K r k) := by
+  let H := godementJacquetPrincipalMatrixBlock K r k
+  let H0 := AdeleRing.principalSubgroup (RingOfIntegers K) K
+  let e (X : H) (i : Fin r) (j : Fin k) : H0 := Subtype.mk (X.val i j) (by
+    choose P hP using (mem_godementJacquetPrincipalMatrixBlock K r k X.val).mp X.property
+    exact Exists.intro (P i j) (congrArg (fun M : UnipotentBlock K r k => M i j) hP))
+  have he : Function.Injective e := by
+    intro X Y h
+    apply Subtype.ext
+    apply Matrix.ext
+    intro i j
+    exact congrArg (fun M : Fin r -> Fin k -> H0 => (M i j).val) h
+  have hVal : Continuous (fun X : H => X.val) := continuous_subtype_val
+  have hCoordinates (i : Fin r) (j : Fin k) : Continuous (fun X : H => (e X i j).val) :=
+    (continuous_apply j).comp ((continuous_apply i).comp hVal)
+  have hC : Continuous e := continuous_pi (fun i => continuous_pi (fun j =>
+    (hCoordinates i j).subtype_mk (fun X => (e X i j).property)))
+  let : DiscreteTopology H0 := discreteTopology_principalAdeles K
+  let : DiscreteTopology (Fin r -> Fin k -> H0) := inferInstance
+  apply discreteTopology_iff_isOpen_singleton.mpr
+  intro X
+  have hEq : Set.preimage e (Singleton.singleton (e X)) = Singleton.singleton X := by
+    ext Y
+    simp only [Set.mem_preimage, Set.mem_singleton_iff, he.eq_iff]
+  rw [<- hEq]
+  exact (isOpen_discrete _).preimage hC
+
+private theorem sectionQuotient_isLocalHomeomorph :
+    IsLocalHomeomorph (QuotientAddGroup.mk
+      (s := godementJacquetPrincipalMatrixBlock K r k)) := by
+  let H := godementJacquetPrincipalMatrixBlock K r k
+  have hH : IsDiscrete (H : Set (UnipotentBlock K r k)) :=
+    SetLike.isDiscrete_iff_discreteTopology.mpr (discreteTopology_godementJacquetPrincipalMatrixBlock K r k)
+  exact (H.isAddQuotientCoveringMap_of_comm hH).isCoveringMap.isLocalHomeomorph
+
+/-- The additive unipotent quotient has a relatively compact Borel set of
+representatives, with exactly one representative of each class. -/
+theorem exists_godementJacquetUnipotentCompactSection
+    [MeasurableSpace (UnipotentBlock K r k)] [BorelSpace (UnipotentBlock K r k)]
+    [MeasurableSpace (UnipotentQuotient K r k)] [BorelSpace (UnipotentQuotient K r k)] :
+    let q := QuotientAddGroup.mk' (godementJacquetPrincipalMatrixBlock K r k)
+    Exists (fun S : Set (UnipotentBlock K r k) => Exists (fun C : Set (UnipotentBlock K r k) =>
+      And (IsCompact C) (And (S <= C)
+        (And (MeasurableSet S) (And (Set.InjOn q S) (Set.image q S = Set.univ)))))) := by
+  let V := InfiniteAdeleRing K
+  let F := FiniteAdeleRing (RingOfIntegers K) K
+  let e : Homeomorph V (mixedEmbedding.mixedSpace K) :=
+    { toEquiv := (InfiniteAdeleRing.ringEquiv_mixedSpace K).toEquiv
+      continuous_toFun := continuous_heckeInfiniteAdele_mixedSpace (K := K)
+      continuous_invFun := continuous_heckeInfiniteAdele_mixedSpace_symm K }
+  let : LocallyCompactSpace V := e.isClosedEmbedding.locallyCompactSpace
+  let : LocallyCompactSpace F := locallyCompactSpace_heckeFiniteAdeles
+  let : LocallyCompactSpace (LeviAdeles K) :=
+    inferInstanceAs (LocallyCompactSpace (Prod V F))
+  let : LocallyCompactSpace (UnipotentBlock K r k) :=
+    inferInstanceAs (LocallyCompactSpace (Fin r -> Fin k -> LeviAdeles K))
+  let H := godementJacquetPrincipalMatrixBlock K r k
+  let : CompactSpace (UnipotentQuotient K r k) :=
+    compactSpace_godementJacquetMatrixBlockModuloPrincipal K r k
+  have hQ := sectionQuotient_isLocalHomeomorph K r k
+  exact exists_measurableSectionSet_of_compactLocalHomeomorph (QuotientAddGroup.mk (s := H))
+    QuotientAddGroup.continuous_mk QuotientAddGroup.isOpenMap_coe Quotient.mk_surjective hQ
+
+/-- A surjective local homeomorphism onto a compact space admits a measurable section. -/
+private theorem exists_measurable_section_of_compact_localHomeomorph
+    {X Y : Type*} [Nonempty X]
+    [TopologicalSpace X] [MeasurableSpace X] [BorelSpace X]
+    [TopologicalSpace Y] [MeasurableSpace Y] [BorelSpace Y] [CompactSpace Y]
+    (q : X -> Y) (hSurj : Function.Surjective q) (hLocal : IsLocalHomeomorph q) :
+    Exists (fun f : Y -> X => And (Measurable f) (Function.RightInverse f q)) := by
+  classical
+  choose E hE hQ using hLocal
+  let V (x : X) := (E x).target
+  have hV (x : X) : IsOpen (V x) := (E x).open_target
+  have hCover : (Set.univ : Set Y) <= Set.iUnion V := by
+    intro y _
+    choose x hx using hSurj y
+    refine Set.mem_iUnion.mpr (Exists.intro x ?_)
+    rw [<- hx, hQ x]
+    exact (E x).map_source (hE x)
+  choose F hF using isCompact_univ.elim_finite_subcover V hV hCover
+  have hFinite : forall D : Finset X, Exists (fun f : Y -> X => And (Measurable f)
+      (forall x, Membership.mem D x -> forall y, Membership.mem (V x) y -> q (f y) = y)) := by
+    intro D
+    induction D using Finset.induction_on with
+    | empty =>
+      exact Exists.intro (fun _ => Classical.choice (inferInstance : Nonempty X))
+        (And.intro measurable_const (fun _ h => False.elim (Finset.notMem_empty _ h)))
+    | insert x D hx ih =>
+      choose f hf using ih
+      let g (y : Y) := if hy : Membership.mem (V x) y then (E x).symm y else f y
+      have hInv : Measurable (fun y : V x => (E x).symm y) :=
+        (continuousOn_iff_continuous_domRestrict.mp (E x).continuousOn_symm).measurable
+      have hG : Measurable g := hInv.dite (hf.1.comp measurable_subtype_coe) (hV x).measurableSet
+      refine Exists.intro g (And.intro hG ?_)
+      intro z hz y hy
+      by_cases h : Membership.mem (V x) y
+      . rw [show g y = (E x).symm y from dif_pos h, hQ x]
+        exact (E x).right_inv h
+      . have hzD : Membership.mem D z := by
+          rcases Finset.mem_insert.mp hz with he | hzD
+          . rw [he] at hy
+            exact False.elim (h hy)
+          . exact hzD
+        rw [show g y = f y from dif_neg h]
+        exact hf.2 z hzD y hy
+  choose s hs using hFinite F
+  refine Exists.intro s (And.intro hs.1 ?_)
+  intro y
+  choose x hx using Set.mem_iUnion.mp (hF (Set.mem_univ y))
+  choose hxF hy using Set.mem_iUnion.mp hx
+  exact hs.2 x hxF y hy
+
+/-- The compact unipotent quotient has a measurable representative in the adelic matrix block. -/
+theorem exists_measurable_godementJacquetUnipotentRepresentative
+    [MeasurableSpace (UnipotentBlock K r k)] [BorelSpace (UnipotentBlock K r k)]
+    [MeasurableSpace (UnipotentQuotient K r k)] [BorelSpace (UnipotentQuotient K r k)] :
+    let q := QuotientAddGroup.mk' (godementJacquetPrincipalMatrixBlock K r k)
+    Exists (fun f : UnipotentQuotient K r k -> UnipotentBlock K r k =>
+      And (Measurable f) (Function.RightInverse f q)) := by
+  let : CompactSpace (UnipotentQuotient K r k) :=
+    compactSpace_godementJacquetMatrixBlockModuloPrincipal K r k
+  exact exists_measurable_section_of_compact_localHomeomorph _
+    Quotient.mk_surjective (sectionQuotient_isLocalHomeomorph K r k)
+
+end UnipotentRepresentatives
 
 end Robin1984.GRH
