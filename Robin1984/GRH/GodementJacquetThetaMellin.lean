@@ -282,4 +282,103 @@ theorem godementJacquetInvertibleDoubleThetaMellin_reflection
 
 end InvertibleThetaMellin
 
+/-- Two-sided exponential moments imply that the normalized logarithmic
+Mellin transform is entire. -/
+theorem differentiable_godementJacquetLogMellin_of_exponentialMoments
+    (n : Nat) (F : Real -> Complex) (hF : Measurable F)
+    (hMoment : forall a : Real,
+      Integrable (fun t : Real => norm (F t) * (Real.exp (abs t)) ^ a) (volume : Measure Real)) :
+    Differentiable Complex (godementJacquetLogMellin n F) := by
+  let m : Measure Real := volume
+  let r (t : Real) := Real.exp (abs t)
+  let P := Set.indicator (Set.Ici (0 : Real)) F
+  let N := Set.indicator (Set.Iio (0 : Real)) F
+  let c : Complex := ((n : Complex) - 1) / 2
+  have hr : Measurable r := (Real.continuous_exp.comp continuous_abs).measurable
+  have hRad : Filter.Eventually (fun t : Real => 1 <= r t) (ae m) :=
+    Filter.Eventually.of_forall (fun t => Real.one_le_exp_iff.mpr (abs_nonneg t))
+  have hP : Measurable P := hF.indicator measurableSet_Ici
+  have hN : Measurable N := hF.indicator measurableSet_Iio
+  have hPM (a : Real) : Integrable (fun t : Real => norm (P t) * r t ^ a) m := by
+    refine ((hMoment a).indicator (s := Set.Ici (0 : Real)) measurableSet_Ici).congr
+      (Filter.Eventually.of_forall (fun t => ?_))
+    by_cases ht : 0 <= t
+    . simp [P, r, ht]
+    . simp [P, r, ht]
+  have hNM (a : Real) : Integrable (fun t : Real => norm (N t) * r t ^ a) m := by
+    refine ((hMoment a).indicator (s := Set.Iio (0 : Real)) measurableSet_Iio).congr
+      (Filter.Eventually.of_forall (fun t => ?_))
+    by_cases ht : t < 0
+    . simp [N, r, ht]
+    . simp [N, r, ht]
+  have hPD := differentiable_heckeMellinTail m P r hP.aestronglyMeasurable hr.aemeasurable hRad hPM
+  have hND := differentiable_heckeMellinTail m N r hN.aestronglyMeasurable hr.aemeasurable hRad hNM
+  have hIntegrable (H : Real -> Complex) (hH : Measurable H)
+      (hHM : forall a : Real, Integrable (fun t : Real => norm (H t) * r t ^ a) m)
+      (z : Complex) :
+      Integrable (fun t : Real => H t * Complex.exp (z * (Real.log (r t) : Complex))) m := by
+    have hExp : Continuous (fun t : Real => Complex.exp (z * (Real.log (r t) : Complex))) := by
+      simp_rw [show forall t : Real, Real.log (r t) = abs t from fun t => Real.log_exp _]
+      exact Complex.continuous_exp.comp (continuous_const.mul (Complex.continuous_ofReal.comp continuous_abs))
+    have hMeas : AEStronglyMeasurable
+        (fun t : Real => H t * Complex.exp (z * (Real.log (r t) : Complex))) m :=
+      (hH.mul hExp.measurable).aestronglyMeasurable
+    apply (integrable_norm_iff hMeas).mp
+    refine (hHM z.re).congr (Filter.Eventually.of_forall (fun t => ?_))
+    change norm (H t) * r t ^ z.re =
+      norm (H t * Complex.exp (z * (Real.log (r t) : Complex)))
+    rw [norm_mul, Complex.norm_exp, Real.rpow_def_of_pos (Real.exp_pos (abs t)), Complex.mul_re]
+    simp only [Complex.ofReal_re, Complex.ofReal_im, mul_zero, sub_zero]
+    rw [mul_comm z.re]
+  have hEq : godementJacquetLogMellin n F =
+      (fun s : Complex => heckeMellinTail m P r (s + c) + heckeMellinTail m N r (-(s + c))) := by
+    funext s
+    have hSplit (t : Real) :
+        F t * Complex.exp ((t : Complex) * (s + c)) =
+          P t * Complex.exp ((s + c) * (Real.log (r t) : Complex)) +
+            N t * Complex.exp (-(s + c) * (Real.log (r t) : Complex)) := by
+      by_cases ht : 0 <= t
+      . have hn : Not (t < 0) := not_lt_of_ge ht
+        simp [P, N, r, ht, hn, abs_of_nonneg ht, mul_comm]
+      . have hp : t < 0 := lt_of_not_ge ht
+        simp only [P, N, Set.indicator, Set.mem_Ici, Set.mem_Iio, ht, hp, if_false,
+          if_true, zero_mul, zero_add, r, Real.log_exp, abs_of_neg hp, Complex.ofReal_neg,
+          neg_mul_neg]
+        rw [mul_comm (s + c) (t : Complex)]
+    calc
+      _ = integral m (fun t : Real =>
+          P t * Complex.exp ((s + c) * (Real.log (r t) : Complex)) +
+            N t * Complex.exp (-(s + c) * (Real.log (r t) : Complex))) :=
+        congrArg (integral m) (funext hSplit)
+      _ = _ := integral_add (hIntegrable P hP hPM (s + c)) (hIntegrable N hN hNM (-(s + c)))
+  rw [hEq]
+  have hShift : Differentiable Complex (fun s : Complex => s + c) :=
+    differentiable_id.add (differentiable_const c)
+  exact (hPD.comp hShift).add (hND.comp hShift.neg)
+
+/-- An exponential moment bounds the log Mellin transform on the strip where
+the absolute value of the shifted real part is at most the moment exponent. -/
+theorem norm_godementJacquetLogMellin_le_exponentialMoment
+    (n : Nat) (F : Real -> Complex) (a : Real) (s : Complex)
+    (hs : abs ((s + ((n : Complex) - 1) / 2).re) <= a)
+    (hMoment : Integrable (fun t : Real => norm (F t) * (Real.exp (abs t)) ^ a)
+      (volume : Measure Real)) :
+    norm (godementJacquetLogMellin n F s) <=
+      integral (volume : Measure Real) (fun t : Real => norm (F t) * (Real.exp (abs t)) ^ a) := by
+  unfold godementJacquetLogMellin
+  refine (norm_integral_le_integral_norm _).trans
+    (integral_mono_of_nonneg (Filter.Eventually.of_forall (fun _ => norm_nonneg _)) hMoment ?_)
+  refine Filter.Eventually.of_forall (fun t => ?_)
+  change norm (F t * Complex.exp ((t : Complex) * (s + ((n : Complex) - 1) / 2))) <=
+    norm (F t) * (Real.exp (abs t)) ^ a
+  rw [norm_mul, Complex.norm_exp, Real.rpow_def_of_pos (Real.exp_pos (abs t))]
+  simp only [Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, zero_mul, sub_zero,
+    Real.log_exp]
+  apply mul_le_mul_of_nonneg_left _ (norm_nonneg _)
+  apply Real.exp_le_exp.mpr
+  calc
+    _ <= abs (t * (s + ((n : Complex) - 1) / 2).re) := le_abs_self _
+    _ = abs t * abs ((s + ((n : Complex) - 1) / 2).re) := abs_mul _ _
+    _ <= abs t * a := mul_le_mul_of_nonneg_left hs (abs_nonneg t)
+
 end Robin1984.GRH

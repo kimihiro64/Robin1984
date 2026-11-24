@@ -3036,8 +3036,13 @@ standard family satisfying the stated analytic hypotheses. It uses
 the Euler products and Gamma factors to supply the inputs of
 \path{grandRobinCompletedCriterion_of_entireOrder}. The rank-one
 criterion uses the completions constructed in
-Appendix~\ref{app:hecke-formalization}. Native instantiation of the
-analytic hypotheses in higher ranks remains open.
+Appendix~\ref{app:hecke-formalization}. In higher ranks, the module
+\path{GodementJacquetThetaMellin.lean} proves that the integrated theta
+series equals its invertible part under absolute integrability, vanishing
+unipotent periods, and zero mean. It also proves the resulting Mellin
+reflection. The higher-rank analytic instantiation still requires proofs
+of the requisite cuspidal estimates and the local and global Euler-product
+input.
 
 The three classical equivalence declarations have the
 mathematical types

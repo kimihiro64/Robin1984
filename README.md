@@ -150,8 +150,14 @@ It constructs the standard completed rank-one family over every number
 field, including unitary norm twists. Its critical-line assertion is
 equivalent to the Dedekind triangular bound for the field together with
 the paired triangular bound for every unitary Hecke character nontrivial
-on norm-one idele classes. The higher-rank instantiation remains open in
-Lean. See [the generalized criteria](docs/GRH.md) for the declarations.
+on norm-one idele classes.
+
+For higher ranks, Lean verifies the Godement–Jacquet theta cancellation
+under absolute integrability, vanishing unipotent periods, and zero mean.
+It also verifies the resulting reflection of the log Mellin transform.
+Constructing the higher-rank analytic data still requires the actual
+cuspidal estimates and the local and global Euler-product input. See
+[the generalized criteria](docs/GRH.md) for the declarations.
 
 ## Critical-line zeros and multiplicity
 
