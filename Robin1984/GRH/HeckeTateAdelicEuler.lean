@@ -387,4 +387,362 @@ theorem integral_heckeTateProductIdelicMeasure
 
 end ProductMeasure
 
+section EulerClassNormalization
+
+open NumberField.InfinitePlace Filter TopologicalSpace
+
+private theorem norm_heckeInfiniteUnit_pos (a : Units (TateEulerMixedSpace K)) :
+    0 < mixedEmbedding.norm a.val := by
+  let e := InfiniteAdeleRing.ringEquiv_mixedSpace K
+  let b := Units.map e.symm.toMonoidHom a
+  have h : e b.val = a.val := e.apply_symm_apply a.val
+  rw [<- h, mixedEmbedding_norm_infiniteIdele]
+  exact heckeInfiniteIdeleNorm_pos b
+
+private def archUnitDensity (x : TateEulerMixedSpace K) : ENNReal :=
+  ENNReal.ofReal ((2 / Real.pi) ^ nrComplexPlaces K * Inv.inv (mixedEmbedding.norm x))
+
+private theorem measurable_archUnitDensity : Measurable (archUnitDensity K) :=
+  (measurable_const.mul (mixedEmbedding.continuous_norm K).measurable.inv).ennreal_ofReal
+
+private theorem archUnitDensity_pos (a : Units (TateEulerMixedSpace K)) : 0 < archUnitDensity K a.val := by
+  apply ENNReal.ofReal_pos.mpr
+  exact mul_pos (pow_pos (div_pos (by norm_num) Real.pi_pos) _)
+    (inv_pos.mpr (norm_heckeInfiniteUnit_pos K a))
+
+section ArchimedeanHaar
+
+variable [MeasurableSpace (Units (TateEulerMixedSpace K))] [BorelSpace (Units (TateEulerMixedSpace K))]
+
+theorem isHaarMeasure_heckeInfiniteUnitMeasure : (heckeInfiniteUnitMeasure K).IsHaarMeasure := by
+  let M := heckeInfiniteUnitMeasure K
+  let j (a : Units (TateEulerMixedSpace K)) := a.val
+  let rho := archUnitDensity K
+  have hj : MeasurableEmbedding j := measurableEmbedding_heckeInfiniteUnitVal
+  let _ : M.IsMulRightInvariant := isMulRightInvariant_heckeInfiniteUnitMeasure
+  have hImage (s : Set (Units (TateEulerMixedSpace K))) (hs : MeasurableSet s) :
+      M s = (volume.withDensity rho) (j '' s) :=
+    Measure.comap_apply j hj.injective (fun _ => hj.measurableSet_image.mpr)
+      (volume.withDensity rho) hs
+  have hLeft : M.IsMulLeftInvariant := by
+    constructor
+    intro a
+    change Measure.map (fun b : Units (TateEulerMixedSpace K) => a * b) M = M
+    simp_rw [mul_comm a]
+    exact (measurePreserving_mul_right M a).map_eq
+  have hCompact : IsFiniteMeasureOnCompacts M := by
+    constructor
+    intro s hs
+    let v (a : Units (TateEulerMixedSpace K)) : Real :=
+      (2 / Real.pi) ^ nrComplexPlaces K * Inv.inv (mixedEmbedding.norm a.val)
+    have hInv (a : Units (TateEulerMixedSpace K)) : mixedEmbedding.norm a.inv =
+        Inv.inv (mixedEmbedding.norm a.val) := by
+      apply eq_inv_of_mul_eq_one_left
+      rw [<- map_mul, a.inv_val, map_one]
+    have hv : Continuous v := by
+      change Continuous (fun a : Units (TateEulerMixedSpace K) =>
+        (2 / Real.pi) ^ nrComplexPlaces K * Inv.inv (mixedEmbedding.norm a.val))
+      simp only [<- hInv]
+      exact continuous_const.mul ((mixedEmbedding.continuous_norm K).comp Units.continuous_coe_inv)
+    choose B hB using hs.bddAbove_image hv.continuousOn
+    have hJ : IsCompact (j '' s) := hs.image Units.continuous_val
+    rw [hImage s hs.measurableSet, withDensity_apply rho hJ.measurableSet]
+    have hDom : Filter.EventuallyLE (ae (volume.restrict (j '' s))) rho
+        (fun _ => ENNReal.ofReal B) := by
+      apply (ae_restrict_mem hJ.measurableSet).mono
+      intro y hy
+      choose a ha hay using hy
+      rw [<- hay]
+      exact ENNReal.ofReal_le_ofReal (hB (Set.mem_image_of_mem v ha))
+    apply lt_of_le_of_lt (lintegral_mono_ae hDom)
+    rw [lintegral_const, Measure.restrict_apply MeasurableSet.univ, Set.univ_inter]
+    exact ENNReal.mul_lt_top (by simp) hJ.measure_lt_top
+  have hOpen : M.IsOpenPosMeasure := by
+    constructor
+    intro s hs hne
+    rw [hImage s hs.measurableSet]
+    have hJ : IsOpen (j '' s) := Units.isOpenEmbedding_val.isOpenMap s hs
+    have hSupport : Inter.inter {x | Not (rho x = 0)} (j '' s) = j '' s := by
+      apply Set.inter_eq_right.mpr
+      intro y hy
+      choose a ha hay using hy
+      rw [<- hay]
+      exact (archUnitDensity_pos K a).ne'
+    intro hz
+    have hm : AEMeasurable rho (volume : Measure (TateEulerMixedSpace K)) :=
+      (measurable_archUnitDensity K).aemeasurable
+    have hv := (withDensity_apply_eq_zero' hm).mp hz
+    rw [hSupport] at hv
+    exact (hJ.measure_pos volume (hne.image j)).ne' hv
+  exact { toIsMulLeftInvariant := hLeft
+          toIsFiniteMeasureOnCompacts := hCompact
+          toIsOpenPosMeasure := hOpen }
+
+end ArchimedeanHaar
+
+section FiniteHaar
+
+theorem isOpen_heckeIntegralFiniteUnitGroup :
+    IsOpen (heckeIntegralFiniteUnitGroup (K := K) : Set (Units (TateEulerFiniteAdeles K))) := by
+  let O : Set (TateEulerFiniteAdeles K) := heckeIntegralFiniteAdeles (K := K)
+  have hO : IsOpen O := isOpen_heckeIntegralFiniteAdeles
+  exact (hO.preimage Units.continuous_val).inter (hO.preimage Units.continuous_coe_inv)
+
+variable [MeasurableSpace (Units (TateEulerFiniteAdeles K))] [BorelSpace (Units (TateEulerFiniteAdeles K))]
+
+theorem isHaarMeasure_heckeNormalizedFiniteUnitMeasure (mu : Measure (Units (TateEulerFiniteAdeles K)))
+    [mu.IsMulLeftInvariant]
+    (hUnit : mu (heckeIntegralFiniteUnitGroup (K := K) : Set (Units (TateEulerFiniteAdeles K))) = 1) :
+    mu.IsHaarMeasure := by
+  let U : Set (Units (TateEulerFiniteAdeles K)) := heckeIntegralFiniteUnitGroup (K := K)
+  have hI : (interior U).Nonempty := by
+    rw [(isOpen_heckeIntegralFiniteUnitGroup K).interior_eq]
+    exact Exists.intro 1 (heckeIntegralFiniteUnitGroup (K := K)).one_mem
+  apply Measure.isHaarMeasure_of_isCompact_nonempty_interior mu U
+    isCompact_heckeIntegralFiniteUnitGroup hI
+  . rw [show mu U = 1 from hUnit]
+    exact one_ne_zero
+  . rw [show mu U = 1 from hUnit]
+    exact ENNReal.one_ne_top
+
+end FiniteHaar
+
+private theorem countable_numberField : Countable K := by
+  exact (Module.finBasis Rat K).equivFun.injective.countable
+
+private theorem countable_heckeFinitePlaces : Countable (HeightOneSpectrum (RingOfIntegers K)) := by
+  let R := RingOfIntegers K
+  let _ : Countable K := countable_numberField K
+  let _ : Countable R := (IsFractionRing.injective R K).countable
+  have hSpan : Function.Surjective (fun s : Finset R => Ideal.span (s : Set R)) := by
+    intro I
+    choose s hs using IsNoetherian.noetherian (R := R) I
+    exact Exists.intro s hs
+  let _ : Countable (Ideal R) := hSpan.countable
+  have hPrime : Function.Injective (HeightOneSpectrum.asIdeal : HeightOneSpectrum R -> Ideal R) :=
+    fun _ _ h => HeightOneSpectrum.ext h
+  exact hPrime.countable
+
+private theorem secondCountable_heckeAdicCompletion (v : HeightOneSpectrum (RingOfIntegers K)) :
+    SecondCountableTopology (v.adicCompletion K) := by
+  let _ : Countable K := countable_numberField K
+  let L := v.adicCompletion K
+  let _ : (uniformity L).IsCountablyGenerated :=
+    (Valued.hasBasis_uniformity L (WithZero (Multiplicative Int))).isCountablyGenerated
+  let _ : SeparableSpace L :=
+    SeparableSpace.mk (Exists.intro (Set.range (algebraMap K L))
+      (And.intro (Set.countable_range _) (v.denseRange_algebraMap K)))
+  infer_instance
+
+/-- The finite adeles are second countable, by the countable cover by charts
+that allow exceptions at a prescribed finite set of places. -/
+theorem secondCountableTopology_heckeFiniteAdeles :
+    SecondCountableTopology (FiniteAdeleRing (RingOfIntegers K) K) := by
+  let V := HeightOneSpectrum (RingOfIntegers K)
+  let L (v : V) := v.adicCompletion K
+  let A (v : V) : Set (L v) := v.adicCompletionIntegers K
+  let _ : Countable V := countable_heckeFinitePlaces K
+  let _ (v : V) : SecondCountableTopology (L v) := secondCountable_heckeAdicCompletion K v
+  have hA (v : V) : IsOpen (A v) := Valued.isOpen_valuationSubring _
+  let C (s : Finset V) : Set V := Compl.compl (s : Set V)
+  have hC (s : Finset V) : Filter.cofinite <= Filter.principal (C s) :=
+    le_principal_iff.mpr (mem_cofinite.mpr (by simpa only [C, compl_compl] using s.finite_toSet))
+  let f (s : Finset V) := RestrictedProduct.inclusion L A (hC s)
+  have hf (s : Finset V) : Topology.IsOpenEmbedding (f s) :=
+    RestrictedProduct.isOpenEmbedding_inclusion_principal hA (hC s)
+  let U (s : Finset V) := Set.range (f s)
+  let _ (s : Finset V) : SecondCountableTopology (RestrictedProduct L A (Filter.principal (C s))) :=
+    (RestrictedProduct.isEmbedding_coe_of_principal (R := L) (A := A) (S := C s)).secondCountableTopology
+  let _ (s : Finset V) : SecondCountableTopology (U s) :=
+    (hf s).isEmbedding.toHomeomorph.symm.secondCountableTopology
+  change SecondCountableTopology (RestrictedProduct L A Filter.cofinite)
+  apply secondCountableTopology_of_countable_cover (U := U) (fun s => (hf s).isOpen_range)
+  apply Set.eq_univ_of_forall
+  intro x
+  have hbad : (Compl.compl {v : V | Membership.mem (A v) (x v)}).Finite :=
+    mem_cofinite.mp x.2
+  let s := hbad.toFinset
+  have hx (v : V) (hv : Membership.mem (C s) v) : Membership.mem (A v) (x v) := by
+    change Not (Membership.mem s v) at hv
+    by_contra h
+    exact hv (hbad.mem_toFinset.mpr h)
+  choose y hy using RestrictedProduct.exists_inclusion_eq_of_eventually L A (hC s) hx
+  exact Set.mem_iUnion.mpr (Exists.intro s (Exists.intro y hy))
+
+/-- The actual finite ideles inherit second countability from the two-coordinate
+embedding that records an adele and its inverse. -/
+theorem secondCountableTopology_heckeFiniteIdeles :
+    SecondCountableTopology (Units (FiniteAdeleRing (RingOfIntegers K) K)) := by
+  let F := FiniteAdeleRing (RingOfIntegers K) K
+  let _ : SecondCountableTopology F := secondCountableTopology_heckeFiniteAdeles K
+  let _ : SecondCountableTopology (MulOpposite F) :=
+    (MulOpposite.opHomeomorph (M := F)).symm.secondCountableTopology
+  exact (Units.isEmbedding_embedProduct (M := F)).secondCountableTopology
+
+section GlobalHaar
+
+private abbrev TateEulerFiniteIdeles := Units (TateEulerFiniteAdeles K)
+private abbrev TateEulerGlobalIdeles := Units (TateProductGlobalAdeles K)
+
+private theorem secondCountable_heckeInfiniteUnits :
+    SecondCountableTopology (Units (TateEulerMixedSpace K)) :=
+  Units.isOpenEmbedding_val.isEmbedding.secondCountableTopology
+
+variable [MeasurableSpace (TateEulerGlobalIdeles K)] [BorelSpace (TateEulerGlobalIdeles K)]
+
+section ProductHaar
+
+variable [MeasurableSpace (Units (TateEulerMixedSpace K))] [BorelSpace (Units (TateEulerMixedSpace K))]
+  [MeasurableSpace (TateEulerFiniteIdeles K)] [BorelSpace (TateEulerFiniteIdeles K)]
+
+private theorem isHaarMeasure_heckeTateProductIdelicMeasure
+    (mu : Measure (TateEulerFiniteIdeles K)) [SFinite mu] [mu.IsMulLeftInvariant]
+    (hUnit : mu (heckeIntegralFiniteUnitGroup (K := K) : Set (TateEulerFiniteIdeles K)) = 1) :
+    (heckeTateProductIdelicMeasure K mu).IsHaarMeasure := by
+  let E := Units (TateEulerMixedSpace K)
+  let F := TateEulerFiniteIdeles K
+  let G := TateEulerGlobalIdeles K
+  let _ : SecondCountableTopology E := secondCountable_heckeInfiniteUnits K
+  let _ : SecondCountableTopology F := secondCountableTopology_heckeFiniteIdeles K
+  let _ : LocallyCompactSpace E := Units.isOpenEmbedding_val.locallyCompactSpace
+  let _ : (heckeInfiniteUnitMeasure K).IsHaarMeasure := isHaarMeasure_heckeInfiniteUnitMeasure K
+  let _ : mu.IsHaarMeasure := isHaarMeasure_heckeNormalizedFiniteUnitMeasure K mu hUnit
+  let _ : SFinite (heckeInfiniteUnitMeasure K) := inferInstance
+  let e : ContinuousMulEquiv (Prod E F) G :=
+    { heckeTateProductIdelesHomeomorph K with
+      map_mul' := heckeTateProductIdelesHomeomorph_mul K }
+  change (Measure.map e ((heckeInfiniteUnitMeasure K).prod mu)).IsHaarMeasure
+  exact e.isHaarMeasure_map _
+
+end ProductHaar
+
+variable [MeasurableSpace (heckeNormOneIdeles K)] [BorelSpace (heckeNormOneIdeles K)]
+
+private theorem isHaarMeasure_heckeIdelicLogNormMeasure
+    (mu : Measure (heckeNormOneIdeles K)) [SFinite mu] [mu.IsHaarMeasure] :
+    (heckeIdelicLogNormMeasure K mu).IsHaarMeasure := by
+  let E := Units (TateEulerMixedSpace K)
+  let F := TateEulerFiniteIdeles K
+  let G := TateEulerGlobalIdeles K
+  let N := heckeNormOneIdeles K
+  let _ : SecondCountableTopology E := secondCountable_heckeInfiniteUnits K
+  let _ : SecondCountableTopology F := secondCountableTopology_heckeFiniteIdeles K
+  let _ : SecondCountableTopology G :=
+    (heckeTateProductIdelesHomeomorph K).symm.secondCountableTopology
+  let _ : SecondCountableTopology N :=
+    (Topology.IsEmbedding.subtypeVal : Topology.IsEmbedding (fun a : N => a.val)).secondCountableTopology
+  let _ : MeasurableSpace (Multiplicative Real) := (inferInstance : MeasurableSpace Real)
+  let _ : BorelSpace (Multiplicative Real) := (inferInstance : BorelSpace Real)
+  let rho : Measure (Multiplicative Real) := (volume : Measure Real)
+  let _ : rho.IsHaarMeasure := by
+    refine { toIsFiniteMeasureOnCompacts :=
+              (inferInstance : IsFiniteMeasureOnCompacts (volume : Measure Real))
+             toIsOpenPosMeasure := (inferInstance : Measure.IsOpenPosMeasure (volume : Measure Real))
+             toIsMulLeftInvariant := ?_ }
+    constructor
+    intro a
+    change Measure.map (fun x : Real => Multiplicative.toAdd a + x) volume = volume
+    exact (measurePreserving_add_left volume (Multiplicative.toAdd a)).map_eq
+  let _ : SFinite rho := (inferInstance : SFinite (volume : Measure Real))
+  let e : ContinuousMulEquiv G (Prod (Multiplicative Real) N) :=
+    { heckeIdelicLogNormHomeomorph K with
+      map_mul' := heckeIdelicLogNormHomeomorph_mul K }
+  change (Measure.map e.symm (rho.prod mu)).IsHaarMeasure
+  exact e.symm.isHaarMeasure_map _
+
+variable [MeasurableSpace (Units (TateEulerMixedSpace K))] [BorelSpace (Units (TateEulerMixedSpace K))]
+  [MeasurableSpace (TateEulerFiniteIdeles K)] [BorelSpace (TateEulerFiniteIdeles K)]
+
+/-- The Euler normalization and a logarithmic norm-one Haar normalization
+differ by one strictly positive scalar, independent of the character and s. -/
+theorem exists_heckeTateProductIdelicMeasure_eq_logNorm_smul
+    (mu : Measure (TateEulerFiniteIdeles K)) [SFinite mu] [mu.IsMulLeftInvariant]
+    (hUnit : mu (heckeIntegralFiniteUnitGroup (K := K) : Set (TateEulerFiniteIdeles K)) = 1)
+    (nu : Measure (heckeNormOneIdeles K)) [SFinite nu] [nu.IsHaarMeasure] :
+    exists c : NNReal, And (0 < c)
+      (heckeTateProductIdelicMeasure K mu = HSMul.hSMul c (heckeIdelicLogNormMeasure K nu)) := by
+  let E := Units (TateEulerMixedSpace K)
+  let F := TateEulerFiniteIdeles K
+  let G := TateEulerGlobalIdeles K
+  let N := heckeNormOneIdeles K
+  let _ : SecondCountableTopology E := secondCountable_heckeInfiniteUnits K
+  let _ : SecondCountableTopology F := secondCountableTopology_heckeFiniteIdeles K
+  let _ : SecondCountableTopology G :=
+    (heckeTateProductIdelesHomeomorph K).symm.secondCountableTopology
+  let _ : LocallyCompactSpace N := locallyCompactSpace_heckeNormOneIdeles K
+  let _ : LocallyCompactSpace G :=
+    (heckeIdelicLogNormHomeomorph K).isOpenEmbedding.locallyCompactSpace
+  let P := heckeTateProductIdelicMeasure K mu
+  let L := heckeIdelicLogNormMeasure K nu
+  let _ : P.IsHaarMeasure := isHaarMeasure_heckeTateProductIdelicMeasure K mu hUnit
+  let _ : L.IsHaarMeasure := isHaarMeasure_heckeIdelicLogNormMeasure K nu
+  exact Exists.intro (Measure.haarScalarFactor P L)
+    (And.intro (Measure.haarScalarFactor_pos_of_isHaarMeasure P L)
+      (Measure.isMulLeftInvariant_eq_smul P L))
+
+/-- Rescale the norm-one Haar measure so its logarithmic product is exactly
+the Euler-normalized measure on the full ideles. -/
+theorem exists_heckeTateProductIdelicMeasure_eq_logNorm
+    (mu : Measure (TateEulerFiniteIdeles K)) [SFinite mu] [mu.IsMulLeftInvariant]
+    (hUnit : mu (heckeIntegralFiniteUnitGroup (K := K) : Set (TateEulerFiniteIdeles K)) = 1)
+    (nu : Measure (heckeNormOneIdeles K)) [SFinite nu] [nu.IsHaarMeasure] :
+    exists nu' : Measure (heckeNormOneIdeles K), And (nu'.IsHaarMeasure)
+      (And (SFinite nu')
+        (heckeTateProductIdelicMeasure K mu = heckeIdelicLogNormMeasure K nu')) := by
+  choose c hc using exists_heckeTateProductIdelicMeasure_eq_logNorm_smul K mu hUnit nu
+  let nu' : Measure (heckeNormOneIdeles K) := HSMul.hSMul c nu
+  have hHaar : nu'.IsHaarMeasure := Measure.IsHaarMeasure.nnreal_smul nu hc.1.ne'
+  have hScale : heckeIdelicLogNormMeasure K nu' =
+      HSMul.hSMul c (heckeIdelicLogNormMeasure K nu) := by
+    unfold heckeIdelicLogNormMeasure heckeLogProductMeasure
+    change Measure.map _ ((volume : Measure Real).prod (HSMul.hSMul c nu)) = _
+    rw [Measure.prod_smul_right, Measure.map_smul]
+  exact Exists.intro nu' (And.intro hHaar (And.intro (by dsimp [nu']; infer_instance)
+    (hc.2.trans hScale.symm)))
+
+variable
+  [MeasurableSpace (TateEulerFiniteAdeles K)] [BorelSpace (TateEulerFiniteAdeles K)]
+  [MeasurableSpace (heckeIdeleClass K)] [BorelSpace (heckeIdeleClass K)]
+  [MeasurableSpace (heckeNormOneIdeleClass K)] [BorelSpace (heckeNormOneIdeleClass K)]
+
+/-- In Euler-normalized logarithmic coordinates, the canonical class theta
+integral equals the Gamma factors times the Euler product for Re(s) > 1. -/
+theorem integral_heckeTateEulerClassTheta
+    [MeasurableSpace (Units (FractionalIdeal (nonZeroDivisors (RingOfIntegers K)) K))]
+    [MeasurableSingletonClass (Units (FractionalIdeal (nonZeroDivisors (RingOfIntegers K)) K))]
+    (mu : Measure (TateEulerFiniteIdeles K)) [SFinite mu] [mu.IsMulLeftInvariant]
+    (hUnit : mu (heckeIntegralFiniteUnitGroup (K := K) : Set (TateEulerFiniteIdeles K)) = 1)
+    (nu : Measure (heckeNormOneIdeles K)) [SFinite nu] [nu.IsMulRightInvariant]
+    (hNorm : heckeTateProductIdelicMeasure K mu = heckeIdelicLogNormMeasure K nu)
+    {S : Set (heckeNormOneIdeles K)} (hS : MeasurableSet S)
+    (hInj : Set.InjOn (QuotientGroup.mk' (heckePrincipalNormOneIdele K).range) S)
+    (hSur : Set.image (QuotientGroup.mk' (heckePrincipalNormOneIdele K).range) S = Set.univ)
+    (chi : UnitaryHeckeCharacter K) (f : SchwartzMap (TateEulerMixedSpace K) Complex)
+    (hf : forall x, f x = heckeTateInfiniteTest chi x)
+    {s : Complex} (hs : 1 < s.re) :
+    integral (volume.prod (heckeNormOneClassQuotientMeasure K nu S))
+      (heckeTateClassZetaIntegrand chi s f (heckeFiniteAdditiveTateTest chi)) =
+        ((Finset.univ.prod (fun v : {w : InfinitePlace K // w.IsReal} =>
+          DedekindZeta.LReal (s + realInfiniteHeckeShift chi v.property))) *
+        (Finset.univ.prod (fun v : {w : InfinitePlace K // w.IsComplex} =>
+          DedekindZeta.LComplex (s + complexInfiniteHeckeShift chi v.property)))) *
+        heckeEulerL K chi s := by
+  have h := integral_heckeTateProductIdelicMeasure K mu hUnit chi f hf hs
+  dsimp only at h
+  rw [hNorm] at h
+  let U : Set (TateEulerFiniteAdeles K) := heckeIntegralFiniteAdeles (K := K)
+  have hSupport (z : TateEulerFiniteAdeles K) (hz : Not (Membership.mem U z)) :
+      heckeFiniteAdditiveTateTest chi z = 0 := by
+    have hz' : Not (Membership.mem (heckeIntegralFiniteAdeles (K := K)) z) := hz
+    rw [heckeFiniteAdditiveTateTest, if_neg hz']
+  have hTheta := integral_heckeTateZeta_eq_classTheta nu hS hInj hSur chi s f
+    (heckeFiniteAdditiveTateTest chi) (continuous_heckeFiniteAdditiveTateTest chi)
+    U isCompact_integralFiniteAdeles hSupport 1 zero_le_one
+    (norm_heckeFiniteAdditiveTateTest_le_one chi) h.1
+  exact hTheta.symm.trans h.2
+
+end GlobalHaar
+
+end EulerClassNormalization
+
 end Robin1984.GRH
