@@ -1686,6 +1686,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetMatrixPoisson.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Poisson summation on the additive adelic matrix space in Godement and Jacquet, Zeta Functions of Simple Algebras.",
+      "formalization_note": "Identifies the Fourier coefficients for Schwartz rectangles with the actual adelic trace-pairing integral and proves Poisson summation on rational matrices.",
+      "content_basis": "Splits the product measure into archimedean and finite parts, matches the scalar trace pairing, and transports the rectangular Poisson sum to matrices using the transpose at the frequency.",
+      "dependency_status": "Uses the verified adelic rectangle Poisson theorem, the matrix trace Fourier transform, and Mathlib product integration.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetProductLattice.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Poisson summation for full-rank Euclidean lattices and the matrix lattice in the Godement-Jacquet zeta integral.",
