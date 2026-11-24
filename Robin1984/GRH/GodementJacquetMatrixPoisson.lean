@@ -360,17 +360,16 @@ def godementJacquetSelfDualMatrixFourier {n : Nat}
     (Y : Matrix (Fin n) (Fin n) (RectAdeles K)) : Complex :=
   rectFourierScale K (Prod (Fin n) (Fin n)) * godementJacquetMatrixFourier K phi Y
 
-/-- Poisson summation on rational matrices for a joint archimedean
-Schwartz function and a product of finite adelic principal cosets.
-The transform uses the matrix trace pairing and the self-dual measure. -/
-theorem tsum_godementJacquetMatrixRectangle_eq_normalizedFourier {n : Nat}
+set_option maxHeartbeats 1000000 in
+private theorem matrixRectanglePoissonData {n : Nat}
     (a : Prod (Fin n) (Fin n) -> RectFinite K) (d : RingOfIntegers K) (hd : Not (d = 0))
     (f : SchwartzMap (RectArchVector K (Prod (Fin n) (Fin n))) Complex) :
     let phi := godementJacquetMatrixRectangle K a d f
     let p := algebraMap K (RectAdeles K)
-    tsum (fun X : Matrix (Fin n) (Fin n) K => phi (X.map p)) =
-      tsum (fun Y : Matrix (Fin n) (Fin n) K =>
-        godementJacquetSelfDualMatrixFourier K phi (Y.map p)) := by
+    let P := fun X : Matrix (Fin n) (Fin n) K => phi (X.map p)
+    let Q := fun Y : Matrix (Fin n) (Fin n) K =>
+      godementJacquetSelfDualMatrixFourier K phi (Y.map p)
+    And (Summable P) (And (Summable Q) (tsum P = tsum Q)) := by
   let J := Prod (Fin n) (Fin n)
   let S : Set (J -> K) := fun x => forall i,
     InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d) (x i)
@@ -388,16 +387,220 @@ theorem tsum_godementJacquetMatrixRectangle_eq_normalizedFourier {n : Nat}
       right_inv := fun _ => funext (fun i => by cases i; rfl) }
   let L (x : J -> K) := rectVectorFunction K J a d f (fun i => p (x i))
   let R := heckeAdeleVectorRectangleFourierIntegral K J a d f
-  change tsum (fun X : Matrix (Fin n) (Fin n) K => phi (X.map p)) =
-    tsum (fun Y : Matrix (Fin n) (Fin n) K => rectFourierScale K J * godementJacquetMatrixFourier K phi (Y.map p))
+  have hD : Not (algebraMap (RingOfIntegers K) K d = 0) :=
+    (map_ne_zero_iff (algebraMap (RingOfIntegers K) K)
+      (FaithfulSMul.algebraMap_injective _ _)).mpr hd
+  have hRep : forall i, Exists
+      (InFiniteAdelePrincipalCoset (a i) (algebraMap (RingOfIntegers K) K d)) :=
+    fun i => exists_finiteAdele_sub_principal_modulus (a i) _ hD
+  choose x0 hx0 using hRep
+  have hP : Summable L :=
+    (summable_subtype_iff_indicator.mp
+      (summable_finiteAdelePrincipalVectorCoset K J a d hd x0 hx0 f)).congr
+        (fun x => (rectVectorFunction_principal K J a d hd f x).symm)
+  have hQ : Summable R :=
+    summable_heckeAdeleVectorRectangleFourierIntegral K J a d hd f
+  refine And.intro (E.summable_iff.mpr hP) (And.intro ?_ ?_)
+  . exact (F.summable_iff.mpr hQ).congr
+      (fun Y => (rectMatrixFourierIntegral K a d hd f Y).symm)
+  . calc
+      _ = tsum L := E.tsum_eq L
+      _ = tsum (S.indicator (fun x => f (heckePrincipalMinkowskiVector K J x))) :=
+        tsum_congr (rectVectorFunction_principal K J a d hd f)
+      _ = tsum (fun x : S => f (heckePrincipalMinkowskiVector K J x.val)) :=
+        (tsum_subtype S _).symm
+      _ = tsum R := tsum_finiteAdelePrincipalVectorCoset_eq_fourierIntegral K J a d hd f
+      _ = tsum (fun Y : Matrix (Fin n) (Fin n) K => R (F Y)) := (F.tsum_eq R).symm
+      _ = _ := tsum_congr (fun Y => (rectMatrixFourierIntegral K a d hd f Y).symm)
+
+/-- Absolute convergence of the rational matrix sum of a Schwartz rectangle. -/
+theorem summable_godementJacquetMatrixRectangle {n : Nat}
+    (a : Prod (Fin n) (Fin n) -> RectFinite K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (f : SchwartzMap (RectArchVector K (Prod (Fin n) (Fin n))) Complex) :
+    Summable (fun X : Matrix (Fin n) (Fin n) K =>
+      godementJacquetMatrixRectangle K a d f (X.map (algebraMap K (RectAdeles K)))) :=
+  (matrixRectanglePoissonData K a d hd f).1
+
+/-- Absolute convergence of the dual rational matrix sum of a Schwartz rectangle. -/
+theorem summable_godementJacquetSelfDualMatrixFourier_rectangle {n : Nat}
+    (a : Prod (Fin n) (Fin n) -> RectFinite K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (f : SchwartzMap (RectArchVector K (Prod (Fin n) (Fin n))) Complex) :
+    Summable (fun Y : Matrix (Fin n) (Fin n) K =>
+      godementJacquetSelfDualMatrixFourier K (godementJacquetMatrixRectangle K a d f)
+        (Y.map (algebraMap K (RectAdeles K)))) :=
+  (matrixRectanglePoissonData K a d hd f).2.1
+
+/-- Poisson summation on rational matrices for a joint archimedean
+Schwartz function and a product of finite adelic principal cosets.
+The transform uses the matrix trace pairing and the self-dual measure. -/
+theorem tsum_godementJacquetMatrixRectangle_eq_normalizedFourier {n : Nat}
+    (a : Prod (Fin n) (Fin n) -> RectFinite K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (f : SchwartzMap (RectArchVector K (Prod (Fin n) (Fin n))) Complex) :
+    let phi := godementJacquetMatrixRectangle K a d f
+    let p := algebraMap K (RectAdeles K)
+    tsum (fun X : Matrix (Fin n) (Fin n) K => phi (X.map p)) =
+      tsum (fun Y : Matrix (Fin n) (Fin n) K =>
+        godementJacquetSelfDualMatrixFourier K phi (Y.map p)) :=
+  (matrixRectanglePoissonData K a d hd f).2.2
+
+omit [MeasurableSpace (InfiniteAdeleRing K)] [BorelSpace (InfiniteAdeleRing K)]
+    [MeasurableSpace (RectFinite K)] [BorelSpace (RectFinite K)] in
+private theorem rectCoset_isCompact (a : RectFinite K) (d : K) :
+    IsCompact (heckeFiniteAdelePrincipalCoset a d) := by
+  have h : IsCompact (heckeScaledIntegralFiniteAdeles d : Set (RectFinite K)) := by
+    change IsCompact (Set.image (fun z : RectFinite K => z * algebraMap K (RectFinite K) d)
+      ((heckeIntegralFiniteAdeles (K := K)) : Set (RectFinite K)))
+    exact (isCompact_integralFiniteAdeles (K := K)).image (continuous_id.mul continuous_const)
+  exact h.image (continuous_const.add continuous_id)
+
+omit [MeasurableSpace (InfiniteAdeleRing K)] [BorelSpace (InfiniteAdeleRing K)]
+    [MeasurableSpace (RectFinite K)] [BorelSpace (RectFinite K)] in
+private theorem rectFinite_t2Space : T2Space (RectFinite K) := by
+  let p (z : RectFinite K) (q : HeightOneSpectrum (RingOfIntegers K)) := z q
+  exact T2Space.of_injective_continuous (show Function.Injective p from DFunLike.coe_injective)
+    (continuous_pi (fun q => RestrictedProduct.continuous_eval q))
+
+omit [MeasurableSpace (InfiniteAdeleRing K)] [BorelSpace (InfiniteAdeleRing K)]
+    [MeasurableSpace (RectFinite K)] [BorelSpace (RectFinite K)] in
+private theorem rectVectorFunction_continuous
+    (a : I -> RectFinite K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (f : SchwartzMap (RectArchVector K I) Complex) :
+    Continuous (rectVectorFunction K I a d f) := by
+  let dd := algebraMap (RingOfIntegers K) K d
+  have hd' : Not (dd = 0) :=
+    (map_ne_zero_iff (algebraMap (RingOfIntegers K) K)
+      (FaithfulSMul.algebraMap_injective (RingOfIntegers K) K)).mpr hd
+  let C (i : I) := heckeFiniteAdelePrincipalCoset (a i) dd
+  have hA : Continuous (fun x : I -> RectAdeles K => rectInfiniteVector K I (fun i => (x i).1)) :=
+    (PiLp.continuousLinearEquiv 2 Real (fun _ : I => RectArch K)).symm.continuous.comp
+      (continuous_pi (fun i => (DedekindZeta.Theta.toMinkowski K).continuous.comp
+        ((continuous_heckeInfiniteAdele_mixedSpace (K := K)).comp
+          (continuous_fst.comp (continuous_apply i)))))
+  let : T2Space (RectFinite K) := rectFinite_t2Space K
+  have hB (i : I) : Continuous (fun z : RectFinite K => (C i).indicator (fun _ => (1 : Complex)) z) := by
+    have hO : IsOpen (C i) :=
+      (Homeomorph.addLeft (a i)).isOpenMap _ (isOpen_heckeScaledIntegralFiniteAdeles dd hd')
+    have hCl : IsClopen (C i) := And.intro (rectCoset_isCompact K (a i) dd).isClosed hO
+    exact hCl.continuous_indicator continuous_const
+  exact (f.continuous.comp hA).mul (continuous_finsetProd _
+    (fun i _ => (hB i).comp (continuous_snd.comp (continuous_apply i))))
+
+omit [MeasurableSpace (InfiniteAdeleRing K)] [BorelSpace (InfiniteAdeleRing K)]
+    [MeasurableSpace (RectFinite K)] [BorelSpace (RectFinite K)] in
+/-- The matrix Schwartz rectangle is continuous on the full adelic matrix space. -/
+theorem continuous_godementJacquetMatrixRectangle {n : Nat}
+    (a : Prod (Fin n) (Fin n) -> RectFinite K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (f : SchwartzMap (RectArchVector K (Prod (Fin n) (Fin n))) Complex) :
+    Continuous (godementJacquetMatrixRectangle K a d f) :=
+  (rectVectorFunction_continuous K (Prod (Fin n) (Fin n)) a d hd f).comp
+    (continuous_pi (fun i => (continuous_apply i.1).comp (continuous_apply i.2)))
+
+private theorem rectVectorFunction_integrable
+    (a : I -> RectFinite K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (f : SchwartzMap (RectArchVector K I) Complex) :
+    Integrable (rectVectorFunction K I a d f)
+      (Measure.pi (fun _ : I => heckeAdeleAdditiveHaar (K := K))) := by
+  let R := RingOfIntegers K
+  let dd := algebraMap R K d
+  let C (i : I) := heckeFiniteAdelePrincipalCoset (a i) dd
+  let muI := heckeInfiniteAdeleAdditiveHaar (K := K)
+  let muF := heckeFiniteAdeleHaar (K := K)
+  let P (i : I) := (C i).indicator (fun _ => (1 : Complex))
+  let B (z : I -> RectFinite K) := Finset.univ.prod (fun i => P i (z i))
+  let : LocallyCompactSpace (RectFinite K) := locallyCompactSpace_heckeFiniteAdeles
+  let : SecondCountableTopology (RectFinite K) := secondCountableTopology_heckeFiniteAdeles K
+  let : SigmaFinite muF := by
+    change SigmaFinite (heckeFiniteAdeleHaar (K := K))
+    unfold heckeFiniteAdeleHaar
+    infer_instance
+  let : IsFiniteMeasureOnCompacts muF := by
+    change IsFiniteMeasureOnCompacts (heckeFiniteAdeleHaar (K := K))
+    unfold heckeFiniteAdeleHaar
+    infer_instance
+  have hd' : Not (dd = 0) :=
+    (map_ne_zero_iff (algebraMap R K) (FaithfulSMul.algebraMap_injective R K)).mpr hd
+  have hP (i : I) : Integrable (P i) muF := by
+    have hO : IsOpen (C i) :=
+      (Homeomorph.addLeft (a i)).isOpenMap _ (isOpen_heckeScaledIntegralFiniteAdeles dd hd')
+    have hCpt : IsCompact (C i) := rectCoset_isCompact K (a i) dd
+    have hMass : muF (C i) < (Top.top : ENNReal) := hCpt.measure_lt_top
+    have hOne : IntegrableOn (fun _ : RectFinite K => (1 : Complex)) (C i) muF :=
+      integrableOn_const hMass.ne
+    exact hOne.integrable_indicator hO.measurableSet
+  have hB : Integrable B (Measure.pi (fun _ : I => muF)) := Integrable.fintype_prod hP
+  let e := rectInfiniteVectorEquiv K I
+  have hA : Integrable (fun z => f (rectInfiniteVector K I z)) (Measure.pi (fun _ : I => muI)) :=
+    ((measurePreserving_rectInfiniteVectorEquiv K I).integrable_comp_emb e.measurableEmbedding).mpr f.integrable
+  let q := MeasurableEquiv.arrowProdEquivProdArrow (InfiniteAdeleRing K) (RectFinite K) I
+  have hq : MeasurePreserving q (Measure.pi (fun _ : I => heckeAdeleAdditiveHaar (K := K)))
+      ((Measure.pi (fun _ : I => muI)).prod (Measure.pi (fun _ : I => muF))) :=
+    measurePreserving_arrowProdEquivProdArrow _ _ _ (fun _ : I => muI) (fun _ : I => muF)
+  exact (hq.integrable_comp_emb q.measurableEmbedding).mpr (hA.mul_prod hB)
+
+/-- The matrix Schwartz rectangle is integrable for the product
+adelic additive measure in its entry coordinates. -/
+theorem integrable_godementJacquetMatrixRectangle_fromVec {n : Nat}
+    (a : Prod (Fin n) (Fin n) -> RectFinite K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (f : SchwartzMap (RectArchVector K (Prod (Fin n) (Fin n))) Complex) :
+    Integrable (fun v => godementJacquetMatrixRectangle K a d f (godementJacquetMatrixFromVec v))
+      (Measure.pi (fun _ : Prod (Fin n) (Fin n) => heckeAdeleAdditiveHaar (K := K))) := by
+  let J := Prod (Fin n) (Fin n)
+  have h : (fun v : J -> RectAdeles K => godementJacquetMatrixRectangle K a d f
+      (godementJacquetMatrixFromVec v)) = rectVectorFunction K J a d f := by
+    funext v
+    change rectVectorFunction K J a d f (godementJacquetMatrixFromVec v).vec =
+      rectVectorFunction K J a d f v
+    rw [godementJacquetMatrixFromVec_vec]
+  rw [h]
+  exact rectVectorFunction_integrable K J a d hd f
+
+/-- The self-dual matrix Fourier transform commutes with finite sums
+of functions integrable in the adelic matrix entry coordinates. -/
+theorem godementJacquetSelfDualMatrixFourier_finsetSum {n : Nat} {A : Type*}
+    (s : Finset A)
+    (phi : A -> Matrix (Fin n) (Fin n) (RectAdeles K) -> Complex)
+    (hphi : forall i, Membership.mem s i ->
+      Integrable (fun v => phi i (godementJacquetMatrixFromVec v))
+        (Measure.pi (fun _ : Prod (Fin n) (Fin n) => heckeAdeleAdditiveHaar (K := K))))
+    (Y : Matrix (Fin n) (Fin n) (RectAdeles K)) :
+    godementJacquetSelfDualMatrixFourier K (fun X => s.sum (fun i => phi i X)) Y =
+      s.sum (fun i => godementJacquetSelfDualMatrixFourier K (phi i) Y) := by
+  let J := Prod (Fin n) (Fin n)
+  let mu := Measure.pi (fun _ : J => heckeAdeleAdditiveHaar (K := K))
+  let phase (v : J -> RectAdeles K) : Complex :=
+    (heckeAdeleAddChar (-(godementJacquetMatrixFromVec v * Y).trace) : Complex)
+  let g (i : A) (v : J -> RectAdeles K) := phi i (godementJacquetMatrixFromVec v) * phase v
+  have hmat : Continuous (godementJacquetMatrixFromVec : (J -> RectAdeles K) ->
+      Matrix (Fin n) (Fin n) (RectAdeles K)) :=
+    continuous_matrix (fun i j => continuous_apply (Prod.mk j i))
+  have htr : Continuous (fun v : J -> RectAdeles K => (godementJacquetMatrixFromVec v * Y).trace) :=
+    (hmat.matrix_mul continuous_const).matrix_trace
+  have hPhase : Continuous phase :=
+    continuous_subtype_val.comp ((continuous_heckeAdeleAddChar (K := K)).comp htr.neg)
+  let e : Homeomorph (InfiniteAdeleRing K) (mixedEmbedding.mixedSpace K) :=
+    { toEquiv := (InfiniteAdeleRing.ringEquiv_mixedSpace K).toEquiv
+      continuous_toFun := continuous_heckeInfiniteAdele_mixedSpace (K := K)
+      continuous_invFun := continuous_heckeInfiniteAdele_mixedSpace_symm K }
+  let : SecondCountableTopology (InfiniteAdeleRing K) := e.isEmbedding.secondCountableTopology
+  let : SecondCountableTopology (RectFinite K) := secondCountableTopology_heckeFiniteAdeles K
+  let : SecondCountableTopology (RectAdeles K) :=
+    inferInstanceAs (SecondCountableTopology (Prod (InfiniteAdeleRing K) (RectFinite K)))
+  let : BorelSpace (RectAdeles K) :=
+    inferInstanceAs (BorelSpace (Prod (InfiniteAdeleRing K) (RectFinite K)))
+  have hBound : forall v, norm (phase v) <= 1 := fun v =>
+    (Circle.norm_coe (heckeAdeleAddChar (-(godementJacquetMatrixFromVec v * Y).trace))).le
+  have hg : forall i, Membership.mem s i -> Integrable (g i) mu := by
+    intro i hi
+    exact ((hphi i hi).bdd_mul hPhase.measurable.aestronglyMeasurable
+      (Filter.Eventually.of_forall hBound)).congr
+      (Filter.Eventually.of_forall (fun v => mul_comm (phase v) (phi i (godementJacquetMatrixFromVec v))))
   calc
-    _ = tsum L := E.tsum_eq L
-    _ = tsum (S.indicator (fun x => f (heckePrincipalMinkowskiVector K J x))) :=
-      tsum_congr (rectVectorFunction_principal K J a d hd f)
-    _ = tsum (fun x : S => f (heckePrincipalMinkowskiVector K J x.val)) :=
-      (tsum_subtype S _).symm
-    _ = tsum R := tsum_finiteAdelePrincipalVectorCoset_eq_fourierIntegral K J a d hd f
-    _ = tsum (fun Y : Matrix (Fin n) (Fin n) K => R (F Y)) := (F.tsum_eq R).symm
-    _ = _ := tsum_congr (fun Y => (rectMatrixFourierIntegral K a d hd f Y).symm)
+    _ = rectFourierScale K J * integral mu (fun v => s.sum (fun i => g i v)) := by
+      apply congrArg (fun z : Complex => rectFourierScale K J * z)
+      apply integral_congr_ae
+      exact Filter.Eventually.of_forall (fun v => Finset.sum_mul s _ (phase v))
+    _ = _ := by
+      rw [integral_finsetSum s hg, Finset.mul_sum]
+      rfl
 
 end Robin1984.GRH
