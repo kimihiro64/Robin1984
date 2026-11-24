@@ -1713,6 +1713,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetVectorPoisson.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Poisson summation on the additive adelic matrix space in Godement and Jacquet, Zeta Functions of Simple Algebras.",
+      "formalization_note": "Proves Poisson summation for finite adelic rectangles and arbitrary archimedean Schwartz functions, with the trace-dual ideal and the exact discriminant normalization.",
+      "content_basis": "Transports the principal coset to an ideal lattice at each coordinate and combines the shifted product-lattice formula with the finite Haar character integrals.",
+      "dependency_status": "Uses the verified product-lattice Poisson theorem and the finite adelic trace-dual and Haar integration results.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeAdeleHaar.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Additive Haar measure and Fourier integration over the compact open integral finite adeles.",

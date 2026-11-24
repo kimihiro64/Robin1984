@@ -9,6 +9,7 @@ import Robin1984.GRH.GodementJacquetMatrixMeasure
 import Robin1984.GRH.GodementJacquetProductLattice
 import Robin1984.GRH.GodementJacquetSingularOrbits
 import Robin1984.GRH.GodementJacquetUnfolding
+import Robin1984.GRH.GodementJacquetVectorPoisson
 import Robin1984.GRH.HeckeTateAdelicEuler
 import Robin1984.GRH.HeckeTateClassPoisson
 import Robin1984.GRH.HeckeTateContinuation
