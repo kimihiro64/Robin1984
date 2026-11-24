@@ -18,6 +18,10 @@ At each determinant value, a fundamental domain for the rational subgroup
 replaces integration by a rational matrix sum. Left invariance and Fubini
 then express the matrix-coefficient zeta integral as a double quotient
 integral and a logarithmic Mellin transform.
+
+For a singular matrix of positive rank, its rational stabilizer splits
+into a unipotent group and a Levi group. The compact unipotent average
+of the cusp form gives cancellation on the stabilizer quotient.
 -/
 
 set_option autoImplicit false
@@ -264,6 +268,368 @@ theorem exists_godementJacquetUnipotentOrbitAction
       mu W hW hUnique c
 
 end AdelicUnipotent
+
+section BlockLeviScalars
+
+variable {R S : Type*} [CommRing R] [CommRing S] {r k : Nat}
+
+theorem godementJacquetBlockLevi_map (f : RingHom R S)
+    (V : Matrix.GeneralLinearGroup (Fin k) R) :
+    Matrix.GeneralLinearGroup.map f (godementJacquetBlockLevi (r := r) V) =
+      godementJacquetBlockLevi (r := r) (Matrix.GeneralLinearGroup.map f V) := by
+  apply Units.ext
+  change (Matrix.fromBlocks (1 : Matrix (Fin r) (Fin r) R) 0 0 V.val).map f =
+    Matrix.fromBlocks 1 0 0 (V.val.map f)
+  rw [Matrix.fromBlocks_map]
+  simp
+
+end BlockLeviScalars
+
+section LeviOnUnipotentOrbits
+
+variable {K : Type*} [Field K] [NumberField K] {n r k : Nat}
+
+/-- Conjugation by the inverse rational Levi element on adelic upper
+unipotents acts by right multiplication by the Levi block. -/
+theorem godementJacquetAdelicUnipotent_levi_conj
+    (e : Equiv (Fin n) (Sum (Fin r) (Fin k))) (a : Matrix.GeneralLinearGroup (Fin n) K)
+    (V : Matrix.GeneralLinearGroup (Fin k) K) (B : Blocks K r k) :
+    let l := godementJacquetPrincipalRankTransport e a (godementJacquetBlockLevi (r := r) V)
+    let va := Matrix.GeneralLinearGroup.map (algebraMap K (Adeles K)) V
+    Inv.inv l * godementJacquetAdelicUnipotent e a (Multiplicative.ofAdd B) * l =
+      godementJacquetAdelicUnipotent e a (Multiplicative.ofAdd (B * va.val)) := by
+  let f := algebraMap K (Adeles K)
+  let va := Matrix.GeneralLinearGroup.map f V
+  let aa := Matrix.GeneralLinearGroup.map f a
+  let T := (godementJacquetRankTransport e aa).toMonoidHom
+  let lv := godementJacquetBlockLevi (r := r) V
+  let u := godementJacquetUpperUnipotent (R := Adeles K) (r := r) (k := k)
+  apply Subtype.ext
+  change Inv.inv (Matrix.GeneralLinearGroup.map f (godementJacquetRankTransport e a lv)) *
+      T (u B) * Matrix.GeneralLinearGroup.map f (godementJacquetRankTransport e a lv) =
+    T (u (B * va.val))
+  rw [godementJacquetRankTransport_map, godementJacquetBlockLevi_map]
+  change Inv.inv (T (godementJacquetBlockLevi (r := r) va)) * T (u B) *
+      T (godementJacquetBlockLevi (r := r) va) = _
+  rw [<- map_inv, <- map_mul, <- map_mul]
+  apply congrArg T
+  have hi : godementJacquetBlockLevi (r := r) (Inv.inv va) =
+      Inv.inv (godementJacquetBlockLevi (r := r) va) :=
+    map_inv (godementJacquetBlockLeviHom (Adeles K) r k) va
+  have h := godementJacquetBlockLevi_upperUnipotent_conj (r := r) (Inv.inv va) B
+  rw [hi, inv_inv] at h
+  exact h
+
+/-- The class of an adelic upper unipotent block modulo principal blocks. -/
+def godementJacquetUnipotentClass (B : Blocks K r k) : UnipotentClasses K r k :=
+  Multiplicative.ofAdd (QuotientAddGroup.mk' (godementJacquetPrincipalMatrixBlock K r k) B)
+
+theorem godementJacquetUnipotentClassLeviEquiv_apply_class
+    (V : Matrix.GeneralLinearGroup (Fin k) K) (B : Blocks K r k) :
+    godementJacquetUnipotentClassLeviEquiv K r k V (godementJacquetUnipotentClass B) =
+      godementJacquetUnipotentClass
+        (B * (Matrix.GeneralLinearGroup.map (algebraMap K (Adeles K)) V).val) := rfl
+
+private theorem compactUnipotentClass_surjective :
+    Function.Surjective (godementJacquetUnipotentClass (K := K) (r := r) (k := k)) := by
+  intro c
+  choose B hB using QuotientAddGroup.mk'_surjective
+    (godementJacquetPrincipalMatrixBlock K r k) (Multiplicative.toAdd c)
+  exact Exists.intro B (congrArg Multiplicative.ofAdd hB)
+
+/-- On the compact quotient the inverse Levi action is the action of the inverse block. -/
+theorem godementJacquetUnipotentClassLeviEquiv_symm_apply
+    (V : Matrix.GeneralLinearGroup (Fin k) K) (c : UnipotentClasses K r k) :
+    (godementJacquetUnipotentClassLeviEquiv K r k V).symm c =
+      godementJacquetUnipotentClassLeviEquiv K r k (Inv.inv V) c := by
+  choose B hB using compactUnipotentClass_surjective c
+  rw [<- hB]
+  apply (godementJacquetUnipotentClassLeviEquiv K r k V).injective
+  rw [MulEquiv.apply_symm_apply, godementJacquetUnipotentClassLeviEquiv_apply_class,
+    godementJacquetUnipotentClassLeviEquiv_apply_class]
+  apply congrArg godementJacquetUnipotentClass
+  rw [map_inv]
+  change B = (B * (Matrix.GeneralLinearGroup.map _ V).inv) *
+    (Matrix.GeneralLinearGroup.map _ V).val
+  rw [Matrix.mul_assoc, Units.inv_val, Matrix.mul_one]
+
+private def compactUnipotentLeviMeasurableEquiv
+    [MeasurableSpace (UnipotentClasses K r k)] [BorelSpace (UnipotentClasses K r k)]
+    (nu : Measure (UnipotentClasses K r k)) [nu.IsHaarMeasure] [IsProbabilityMeasure nu]
+    (V : Matrix.GeneralLinearGroup (Fin k) K) :
+    MeasurableEquiv (UnipotentClasses K r k) (UnipotentClasses K r k) where
+  toEquiv := (godementJacquetUnipotentClassLeviEquiv K r k V).toEquiv
+  measurable_toFun := (measurePreserving_godementJacquetUnipotentClassLeviEquiv K r k V nu).measurable
+  measurable_invFun := by
+    change Measurable (fun c => (godementJacquetUnipotentClassLeviEquiv K r k V).symm c)
+    simp_rw [godementJacquetUnipotentClassLeviEquiv_symm_apply]
+    exact (measurePreserving_godementJacquetUnipotentClassLeviEquiv K r k (Inv.inv V) nu).measurable
+
+private abbrev RationalLevi
+    (e : Equiv (Fin n) (Sum (Fin r) (Fin k))) (a : Matrix.GeneralLinearGroup (Fin n) K) :=
+  (godementJacquetProjectionLevi K r k).map (godementJacquetPrincipalRankTransport e a)
+
+/-- The rational Levi action intertwines compact translations with the
+Haar-preserving automorphisms of the compact unipotent group. -/
+theorem exists_godementJacquetLeviOrbitCompatibility
+    (e : Equiv (Fin n) (Sum (Fin r) (Fin k))) (a : Matrix.GeneralLinearGroup (Fin n) K)
+    [MeasurableSpace (NormGroup K n)] [MeasurableMul (NormGroup K n)]
+    [MeasurableSpace (UnipotentClasses K r k)] [BorelSpace (UnipotentClasses K r k)]
+    (hNorm : forall (l : RationalLevi e a) (u : RationalUnipotent e a),
+      Membership.mem (RationalUnipotent e a) (l.val * u.val * Inv.inv l.val))
+    (act : MulAction (UnipotentClasses K r k) (RationalUnipotentOrbits e a))
+    (hAct : forall (B : Blocks K r k) (g : NormGroup K n),
+      let q := Quotient.mk (MulAction.orbitRel (RationalUnipotent e a) (NormGroup K n))
+      act.smul (godementJacquetUnipotentClass B) (q g) =
+        q (godementJacquetAdelicUnipotent e a (Multiplicative.ofAdd B) * g))
+    (nu : Measure (UnipotentClasses K r k)) [nu.IsHaarMeasure] [IsProbabilityMeasure nu] :
+    let E := leftOrbitNormalizerSubgroupEquiv (RationalUnipotent e a) (RationalLevi e a) hNorm
+    Exists (fun aut : RationalLevi e a -> MeasurableEquiv
+        (UnipotentClasses K r k) (UnipotentClasses K r k) =>
+      And (forall l, MeasurePreserving (aut l) nu nu)
+        (forall (l : RationalLevi e a) (c : UnipotentClasses K r k) (x : RationalUnipotentOrbits e a),
+          act.smul c (E l x) = E l (act.smul (aut l c) x))) := by
+  let f := godementJacquetPrincipalRankTransport e a
+  let L := RationalLevi e a
+  let U := RationalUnipotent e a
+  let q := Quotient.mk (MulAction.orbitRel U (NormGroup K n))
+  let E := leftOrbitNormalizerSubgroupEquiv U L hNorm
+  let alpha := godementJacquetAdelicUnipotent e a
+  have hLift (l : L) : Exists (fun V : Matrix.GeneralLinearGroup (Fin k) K =>
+      f (godementJacquetBlockLevi (r := r) V) = l.val) := by
+    have hl := l.property
+    choose x hx using hl
+    choose V hV using hx.1
+    refine Exists.intro V ?_
+    change godementJacquetBlockLevi (r := r) V = x at hV
+    rw [hV]
+    exact hx.2
+  choose V hV using hLift
+  let aut := fun l : L => compactUnipotentLeviMeasurableEquiv (r := r) nu (V l)
+  refine Exists.intro aut (And.intro ?_ ?_)
+  . intro l
+    exact measurePreserving_godementJacquetUnipotentClassLeviEquiv K r k (V l) nu
+  . intro l c x
+    change act.smul c (E l x) = E l (act.smul (aut l c) x)
+    choose B hB using compactUnipotentClass_surjective c
+    rw [<- hB]
+    refine Quotient.inductionOn x ?_
+    intro g
+    let va := Matrix.GeneralLinearGroup.map (algebraMap K (Adeles K)) (V l)
+    have hc : aut l (godementJacquetUnipotentClass B) = godementJacquetUnipotentClass (B * va.val) :=
+      godementJacquetUnipotentClassLeviEquiv_apply_class (V l) B
+    have hE (z : NormGroup K n) : E l (q z) = q (l.val * z) := rfl
+    have hConj : Inv.inv l.val * alpha (Multiplicative.ofAdd B) * l.val =
+        alpha (Multiplicative.ofAdd (B * va.val)) := by
+      rw [<- hV l]
+      exact godementJacquetAdelicUnipotent_levi_conj e a (V l) B
+    have hComm : alpha (Multiplicative.ofAdd B) * l.val =
+        l.val * alpha (Multiplicative.ofAdd (B * va.val)) := calc
+      _ = l.val * (Inv.inv l.val * alpha (Multiplicative.ofAdd B) * l.val) := by simp [mul_assoc]
+      _ = _ := by rw [hConj]
+    change act.smul (godementJacquetUnipotentClass B) (E l (q g)) =
+      E l (act.smul (aut l (godementJacquetUnipotentClass B)) (q g))
+    rw [hE, hAct, hc, hAct, hE, <- mul_assoc, <- mul_assoc, hComm]
+
+private abbrev RationalStabilizer
+    (e : Equiv (Fin n) (Sum (Fin r) (Fin k))) (a : Matrix.GeneralLinearGroup (Fin n) K) :=
+  (godementJacquetProjectionStabilizer K r k).map (godementJacquetPrincipalRankTransport e a)
+
+/-- A rational stabilizer integral vanishes when the compact unipotent
+constant term of its invariant integrand vanishes. -/
+theorem integral_godementJacquetRationalStabilizer_eq_zero_of_constantTerm
+    (e : Equiv (Fin n) (Sum (Fin r) (Fin k))) (a : Matrix.GeneralLinearGroup (Fin n) K)
+    [MeasurableSpace (NormGroup K n)] [BorelSpace (NormGroup K n)]
+    [MeasurableSpace (UnipotentClasses K r k)] [BorelSpace (UnipotentClasses K r k)]
+    (nu : Measure (UnipotentClasses K r k)) [nu.IsHaarMeasure] [IsProbabilityMeasure nu]
+    [nu.IsMulRightInvariant]
+    (mu : Measure (NormGroup K n)) [SFinite mu] [mu.IsMulLeftInvariant]
+    (S : Set (NormGroup K n)) (hS : MeasurableSet S)
+    (hUnique : forall g : NormGroup K n, ExistsUnique
+      (fun h : RationalStabilizer e a => Membership.mem S (h.val * g)))
+    (F : NormGroup K n -> Complex) (hF : Measurable F) (hInt : IntegrableOn F S mu)
+    (hInvariant : forall h : RationalStabilizer e a, forall g, F (h.val * g) = F g)
+    (representative : UnipotentClasses K r k -> Blocks K r k)
+    (hRep : Function.RightInverse representative godementJacquetUnipotentClass)
+    (hConstantTerm : forall g : NormGroup K n,
+      integral nu (fun c => F (godementJacquetAdelicUnipotent e a
+        (Multiplicative.ofAdd (representative c)) * g)) = 0) :
+    integral (mu.restrict S) F = 0 := by
+  let G := NormGroup K n
+  let C := UnipotentClasses K r k
+  let hom := godementJacquetPrincipalRankTransport e a
+  let U := RationalUnipotent e a
+  let L := RationalLevi e a
+  let H := RationalStabilizer e a
+  let X := RationalUnipotentOrbits e a
+  let q := Quotient.mk (MulAction.orbitRel U G)
+  let T := Set.image q S
+  let : SecondCountableTopology (AdelicGeneralLinearGroup K n) :=
+    secondCountableTopology_adelicGeneralLinearGroup K n
+  let : SecondCountableTopology G :=
+    (Topology.IsEmbedding.subtypeVal : Topology.IsEmbedding (fun g : G => g.val)).secondCountableTopology
+  let : DiscreteTopology U :=
+    discreteTopology_godementJacquetPrincipalRankSubgroup e a (godementJacquetProjectionUnipotent K r k)
+  let : DiscreteTopology L :=
+    discreteTopology_godementJacquetPrincipalRankSubgroup e a (godementJacquetProjectionLevi K r k)
+  let : Countable U := countable_of_Lindelof_of_discrete
+  let : Countable L := countable_of_Lindelof_of_discrete
+  have hU : U <= H := Subgroup.map_mono (godementJacquetProjectionUnipotent_le_stabilizer K r k)
+  have hL : L <= H := Subgroup.map_mono (godementJacquetProjectionLevi_le_stabilizer K r k)
+  have hSplitNorm := exists_godementJacquetProjectionStabilizer_map_split hom
+    (godementJacquetPrincipalRankTransport_injective e a)
+  choose split hSplit using hSplitNorm.1
+  have hNorm := hSplitNorm.2
+  choose W hW using exists_leftOrbitRestriction_of_splitSubgroup U L H hU hL split hSplit mu S hS hUnique
+  let m := (mu.restrict W).map q
+  have hT : MeasurableSet T := hW.2.2.1
+  have hRestrict : m.restrict T = (mu.restrict S).map q := hW.2.2.2
+  choose act hAct using exists_godementJacquetUnipotentOrbitAction e a mu W hW.1 hW.2.1
+  choose aut hAut using exists_godementJacquetLeviOrbitCompatibility e a hNorm act hAct.1 nu
+  let : MulAction C X := act
+  let : MulAction L X := leftOrbitNormalizerMulAction U L hNorm
+  have hPC (c : C) : MeasurePreserving (fun x : X => HSMul.hSMul c x) m m := hAct.2.2 c
+  have hPL (l : L) : MeasurePreserving (fun x : X => HSMul.hSMul l x) m m := by
+    exact measurePreserving_leftOrbitNormalizerEquiv U mu W hW.1 hW.2.1 l.val
+      (hNorm l) (fun u => by
+        simpa only [Subgroup.coe_inv, inv_inv] using hNorm (Inv.inv l) u)
+  let : MeasurableConstSMul C X := MeasurableConstSMul.mk (fun c => (hPC c).measurable)
+  let : MeasurableConstSMul L X := MeasurableConstSMul.mk (fun l => (hPL l).measurable)
+  let : SMulInvariantMeasure C X m := SMulInvariantMeasure.mk (fun c s hs => by
+    rw [<- Measure.map_apply (hPC c).measurable hs, (hPC c).map_eq])
+  let : SMulInvariantMeasure L X m := SMulInvariantMeasure.mk (fun l s hs => by
+    rw [<- Measure.map_apply (hPL l).measurable hs, (hPL l).map_eq])
+  let : SFinite m := inferInstanceAs (SFinite ((mu.restrict W).map q))
+  have hUT : forall x : X, ExistsUnique (fun l : L => Membership.mem T (HSMul.hSMul l x)) :=
+    existsUnique_leftOrbitNormalizerSubgroup_imageDomain U L H hNorm split hSplit S hUnique
+  have hDom : IsFundamentalDomain L T m := IsFundamentalDomain.mk' hT.nullMeasurableSet hUT
+  let f : X -> Complex := Quotient.lift F (by
+    intro g h hr
+    change Exists (fun u : U => u.val * h = g) at hr
+    choose u hu using hr
+    rw [<- hu]
+    exact hInvariant (Subtype.mk u.val (hU u.property)) h)
+  have hq : Measurable q := fun _ hs => measurableSet_quotient.mp hs
+  have hf : Measurable f := measurable_from_quotient.mpr hF
+  have hIntT : IntegrableOn f T m := by
+    change Integrable f (m.restrict T)
+    rw [hRestrict]
+    exact (integrable_map_measure hf.aestronglyMeasurable hq.aemeasurable).mpr hInt
+  have hInv (l : L) (x : X) : f (HSMul.hSMul l x) = f x := by
+    refine Quotient.inductionOn x ?_
+    intro g
+    exact hInvariant (Subtype.mk l.val (hL l.property)) g
+  have hMean (x : X) : integral nu (fun c : C => f (HSMul.hSMul c x)) = 0 := by
+    refine Quotient.inductionOn x ?_
+    intro g
+    have he : (fun c : C => f (HSMul.hSMul c (q g))) =
+        (fun c => F (godementJacquetAdelicUnipotent e a (Multiplicative.ofAdd (representative c)) * g)) := by
+      funext c
+      have hc := hAct.1 (representative c) g
+      change act.smul (godementJacquetUnipotentClass (representative c)) (q g) = _ at hc
+      rw [hRep c] at hc
+      exact congrArg f hc
+    change integral nu (fun c : C => f (HSMul.hSMul c (q g))) = 0
+    rw [he]
+    exact hConstantTerm g
+  have hZero := setIntegral_eq_zero_of_orbitAverage nu m T hDom hT hUT
+    hAct.2.1 aut hAut.1 hAut.2 f hf hIntT hInv (Filter.Eventually.of_forall hMean)
+  rw [hRestrict, integral_map hq.aemeasurable hf.aestronglyMeasurable] at hZero
+  exact hZero
+
+/-- Every adelic upper unipotent in the transported block fixes the rational
+matrix after scalar extension to the adeles. -/
+theorem godementJacquetAdelicUnipotent_fixes_singularMatrix
+    (P : Matrix (Fin n) (Fin n) K) (e : Equiv (Fin n) (Sum (Fin r) (Fin k)))
+    (a b : Matrix.GeneralLinearGroup (Fin n) K)
+    (h : a.val * P * b.val = (godementJacquetRankProjection K r k).submatrix e e)
+    (B : Blocks K r k) :
+    let PA := P.map (algebraMap K (Adeles K))
+    (godementJacquetAdelicUnipotent e a (Multiplicative.ofAdd B)).val.val * PA = PA := by
+  let f := algebraMap K (Adeles K)
+  let fM : RingHom (Matrix (Fin n) (Fin n) K)
+      (Matrix (Fin n) (Fin n) (Adeles K)) := RingHom.mapMatrix f
+  let aa := Matrix.GeneralLinearGroup.map f a
+  let ba := Matrix.GeneralLinearGroup.map f b
+  have hA := congrArg fM h
+  rw [map_mul, map_mul] at hA
+  have hProjection :
+      (godementJacquetRankProjection K r k).map f =
+      godementJacquetRankProjection (Adeles K) r k := by
+    simp [godementJacquetRankProjection, Matrix.fromBlocks_map]
+  have hMapped : aa.val * P.map f * ba.val =
+      (godementJacquetRankProjection (Adeles K) r k).submatrix e e := by
+    change aa.val * P.map f * ba.val =
+      ((godementJacquetRankProjection K r k).map f).submatrix e e at hA
+    rw [hProjection] at hA
+    exact hA
+  exact (godementJacquetRankTransport_mul_eq_iff (P.map f) e aa ba hMapped
+    (godementJacquetUpperUnipotent B)).mpr (godementJacquetUpperUnipotent_mul_rankProjection B)
+
+/-- A singular theta term vanishes on the rational stabilizer quotient
+when the cusp form has zero constant term for the transported unipotent. -/
+theorem integral_godementJacquetSingularTerm_eq_zero_of_cuspidal
+    (P : Matrix (Fin n) (Fin n) K) (e : Equiv (Fin n) (Sum (Fin r) (Fin k)))
+    (a b : Matrix.GeneralLinearGroup (Fin n) K)
+    (h : a.val * P * b.val = (godementJacquetRankProjection K r k).submatrix e e)
+    [MeasurableSpace (NormGroup K n)] [BorelSpace (NormGroup K n)]
+    [MeasurableSpace (UnipotentClasses K r k)] [BorelSpace (UnipotentClasses K r k)]
+    (nu : Measure (UnipotentClasses K r k)) [nu.IsHaarMeasure] [IsProbabilityMeasure nu]
+    [nu.IsMulRightInvariant]
+    (mu : Measure (NormGroup K n)) [SFinite mu] [mu.IsMulLeftInvariant]
+    (S : Set (NormGroup K n)) (hS : MeasurableSet S)
+    (hUnique : forall g : NormGroup K n, ExistsUnique
+      (fun h : RationalStabilizer e a => Membership.mem S (h.val * g)))
+    [MeasurableSpace (Matrix (Fin n) (Fin n) (Adeles K))]
+    [BorelSpace (Matrix (Fin n) (Fin n) (Adeles K))]
+    (phi : Matrix (Fin n) (Fin n) (Adeles K) -> Complex) (hPhi : Measurable phi)
+    (cusp : NormGroup K n -> Complex) (hCusp : Measurable cusp)
+    (hInvariant : forall gamma : (adelicPrincipalDeterminantOne K n).range, forall g,
+      cusp (gamma.val * g) = cusp g)
+    (representative : UnipotentClasses K r k -> Blocks K r k)
+    (hRep : Function.RightInverse representative godementJacquetUnipotentClass)
+    (hCuspPeriod : forall g : NormGroup K n,
+      integral nu (fun c => cusp (godementJacquetAdelicUnipotent e a
+        (Multiplicative.ofAdd (representative c)) * g)) = 0) :
+    let PA := P.map (algebraMap K (Adeles K))
+    let F := fun g : NormGroup K n => phi (g.val.inv * PA) * cusp g
+    IntegrableOn F S mu -> integral (mu.restrict S) F = 0 := by
+  let G := NormGroup K n
+  let C := UnipotentClasses K r k
+  let PA := P.map (algebraMap K (Adeles K))
+  let F := fun g : G => phi (g.val.inv * PA) * cusp g
+  let alpha := godementJacquetAdelicUnipotent e a
+  change IntegrableOn F S mu -> integral (mu.restrict S) F = 0
+  intro hInt
+  have hMatrix (l : G) (hl : l.val.val * PA = PA) (g : G) :
+      (l * g).val.inv * PA = g.val.inv * PA := by
+    have hi : l.val.inv * PA = PA := calc
+      _ = l.val.inv * (l.val.val * PA) := congrArg (fun P => l.val.inv * P) hl.symm
+      _ = _ := by rw [<- Matrix.mul_assoc, l.val.inv_val, Matrix.one_mul]
+    change (g.val.inv * l.val.inv) * PA = _
+    rw [Matrix.mul_assoc, hi]
+  have hF : Measurable F := by
+    have hc : Continuous (fun g : G => g.val.inv * PA) :=
+      (Units.continuous_val.comp continuous_subtype_val.inv).mul continuous_const
+    exact (hPhi.comp hc.measurable).mul hCusp
+  refine integral_godementJacquetRationalStabilizer_eq_zero_of_constantTerm e a nu mu S hS hUnique
+    F hF hInt ?_ representative hRep ?_
+  . intro l g
+    have hl := (mem_godementJacquetPrincipalSingularStabilizer_iff P e a b h l.val).mp l.property
+    change phi ((l.val * g).val.inv * PA) * cusp (l.val * g) = phi (g.val.inv * PA) * cusp g
+    rw [hMatrix l.val hl.2 g, hInvariant (Subtype.mk l.val hl.1) g]
+  . intro g
+    have he : (fun c : C => F (alpha (Multiplicative.ofAdd (representative c)) * g)) =
+        (fun c => phi (g.val.inv * PA) *
+          cusp (alpha (Multiplicative.ofAdd (representative c)) * g)) := by
+      funext c
+      have hFix := godementJacquetAdelicUnipotent_fixes_singularMatrix P e a b h (representative c)
+      change phi ((alpha (Multiplicative.ofAdd (representative c)) * g).val.inv * PA) * _ = _
+      rw [hMatrix _ hFix g]
+    change integral nu (fun c : C => F (alpha (Multiplicative.ofAdd (representative c)) * g)) = 0
+    rw [he, integral_const_mul, hCuspPeriod, mul_zero]
+
+end LeviOnUnipotentOrbits
 
 variable (K : Type*) [Field K] [NumberField K] (n : Nat)
 
