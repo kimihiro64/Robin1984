@@ -1083,6 +1083,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeTateInfiniteEuler.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's archimedean zeta integrals for real and complex local characters.",
+      "formalization_note": "Evaluates the character-weighted polynomial Gaussian under the normalized multiplicative Haar measure.",
+      "content_basis": "The polynomial cancels the local parity and angular character. The remaining radial powers give the shifted standard Gamma factors.",
+      "dependency_status": "Uses the actual local character parameters, the idelic norm, and the archimedean Haar normalization.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeTateMellin.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Tate's thesis, the positive-norm adelic theta integral.",
