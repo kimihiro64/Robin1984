@@ -1668,6 +1668,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetUnfolding.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the global matrix-coefficient zeta integral.",
+      "formalization_note": "Unfolds the weighted adelic integral into the double theta integral over determinant-one fundamental domains under absolute integrability.",
+      "content_basis": "Proves the identity by integrating the countable principal matrix sum over a fundamental domain, applying determinant coordinates, and changing variables in the matrix coefficient integral.",
+      "dependency_status": "Uses the verified determinant-norm product measure and the pinned Mathlib fundamental-domain and integration theorems.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeAdeleHaar.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Additive Haar measure and Fourier integration over the compact open integral finite adeles.",
