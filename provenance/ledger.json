@@ -1659,6 +1659,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetFiniteRectangleDilation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Schwartz-Bruhat test functions and matrix dilations in Godement and Jacquet, Zeta Functions of Simple Algebras.",
+      "formalization_note": "Proves that the inverse image of a finite adelic principal rectangle under an invertible matrix is a finite disjoint union of principal rectangles.",
+      "content_basis": "Clears matrix denominators at all finite places and partitions the compact inverse image into cosets of one open principal vector subgroup.",
+      "dependency_status": "Uses the verified rank-one finite adele denominator theorem and Mathlib product topology, compactness, and matrix multiplication.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetFourier.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Fourier inversion for the adelic matrix trace pairing.",
