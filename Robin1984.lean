@@ -3,6 +3,7 @@ import Robin1984.GRH.DedekindMultiplicity
 import Robin1984.GRH.DirichletMultiplicity
 import Robin1984.GRH.DirichletMultiplicityArithmetic
 import Robin1984.GRH.GodementJacquetCoordinates
+import Robin1984.GRH.GodementJacquetHaarNormalization
 import Robin1984.GRH.GodementJacquetMatrixMeasure
 import Robin1984.GRH.GodementJacquetSingularOrbits
 import Robin1984.GRH.GodementJacquetUnfolding
