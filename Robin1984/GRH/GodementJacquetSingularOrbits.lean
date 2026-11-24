@@ -323,4 +323,170 @@ theorem exists_godementJacquetRankProjection_stabilizer_factorization
     change V.val.det = X.val.det
     rw [hV, hDet]
 
+section RankProjectionStabilizer
+
+variable (R r k)
+
+private abbrev BlockGL := Matrix.GeneralLinearGroup (Sum (Fin r) (Fin k)) R
+private abbrev LeviGL := Matrix.GeneralLinearGroup (Fin k) R
+
+/-- The embedded lower-right general linear group. -/
+def godementJacquetBlockLeviHom : MonoidHom (LeviGL R k) (BlockGL R r k) where
+  toFun := godementJacquetBlockLevi
+  map_one' := by
+    apply Units.ext
+    exact Matrix.fromBlocks_one
+  map_mul' A B := by
+    apply Units.ext
+    change Matrix.fromBlocks 1 0 0 (A.val * B.val) =
+      Matrix.fromBlocks 1 0 0 A.val * Matrix.fromBlocks 1 0 0 B.val
+    rw [Matrix.fromBlocks_multiply]
+    simp
+
+/-- The unipotent factor of the rank-projection stabilizer. -/
+def godementJacquetProjectionUnipotent : Subgroup (BlockGL R r k) :=
+  (godementJacquetUpperUnipotentHom (R := R) (r := r) (k := k)).range
+
+/-- The full lower-right Levi factor of the rank-projection stabilizer. -/
+def godementJacquetProjectionLevi : Subgroup (BlockGL R r k) :=
+  (godementJacquetBlockLeviHom R r k).range
+
+/-- The left stabilizer of the rank projection in the general linear group. -/
+def godementJacquetProjectionStabilizer : Subgroup (BlockGL R r k) where
+  carrier := Set.ofPred (fun A =>
+    A.val * godementJacquetRankProjection R r k = godementJacquetRankProjection R r k)
+  one_mem' := by
+    change (1 : Matrix (Sum (Fin r) (Fin k)) (Sum (Fin r) (Fin k)) R) *
+      godementJacquetRankProjection R r k = godementJacquetRankProjection R r k
+    rw [Matrix.one_mul]
+  mul_mem' := by
+    intro A B hA hB
+    let P := godementJacquetRankProjection R r k
+    change A.val * P = P at hA
+    change B.val * P = P at hB
+    change (A.val * B.val) * P = P
+    rw [Matrix.mul_assoc, hB, hA]
+  inv_mem' := by
+    intro A hA
+    let P := godementJacquetRankProjection R r k
+    change A.val * P = P at hA
+    change A.inv * P = P
+    calc
+      A.inv * P = A.inv * (A.val * P) := congrArg (fun M => A.inv * M) hA.symm
+      _ = P := by rw [<- Matrix.mul_assoc, A.inv_val, Matrix.one_mul]
+
+theorem godementJacquetProjectionUnipotent_le_stabilizer :
+    godementJacquetProjectionUnipotent R r k <= godementJacquetProjectionStabilizer R r k := by
+  intro A hA
+  change Exists (fun B : Multiplicative (Matrix (Fin r) (Fin k) R) =>
+    godementJacquetUpperUnipotent (Multiplicative.toAdd B) = A) at hA
+  choose B hB using hA
+  rw [<- hB]
+  exact godementJacquetUpperUnipotent_mul_rankProjection _
+
+theorem godementJacquetProjectionLevi_le_stabilizer :
+    godementJacquetProjectionLevi R r k <= godementJacquetProjectionStabilizer R r k := by
+  intro A hA
+  change Exists (fun V : LeviGL R k => godementJacquetBlockLevi (r := r) V = A) at hA
+  choose V hV using hA
+  rw [<- hV]
+  change Matrix.fromBlocks 1 0 0 V.val * godementJacquetRankProjection R r k =
+    godementJacquetRankProjection R r k
+  rw [godementJacquetRankProjection, Matrix.fromBlocks_multiply]
+  simp
+
+private theorem upperMulBlockLevi_val (B : Matrix (Fin r) (Fin k) R) (V : LeviGL R k) :
+    (godementJacquetUpperUnipotent B * godementJacquetBlockLevi (r := r) V).val =
+      Matrix.fromBlocks 1 (B * V.val) 0 V.val := by
+  change Matrix.fromBlocks 1 B 0 1 * Matrix.fromBlocks 1 0 0 V.val = _
+  rw [Matrix.fromBlocks_multiply]
+  simp
+
+private theorem upperMulBlockLevi_inj
+    (A B : Matrix (Fin r) (Fin k) R) (U V : LeviGL R k)
+    (h : godementJacquetUpperUnipotent A * godementJacquetBlockLevi (r := r) U =
+      godementJacquetUpperUnipotent B * godementJacquetBlockLevi (r := r) V) :
+    And (A = B) (U = V) := by
+  have hM := congrArg (fun A : BlockGL R r k => A.val) h
+  rw [upperMulBlockLevi_val, upperMulBlockLevi_val] at hM
+  have hUV : U.val = V.val := Matrix.ext (fun i j =>
+    congrArg (fun T : Matrix (Sum (Fin r) (Fin k)) (Sum (Fin r) (Fin k)) R => T (Sum.inr i) (Sum.inr j)) hM)
+  have hU : U = V := Units.ext hUV
+  have hAB : A * U.val = B * V.val := Matrix.ext (fun i j =>
+    congrArg (fun T : Matrix (Sum (Fin r) (Fin k)) (Sum (Fin r) (Fin k)) R => T (Sum.inl i) (Sum.inr j)) hM)
+  rw [<- hU] at hAB
+  refine And.intro ?_ hU
+  have h := congrArg (fun C : Matrix (Fin r) (Fin k) R => C * U.inv) hAB
+  simpa only [Matrix.mul_assoc, U.val_inv, Matrix.mul_one] using h
+
+/-- The Levi subgroup normalizes the unipotent subgroup. -/
+theorem godementJacquetProjectionLevi_normalizes_unipotent
+    (l : godementJacquetProjectionLevi R r k) (u : godementJacquetProjectionUnipotent R r k) :
+    Membership.mem (godementJacquetProjectionUnipotent R r k) (l.val * u.val * Inv.inv l.val) := by
+  have hL := l.property
+  have hU := u.property
+  change Exists (fun V : LeviGL R k => godementJacquetBlockLevi (r := r) V = l.val) at hL
+  change Exists (fun B : Multiplicative (Matrix (Fin r) (Fin k) R) =>
+    godementJacquetUpperUnipotent (Multiplicative.toAdd B) = u.val) at hU
+  choose V hV using hL
+  choose B hB using hU
+  change Exists (fun D : Multiplicative (Matrix (Fin r) (Fin k) R) =>
+    godementJacquetUpperUnipotent (Multiplicative.toAdd D) = l.val * u.val * Inv.inv l.val)
+  refine Exists.intro (Multiplicative.ofAdd (Multiplicative.toAdd B * V.inv)) ?_
+  rw [<- hV, <- hB]
+  exact (godementJacquetBlockLevi_upperUnipotent_conj V (Multiplicative.toAdd B)).symm
+
+/-- The full left stabilizer is exactly the product of its
+unipotent and Levi factors, with unique coordinates. -/
+theorem exists_godementJacquetProjectionStabilizer_split :
+    let U := godementJacquetProjectionUnipotent R r k
+    let L := godementJacquetProjectionLevi R r k
+    let H := godementJacquetProjectionStabilizer R r k
+    Exists (fun e : Equiv (Prod U L) H => forall p, (e p).val = p.1.val * p.2.val) := by
+  let U := godementJacquetProjectionUnipotent R r k
+  let L := godementJacquetProjectionLevi R r k
+  let H := godementJacquetProjectionStabilizer R r k
+  let f (p : Prod U L) : H := Subtype.mk (p.1.val * p.2.val)
+    (H.mul_mem (godementJacquetProjectionUnipotent_le_stabilizer R r k p.1.property)
+      (godementJacquetProjectionLevi_le_stabilizer R r k p.2.property))
+  have hSurj : Function.Surjective f := by
+    intro x
+    have hx := x.property
+    change x.val.val * godementJacquetRankProjection R r k =
+      godementJacquetRankProjection R r k at hx
+    choose B V hV using exists_godementJacquetRankProjection_stabilizer_factorization x.val hx
+    let u : U := Subtype.mk (godementJacquetUpperUnipotent B)
+      (Exists.intro (Multiplicative.ofAdd B) rfl)
+    let l : L := Subtype.mk (godementJacquetBlockLevi (r := r) V)
+      (Exists.intro V rfl)
+    exact Exists.intro (Prod.mk u l) (Subtype.ext hV.1.symm)
+  have hInj : Function.Injective f := by
+    intro x y h
+    have hUX := x.1.property
+    have hLX := x.2.property
+    have hUY := y.1.property
+    have hLY := y.2.property
+    change Exists (fun B : Multiplicative (Matrix (Fin r) (Fin k) R) =>
+      godementJacquetUpperUnipotent (Multiplicative.toAdd B) = x.1.val) at hUX
+    change Exists (fun B : Multiplicative (Matrix (Fin r) (Fin k) R) =>
+      godementJacquetUpperUnipotent (Multiplicative.toAdd B) = y.1.val) at hUY
+    change Exists (fun V : LeviGL R k => godementJacquetBlockLevi (r := r) V = x.2.val) at hLX
+    change Exists (fun V : LeviGL R k => godementJacquetBlockLevi (r := r) V = y.2.val) at hLY
+    choose A hA using hUX
+    choose B hB using hUY
+    choose P hP using hLX
+    choose Q hQ using hLY
+    have hProd := congrArg (fun z : H => z.val) h
+    change x.1.val * x.2.val = y.1.val * y.2.val at hProd
+    rw [<- hA, <- hP, <- hB, <- hQ] at hProd
+    have he := upperMulBlockLevi_inj R r k _ _ P Q hProd
+    apply Prod.ext
+    . apply Subtype.ext
+      rw [<- hA, <- hB, he.1]
+    . apply Subtype.ext
+      rw [<- hP, <- hQ, he.2]
+  exact Exists.intro (Equiv.ofBijective f (And.intro hInj hSurj)) (fun _ => rfl)
+
+end RankProjectionStabilizer
+
 end Robin1984.GRH
