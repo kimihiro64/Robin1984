@@ -8,7 +8,8 @@
     "Robin1984.GRH.dirichletGRH_iff_cyclotomicCorrectedIdealRobin",
     "Robin1984.GRH.dedekindERH_iff_correctedIdealRobin",
     "Robin1984.GRH.riemannRH_iff_globalPrimePowerMultiplicityInequality",
-    "Robin1984.GRH.dirichletGRH_iff_globalPrimePowerMultiplicityInequality"
+    "Robin1984.GRH.dirichletGRH_iff_globalPrimePowerMultiplicityInequality",
+    "Robin1984.GRH.dedekindERH_iff_globalPrimePowerMultiplicityInequality"
   ],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],

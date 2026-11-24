@@ -1,4 +1,5 @@
 import Robin1984.Equivalence.Theorem
+import Robin1984.GRH.DedekindMultiplicity
 import Robin1984.GRH.DirichletMultiplicity
 import Robin1984.GRH.DirichletMultiplicityArithmetic
 import Robin1984.GRH.HeckeTateMellin

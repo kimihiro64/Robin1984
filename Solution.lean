@@ -1,6 +1,7 @@
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Robin1984.Equivalence.Theorem
 import Robin1984.GRH.CyclotomicFactorization
+import Robin1984.GRH.DedekindMultiplicity
 import Robin1984.GRH.DedekindTriangular
 import Robin1984.GRH.DirichletMultiplicity
 import Robin1984.GRH.RiemannMultiplicity
@@ -210,6 +211,55 @@ theorem dirichletGRH_iff_globalPrimePowerMultiplicityInequality (hGRH : Dirichle
       DirichletPrimePowerMultiplicityInequality chi = DirichletMultiplicityInequality chi := rfl
   simp only [hDef]
   exact dirichletGRH_simpleZeros_iff_globalMultiplicityInequality hGRH
+
+end
+
+/-! ## Dedekind ERH and zero multiplicity -/
+
+section
+
+open MeasureTheory
+open scoped Classical
+
+universe v w
+
+/-- The signed prime-power signal of a factor in the specified product. -/
+noncomputable def dedekindFactorPrimePowerSignal {index : Type v} {powers : index -> Type w}
+    (f : DedekindMultiplicityFactorization index powers) (j : index) (t : Real) : Complex :=
+  if t < 0 then 0 else
+    let x := Real.exp t
+    (Real.exp (-t / 2) : Complex) *
+      (((f.poleOrder j / 2 : Real) : Complex) * (x : Complex) -
+        tsum (fun n : powers j => (Set.Ioi (f.primePowerNorm j n)).indicator
+          (fun y : Real => f.coefficient j n *
+            (1 - (f.primePowerNorm j n : Complex) / (y : Complex))) x))
+
+/-- The weighted global prime-power inequality for the supplied factorization. -/
+def DedekindPrimePowerMultiplicityInequality {index : Type v} {powers : index -> Type w}
+    (f : DedekindMultiplicityFactorization index powers) : Prop :=
+  f.factors.sum (fun j => (f.exponent j : Real) * Filter.limsup (fun T : Real =>
+    (Inv.inv (T : Complex) * intervalIntegral
+      (fun t => ((norm (primePowerGaussianSmoothing (dedekindFactorPrimePowerSignal f j) 1 t) ^ 2 : Real) :
+         Complex))
+      0 T MeasureTheory.volume).re) Filter.atTop) <=
+    f.factors.sum (fun j => (f.exponent j : Real) * Filter.limsup (fun t : Real =>
+      (primePowerGaussianSmoothing (dedekindFactorPrimePowerSignal f j) 2 t).re) Filter.atTop)
+
+/-- **Dedekind ERH and forced zero orders.** Under Dedekind ERH, the
+critical-strip zeros of a Dedekind zeta function have exactly the orders
+forced by the given positive holomorphic factorization if and only if
+the weighted global prime-power inequality holds. -/
+theorem dedekindERH_iff_globalPrimePowerMultiplicityInequality
+    (hERH : forall (K : Type u) [Field K] [NumberField K], DedekindRH K)
+    (K : Type u) [Field K] [NumberField K]
+    {index : Type v} {powers : index -> Type w} [forall j, Countable (powers j)]
+    (f : DedekindMultiplicityFactorization index powers)
+    (h : HasDedekindMultiplicityFactorization K f) :
+    DedekindOrderForcedByFactors f <-> DedekindPrimePowerMultiplicityInequality f := by
+  have hDef : DedekindPrimePowerMultiplicityInequality f =
+      DedekindGlobalMultiplicityInequality f := rfl
+  rw [hDef]
+  exact dedekindERH_iff_globalMultiplicityInequality hERH K f h
 
 end
 

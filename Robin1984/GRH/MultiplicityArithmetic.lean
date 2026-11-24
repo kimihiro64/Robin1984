@@ -221,9 +221,8 @@ private theorem measurable_gaussianMultiplicitySignal {A : Real -> Complex}
     fun_prop
   exact measurable_spectralConvolution hK.measurable hA
 
-/-- The Gaussian inequality detects repeated frequencies of an arithmetic
-signal with the repeated triangular Hadamard expansion. -/
-theorem gaussianMultiplicityInequality_iff_injective {i : Type*} [Countable i]
+/-- Compare the mass with the mean-square energy and detect repeated frequencies. -/
+theorem gaussianMultiplicityComparison {i : Type*} [Countable i]
     (A : Real -> Complex) (gamma : i -> Real) (hA : Measurable A)
     {C : Real} (hBound : forall t, norm (A t) <= C)
     (hWeights : Summable (fun j => Inv.inv (norm
@@ -235,7 +234,9 @@ theorem gaussianMultiplicityInequality_iff_injective {i : Type*} [Countable i]
           ((3 / 2 : Complex) + (gamma j : Complex) * Complex.I)) *
         Complex.exp ((gamma j : Complex) * Complex.I * (t : Complex))))
       atTop (nhds 0)) :
-    GaussianMultiplicityInequality A <-> Function.Injective gamma := by
+    And (Filter.limsup (fun t : Real => (gaussianMultiplicitySignal A 2 t).re) atTop <=
+      spectralSquareEnergy (gaussianMultiplicitySignal A 1))
+      (GaussianMultiplicityInequality A <-> Function.Injective gamma) := by
   let w (j : i) : Real := Real.exp (-(gamma j ^ 2))
   let S1 (t : Real) : Complex := tsum (fun j => (w j : Complex) *
     Complex.exp ((gamma j : Complex) * Complex.I * (t : Complex)))
@@ -272,10 +273,58 @@ theorem gaussianMultiplicityInequality_iff_injective {i : Type*} [Countable i]
   have hEnergy := spectralSquareEnergy_eq_of_tendsto_sub_zero
     (measurable_gaussianMultiplicitySignal hA 1) hS1.1 hNorm1 hS1.2 hH1
   have hMass := limsup_re_eq_of_tendsto_sub_zero hS2.2 hH2
-  have hCriterion : (spectralSquareEnergy S1 <=
-      Filter.limsup (fun t : Real => (S2 t).re) atTop) <->
-      Function.Injective gamma := fourierOccurrenceMultiplicityCriterion w gamma hp hw hw2
+  have hCompare := fourierOccurrenceMultiplicityComparison w gamma hp hw hw2
   unfold GaussianMultiplicityInequality
-  rw [hEnergy, hMass, hCriterion]
+  rw [hEnergy, hMass]
+  exact hCompare
+
+/-- The Gaussian inequality detects repeated frequencies of an arithmetic
+signal with the repeated triangular Hadamard expansion. -/
+theorem gaussianMultiplicityInequality_iff_injective {i : Type*} [Countable i]
+    (A : Real -> Complex) (gamma : i -> Real) (hA : Measurable A)
+    {C : Real} (hBound : forall t, norm (A t) <= C)
+    (hWeights : Summable (fun j => Inv.inv (norm
+      (((1 / 2 : Complex) + (gamma j : Complex) * Complex.I) *
+        ((3 / 2 : Complex) + (gamma j : Complex) * Complex.I)))))
+    (hAsym : Tendsto (fun t : Real => A t -
+      tsum (fun j => Inv.inv
+        (((1 / 2 : Complex) + (gamma j : Complex) * Complex.I) *
+          ((3 / 2 : Complex) + (gamma j : Complex) * Complex.I)) *
+        Complex.exp ((gamma j : Complex) * Complex.I * (t : Complex))))
+      atTop (nhds 0)) :
+    GaussianMultiplicityInequality A <-> Function.Injective gamma :=
+  (gaussianMultiplicityComparison A gamma hA hBound hWeights hAsym).2
+
+/-- The arithmetic Gaussian gap is nonnegative and is zero exactly
+when the ordinary pole-cleared factor has simple critical-line zeros. -/
+theorem complexArithmeticMultiplicityComparison {iota : Type*} [Countable iota]
+    (a : iota -> Real) (b : iota -> Complex) (m : Real) (F : Complex -> Complex)
+    (ha : forall i, 1 <= a i)
+    (hFinite : forall T : Real, Set.Finite {i : iota | a i < T})
+    (hSum : forall r : Real, 1 < r -> Summable (fun n => norm (b n) * (a n) ^ (-r)))
+    (hOrder : EntireOfOrderAtMost 1 F)
+    (hNonzero : exists z, Not (F z = 0))
+    (hZero : forall z, F z = 0 -> z.re <= 1 / 2)
+    (hEuler : forall s : Complex, 1 < s.re ->
+      logDeriv F s = (m : Complex) / (s - 1) -
+        tsum (fun n => b n * (a n : Complex) ^ (-s))) :
+    let A := triangularLogSignal (complexTriangularRemainder a b m)
+    And (Filter.limsup (fun t : Real => (gaussianMultiplicitySignal A 2 t).re) atTop <=
+      spectralSquareEnergy (gaussianMultiplicitySignal A 1))
+      (GaussianMultiplicityInequality A <->
+        forall z, z.re = 1 / 2 -> F z = 0 -> analyticOrderNatAt F z <= 1) := by
+  let A := triangularLogSignal (complexTriangularRemainder a b m)
+  let _ : Countable (entireNonzeroZeroIndex F) :=
+    countable_entireNonzeroZeroIndex hOrder hNonzero
+  let i := criticalHadamardOccurrence F
+  let gamma : i -> Real := criticalHadamardOrdinate
+  have hTrace := complexTriangularLogSignal_has_criticalSpectrum a b m F ha hFinite
+    hSum hOrder hNonzero hZero hEuler
+  choose C hC using hTrace.1
+  have hWeights := summable_criticalHadamardOccurrence_denominator hOrder hNonzero
+  have hCompare := gaussianMultiplicityComparison A gamma
+    (measurable_complexTriangularLogSignal a b m) hC hWeights hTrace.2
+  exact And.intro hCompare.1 (hCompare.2.trans
+    (injective_criticalHadamardOrdinate_iff hOrder.differentiable))
 
 end Robin1984.GRH

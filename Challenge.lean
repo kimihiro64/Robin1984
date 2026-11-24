@@ -365,6 +365,107 @@ theorem dirichletGRH_iff_globalPrimePowerMultiplicityInequality (hGRH : Dirichle
 
 end
 
+/-! ## Dedekind ERH and zero multiplicity -/
+
+section
+
+open MeasureTheory
+open scoped Classical
+
+universe v w
+
+/-- Finite positive-weight factor data and its individual prime-power series. -/
+structure DedekindMultiplicityFactorization (index : Type v) (powers : index -> Type w) where
+  factors : Finset index
+  exponent : index -> Nat
+  zeta : Complex -> Complex
+  unit : Complex -> Complex
+  ordinary : index -> Complex -> Complex
+  primePowerNorm : forall j, powers j -> Real
+  coefficient : forall j, powers j -> Complex
+  poleOrder : index -> Real
+
+/-- The epsilon form of the order-one bound for an entire function. -/
+def HasMultiplicityOrderOne (F : Complex -> Complex) : Prop :=
+  Differentiable Complex F /\
+    forall eps : Real, 0 < eps -> exists C : Real, 0 < C /\
+      forall s : Complex, norm (F s) <= Real.exp (C * (1 + norm s) ^ (1 + eps))
+
+/-- The given positive holomorphic factorization belongs to the actual Dedekind
+zeta function, with each factor supplying its own signed Euler logarithm. -/
+structure HasDedekindMultiplicityFactorization (K : Type u) [Field K] [NumberField K]
+    {index : Type v} {powers : index -> Type w} (f : DedekindMultiplicityFactorization index powers) : Prop where
+  zeta_continuation : IsDedekindZetaContinuation K f.zeta
+  exponent_positive : forall j, Membership.mem f.factors j -> 0 < f.exponent j
+  factorization :
+    forall s : Complex, 0 < s.re -> s.re < 1 ->
+      f.zeta s = f.unit s * f.factors.prod (fun j => f.ordinary j s ^ f.exponent j)
+  unit_analytic :
+    forall s : Complex, 0 < s.re -> s.re < 1 -> AnalyticAt Complex f.unit s
+  unit_nonzero :
+    forall s : Complex, 0 < s.re -> s.re < 1 -> Not (f.unit s = 0)
+  order_one : forall j, Membership.mem f.factors j -> HasMultiplicityOrderOne (f.ordinary j)
+  right_nonvanishing :
+    forall j, Membership.mem f.factors j ->
+      forall s : Complex, 1 <= s.re -> Not (f.ordinary j s = 0)
+  norms_positive :
+    forall j, Membership.mem f.factors j -> forall n, 1 <= f.primePowerNorm j n
+  norms_locally_finite :
+    forall j, Membership.mem f.factors j -> forall T : Real,
+      Set.Finite {n : powers j | f.primePowerNorm j n < T}
+  coefficients_summable :
+    forall j, Membership.mem f.factors j -> forall r : Real, 1 < r ->
+      Summable (fun n => norm (f.coefficient j n) * (f.primePowerNorm j n) ^ (-r))
+  euler_log_derivative : forall j, Membership.mem f.factors j ->
+    forall s : Complex, 1 < s.re ->
+      logDeriv (f.ordinary j) s = (f.poleOrder j : Complex) / (s - 1) -
+        tsum (fun n => f.coefficient j n * (f.primePowerNorm j n : Complex) ^ (-s))
+
+/-- Each vanishing factor contributes its positive integer exponent
+to the forced order of the Dedekind zeta function. -/
+def DedekindOrderForcedByFactors {index : Type v} {powers : index -> Type w}
+    (f : DedekindMultiplicityFactorization index powers) : Prop :=
+  forall s : Complex, 0 < s.re -> s.re < 1 ->
+    analyticOrderNatAt f.zeta s =
+      f.factors.sum (fun j => f.exponent j * (if f.ordinary j s = 0 then 1 else 0))
+
+/-- The signed prime-power signal of a factor in the specified product. -/
+noncomputable def dedekindFactorPrimePowerSignal {index : Type v} {powers : index -> Type w}
+    (f : DedekindMultiplicityFactorization index powers) (j : index) (t : Real) : Complex :=
+  if t < 0 then 0 else
+    let x := Real.exp t
+    (Real.exp (-t / 2) : Complex) *
+      (((f.poleOrder j / 2 : Real) : Complex) * (x : Complex) -
+        tsum (fun n : powers j => (Set.Ioi (f.primePowerNorm j n)).indicator
+          (fun y : Real => f.coefficient j n *
+            (1 - (f.primePowerNorm j n : Complex) / (y : Complex))) x))
+
+/-- The weighted global prime-power inequality for the supplied factorization. -/
+def DedekindPrimePowerMultiplicityInequality {index : Type v} {powers : index -> Type w}
+    (f : DedekindMultiplicityFactorization index powers) : Prop :=
+  f.factors.sum (fun j => (f.exponent j : Real) * Filter.limsup (fun T : Real =>
+    (Inv.inv (T : Complex) * intervalIntegral
+      (fun t => ((norm (primePowerGaussianSmoothing (dedekindFactorPrimePowerSignal f j) 1 t) ^ 2 : Real) :
+         Complex))
+      0 T MeasureTheory.volume).re) Filter.atTop) <=
+    f.factors.sum (fun j => (f.exponent j : Real) * Filter.limsup (fun t : Real =>
+      (primePowerGaussianSmoothing (dedekindFactorPrimePowerSignal f j) 2 t).re) Filter.atTop)
+
+/-- **Dedekind ERH and forced zero orders.** Under Dedekind ERH, the
+critical-strip zeros of a Dedekind zeta function have exactly the orders
+forced by the given positive holomorphic factorization if and only if
+the weighted global prime-power inequality holds. -/
+theorem dedekindERH_iff_globalPrimePowerMultiplicityInequality
+    (hERH : forall (K : Type u) [Field K] [NumberField K], DedekindRH K)
+    (K : Type u) [Field K] [NumberField K]
+    {index : Type v} {powers : index -> Type w} [forall j, Countable (powers j)]
+    (f : DedekindMultiplicityFactorization index powers)
+    (h : HasDedekindMultiplicityFactorization K f) :
+    DedekindOrderForcedByFactors f <-> DedekindPrimePowerMultiplicityInequality f := by
+  sorry
+
+end
+
 /-! # Supporting statements -/
 
 /-- The single-field Dedekind equivalence used to prove the family criteria.

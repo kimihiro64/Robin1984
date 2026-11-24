@@ -1317,6 +1317,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/DedekindMultiplicity.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The additive holomorphic order formula and the Gaussian prime-power multiplicity comparison.",
+      "formalization_note": "Under Dedekind ERH each factor has only critical-line zeros in the open strip; the weighted gap detects all excess orders.",
+      "content_basis": "Holomorphic product, positive integer exponents, signed Euler logarithms, and Gaussian frequency spectra.",
+      "dependency_status": "The actual Dedekind zeta continuation and the supplied positive holomorphic factorization.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/DedekindPrimeIdealTheorem.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The Wiener-Ikehara proof of the prime ideal theorem.",
