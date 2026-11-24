@@ -214,7 +214,7 @@ theorem summable_gaussian_criticalWeights {i : Type*} (gamma : i -> Real)
 
 /-- The point on the critical line of a specified ordinate. -/
 def multiplicityCriticalPoint (delta : Real) : Complex :=
-  Complex.mk (1 / 2) delta
+  Complex.mk (1 / (Nat.cast 2 : Real)) delta
 
 private def criticalOccurrencesAtEquiv {F : Complex -> Complex} (delta : Real) :
     Equiv (Fin (Int.toNat (MeromorphicOn.divisor F univ (multiplicityCriticalPoint delta))))

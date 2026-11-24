@@ -43,8 +43,13 @@ structure StandardMultiplicityFamilyData (index : Type u) (powers : index -> Typ
 /-- The conductor, cleared pole at zero, and Gamma factors of a standard completion. -/
 noncomputable def standardMultiplicityCompletionFactor {index : Type u} {powers : index -> Type v}
     (family : StandardMultiplicityFamilyData index powers) (pi : index) (s : Complex) : Complex :=
-  standardCompletionFactor (family.conductor pi) (family.poleOrder pi)
-    (family.realShift pi) (family.complexShift pi) s
+  s ^ family.poleOrder pi * (family.conductor pi : Complex) ^ (s / ((2 : Nat) : Complex)) *
+    (Finset.univ.prod (fun j =>
+      (Real.pi : Complex) ^ (-(s + family.realShift pi j) / ((2 : Nat) : Complex)) *
+        Complex.Gamma ((s + family.realShift pi j) / ((2 : Nat) : Complex)))) *
+    (Finset.univ.prod (fun j =>
+      ((2 : Nat) : Complex) * (((2 : Nat) : Complex) * (Real.pi : Complex)) ^ (-(s + family.complexShift pi j)) *
+        Complex.Gamma (s + family.complexShift pi j)))
 
 /-- Standard completion, growth, and Euler logarithm for an individual family.
 The pole order refers to normalization at zero and one. -/
@@ -69,10 +74,15 @@ structure HasStandardMultiplicityAnalytics {index : Type u} {powers : index -> T
       tsum (fun n => family.coefficient pi n * ((family.primePowerNorm pi n : Real) : Complex) ^ (-s))
 
 /-- The signed triangular prime-power signal of an individual standard L-function. -/
-def standardMultiplicityLogSignal {index : Type u} {powers : index -> Type v}
-    (family : StandardMultiplicityFamilyData index powers) (pi : index) : Real -> Complex :=
-  triangularLogSignal (complexTriangularRemainder
-    (fun i => (family.primePowerNorm pi i : Real)) (family.coefficient pi) (family.poleOrder pi : Real))
+noncomputable def standardMultiplicityLogSignal {index : Type u} {powers : index -> Type v}
+    (family : StandardMultiplicityFamilyData index powers) (pi : index) (t : Real) : Complex :=
+  if t < 0 then 0 else
+    let x := Real.exp t
+    (Real.exp (-t / (Nat.cast 2 : Real)) : Complex) *
+      ((((family.poleOrder pi : Real) / (Nat.cast 2 : Real) : Real) : Complex) * (x : Complex) -
+        tsum (fun n : powers pi => (Set.Ioi (family.primePowerNorm pi n : Real)).indicator
+          (fun y : Real => family.coefficient pi n *
+            (1 - ((family.primePowerNorm pi n : Real) : Complex) / (y : Complex))) x))
 
 /-- Under Grand RH for the supplied standard family, the completed functions
 have simple zeros outside finite exceptional sets and the prescribed orders

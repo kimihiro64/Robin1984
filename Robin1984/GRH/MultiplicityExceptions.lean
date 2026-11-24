@@ -27,8 +27,12 @@ open Complex.Hadamard Filter MeasureTheory Set
 open scoped Topology Classical
 
 /-- The mean Fourier coefficient extracted from the arithmetic signal. -/
-def arithmeticMultiplicityCoefficient (H : Real -> Complex) (delta : Real) : Complex :=
-  Filter.limUnder atTop (multiplicityFrequencyMean H delta)
+noncomputable def arithmeticMultiplicityCoefficient (H : Real -> Complex) (delta : Real) :
+    Complex :=
+  Filter.limUnder Filter.atTop (fun T : Real => Inv.inv (T : Complex) *
+    intervalIntegral
+      (fun t : Real => H t * Complex.exp (-(delta : Complex) * Complex.I * (t : Complex)))
+      0 T MeasureTheory.volume)
 
 /-- Delete the measured contribution of each exceptional ordinate. -/
 def removeMultiplicityFrequencies (E : Finset Real) (H : Real -> Complex) (t : Real) :

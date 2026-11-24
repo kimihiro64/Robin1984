@@ -116,21 +116,21 @@ open MeasureTheory
 
 /-- The signed von Mangoldt remainder with triangular weights and residue one. -/
 noncomputable def riemannMultiplicityPrimePowerRemainder (x : Real) : Real :=
-  1 / 2 * x - tsum (fun n : Nat =>
+  1 / (Nat.cast 2 : Real) * x - tsum (fun n : Nat =>
     let q : Real := ((max 1 n : Nat) : Real)
     (Set.Ioi q).indicator (fun y : Real =>
       ArithmeticFunction.vonMangoldt n * (1 - q / y)) x)
 
 /-- The logarithmic square-root normalization of the classical arithmetic remainder. -/
 noncomputable def riemannMultiplicityLogInput (t : Real) : Complex :=
-  if t < 0 then 0 else (Real.exp (-t / 2) : Complex) *
+  if t < 0 then 0 else (Real.exp (-t / (Nat.cast 2 : Real)) : Complex) *
     (riemannMultiplicityPrimePowerRemainder (Real.exp t) : Complex)
 
 /-- The Gaussian smoothing with the two differential factors of the triangular kernel. -/
 noncomputable def riemannPrimePowerSmoothing (a t : Real) : Complex :=
   MeasureTheory.integral MeasureTheory.volume (fun v : Real =>
-    let g := Real.exp (-(v ^ 2) / (4 * a)) / Real.sqrt (4 * Real.pi * a)
-    let k : Real := (v ^ 2 / (4 * a ^ 2) - v / a + 3 / 4 - 1 / (2 * a)) * g
+    let g := Real.exp (-(v ^ 2) / ((Nat.cast 4 : Real) * a)) / Real.sqrt ((Nat.cast 4 : Real) * Real.pi * a)
+    let k : Real := (v ^ 2 / ((Nat.cast 4 : Real) * a ^ 2) - v / a + (Nat.cast 3 : Real) / (Nat.cast 4 : Real) - 1 / ((Nat.cast 2 : Real) * a)) * g
     (k : Complex) * riemannMultiplicityLogInput (t - v))
 
 /-- The long-time mean-square inequality for the classical prime-power remainder. -/
@@ -139,7 +139,7 @@ def RiemannPrimePowerMultiplicityInequality : Prop :=
     (Inv.inv (T : Complex) * intervalIntegral
       (fun t => ((norm (riemannPrimePowerSmoothing 1 t) ^ 2 : Real) : Complex))
       0 T MeasureTheory.volume).re) Filter.atTop <=
-    Filter.limsup (fun t : Real => (riemannPrimePowerSmoothing 2 t).re) Filter.atTop
+    Filter.limsup (fun t : Real => (riemannPrimePowerSmoothing (Nat.cast 2 : Real) t).re) Filter.atTop
 
 /-- **Classical RH and simple zeros.** Under the Riemann hypothesis,
 every nontrivial zero of the Riemann zeta function is simple exactly when
@@ -165,8 +165,8 @@ open scoped Classical
 /-- The Gaussian smoothing of a square-root normalized prime-power signal. -/
 noncomputable def primePowerGaussianSmoothing (A : Real -> Complex) (a t : Real) : Complex :=
   MeasureTheory.integral MeasureTheory.volume (fun v : Real =>
-    let g := Real.exp (-(v ^ 2) / (4 * a)) / Real.sqrt (4 * Real.pi * a)
-    let k : Real := (v ^ 2 / (4 * a ^ 2) - v / a + 3 / 4 - 1 / (2 * a)) * g
+    let g := Real.exp (-(v ^ 2) / ((Nat.cast 4 : Real) * a)) / Real.sqrt ((Nat.cast 4 : Real) * Real.pi * a)
+    let k : Real := (v ^ 2 / ((Nat.cast 4 : Real) * a ^ 2) - v / a + (Nat.cast 3 : Real) / (Nat.cast 4 : Real) - 1 / ((Nat.cast 2 : Real) * a)) * g
     (k : Complex) * A (t - v))
 
 /-- The global mean-square inequality for a prime-power signal. -/
@@ -175,13 +175,13 @@ def PrimePowerGaussianInequality (A : Real -> Complex) : Prop :=
     (Inv.inv (T : Complex) * intervalIntegral
       (fun t => ((norm (primePowerGaussianSmoothing A 1 t) ^ 2 : Real) : Complex))
       0 T MeasureTheory.volume).re) Filter.atTop <=
-    Filter.limsup (fun t : Real => (primePowerGaussianSmoothing A 2 t).re) Filter.atTop
+    Filter.limsup (fun t : Real => (primePowerGaussianSmoothing A (Nat.cast 2 : Real) t).re) Filter.atTop
 
 /-- The signed triangular remainder with the twisted von Mangoldt coefficients. -/
 noncomputable def dirichletMultiplicityPrimePowerRemainder {N : Nat} [NeZero N]
     (chi : DirichletCharacter Complex N) (x : Real) : Complex :=
   let m : Real := if chi = 1 then 1 else 0
-  ((m / 2 : Real) : Complex) * (x : Complex) -
+  ((m / (Nat.cast 2 : Real) : Real) : Complex) * (x : Complex) -
     tsum (fun n : Nat =>
       let q : Real := ((max 1 n : Nat) : Real)
       (Set.Ioi q).indicator (fun y : Real =>
@@ -191,7 +191,7 @@ noncomputable def dirichletMultiplicityPrimePowerRemainder {N : Nat} [NeZero N]
 /-- The normalized Dirichlet remainder extended by zero to negative log time. -/
 noncomputable def dirichletMultiplicityLogInput {N : Nat} [NeZero N]
     (chi : DirichletCharacter Complex N) (t : Real) : Complex :=
-  if t < 0 then 0 else (Real.exp (-t / 2) : Complex) *
+  if t < 0 then 0 else (Real.exp (-t / (Nat.cast 2 : Real)) : Complex) *
     dirichletMultiplicityPrimePowerRemainder chi (Real.exp t)
 
 /-- The arithmetic multiplicity inequality for an individual Dirichlet L-function. -/
@@ -229,8 +229,8 @@ noncomputable def dedekindFactorPrimePowerSignal {index : Type v} {powers : inde
     (f : DedekindMultiplicityFactorization index powers) (j : index) (t : Real) : Complex :=
   if t < 0 then 0 else
     let x := Real.exp t
-    (Real.exp (-t / 2) : Complex) *
-      (((f.poleOrder j / 2 : Real) : Complex) * (x : Complex) -
+    (Real.exp (-t / (Nat.cast 2 : Real)) : Complex) *
+      (((f.poleOrder j / (Nat.cast 2 : Real) : Real) : Complex) * (x : Complex) -
         tsum (fun n : powers j => (Set.Ioi (f.primePowerNorm j n)).indicator
           (fun y : Real => f.coefficient j n *
             (1 - (f.primePowerNorm j n : Complex) / (y : Complex))) x))
@@ -244,7 +244,7 @@ def DedekindPrimePowerMultiplicityInequality {index : Type v} {powers : index ->
          Complex))
       0 T MeasureTheory.volume).re) Filter.atTop) <=
     f.factors.sum (fun j => (f.exponent j : Real) * Filter.limsup (fun t : Real =>
-      (primePowerGaussianSmoothing (dedekindFactorPrimePowerSignal f j) 2 t).re) Filter.atTop)
+      (primePowerGaussianSmoothing (dedekindFactorPrimePowerSignal f j) (Nat.cast 2 : Real) t).re) Filter.atTop)
 
 /-- **Dedekind ERH and forced zero orders.** Under Dedekind ERH, the
 critical-strip zeros of a Dedekind zeta function have exactly the orders
@@ -278,7 +278,7 @@ penalty for prescribed orders. -/
 def GrandPrimePowerMultiplicityInequality (A : Real -> Complex)
     (E J : Finset Real) (order : Real -> Nat) : Prop :=
   let H1 := primePowerGaussianSmoothing A 1
-  let H2 := primePowerGaussianSmoothing A 2
+  let H2 := primePowerGaussianSmoothing A (Nat.cast 2 : Real)
   Filter.limsup (fun T : Real =>
     (Inv.inv (T : Complex) * intervalIntegral
       (fun t => ((norm (removeMultiplicityFrequencies E H1 t) ^ 2 : Real) : Complex))
