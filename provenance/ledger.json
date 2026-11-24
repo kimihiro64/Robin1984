@@ -1038,6 +1038,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeTateFiniteEuler.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The finite Euler product in Tate's thesis.",
+      "formalization_note": "The normalized finite Tate integral converges absolutely and equals the Hecke Euler product for real part greater than one.",
+      "content_basis": "Local valuation shells give the Euler weights. The Dedekind ideal series bounds their absolute sum.",
+      "dependency_status": "Uses the actual finite Tate density and the normalized counting measure on fractional ideals.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeTateFiniteIntegral.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Tate's finite local tests and multiplicative Haar measure on integral-unit cosets.",

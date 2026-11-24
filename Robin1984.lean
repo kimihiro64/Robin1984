@@ -2,7 +2,7 @@ import Robin1984.Equivalence.Theorem
 import Robin1984.GRH.DedekindMultiplicity
 import Robin1984.GRH.DirichletMultiplicity
 import Robin1984.GRH.DirichletMultiplicityArithmetic
-import Robin1984.GRH.HeckeTateFiniteIntegral
+import Robin1984.GRH.HeckeTateFiniteEuler
 import Robin1984.GRH.HeckeTateMellin
 import Robin1984.GRH.HeckeTateQuotientIntegration
 import Robin1984.GRH.HeckeTateZetaUnfolding
