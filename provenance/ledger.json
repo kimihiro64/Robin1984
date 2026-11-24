@@ -1785,6 +1785,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetThetaAnalyticContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Mellin transforms of exponentially decaying theta integrals.",
+      "formalization_note": "Proves continuity of the dual rectangle, measurability of the theta curve, and entire Mellin continuation with reflection under the two theta cancellation identities.",
+      "content_basis": "Uses countable partial sums and joint continuity of the matrix argument for measurability, then combines Poisson reflection with the primal and dual positive-time bounds.",
+      "dependency_status": "Uses the checked Fourier closure, Haar theta estimates, Poisson identity and exponential-moment theorem. The full-to-invertible cancellation identities are hypotheses of the last declaration.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetThetaDecay.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Schwartz decay of the adelic matrix theta kernel.",
