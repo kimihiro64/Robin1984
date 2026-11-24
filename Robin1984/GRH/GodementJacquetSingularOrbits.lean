@@ -1,3 +1,4 @@
+import Mathlib.Algebra.Group.Subgroup.Map
 import Mathlib.LinearAlgebra.Matrix.GeneralLinearGroup.Defs
 import Mathlib.LinearAlgebra.Matrix.Rank
 
@@ -15,8 +16,9 @@ import Mathlib.LinearAlgebra.Matrix.Rank
 
 An upper unipotent block subgroup fixes the rank projection on the left.
 A two-sided rational change of basis carries the stabilizer to any
-singular orbit. The stabilizer has determinant one over every scalar
-extension, including the adele ring.
+singular orbit. The upper unipotent factor has determinant one over every
+scalar extension. The full rational stabilizer includes its general
+linear Levi factor.
 -/
 
 set_option autoImplicit false
@@ -488,5 +490,94 @@ theorem exists_godementJacquetProjectionStabilizer_split :
   exact Exists.intro (Equiv.ofBijective f (And.intro hInj hSurj)) (fun _ => rfl)
 
 end RankProjectionStabilizer
+
+section RankTransport
+
+variable {m : Type*} [Fintype m] [DecidableEq m]
+
+/-- Reindex the rank coordinates and conjugate back to the rational matrix. -/
+def godementJacquetRankTransport (e : Equiv m (Sum (Fin r) (Fin k)))
+    (a : Matrix.GeneralLinearGroup m R) :
+    MulEquiv (BlockGL R r k) (Matrix.GeneralLinearGroup m R) :=
+  (Units.mapEquiv (Matrix.reindexRingEquiv (R := R) e.symm).toMulEquiv).trans
+    (MulAut.conj (Inv.inv a))
+
+/-- Transport identifies the entire left stabilizer of a rank projection. -/
+theorem godementJacquetRankTransport_mul_eq_iff
+    (P : Matrix m m R) (e : Equiv m (Sum (Fin r) (Fin k)))
+    (a b : Matrix.GeneralLinearGroup m R)
+    (h : a.val * P * b.val =
+      (godementJacquetRankProjection R r k).submatrix e e)
+    (u : BlockGL R r k) :
+    (godementJacquetRankTransport e a u).val * P = P <->
+      u.val * godementJacquetRankProjection R r k = godementJacquetRankProjection R r k := by
+  let reindexing := Matrix.reindexRingEquiv (R := R) e.symm
+  let t := godementJacquetRankTransport e a u
+  have ht : t.val = a.inv * reindexing u.val * a.val := by
+    change ((MulAut.conj (Inv.inv a))
+      ((Units.mapEquiv reindexing.toMulEquiv) u)).val = _
+    rw [MulAut.conj_apply, inv_inv]
+    rfl
+  have hcomm : a.val * t.val = reindexing u.val * a.val := by
+    rw [ht, <- Matrix.mul_assoc a.val, <- Matrix.mul_assoc a.val, a.val_inv,
+      Matrix.one_mul]
+  rw [<- reindexing.injective.eq_iff]
+  change t.val * P = P <->
+    reindexing (u.val * godementJacquetRankProjection R r k) =
+      reindexing (godementJacquetRankProjection R r k)
+  rw [map_mul]
+  change t.val * P = P <->
+    reindexing u.val * ((godementJacquetRankProjection R r k).submatrix e e) =
+      (godementJacquetRankProjection R r k).submatrix e e
+  rw [<- h]
+  have hcombine : a.val * (t.val * P) * b.val =
+      reindexing u.val * (a.val * P * b.val) := by
+    rw [<- Matrix.mul_assoc a.val t.val, hcomm]
+    simp only [Matrix.mul_assoc]
+  constructor
+  . intro hf
+    rw [<- hcombine, hf]
+  . intro hf
+    rw [<- hcombine] at hf
+    have hh := congrArg (fun Q : Matrix m m R => a.inv * Q * b.inv) hf
+    simpa only [Matrix.mul_assoc, b.val_inv, Matrix.mul_one,
+      <- Matrix.mul_assoc a.inv a.val, a.inv_val, Matrix.one_mul] using hh
+
+/-- Injective homomorphisms preserve the full split stabilizer and its
+normalizer action. -/
+theorem exists_godementJacquetProjectionStabilizer_map_split
+    {G : Type*} [Group G] (f : MonoidHom (BlockGL R r k) G) (hf : Function.Injective f) :
+    let U := (godementJacquetProjectionUnipotent R r k).map f
+    let L := (godementJacquetProjectionLevi R r k).map f
+    let H := (godementJacquetProjectionStabilizer R r k).map f
+    (Exists (fun e : Equiv (Prod U L) H => forall p, (e p).val = p.1.val * p.2.val)) /\
+      (forall (l : L) (u : U), Membership.mem U (l.val * u.val * Inv.inv l.val)) := by
+  let U := godementJacquetProjectionUnipotent R r k
+  let L := godementJacquetProjectionLevi R r k
+  let H := godementJacquetProjectionStabilizer R r k
+  let eu := Subgroup.equivMapOfInjective U f hf
+  let el := Subgroup.equivMapOfInjective L f hf
+  let eh := Subgroup.equivMapOfInjective H f hf
+  choose t ht using exists_godementJacquetProjectionStabilizer_split R r k
+  refine And.intro (Exists.intro
+    ((Equiv.prodCongr eu.symm.toEquiv el.symm.toEquiv).trans (t.trans eh.toEquiv)) ?_) ?_
+  . intro p
+    change f (t (Prod.mk (eu.symm p.1) (el.symm p.2))).val = p.1.val * p.2.val
+    rw [ht, map_mul]
+    have hu : f (eu.symm p.1).val = p.1.val :=
+      congrArg Subtype.val (eu.apply_symm_apply p.1)
+    have hl : f (el.symm p.2).val = p.2.val :=
+      congrArg Subtype.val (el.apply_symm_apply p.2)
+    rw [hu, hl]
+  . intro l u
+    let lv := el.symm l
+    let uv := eu.symm u
+    have hl : f lv.val = l.val := congrArg Subtype.val (el.apply_symm_apply l)
+    have hu : f uv.val = u.val := congrArg Subtype.val (eu.apply_symm_apply u)
+    refine Exists.intro (lv.val * uv.val * Inv.inv lv.val)
+      (And.intro (godementJacquetProjectionLevi_normalizes_unipotent R r k lv uv) ?_)
+    rw [map_mul, map_mul, map_inv, hl, hu]
+
+end RankTransport
 
 end Robin1984.GRH
