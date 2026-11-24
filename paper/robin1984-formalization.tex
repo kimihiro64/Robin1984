@@ -874,6 +874,361 @@ applied with \(\alpha=1/2+\varepsilon\) excludes any pole to the
 right of that line. Taking all \(\varepsilon>0\) gives the
 square-root criterion by the already proved reverse implication.
 
+\section{Critical-line location with prescribed multiplicities}
+\label{sec:multiplicity}
+
+The triangular bound controls the locations of the zeros. A second test
+records the order at each point, including zeros shared by several
+factors. We use the sublevel-area test for simple zeros developed in
+\emph{Prime Factor Oscillations} and extend its threshold to any
+nonnegative integer.\footnote{See
+\href{https://github.com/kimihiro64/prime-factor-oscillations/blob/5aa03e03423b7f9cee75f31798e9d68dde8c5dbf/PrimeFactorOscillations/Helpers/ZeroSmallValueArea.lean}{\texttt{ZeroSmallValueArea.lean}}
+and the coprimality application
+\href{https://github.com/kimihiro64/prime-factor-oscillations/blob/5aa03e03423b7f9cee75f31798e9d68dde8c5dbf/PrimeFactorOscillations/Assembly/CarmichaelSimplicityCriterion.lean}{\texttt{CarmichaelSimplicityCriterion.lean}}.}
+For a holomorphic function \(F\) with a nonzero germ at \(w\), let
+\[
+ A_F(w,R,\eta)=
+ \operatorname{area}\{z\in\mathbb C:|z-w|<R,\ |F(z)|\leq\eta\}.
+\]
+For every integer \(B\geq 0\),
+\begin{equation}
+ \operatorname{ord}_w F\leq B
+ \quad\Longleftrightarrow\quad
+ \exists R>0:\quad
+ A_F(w,R,\varepsilon^{B+1})=o(\varepsilon^2)
+ \quad(\varepsilon\downarrow0).
+ \label{eq:order-area-threshold}
+\end{equation}
+The disk on the right is taken inside the domain of \(F\).
+Indeed, if \(m=\operatorname{ord}_w F>0\), write
+\(F(z)=(z-w)^m g(z)\) with \(g(w)\ne0\). On a sufficiently small disk,
+\(|g|\) lies between two positive constants. The small-value set lies
+between disks of radii proportional to \(\eta^{1/m}\) for small enough
+\(\eta\), so its area is bounded above and below by positive multiples of
+\(\eta^{2/m}\). The lower bound works in every disk about \(w\) by first
+restricting to a smaller disk. The exponent \(2(B+1)/m\) exceeds \(2\)
+exactly when \(m\le B\). For \(m=0\) the area vanishes for all sufficiently
+small thresholds in some disk. In particular, \(B=1\) is the original
+test \(A_F(w,R,\eta)=o(\eta)\).
+
+Suppose a chosen factorization on the strip has the form
+\[
+ F(s)=U(s)\prod_{j=1}^{r}F_j(s)^{e_j},
+\]
+where \(U\) is holomorphic and nowhere zero, the \(F_j\) are holomorphic
+with nonzero germs, and \(e_j\) are positive integers. Fix lower bounds
+\(b_j(w)\le\operatorname{ord}_w F_j\). The basic choice is \(b_j(w)=1\)
+at a zero of \(F_j\) and \(0\) elsewhere. A known order or a larger proved
+lower bound can be used at an exceptional point. Set
+\(B_F(w)=\sum_{j=1}^{r}e_j b_j(w)\). Additivity of zero order gives
+\(\operatorname{ord}_w F\ge B_F(w)\); equality means each factor attains
+its specified lower bound. At a common zero the contributions add.
+If simplicity is required away from a factor's intrinsic center, its
+condition at that center can instead be omitted in the factorwise test.
+If an exact central order is prescribed, it can be tested by applying
+\eqref{eq:order-area-threshold} at that order and, for positive order,
+requiring failure at the preceding integer.
+
+Thus the combined location and multiplicity assertion is equivalent to
+\eqref{eq:order-area-threshold} at every point of the open critical strip
+with cap \(0\) off the line and cap \(B_F(w)\) on the line. Equivalently,
+one can use the corrected Robin inequality or the triangular inequality
+from the corresponding theorem for location, and test area only on the
+line. Multiplying by a holomorphic unit preserves the order and hence
+either area test. We may therefore use the following arithmetic
+carriers, whose identities hold first in the half-plane of absolute
+convergence and then by continuation:
+\begin{align*}
+ C_{\chi}(s)
+ &=\frac{L(s,\chi)}{L(s+1,\chi)}
+   =\sum_{n\ge1}\frac{\chi(n)\varphi(n)}{n^{s+1}},\\
+ C_K(s)
+ &=\frac{\zeta_K(s)}{\zeta_K(s+1)}
+   =\sum_{\mathfrak a\ne(0)}
+     \frac{\varphi_K(\mathfrak a)}{(N\mathfrak a)^{s+1}},
+ \qquad
+ \varphi_K(\mathfrak a)=N\mathfrak a
+         \prod_{\mathfrak p\mid\mathfrak a}(1-(N\mathfrak p)^{-1}).
+\end{align*}
+The ideal sum is over nonzero integral ideals. Both identities follow
+by taking local geometric series with the coprimality weight at each
+positive exponent. The denominators are nonzero on the strip. For an
+individual automorphic \(L\)-function use
+\(C_\pi(s)=Z_\pi(s)/L(s+1,\pi)\), where \(Z_\pi\) is its individual
+pole-cleared completion. The finite part \(L(s,\pi)/L(s+1,\pi)\) has local
+factors
+\[
+ \prod_{j=1}^n
+   \frac{1-\alpha_{\pi,j}(\mathfrak p)q^{-s-1}}
+        {1-\alpha_{\pi,j}(\mathfrak p)q^{-s}},
+ \qquad q=N\mathfrak p .
+\]
+For each Satake coordinate the factor at exponent \(k\ge1\) is
+\((1-q^{-1})\alpha_{\pi,j}(\mathfrak p)^k\), with constant term \(1\).
+Use the ramified parameters from the local standard factor, padded by
+zeros as above. The individual completions measure the orders of the
+original functions. Testing a paired completion instead adds the orders
+of both members.
+
+For Dirichlet GRH the natural additional requirement is simplicity
+for each character. Finite Euler factors for imprimitive characters
+are units in the open strip. For Dedekind ERH use the exponents of the
+specified holomorphic factorization, for example the character
+factorization of an abelian field. In a full irreducible Artin
+factorization, the exponents are the multiplicities in the permutation
+representation. Using all these factors as holomorphic functions for
+an arbitrary field requires their holomorphy. Even in the known
+holomorphic cases, the exponents can exceed one. For the \(S_3\)
+splitting field of \(X^3-2\), the standard two-dimensional constituent
+occurs twice in the regular representation. A zero of its holomorphic
+\(L\)-function therefore contributes at least two to the order of the
+Dedekind zeta function. For Grand RH, apply the criterion to each
+individual cuspidal standard completion and specify any intrinsic
+central exceptions. Higher central orders can occur already in degree
+two; the level \(389\) elliptic curve \texttt{389a1} supplies an
+example.\footnote{\href{https://www.lmfdb.org/EllipticCurve/Q/389a1/}
+{LMFDB entry for \texttt{389a1}} records analytic rank two.}
+The location equivalences above and the area threshold together give
+criteria with the chosen multiplicity requirements. Proving the
+resulting area bounds is an additional assertion.
+
+\subsection{Multiplicity from the same prime-power remainder}
+
+For a triangular remainder \(R_Z\) as in
+\eqref{eq:grand-mellin-transform}, its square-root bound is equivalent
+to the location condition, and the forward direction of that equivalence
+gives \(|R_Z(x)|=O_Z(\sqrt{x})\). Under these equivalent conditions,
+\(\mathcal{M}R_Z(s)\) is an absolutely convergent integral for
+\(\Re s>1/2\). Equation~\eqref{eq:grand-mellin-transform} holds there by
+analytic continuation. Let \(w=1/2+i\gamma\), \(s=w+\delta\) with
+\(\delta>0\), and set
+\[
+ D_Z(w,\delta)=\delta\,s(s+1)
+       \int_1^\infty R_Z(x)x^{-s-1}\,dx .
+\]
+The logarithmic derivative of \(F_Z\) is
+\(\operatorname{ord}_w F_Z/(s-w)\) plus a function holomorphic in a
+neighborhood of \(w\). Thus
+\[
+ \lim_{\delta\downarrow0}D_Z(w,\delta)=\operatorname{ord}_w F_Z.
+\]
+The limit exists also at a nonzero value of \(F_Z\), where it is zero.
+Consequently the area bound at a prescribed maximum order
+\(B\in\mathbb Z_{\ge0}\) has a test involving the very same arithmetic
+remainder:
+\begin{equation}
+ \Re D_Z(w,\delta)\ \le\ B+\tfrac12
+ \qquad\text{for every sufficiently small }\delta>0 .
+ \label{eq:triangular-order-test}
+\end{equation}
+The half-integer threshold uses the fact that the limit is an integer.
+Changing variables \(x=e^u\) identifies the integral as the exponentially
+damped Fourier transform of \(e^{-u/2}R_Z(e^u)\) at frequency \(\gamma\).
+Thus the square-root bound and the boundary tests
+\eqref{eq:triangular-order-test} use one arithmetic input. The order of
+the full completion agrees with this limit when the additional completion
+factor is a unit at \(w\). In general, if that factor is \(G_Z\), the
+expression for the full completion includes
+\(\delta G_Z'(s)/G_Z(s)\). For a holomorphic product, the boundary
+test with the sum of proved lower bounds as cap enforces equality
+factor by factor because each excess order is nonnegative.
+
+\subsection{A global mean-square criterion}
+
+One can test all ordinates together. Assume the location inequality for
+\(R_Z\) and put \(A_Z(t)=e^{-t/2}R_Z(e^t)\) for \(t\ge0\), extended by
+zero for \(t<0\). Write \(\rho_\gamma=1/2+i\gamma\) and
+\(m_\gamma=\operatorname{ord}_{\rho_\gamma}F_Z\). In the following sums,
+the ordinates with \(m_\gamma>0\) are distinct. The inversion
+\eqref{eq:grand-zeros-inversion} gives
+\begin{equation}
+ A_Z(t)=
+ \sum_{\gamma}
+ \frac{m_\gamma}{\rho_\gamma(\rho_\gamma+1)}\,e^{i\gamma t}
+ +o(1)\qquad(t\to\infty).
+ \label{eq:multiplicity-log-series}
+\end{equation}
+The sum converges absolutely and uniformly. Zeros strictly to the
+left of the line contribute \(o(1)\) by dominated convergence using
+the summable inverse Mellin weights. For the real paired data, the
+conjugate zeros make the displayed series real. For an individual
+complex factor, use its own complex prime-power coefficients and
+omit the real part in the inversion, which follows from the same
+absolute convergence and uniqueness. Pure norm translates use
+the corresponding translated ordinate and polar term.
+
+Use the Fourier convention
+\(\widehat k(\gamma)=\int_{\mathbb R}k(v)e^{-i\gamma v}\,dv\).
+For \(a=1,2\), put
+\[
+ g_a(v)=\frac{e^{-v^2/(4a)}}{\sqrt{4\pi a}},\qquad
+ k_a=\Bigl(\frac{d}{dv}+\tfrac12\Bigr)
+     \Bigl(\frac{d}{dv}+\tfrac32\Bigr)g_a,\qquad
+ H_a(t)=\int_{\mathbb R}k_a(v)A_Z(t-v)\,dv .
+\]
+In particular, \(\widehat k_a(\gamma)=
+\rho_\gamma(\rho_\gamma+1)e^{-a\gamma^2}\).
+Let \(E\subset\mathbb R\) be a finite set of ordinates at which a
+different order is allowed. Define \(\widetilde H_a(t)\) by subtracting,
+for \(\gamma\in E\), the terms \(h_a(\gamma)e^{i\gamma t}\), where
+\[
+ h_a(\gamma)=\lim_{T\to\infty}\frac1T
+               \int_0^T H_a(t)e^{-i\gamma t}\,dt .
+\]
+The basic case is \(E=\varnothing\). All transforms
+use the arithmetic remainder and the chosen exceptional ordinates.
+
+\begin{equation}
+ \lim_{T\to\infty}\frac1T\int_0^T|\widetilde H_1(t)|^2\,dt
+ \ \le\ \limsup_{t\to\infty}\Re\widetilde H_2(t)
+ \label{eq:global-multiplicity-energy}
+\end{equation}
+holds if and only if every zero on the line outside \(E\) is simple.
+To see this, convolve \eqref{eq:multiplicity-log-series} termwise
+with \(k_a\in L^1(\mathbb R)\). The remainder is bounded and tends
+to zero at positive infinity, so its convolution also tends to zero.
+The smoothed series has coefficient
+\(m_\gamma e^{-a\gamma^2}\). Averaging its product with
+\(e^{-i\gamma t}\) recovers that coefficient, giving the asserted
+exception removal.\footnote{For logarithmic frequency recovery in the
+zeta setting, see
+\href{https://github.com/kimihiro64/prime-factor-oscillations/blob/5aa03e03423b7f9cee75f31798e9d68dde8c5dbf/PrimeFactorOscillations/Helpers/XiZeroLogSpectrum.lean}{\texttt{XiZeroLogSpectrum.lean}}.}
+Orthogonality of distinct frequencies in the mean and absolute
+convergence give the left side of
+\eqref{eq:global-multiplicity-energy} as
+\(\sum_{\gamma\notin E}m_\gamma^2e^{-2\gamma^2}\).
+The real part of the \(a=2\) series is at most the sum of its
+nonnegative coefficients. It approaches that bound arbitrarily far
+out. For a finite set of frequencies, take the difference of two
+arbitrarily distant indices in a convergent subsequence of
+\((e^{i\gamma n})_\gamma\) in the finite torus. At those differences all
+the phases approach \(1\). Absolute convergence makes the tail of the
+infinite series arbitrarily small. The right side is therefore
+\(\sum_{\gamma\notin E}m_\gamma e^{-2\gamma^2}\).
+Their difference is the sum of
+\(m_\gamma(m_\gamma-1)e^{-2\gamma^2}\), which vanishes exactly
+when every retained zero is simple.
+
+For a chosen positive factorization, apply
+\eqref{eq:global-multiplicity-energy} to the individual factors and
+sum the two sides with the factorization weights \(e_j\). This gives
+one inequality for the product. A common zero contributes once to
+each factor's test, and its order in the product is the weighted
+sum. To test a prescribed exact order \(r\) at an exceptional
+ordinate \(\gamma\), add
+\(\lvert h_1(\gamma)-r e^{-\gamma^2}\rvert^2\) to the left side for
+that factor. Under the location criterion, the resulting inequality
+requires those exact orders and simplicity at every remaining
+zero. If \(G_Z\) is the additional factor in the full completion,
+set \(g_\gamma=\operatorname{ord}_{\rho_\gamma}G_Z\), allowing negative
+orders at poles. Before removing exceptional frequencies, add
+\[
+ \sum_{\gamma:\,g_\gamma\ne0}
+       g_\gamma e^{-a\gamma^2}e^{i\gamma t}
+\]
+to \(H_a\). The sum is finite for the gamma, exponential, and
+polynomial factors used here. The resulting coefficients use the
+orders in the full completion. When \(G_Z\) is a unit on the line,
+the inversion in \eqref{eq:multiplicity-log-series} gives these
+multiplicities directly.
+
+\subsection{Four conditional multiplicity equivalences}
+
+Write \(\mathcal E(Z;E)\) for the mean-square limit on the left of
+\eqref{eq:global-multiplicity-energy}, including the completion
+correction where needed. Write \(\mathcal S(Z;E)\) for the limit superior
+on the right. For a finite subset \(J\subseteq E\) and prescribed
+orders \(r(\gamma)\ge0\) on \(J\), put
+\[
+ \mathcal P(Z;J,r)
+ =\sum_{\gamma\in J}
+       \bigl|h_1(\gamma)-r(\gamma)e^{-\gamma^2}\bigr|^2.
+\]
+Here \(h_1\) is computed before removing the ordinates in \(E\).
+Thus \(E\setminus J\) permits arbitrary orders, and \(J\) prescribes
+exact orders.
+
+\begin{theorem}[RH and simplicity]\label{thm:rh-multiplicity}
+Assume the Riemann hypothesis. Every nontrivial zero of \(\zeta\)
+is simple if and only if
+\[
+ \mathcal E(\zeta;\varnothing)\le\mathcal S(\zeta;\varnothing).
+\]
+The input is \(R_Z\) for \(Z=\zeta_{\mathbb Q}\).
+\end{theorem}
+
+\begin{theorem}[Dirichlet GRH and simplicity]\label{thm:grh-multiplicity}
+Assume Dirichlet GRH. Every nontrivial zero of every Dirichlet
+\(L\)-function is simple if and only if, for every Dirichlet character
+\(\chi\),
+\[
+ \mathcal E(L(\cdot,\chi);\varnothing)
+ \le\mathcal S(L(\cdot,\chi);\varnothing).
+\]
+It suffices on both sides to take primitive characters.
+\end{theorem}
+
+\begin{theorem}[Dedekind ERH and multiplicity in a factorization]
+\label{thm:erh-multiplicity}
+Assume Dedekind ERH. Fix a positive holomorphic factorization
+\(\zeta_K=U_K\prod_{j\in I_K}L_{K,j}^{e_{K,j}}\) on the strip for
+each field in the test, with \(U_K\) a unit and factors admitting
+the prime-power inversion above. Then for every such \(K\) and
+\(w\) on the line,
+\[
+ \operatorname{ord}_w\zeta_K
+  =\sum_{j\in I_K}e_{K,j}\,\mathbf1_{\{L_{K,j}(w)=0\}}
+\]
+if and only if, for every such \(K\),
+\[
+ \sum_{j\in I_K}e_{K,j}\mathcal E(L_{K,j};\varnothing)
+ \le
+ \sum_{j\in I_K}e_{K,j}\mathcal S(L_{K,j};\varnothing).
+\]
+In a full holomorphic Artin factorization the weights are the
+irreducible multiplicities of the permutation representation.
+\end{theorem}
+
+\begin{theorem}[Grand RH and multiplicity of standard \(L\)-functions]
+\label{thm:grand-multiplicity}
+Assume Grand RH. For each individual unitary cuspidal standard
+\(L\)-function over a number field, fix \(J_\pi\subseteq E_\pi\)
+and \(r_\pi\) as above. All nontrivial zeros outside \(E_\pi\)
+are simple and all orders on \(J_\pi\) equal \(r_\pi\), for every
+\(\pi\), if and only if, for every \(\pi\),
+\[
+ \mathcal E(L(\cdot,\pi);E_\pi)
+ +\mathcal P(L(\cdot,\pi);J_\pi,r_\pi)
+ \le \mathcal S(L(\cdot,\pi);E_\pi).
+\]
+An intrinsic center can be included in \(E_\pi\) with its order
+left free or placed in \(J_\pi\) with an exact order specified.
+For a pure norm twist of the trivial character use the untranslated
+zeta function, shifting the prescribed ordinates accordingly.
+\end{theorem}
+
+\begin{proof}
+The RH and Dirichlet statements apply
+\eqref{eq:global-multiplicity-energy} to the individual functions.
+The additional Euler factors of an imprimitive character are units
+in the open strip. Positivity of the holomorphic factorization in
+the Dedekind statement means that every zero of a factor in the
+open strip is a zero of \(\zeta_K\), hence is on the line under ERH.
+The difference of the two weighted sums is nonnegative and is zero
+precisely when each factor has only simple zeros. Additivity of
+orders gives the displayed equality, including coincidences between
+different factors. For Grand RH the difference of the two sides is
+again a sum of nonnegative multiplicity terms plus the squares in
+\(\mathcal P\). Each vanishes precisely at the claimed orders.
+\end{proof}
+
+The four equivalences assume the corresponding location hypothesis.
+Combining any of them with the location equivalence gives a
+simultaneous arithmetic criterion for location and the specified
+orders. The holomorphic factorization in the Dedekind statement is
+part of its data. An application using all irreducible Artin factors
+of an arbitrary field requires the holomorphy of those factors.
+
 \section{Formal verification and source availability}
 \label{sec:formalization-summary}
 

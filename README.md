@@ -152,6 +152,91 @@ tails on the idele class quotient. The identification with the completed
 Hecke Euler products is still in progress. See
 [the generalized criteria](docs/GRH.md) for the declarations.
 
+## Critical-line zeros and multiplicity
+
+For a carrier $F$, let $A_F(w,R,\eta)$ be the planar area of
+$\{z : |z-w|<R,\ |F(z)|\le \eta\}$. The local test for a prescribed
+maximum order $B\ge 0$ is
+
+```math
+\operatorname{ord}_w F\le B
+\quad\Longleftrightarrow\quad
+\exists R>0,\quad A_F(w,R,\varepsilon^{B+1})=o(\varepsilon^2)
+\quad(\varepsilon\downarrow0).
+```
+
+Use $B=0$ off the critical line. On the line, for a holomorphic
+factorization $F=U\prod_j F_j^{e_j}$ with $U$ nowhere zero, use
+$B=\sum_j e_j b_j(w)$ for specified lower bounds $b_j(w)$ on the factor
+orders. The basic choice counts one per factor vanishing at $w$, with its
+exponent $e_j$. This tests for no excess order in the factors and counts
+shared zeros with their weights. The Robin or triangular criterion can
+supply the location condition instead, so the area test only needs points
+on the line.
+
+The arithmetic carriers are $L(s,\chi)/L(s+1,\chi)$,
+$\zeta_K(s)/\zeta_K(s+1)$, and $Z_\pi(s)/L(s+1,\pi)$ with the individual
+pole-cleared completion $Z_\pi$. The first two have the coefficients
+$\chi(n)\varphi(n)/n$ and $\varphi_K(\mathfrak a)/N\mathfrak a$ in their
+Dirichlet series, where $\varphi_K(\mathfrak a)=N\mathfrak a\prod_{\mathfrak p\mid\mathfrak a}(1-(N\mathfrak p)^{-1})$.
+The [paper](paper/robin1984-formalization.tex) gives the automorphic local factors,
+the holomorphy requirement for a full Artin factorization, and the treatment of
+intrinsic central zeros. This extension is a mathematical criterion.
+
+The same triangular remainder $R_Z$ also supplies an arithmetic
+multiplicity test. Once the square-root bound holds, put
+$w=\tfrac12+i\gamma$, $s=w+\delta$. The order of the pole-cleared
+function in the triangular Mellin formula is the limit, as
+$\delta\downarrow0$, of
+
+```math
+D_Z(w,\delta)=\delta\,s(s+1)\int_1^\infty R_Z(x)x^{-s-1}\,dx.
+```
+
+This order is at most $B$ exactly when $\Re D_Z(w,\delta)\le B+\tfrac12$
+for every sufficiently small $\delta>0$. The paper gives the completion
+factor correction when that factor has nonzero order at $w$.
+
+### Global multiplicity test
+
+There is also a test that combines all ordinates in one inequality.
+Use $A(t)=e^{-t/2}R_Z(e^t)$ for $t\ge 0$ and $A(t)=0$ for $t<0$.
+For $a=1,2$ convolve $A$ with the integrable kernel
+$k_a=(\frac{d}{dt}+\frac12)(\frac{d}{dt}+\frac32)g_a$, where
+$g_a(t)=e^{-t^2/(4a)}/\sqrt{4\pi a}$. Write $H_a=k_a*A$ and let
+$\widetilde H_a$ remove the mean Fourier coefficients at any specified
+exceptional ordinates. Under the square-root bound, the test is
+
+```math
+\lim_{T\to\infty}\frac1T\int_0^T|\widetilde H_1(t)|^2\,dt
+\ \le\ \limsup_{t\to\infty}\Re\widetilde H_2(t).
+```
+
+The difference of the two sides is the sum of
+$m_\gamma(m_\gamma-1)e^{-2\gamma^2}$ over the retained ordinates, where
+$m_\gamma$ is the order in the function used by the Mellin formula.
+This detects any repeated zero. Use the individual factors and sum
+with their factorization weights for a criterion that allows repeated
+zeros forced by the product. The [paper](paper/robin1984-formalization.tex)
+proves the inequality criterion, including exact order constraints
+at exceptional ordinates.
+
+### Four conditional headline equivalences
+
+Assume the corresponding location hypothesis in each statement.
+Write $\mathcal E$ for the global mean-square limit and $\mathcal S$
+for the limit superior defined above.
+
+| Hypothesis | Multiplicity requirement equivalent to the global inequality |
+| --- | --- |
+| RH | All nontrivial zeros of $\zeta$ are simple iff $\mathcal E\le\mathcal S$ for $\zeta$. |
+| Dirichlet GRH | Each Dirichlet $L$-function has simple nontrivial zeros iff $\mathcal E\le\mathcal S$ for each individual character. |
+| Dedekind ERH | For the specified holomorphic factorization $\zeta_K=U_K\prod_jL_{K,j}^{e_{K,j}}$, the order at each zero is exactly $\sum_{j:L_{K,j}(w)=0}e_{K,j}$ iff $\sum_j e_{K,j}\mathcal E_j\le\sum_j e_{K,j}\mathcal S_j$ for each field in the test. |
+| Grand RH | Every individual standard completion has simple zeros outside its prescribed exceptions and the stated exact orders at specified exceptions iff $\mathcal E+\mathcal P\le\mathcal S$ for each individual representation. The term $\mathcal P$ is the sum of squared errors in the prescribed orders, weighted by the Gaussian coefficients. |
+
+These statements and their proofs are in the
+[research paper](paper/robin1984-formalization.tex).
+
 ## Mathematical organization
 
 The proof development is organized by mathematical role:
