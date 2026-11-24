@@ -1119,6 +1119,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeTateInfiniteFourier.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The real and complex local Fourier transforms in Tate's thesis.",
+      "formalization_note": "Identifies the canonical archimedean trace Fourier test with the test for the inverse character and an explicit unit phase.",
+      "content_basis": "Separates Fourier transforms over finite Euclidean products, computes the complex coordinate Jacobian, and transports the real parity and complex angular weights.",
+      "dependency_status": "Uses the proved local polynomial-Gaussian Fourier transforms and the actual mixed-space trace normalization.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeTateMellin.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Tate's thesis, the positive-norm adelic theta integral.",
