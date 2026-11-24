@@ -1668,6 +1668,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetFundamentalDomain.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Borel fundamental domains for discrete subgroups of second-countable groups and the determinant-one quotient in the Godement-Jacquet zeta integral.",
+      "formalization_note": "Constructs a measurable fundamental domain for rational left translation on the determinant-norm-one adelic general linear group.",
+      "content_basis": "Uses a countable cover by injective local sheets, chooses the first sheet meeting each orbit, and proves discreteness of the rational subgroup coordinatewise.",
+      "dependency_status": "Uses the verified principal adele discreteness and determinant coordinates together with pinned Mathlib group, Lindelof, and fundamental domain APIs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetHaarNormalization.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Tate's adelic Fourier analysis and the additive determinant modulus in the Godement-Jacquet zeta integral.",
