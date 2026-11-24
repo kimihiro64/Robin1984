@@ -1,3 +1,4 @@
+import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
 import Robin1984.GRH.GodementJacquetSchwartzDilation
 import Robin1984.GRH.GodementJacquetUnfolding
 
@@ -380,5 +381,104 @@ theorem norm_godementJacquetLogMellin_le_exponentialMoment
     _ <= abs (t * (s + ((n : Complex) - 1) / 2).re) := le_abs_self _
     _ = abs t * abs ((s + ((n : Complex) - 1) / 2).re) := abs_mul _ _
     _ <= abs t * a := mul_le_mul_of_nonneg_left hs (abs_nonneg t)
+
+/-- Arbitrarily fast exponential decay gives every moment on the positive
+half-line, including the moments with positive exponents. -/
+theorem integrableOn_godementJacquet_exponentialMoment_of_decay
+    (F : Real -> Complex) (hF : Measurable F)
+    (hDecay : forall b : Real, 0 < b -> exists C : Real,
+      forall t : Real, 0 <= t -> norm (F t) <= C * Real.exp (-b * t))
+    (a : Real) :
+    IntegrableOn (fun t : Real => norm (F t) * (Real.exp t) ^ a)
+      (Set.Ici 0) (volume : Measure Real) := by
+  let b := abs a + 1
+  have hb : 0 < b := add_pos_of_nonneg_of_pos (abs_nonneg a) zero_lt_one
+  have hRate : a - b < 0 := by
+    have h := le_abs_self a
+    dsimp [b]
+    linarith
+  obtain h := hDecay b hb
+  let C := Classical.choose h
+  have hC := Classical.choose_spec h
+  have hSubset : Set.Ici (0 : Real) <= Set.Ioi (-1 : Real) := by
+    intro t ht
+    exact (by norm_num : (-1 : Real) < 0).trans_le ht
+  have hExp : IntegrableOn (fun t : Real => C * Real.exp ((a - b) * t))
+      (Set.Ici 0) (volume : Measure Real) :=
+    ((integrableOn_exp_mul_Ioi hRate (-1)).mono_set hSubset).const_mul C
+  refine hExp.mono' ((hF.norm.mul ?_).aestronglyMeasurable) ?_
+  . have hRw : (fun t : Real => (Real.exp t) ^ a) = fun t : Real => Real.exp (t * a) := by
+      funext t
+      simp only [Real.rpow_def_of_pos (Real.exp_pos t), Real.log_exp]
+    rw [hRw]
+    exact (Real.continuous_exp.comp (continuous_id.mul continuous_const)).measurable
+  filter_upwards [ae_restrict_mem (s := Set.Ici (0 : Real)) measurableSet_Ici] with t ht
+  change norm (norm (F t) * (Real.exp t) ^ a) <= C * Real.exp ((a - b) * t)
+  rw [Real.norm_of_nonneg (mul_nonneg (norm_nonneg _) (Real.rpow_nonneg (Real.exp_nonneg _) _))]
+  rw [Real.rpow_def_of_pos (Real.exp_pos t), Real.log_exp]
+  calc
+    _ <= (C * Real.exp (-b * t)) * Real.exp (t * a) :=
+      mul_le_mul_of_nonneg_right (hC t ht) (Real.exp_nonneg _)
+    _ = C * Real.exp ((a - b) * t) := by
+      rw [mul_assoc, show (a - b) * t = -b * t + t * a by ring, Real.exp_add]
+
+/-- Poisson reflection transports all positive-half-line moments of the dual
+curve to the negative half-line of the primal curve. -/
+theorem integrable_godementJacquet_exponentialMoment_of_reflection
+    (n : Nat) (F G : Real -> Complex)
+    (hReflect : forall t : Real,
+      F t = ((Real.exp (-((n : Real) * t)) : Real) : Complex) * G (-t))
+    (hF : forall a : Real, IntegrableOn (fun t : Real => norm (F t) * (Real.exp t) ^ a)
+      (Set.Ici 0) (volume : Measure Real))
+    (hG : forall a : Real, IntegrableOn (fun t : Real => norm (G t) * (Real.exp t) ^ a)
+      (Set.Ici 0) (volume : Measure Real))
+    (a : Real) :
+    Integrable (fun t : Real => norm (F t) * (Real.exp (abs t)) ^ a) (volume : Measure Real) := by
+  let P := Set.indicator (Set.Ici (0 : Real)) (fun t : Real => norm (F t) * (Real.exp t) ^ a)
+  let Q := Set.indicator (Set.Ioi (0 : Real))
+    (fun t : Real => norm (G t) * (Real.exp t) ^ (a + n))
+  have hP : Integrable P (volume : Measure Real) := (hF a).integrable_indicator measurableSet_Ici
+  have hQSubset : Set.Ioi (0 : Real) <= Set.Ici 0 := by
+    intro t ht
+    change 0 <= t
+    exact le_of_lt (show 0 < t from ht)
+  have hQ : Integrable Q (volume : Measure Real) :=
+    ((hG (a + n)).mono_set hQSubset).integrable_indicator measurableSet_Ioi
+  have hNeg : Integrable (fun t : Real => Q (-t)) (volume : Measure Real) :=
+    ((Measure.measurePreserving_neg (volume : Measure Real)).integrable_comp_emb
+      (MeasurableEquiv.neg Real).measurableEmbedding).mpr hQ
+  refine (hP.add hNeg).congr (Filter.Eventually.of_forall (fun t => ?_))
+  change P t + Q (-t) = norm (F t) * (Real.exp (abs t)) ^ a
+  by_cases ht : 0 <= t
+  . have hnt : Not (0 < -t) := by linarith
+    simp [P, Q, ht, hnt, abs_of_nonneg ht]
+  . have hlt : t < 0 := lt_of_not_ge ht
+    have hp : 0 < -t := by linarith
+    simp only [P, Q, Set.indicator, Set.mem_Ici, Set.mem_Ioi,
+      ht, hp, if_false, if_true, zero_add, abs_of_neg hlt]
+    rw [hReflect t, norm_mul, Complex.norm_real, Real.norm_of_nonneg (Real.exp_nonneg _)]
+    rw [Real.rpow_def_of_pos (Real.exp_pos (-t)), Real.rpow_def_of_pos (Real.exp_pos (-t))]
+    simp only [Real.log_exp]
+    rw [show (-t) * (a + n) = -((n : Real) * t) + (-t) * a by ring, Real.exp_add]
+    ring
+
+/-- Rapid decay of the primal and dual positive tails gives an entire
+Godement-Jacquet Mellin transform with its reflected functional equation. -/
+theorem godementJacquetLogMellin_entire_and_reflection_of_decay
+    (n : Nat) (F G : Real -> Complex) (hF : Measurable F) (hG : Measurable G)
+    (hReflect : forall t : Real,
+      F t = ((Real.exp (-((n : Real) * t)) : Real) : Complex) * G (-t))
+    (hDecayF : forall b : Real, 0 < b -> exists C : Real,
+      forall t : Real, 0 <= t -> norm (F t) <= C * Real.exp (-b * t))
+    (hDecayG : forall b : Real, 0 < b -> exists C : Real,
+      forall t : Real, 0 <= t -> norm (G t) <= C * Real.exp (-b * t)) :
+    And (Differentiable Complex (godementJacquetLogMellin n F))
+      (forall s : Complex, godementJacquetLogMellin n F s =
+        godementJacquetLogMellin n G (1 - s)) := by
+  have hMoment := integrable_godementJacquet_exponentialMoment_of_reflection n F G hReflect
+    (integrableOn_godementJacquet_exponentialMoment_of_decay F hF hDecayF)
+    (integrableOn_godementJacquet_exponentialMoment_of_decay G hG hDecayG)
+  exact And.intro (differentiable_godementJacquetLogMellin_of_exponentialMoments n F hF hMoment)
+    (godementJacquetLogMellin_reflection n F G hReflect)
 
 end Robin1984.GRH
