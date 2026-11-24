@@ -1722,6 +1722,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetHaarVolume.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Haar measure on adelic general linear groups and the determinant coordinates in Godement and Jacquet, Zeta Functions of Simple Algebras.",
+      "formalization_note": "Proves dyadic Haar volume bounds on the ambient adelic matrix group and on the norm-one group over a finite rectangle.",
+      "content_basis": "Combines the finite inverse-denominator cover, the archimedean cover and inverse estimates, compact subsets of the unit group, and logarithmic determinant coordinates.",
+      "dependency_status": "Uses the verified matrix and determinant bounds, finite residue covers, and Mathlib Haar measure and compactness.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetMatrixMeasure.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the determinant change of variables for additive Haar measure on adelic matrices.",
@@ -1782,6 +1791,15 @@
       "formalization_note": "Unfolds the nonnegative time-zero theta kernel into a convolution and controls the integral by square-integrability on the quotient and a dyadic volume bound for the group weight.",
       "content_basis": "Uses fundamental domains, invariance under right translation, the quadratic bound on a product, rational lattice summability, and dyadic reciprocal-power estimates.",
       "dependency_status": "Uses the verified time-zero lattice and unfolding results. The dyadic Haar volume bound and the square-integrability of the quotient functions are stated hypotheses.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetThetaL2Decay.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the square-integrability bound on the unfolded quotient integral.",
+      "formalization_note": "Proves rapid positive-time decay of the invertible theta integral for a Schwartz rectangle and square-integrable quotient functions.",
+      "content_basis": "Combines the norm-one Haar volume estimate with dyadic integration of the reciprocal power, the time-zero lattice bound, and the unfolded quotient convolution.",
+      "dependency_status": "Uses the verified volume and convolution bounds. The stated quotient hypotheses include bi-invariant Haar measure and square-integrability of the functions.",
       "reviewed": true
     },
     {

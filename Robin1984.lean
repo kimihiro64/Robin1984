@@ -10,6 +10,7 @@ import Robin1984.GRH.GodementJacquetFiniteRectangleDilation
 import Robin1984.GRH.GodementJacquetFourier
 import Robin1984.GRH.GodementJacquetFundamentalDomain
 import Robin1984.GRH.GodementJacquetHaarNormalization
+import Robin1984.GRH.GodementJacquetHaarVolume
 import Robin1984.GRH.GodementJacquetMatrixMeasure
 import Robin1984.GRH.GodementJacquetMatrixPoisson
 import Robin1984.GRH.GodementJacquetProductLattice
@@ -17,6 +18,7 @@ import Robin1984.GRH.GodementJacquetSchwartzDilation
 import Robin1984.GRH.GodementJacquetSingularOrbits
 import Robin1984.GRH.GodementJacquetThetaDecay
 import Robin1984.GRH.GodementJacquetThetaKernel
+import Robin1984.GRH.GodementJacquetThetaL2Decay
 import Robin1984.GRH.GodementJacquetThetaLatticeDecay
 import Robin1984.GRH.GodementJacquetThetaMellin
 import Robin1984.GRH.GodementJacquetUnfolding
