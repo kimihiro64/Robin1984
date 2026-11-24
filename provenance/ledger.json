@@ -1038,6 +1038,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeTateClassPoisson.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's adelic Poisson summation on the idele class group.",
+      "formalization_note": "Transports the mixed Schwartz and finite Fourier tests to logarithmic norm coordinates and retains both values at zero.",
+      "content_basis": "Uses the project adelic Poisson formula, absolute lattice summability, compact support of the finite dual, and quotient invariance.",
+      "dependency_status": "Applies to actual unitary Hecke characters and the canonically normalized finite Fourier transform.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeTateDualSupport.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Tate's finite additive Fourier transform, duality of an integral modulus, and the restricted product of local fields.",

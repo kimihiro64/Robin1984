@@ -3,6 +3,7 @@ import Robin1984.GRH.DedekindMultiplicity
 import Robin1984.GRH.DirichletMultiplicity
 import Robin1984.GRH.DirichletMultiplicityArithmetic
 import Robin1984.GRH.HeckeTateAdelicEuler
+import Robin1984.GRH.HeckeTateClassPoisson
 import Robin1984.GRH.HeckeTateMellin
 import Robin1984.GRH.HeckeTateQuotientIntegration
 import Robin1984.GRH.MultiplicityArithmetic
