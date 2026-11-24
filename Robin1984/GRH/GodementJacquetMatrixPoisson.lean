@@ -72,34 +72,57 @@ private theorem trace_rectInfinite_mul_principal (x : InfiniteAdeleRing K) (t : 
     DedekindZeta.Theta.conjMixed_snd, starRingEnd_apply, star_star]
   rfl
 
-private theorem coe_heckeAdeleAddChar_neg_mul_principal (x : RectAdeles K) (t : K) :
-    (heckeAdeleAddChar (-(x * algebraMap K (RectAdeles K) t)) : Complex) =
+private theorem rectInfiniteCoordinates_principal (x : K) :
+    rectInfiniteCoordinates K (algebraMap K (InfiniteAdeleRing K) x) = DedekindZeta.Theta.eEmb K x := by
+  change DedekindZeta.Theta.toMinkowski K
+    (InfiniteAdeleRing.ringEquiv_mixedSpace K (algebraMap K (InfiniteAdeleRing K) x)) =
+    DedekindZeta.Theta.toMinkowski K (mixedEmbedding K x)
+  exact congrArg (DedekindZeta.Theta.toMinkowski K)
+    (InfiniteAdeleRing.mixedEmbedding_eq_algebraMap_comp (K := K) (x := x)).symm
+
+private theorem trace_rectInfinite_mul (x y : InfiniteAdeleRing K) :
+    infiniteAdeleTrace (x * y) = inner Real (rectInfiniteCoordinates K x)
+      (DedekindZeta.Theta.conjMink K (rectInfiniteCoordinates K y)) := by
+  let F (z : InfiniteAdeleRing K) := infiniteAdeleTrace (x * z)
+  let G (z : InfiniteAdeleRing K) := inner Real (rectInfiniteCoordinates K x)
+    (DedekindZeta.Theta.conjMink K (rectInfiniteCoordinates K z))
+  have hF : Continuous F := continuous_infiniteAdeleTrace.comp (continuous_const.mul continuous_id)
+  have hCoord : Continuous (rectInfiniteCoordinates K) :=
+    (DedekindZeta.Theta.toMinkowski K).continuous.comp (continuous_heckeInfiniteAdele_mixedSpace (K := K))
+  have hG : Continuous G := continuous_const.inner ((DedekindZeta.Theta.conjMink K).continuous.comp hCoord)
+  have hEq : F = G := (InfiniteAdeleRing.denseRange_algebraMap (K := K)).equalizer hF hG (by
+    funext t
+    change infiniteAdeleTrace (x * algebraMap K (InfiniteAdeleRing K) t) =
+      inner Real (rectInfiniteCoordinates K x)
+        (DedekindZeta.Theta.conjMink K (rectInfiniteCoordinates K (algebraMap K (InfiniteAdeleRing K) t)))
+    rw [rectInfiniteCoordinates_principal, trace_rectInfinite_mul_principal])
+  exact congrFun hEq y
+
+private theorem coe_heckeAdeleAddChar_neg_mul (x y : RectAdeles K) :
+    (heckeAdeleAddChar (-(x * y)) : Complex) =
       (Real.fourierChar (-(inner Real (rectInfiniteCoordinates K x.1)
-        (DedekindZeta.Theta.conjMink K (DedekindZeta.Theta.eEmb K t)))) : Complex) *
-        (heckeFiniteAdelePrincipalChar (-t) x.2 : Complex) := by
-  let ai := x.1 * algebraMap K (InfiniteAdeleRing K) t
-  let af := x.2 * algebraMap K (RectFinite K) t
+        (DedekindZeta.Theta.conjMink K (rectInfiniteCoordinates K y.1)))) : Complex) *
+      (heckeFiniteAddChar (x.2 * (-y.2)) : Complex) := by
+  let ai := x.1 * y.1
+  let af := x.2 * y.2
   let zi : RectAdeles K := Prod.mk (-ai) 0
   let zf : RectAdeles K := Prod.mk 0 (-af)
-  have hsplit : -(x * algebraMap K (RectAdeles K) t) = zi + zf := by
+  have hsplit : -(x * y) = zi + zf := by
     apply Prod.ext
     . exact (add_zero (-ai)).symm
     . exact (zero_add (-af)).symm
   rw [hsplit, AddChar.map_add_eq_mul, Circle.coe_mul]
-  have hiz : forall p : HeightOneSpectrum (RingOfIntegers K),
+  have hzi : forall p : HeightOneSpectrum (RingOfIntegers K),
       Membership.mem (p.adicCompletionIntegers K) (zi.2 p) :=
     fun p => (p.adicCompletionIntegers K).zero_mem
-  have harch := heckeAdeleAddChar_of_integralFinitePart zi hiz
-  have hi : infiniteAdeleTrace zi.1 =
-      -(inner Real (rectInfiniteCoordinates K x.1)
-        (DedekindZeta.Theta.conjMink K (DedekindZeta.Theta.eEmb K t))) := by
+  have harch := heckeAdeleAddChar_of_integralFinitePart zi hzi
+  have hi : infiniteAdeleTrace zi.1 = -(inner Real (rectInfiniteCoordinates K x.1)
+      (DedekindZeta.Theta.conjMink K (rectInfiniteCoordinates K y.1))) := by
     change infiniteAdeleTrace (-ai) = _
-    rw [map_neg, trace_rectInfinite_mul_principal]
-  rw [harch, hi]
-  have hfin : zf = (Prod.mk (0 : InfiniteAdeleRing K)
-      (x.2 * algebraMap K (RectFinite K) (-t)) : RectAdeles K) := by
-    rw [map_neg, mul_neg]
-  rw [hfin]
+    rw [map_neg, trace_rectInfinite_mul]
+  have hf : zf = (Prod.mk (0 : InfiniteAdeleRing K) (x.2 * (-y.2)) : RectAdeles K) := by
+    rw [mul_neg]
+  rw [harch, hi, hf]
   rfl
 
 private theorem rect_coe_addChar_sum {A B : Type*} [AddCommMonoid A]
@@ -117,13 +140,13 @@ private abbrev RectArchVector := PiLp 2 (fun _ : I => RectArch K)
 private def rectInfiniteVector (x : I -> InfiniteAdeleRing K) : RectArchVector K I :=
   WithLp.toLp 2 (fun i => rectInfiniteCoordinates K (x i))
 
-private theorem rect_trace_phase (x : I -> RectAdeles K) (t : I -> K) :
-    (heckeAdeleAddChar (-(Finset.univ.sum (fun i => x i * algebraMap K (RectAdeles K) (t i)))) : Complex) =
+private theorem rect_trace_phase_full (x t : I -> RectAdeles K) :
+    (heckeAdeleAddChar (-(Finset.univ.sum (fun i => x i * t i))) : Complex) =
       (Real.fourierChar (-(inner Real (rectInfiniteVector K I (fun i => (x i).1))
-        (heckeConjMinkowskiVector K I (heckePrincipalMinkowskiVector K I t)))) : Complex) *
-      Finset.univ.prod (fun i => (heckeFiniteAdelePrincipalChar (-(t i)) (x i).2 : Complex)) := by
+        (heckeConjMinkowskiVector K I (rectInfiniteVector K I (fun i => (t i).1))))) : Complex) *
+      Finset.univ.prod (fun i => (heckeFiniteAddChar ((x i).2 * (-(t i).2)) : Complex)) := by
   rw [<- Finset.sum_neg_distrib, rect_coe_addChar_sum]
-  simp_rw [coe_heckeAdeleAddChar_neg_mul_principal, Finset.prod_mul_distrib,
+  simp_rw [coe_heckeAdeleAddChar_neg_mul, Finset.prod_mul_distrib,
     <- rect_coe_addChar_sum Real.fourierChar, Finset.sum_neg_distrib]
   rfl
 
@@ -185,24 +208,25 @@ private def rectVectorFunction
 private noncomputable def rectFourierScale : Complex :=
   (Inv.inv (Real.sqrt (abs (NumberField.discr K : Real)) : Complex)) ^ Fintype.card I
 
-private theorem rectVectorFourierIntegral
-    (a : I -> RectFinite K) (d : RingOfIntegers K) (hd : Not (d = 0))
-    (f : SchwartzMap (RectArchVector K I) Complex) (t : I -> K) :
-    rectFourierScale K I * integral
-      (Measure.pi (fun _ : I => heckeAdeleAdditiveHaar (K := K)))
+private theorem rectVectorFourierIntegral_full
+    (a : I -> RectFinite K) (d : RingOfIntegers K)
+    (f : SchwartzMap (RectArchVector K I) Complex) (t : I -> RectAdeles K) :
+    integral (Measure.pi (fun _ : I => heckeAdeleAdditiveHaar (K := K)))
       (fun x => rectVectorFunction K I a d f x *
-        (heckeAdeleAddChar (-(Finset.univ.sum (fun i => x i * algebraMap K (RectAdeles K) (t i)))) :
-          Complex)) =
-        heckeAdeleVectorRectangleFourierIntegral K I a d f t := by
-  let R := RingOfIntegers K
-  let dd := algebraMap R K d
+        (heckeAdeleAddChar (-(Finset.univ.sum (fun i => x i * t i))) : Complex)) =
+      FourierTransform.fourier (f : RectArchVector K I -> Complex)
+        (heckeConjMinkowskiVector K I (rectInfiniteVector K I (fun i => (t i).1))) *
+      Finset.univ.prod (fun i => heckeFiniteFourierIntegral (heckeFiniteAdeleHaar (K := K))
+        ((heckeFiniteAdelePrincipalCoset (a i)
+          (algebraMap (RingOfIntegers K) K d)).indicator (fun _ => (1 : Complex))) (-(t i).2)) := by
+  let dd := algebraMap (RingOfIntegers K) K d
   let C (i : I) := heckeFiniteAdelePrincipalCoset (a i) dd
   let muI := heckeInfiniteAdeleAdditiveHaar (K := K)
   let muF := heckeFiniteAdeleHaar (K := K)
-  let y := heckeConjMinkowskiVector K I (heckePrincipalMinkowskiVector K I t)
+  let y := heckeConjMinkowskiVector K I (rectInfiniteVector K I (fun i => (t i).1))
   let A (z : RectArchVector K I) : Complex := f z * (Real.fourierChar (-(inner Real z y)) : Complex)
   let P (i : I) (z : RectFinite K) : Complex :=
-    (C i).indicator (fun _ => (1 : Complex)) z * (heckeFiniteAdelePrincipalChar (-(t i)) z : Complex)
+    (C i).indicator (fun _ => (1 : Complex)) z * (heckeFiniteAddChar (z * (-(t i).2)) : Complex)
   let B (z : I -> RectFinite K) : Complex := Finset.univ.prod (fun i => P i (z i))
   let : SigmaFinite muF := by
     let : LocallyCompactSpace (RectFinite K) := locallyCompactSpace_heckeFiniteAdeles
@@ -223,43 +247,27 @@ private theorem rectVectorFourierIntegral
     apply integral_congr_ae
     filter_upwards with z
     exact mul_comm _ _
-  have hd' : Not (dd = 0) :=
-    (map_ne_zero_iff (algebraMap R K) (FaithfulSMul.algebraMap_injective R K)).mpr hd
   have hFin : integral (Measure.pi (fun _ : I => muF)) B =
-      Finset.univ.prod (fun i => integral (muF.restrict (C i))
-        (fun z => (heckeFiniteAdelePrincipalChar (-(t i)) z : Complex))) := by
+      Finset.univ.prod (fun i => heckeFiniteFourierIntegral muF
+        ((C i).indicator (fun _ => (1 : Complex))) (-(t i).2)) := by
     change integral (Measure.pi (fun _ : I => muF)) (fun z => Finset.univ.prod (fun i => P i (z i))) = _
     rw [integral_fintype_prod_eq_prod]
-    apply Finset.prod_congr rfl
-    intro i _
-    have hC : MeasurableSet (C i) :=
-      ((Homeomorph.addLeft (a i)).isOpenMap _ (isOpen_heckeScaledIntegralFiniteAdeles dd hd')).measurableSet
-    rw [<- integral_indicator hC]
-    apply integral_congr_ae
-    filter_upwards with z
-    change (C i).indicator (fun _ => (1 : Complex)) z *
-      (heckeFiniteAdelePrincipalChar (-(t i)) z : Complex) =
-        (C i).indicator (fun w => (heckeFiniteAdelePrincipalChar (-(t i)) w : Complex)) z
-    by_cases hz : Membership.mem (C i) z
-    . rw [Set.indicator_of_mem hz, Set.indicator_of_mem hz, one_mul]
-    . rw [Set.indicator_of_notMem hz, Set.indicator_of_notMem hz, zero_mul]
-  refine (congrArg (fun z : Complex => rectFourierScale K I * z) ?_).trans
-    (mul_assoc (rectFourierScale K I) _ _).symm
+    rfl
   let Q (z : Prod (I -> InfiniteAdeleRing K) (I -> RectFinite K)) : Complex :=
     A (rectInfiniteVector K I z.1) * B z.2
   calc
     _ = integral (Measure.pi (fun _ : I => heckeAdeleAdditiveHaar (K := K))) (fun x => Q (q x)) := by
       apply integral_congr_ae
       filter_upwards with z
-      rw [rect_trace_phase K I]
+      rw [rect_trace_phase_full K I]
       change f (rectInfiniteVector K I (fun i => (z i).1)) *
         Finset.univ.prod (fun i => (C i).indicator (fun _ => (1 : Complex)) (z i).2) *
         ((Real.fourierChar (-(inner Real (rectInfiniteVector K I (fun i => (z i).1)) y)) : Complex) *
-          Finset.univ.prod (fun i => (heckeFiniteAdelePrincipalChar (-(t i)) (z i).2 : Complex))) = _
+          Finset.univ.prod (fun i => (heckeFiniteAddChar ((z i).2 * (-(t i).2)) : Complex))) = _
       unfold Q A B P
       change _ = _ * Finset.univ.prod (fun i =>
         (C i).indicator (fun _ => (1 : Complex)) (z i).2 *
-          (heckeFiniteAdelePrincipalChar (-(t i)) (z i).2 : Complex))
+          (heckeFiniteAddChar ((z i).2 * (-(t i).2)) : Complex))
       rw [Finset.prod_mul_distrib]
       ac_rfl
     _ = integral ((Measure.pi (fun _ : I => muI)).prod (Measure.pi (fun _ : I => muF))) Q :=
@@ -273,6 +281,75 @@ private theorem rectVectorFourierIntegral
           z * integral (Measure.pi (fun _ : I => muF)) B) hArch).trans
           (congrArg (fun z : Complex =>
             FourierTransform.fourier (f : RectArchVector K I -> Complex) y * z) hFin)
+
+private theorem rectVectorFourierIntegral
+    (a : I -> RectFinite K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (f : SchwartzMap (RectArchVector K I) Complex) (t : I -> K) :
+    rectFourierScale K I * integral
+      (Measure.pi (fun _ : I => heckeAdeleAdditiveHaar (K := K)))
+      (fun x => rectVectorFunction K I a d f x *
+        (heckeAdeleAddChar (-(Finset.univ.sum (fun i => x i * algebraMap K (RectAdeles K) (t i)))) :
+          Complex)) =
+        heckeAdeleVectorRectangleFourierIntegral K I a d f t := by
+  let R := RingOfIntegers K
+  let dd := algebraMap R K d
+  let C (i : I) := heckeFiniteAdelePrincipalCoset (a i) dd
+  let g := algebraMap K (RectAdeles K)
+  let t' (i : I) := g (t i)
+  have hArch : rectInfiniteVector K I (fun i => (t' i).1) =
+      heckePrincipalMinkowskiVector K I t :=
+    congrArg (WithLp.toLp 2) (funext (fun i => rectInfiniteCoordinates_principal K (t i)))
+  have hd' : Not (dd = 0) :=
+    (map_ne_zero_iff (algebraMap R K) (FaithfulSMul.algebraMap_injective R K)).mpr hd
+  have hFin (i : I) :
+      heckeFiniteFourierIntegral (heckeFiniteAdeleHaar (K := K))
+        ((C i).indicator (fun _ => (1 : Complex))) (-(t' i).2) =
+      integral ((heckeFiniteAdeleHaar (K := K)).restrict (C i))
+        (fun z => (heckeFiniteAdelePrincipalChar (-(t i)) z : Complex)) := by
+    have hC : MeasurableSet (C i) :=
+      ((Homeomorph.addLeft (a i)).isOpenMap _ (isOpen_heckeScaledIntegralFiniteAdeles dd hd')).measurableSet
+    let gF := algebraMap K (RectFinite K)
+    have hn : -(t' i).2 = gF (-(t i)) := (map_neg gF (t i)).symm
+    rw [hn, <- integral_indicator hC]
+    apply integral_congr_ae
+    filter_upwards with z
+    change (C i).indicator (fun _ => (1 : Complex)) z *
+      (heckeFiniteAdelePrincipalChar (-(t i)) z : Complex) =
+      (C i).indicator (fun w => (heckeFiniteAdelePrincipalChar (-(t i)) w : Complex)) z
+    by_cases hz : Membership.mem (C i) z
+    . rw [Set.indicator_of_mem hz, Set.indicator_of_mem hz, one_mul]
+    . rw [Set.indicator_of_notMem hz, Set.indicator_of_notMem hz, zero_mul]
+  change rectFourierScale K I * integral
+    (Measure.pi (fun _ : I => heckeAdeleAdditiveHaar (K := K)))
+    (fun x => rectVectorFunction K I a d f x *
+      (heckeAdeleAddChar (-(Finset.univ.sum (fun i => x i * t' i))) : Complex)) = _
+  rw [rectVectorFourierIntegral_full, hArch, <- mul_assoc]
+  let A := rectFourierScale K I * FourierTransform.fourier
+    (f : RectArchVector K I -> Complex)
+    (heckeConjMinkowskiVector K I (heckePrincipalMinkowskiVector K I t))
+  exact congrArg (fun p : Complex => A * p) (Finset.prod_congr rfl (fun i _ => hFin i))
+
+private theorem godementJacquetMatrixFourier_rectangle_full {n : Nat}
+    (a : Prod (Fin n) (Fin n) -> RectFinite K) (d : RingOfIntegers K)
+    (f : SchwartzMap (RectArchVector K (Prod (Fin n) (Fin n))) Complex)
+    (Y : Matrix (Fin n) (Fin n) (RectAdeles K)) :
+    let J := Prod (Fin n) (Fin n)
+    godementJacquetMatrixFourier K (fun X => rectVectorFunction K J a d f X.vec) Y =
+      FourierTransform.fourier (f : RectArchVector K J -> Complex)
+        (heckeConjMinkowskiVector K J (rectInfiniteVector K J (fun i => (Y.vec i.swap).1))) *
+      Finset.univ.prod (fun i : J => heckeFiniteFourierIntegral (heckeFiniteAdeleHaar (K := K))
+        ((heckeFiniteAdelePrincipalCoset (a i)
+          (algebraMap (RingOfIntegers K) K d)).indicator (fun _ => (1 : Complex))) (-(Y.vec i.swap).2)) := by
+  let J := Prod (Fin n) (Fin n)
+  let t : J -> RectAdeles K := fun i => Y.vec i.swap
+  dsimp only
+  rw [<- rectVectorFourierIntegral_full K J a d f t]
+  unfold godementJacquetMatrixFourier
+  apply integral_congr_ae
+  filter_upwards with v
+  change rectVectorFunction K J a d f (godementJacquetMatrixFromVec v).vec *
+    (heckeAdeleAddChar (-(godementJacquetMatrixFromVec v * Y).trace) : Complex) = _
+  rw [godementJacquetMatrixFromVec_vec, trace_matrixFromVec_mul_eq_sum]
 
 private theorem rectMatrixFourierIntegral {n : Nat}
     (a : Prod (Fin n) (Fin n) -> RectFinite K) (d : RingOfIntegers K) (hd : Not (d = 0))
@@ -298,16 +375,6 @@ private theorem rectMatrixFourierIntegral {n : Nat}
       Complex) = _
   rw [godementJacquetMatrixFromVec_vec, trace_matrixFromVec_mul_eq_sum]
   rfl
-
-omit [MeasurableSpace (InfiniteAdeleRing K)] [BorelSpace (InfiniteAdeleRing K)]
-  [MeasurableSpace (RectFinite K)] [BorelSpace (RectFinite K)] in
-private theorem rectInfiniteCoordinates_principal (x : K) :
-    rectInfiniteCoordinates K (algebraMap K (InfiniteAdeleRing K) x) = DedekindZeta.Theta.eEmb K x := by
-  change DedekindZeta.Theta.toMinkowski K
-    (InfiniteAdeleRing.ringEquiv_mixedSpace K (algebraMap K (InfiniteAdeleRing K) x)) =
-    DedekindZeta.Theta.toMinkowski K (mixedEmbedding K x)
-  exact congrArg (DedekindZeta.Theta.toMinkowski K)
-    (InfiniteAdeleRing.mixedEmbedding_eq_algebraMap_comp (K := K) (x := x)).symm
 
 omit [MeasurableSpace (InfiniteAdeleRing K)] [BorelSpace (InfiniteAdeleRing K)] in
 private theorem rectVectorFunction_principal
@@ -359,6 +426,29 @@ def godementJacquetSelfDualMatrixFourier {n : Nat}
     (phi : Matrix (Fin n) (Fin n) (RectAdeles K) -> Complex)
     (Y : Matrix (Fin n) (Fin n) (RectAdeles K)) : Complex :=
   rectFourierScale K (Prod (Fin n) (Fin n)) * godementJacquetMatrixFourier K phi Y
+
+/-- The self-dual Fourier transform of a Schwartz rectangle at an arbitrary
+adelic matrix is an archimedean Fourier transform times the finite
+coset transforms. The matrix trace pairing transposes the frequency. -/
+theorem godementJacquetSelfDualMatrixFourier_rectangle_apply {n : Nat}
+    (a : Prod (Fin n) (Fin n) -> RectFinite K) (d : RingOfIntegers K)
+    (f : SchwartzMap (RectArchVector K (Prod (Fin n) (Fin n))) Complex)
+    (Y : Matrix (Fin n) (Fin n) (RectAdeles K)) :
+    let J := Prod (Fin n) (Fin n)
+    godementJacquetSelfDualMatrixFourier K (godementJacquetMatrixRectangle K a d f) Y =
+      ((Inv.inv (Real.sqrt (abs (NumberField.discr K : Real)) : Complex)) ^ Fintype.card J *
+        FourierTransform.fourier (f : RectArchVector K J -> Complex)
+          (heckeConjMinkowskiVector K J (WithLp.toLp 2 (fun i : J =>
+            DedekindZeta.Theta.toMinkowski K
+              (InfiniteAdeleRing.ringEquiv_mixedSpace K (Y.vec i.swap).1))))) *
+      Finset.univ.prod (fun i : J => heckeFiniteFourierIntegral (heckeFiniteAdeleHaar (K := K))
+        ((heckeFiniteAdelePrincipalCoset (a i)
+          (algebraMap (RingOfIntegers K) K d)).indicator (fun _ => (1 : Complex))) (-(Y.vec i.swap).2)) := by
+  let J := Prod (Fin n) (Fin n)
+  change rectFourierScale K J * godementJacquetMatrixFourier K
+    (fun X => rectVectorFunction K J a d f X.vec) Y = _
+  rw [godementJacquetMatrixFourier_rectangle_full, <- mul_assoc]
+  rfl
 
 set_option maxHeartbeats 1000000 in
 private theorem matrixRectanglePoissonData {n : Nat}
