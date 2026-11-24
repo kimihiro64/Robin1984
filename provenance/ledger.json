@@ -1713,6 +1713,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetFullThetaGrowth.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and lattice point bounds for adelic Schwartz functions.",
+      "formalization_note": "Supplies a polynomial majorant for the full rational theta series by clearing finite denominators and controlling the archimedean action separately in each variable.",
+      "content_basis": "Clears denominators of the left and inverse right matrices separately and uses the compact support of the finite test factor. Bounds the integral lattice sum by the three archimedean operator norms.",
+      "dependency_status": "Uses the verified finite rectangle support, principal vector lattice summability and archimedean matrix dilation. The resulting bound includes singular matrices.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetFundamentalDomain.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Borel fundamental domains for discrete subgroups of second-countable groups and the determinant-one quotient in the Godement-Jacquet zeta integral.",
