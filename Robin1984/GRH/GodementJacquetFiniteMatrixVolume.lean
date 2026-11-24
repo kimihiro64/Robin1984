@@ -279,6 +279,65 @@ private theorem mem_integralFiniteAdeleMatrixGroup_of_sameResidues
       _ = _ := by rw [<- map_mul, hInvA, map_one]
   exact mem_matrixSubringUnits_inv_mul_of_scalarCongruence R (N : F) g h C hg.2 hh.2 hC hCeq
 
+/-- For a fixed positive inverse denominator, the residue matrices give
+a left coset cover by the compact integral subgroup. -/
+theorem exists_finiteAdeleMatrixDenominatorSet_cosetCover
+    (K : Type*) [Field K] [NumberField K] (n N : Nat) (hN : 0 < N) :
+    Exists (fun center : Fin (N ^ (Module.finrank Int (RingOfIntegers K) * n * n)) -> FiniteGL K n =>
+      forall g : FiniteGL K n, Membership.mem (finiteAdeleMatrixDenominatorSet K n N) g ->
+        Exists (fun i => Membership.mem (integralFiniteAdeleMatrixGroup K n) (Inv.inv (center i) * g))) := by
+  let G := FiniteGL K n
+  let S := finiteAdeleMatrixDenominatorSet K n N
+  let I := MatrixResidueIndex K n N
+  let E (i : I) := Exists (fun g : G => And (Membership.mem S g) (finiteMatrixHasResidues K n N g i))
+  let center (i : I) : G := if hi : E i then Classical.choose hi else 1
+  have hCard :
+      Fintype.card I = N ^ (Module.finrank Int (RingOfIntegers K) * n * n) := by
+    dsimp only [I, MatrixResidueIndex, IntegralResidueIndex]
+    simp only [Fintype.card_fun, Fintype.card_fin, <- pow_mul]
+  let e := (Fintype.equivFin I).trans (finCongr hCard)
+  refine Exists.intro (fun i => center (e.symm i)) (fun g hg => ?_)
+  choose i hi using exists_finiteMatrixHasResidues K n N hN g hg
+  have hE : E i := Exists.intro g (And.intro hg hi)
+  have hc : center i = Classical.choose hE := dif_pos hE
+  have hPick := Classical.choose_spec hE
+  refine Exists.intro (e i) ?_
+  simp only [e.symm_apply_apply]
+  rw [hc]
+  exact mem_integralFiniteAdeleMatrixGroup_of_sameResidues K n N hN _ g hPick.1 hg i hPick.2 hi
+
+/-- An integer upper bound for the inverse denominator gives one finite
+family covering every corresponding integral matrix. -/
+theorem exists_finiteAdeleMatrixDenominatorSet_cosetCover_le
+    (K : Type*) [Field K] [NumberField K] (n B : Nat) :
+    let d := Module.finrank Int (RingOfIntegers K) * n * n
+    Exists (fun center : Prod (Fin B) (Fin (B ^ d)) -> FiniteGL K n =>
+      forall (N : Nat), 0 < N -> N <= B ->
+        forall g : FiniteGL K n, Membership.mem (finiteAdeleMatrixDenominatorSet K n N) g ->
+          Exists (fun i => Membership.mem (integralFiniteAdeleMatrixGroup K n) (Inv.inv (center i) * g))) := by
+  let d := Module.finrank Int (RingOfIntegers K) * n * n
+  have hC (i : Fin B) := exists_finiteAdeleMatrixDenominatorSet_cosetCover K n (i.val + 1) (Nat.zero_lt_succ _)
+  choose center hCenter using hC
+  let F (i : Prod (Fin B) (Fin (B ^ d))) : FiniteGL K n :=
+    if hi : i.2.val < (i.1.val + 1) ^ d then center i.1 (Fin.mk i.2.val hi) else 1
+  refine Exists.intro F (fun N hN hNB g hg => ?_)
+  let i : Fin B := Fin.mk (N - 1) (by omega)
+  have hi : i.val + 1 = N := by
+    change N - 1 + 1 = N
+    omega
+  have hg' : Membership.mem (finiteAdeleMatrixDenominatorSet K n (i.val + 1)) g := by rwa [hi]
+  choose j hj using hCenter i g hg'
+  have hPow : (i.val + 1) ^ d <= B ^ d := by
+    have hiB : i.val + 1 <= B := hi.trans_le hNB
+    gcongr
+  let J : Fin (B ^ d) := Fin.mk j.val (j.isLt.trans_le hPow)
+  refine Exists.intro (Prod.mk i J) ?_
+  have hJ : J.val < (i.val + 1) ^ d := j.isLt
+  change Membership.mem (integralFiniteAdeleMatrixGroup K n)
+    (Inv.inv (if h : J.val < (i.val + 1) ^ d then center i (Fin.mk J.val h) else 1) * g)
+  rw [dif_pos hJ]
+  exact hj
+
 /-- The finite Haar measure with one fixed inverse denominator is bounded
 by the number of integral residue matrices times the mass of the compact
 integral subgroup. -/
@@ -293,9 +352,8 @@ theorem measure_finiteAdeleMatrixDenominatorSet_le
   let G := FiniteGL K n
   let S := finiteAdeleMatrixDenominatorSet K n N
   let H := integralFiniteAdeleMatrixGroup K n
-  let I := MatrixResidueIndex K n N
-  let E (i : I) := Exists (fun g : G => And (Membership.mem S g) (finiteMatrixHasResidues K n N g i))
-  let center (i : I) : G := if hi : E i then Classical.choose hi else 1
+  let I := Fin (N ^ (Module.finrank Int (RingOfIntegers K) * n * n))
+  choose center hCenter using exists_finiteAdeleMatrixDenominatorSet_cosetCover K n N hN
   let coset (i : I) := Set.preimage (fun g : G => Inv.inv (center i) * g) (H : Set G)
   let F := FiniteAdelicScalars K
   let P := HeightOneSpectrum (RingOfIntegers K)
@@ -309,23 +367,14 @@ theorem measure_finiteAdeleMatrixDenominatorSet_le
     (measurePreserving_mul_left mu (Inv.inv (center i))).measure_preimage hH.nullMeasurableSet
   have hCover : S <= Set.iUnion coset := by
     intro g hg
-    choose i hi using exists_finiteMatrixHasResidues K n N hN g hg
-    have hE : E i := Exists.intro g (And.intro hg hi)
-    have hc : center i = Classical.choose hE := dif_pos hE
-    have hPick := Classical.choose_spec hE
-    have hCg : Membership.mem (coset i) g := by
-      change Membership.mem H (Inv.inv (center i) * g)
-      rw [hc]
-      exact mem_integralFiniteAdeleMatrixGroup_of_sameResidues K n N hN _ g hPick.1 hg i hPick.2 hi
-    exact Set.mem_iUnion.mpr (Exists.intro i hCg)
-  have hCard :
-      Fintype.card I = N ^ (Module.finrank Int (RingOfIntegers K) * n * n) := by
-    dsimp only [I, MatrixResidueIndex, IntegralResidueIndex]
-    simp only [Fintype.card_fun, Fintype.card_fin, <- pow_mul]
+    choose i hi using hCenter g hg
+    exact Set.mem_iUnion.mpr (Exists.intro i hi)
   calc
     _ <= mu (Set.iUnion coset) := measure_mono hCover
     _ <= tsum (fun i => mu (coset i)) := measure_iUnion_le coset
     _ = _ := by
+      have hCard : Fintype.card I = N ^ (Module.finrank Int (RingOfIntegers K) * n * n) :=
+        Fintype.card_fin _
       simp_rw [hCoset, tsum_fintype, Finset.sum_const, Finset.card_univ, nsmul_eq_mul, hCard, Nat.cast_pow]
       rfl
 
