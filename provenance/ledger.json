@@ -1659,6 +1659,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetFourier.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Fourier inversion for the adelic matrix trace pairing.",
+      "formalization_note": "Proves Fourier covariance of left and right matrix dilation, including the inverse trace-dual action and its exact determinant-norm factor.",
+      "content_basis": "Combines Kronecker vectorization, trace cyclicity, and the normalized matrix Haar pushforward to change variables in the adelic Fourier integral.",
+      "dependency_status": "Uses the pinned Mathlib Kronecker and Bochner integral theorems and the verified normalization of the additive adelic measure.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetHaarNormalization.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Tate's adelic Fourier analysis and the additive determinant modulus in the Godement-Jacquet zeta integral.",
