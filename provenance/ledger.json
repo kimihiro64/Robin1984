@@ -1686,6 +1686,24 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/MultiplicityExpansion.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Mellin inversion and the canonical triangular zero expansion on the positive real axis.",
+      "formalization_note": "The logarithmic rescaling isolates the critical-line frequencies, and continuity upgrades the almost-everywhere triangular expansion to pointwise equality.",
+      "content_basis": "Reviewed the scaled triangular zero term, summable domination of the remaining terms, and the continuous representative on the open tail.",
+      "dependency_status": "Mathlib dominated convergence for absolutely summable series and Robin1984 Mellin inversion.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/MultiplicityFourierSeries.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Cesaro means and simultaneous phase recurrence for absolutely convergent Fourier series.",
+      "formalization_note": "Complex orthogonality gives the squared mean, compactness supplies recurrence for the upper limit, and the convolution lemmas connect these identities to the arithmetic signal.",
+      "content_basis": "Reviewed the squared-mean identity, phase recurrence, positive weighted multiplicity comparison, and integrable kernel action.",
+      "dependency_status": "Mathlib compactness, convergent series, and Bochner integration.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/MertensAbelianAverage.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The Abelian limit of a normalized exponential average.",
