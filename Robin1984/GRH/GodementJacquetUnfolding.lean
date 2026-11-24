@@ -891,4 +891,307 @@ theorem integral_adelicGodementJacquet_eq_doubleThetaMellin
 
 end MatrixCoefficient
 
+section CosetDomains
+
+variable {G : Type*} [Group G]
+
+/-- Cosets of the smaller subgroup for its left action on the larger group. -/
+abbrev LeftSubgroupCosets (H Gamma : Subgroup G) :=
+  Quotient (MulAction.orbitRel (H.subgroupOf Gamma) Gamma)
+
+/-- A representative of a coset for the left action. -/
+def leftSubgroupCosetRepresentative (H Gamma : Subgroup G) (j : LeftSubgroupCosets H Gamma) : Gamma :=
+  Classical.choose (Quotient.mk_surjective j)
+
+theorem leftSubgroupCosetRepresentative_spec (H Gamma : Subgroup G) (j : LeftSubgroupCosets H Gamma) :
+    Quotient.mk (MulAction.orbitRel (H.subgroupOf Gamma) Gamma)
+      (leftSubgroupCosetRepresentative H Gamma j) = j :=
+  Classical.choose_spec (Quotient.mk_surjective j)
+
+/-- A map with the cosets as fibers identifies those cosets with its range. -/
+def leftSubgroupCosetEquivRange {Y : Type*} (H Gamma : Subgroup G)
+    (f : Gamma -> Y)
+    (hFiber : forall (x y : Gamma), f x = f y <->
+      Membership.mem H (x.val * Inv.inv y.val)) :
+    Equiv (LeftSubgroupCosets H Gamma) (Set.range f) := by
+  let J := LeftSubgroupCosets H Gamma
+  let rep := leftSubgroupCosetRepresentative H Gamma
+  let q := Quotient.mk (MulAction.orbitRel (H.subgroupOf Gamma) Gamma)
+  have hRep (j : J) : q (rep j) = j := leftSubgroupCosetRepresentative_spec H Gamma j
+  let F (j : J) : Set.range f := Subtype.mk (f (rep j)) (Exists.intro (rep j) rfl)
+  refine Equiv.ofBijective F (And.intro ?_ ?_)
+  . intro i j h
+    have he := congrArg Subtype.val h
+    have hm := (hFiber (rep i) (rep j)).mp he
+    let w : H.subgroupOf Gamma := Subtype.mk (rep i * Inv.inv (rep j)) hm
+    have hr : q (rep i) = q (rep j) := Quotient.sound
+      (Exists.intro w (show (rep i * Inv.inv (rep j)) * rep j = rep i by simp [mul_assoc]))
+    exact (hRep i).symm.trans (hr.trans (hRep j))
+  . intro y
+    choose x hx using y.property
+    let j := q x
+    have he := Quotient.exact (hRep j)
+    change Exists (fun w : H.subgroupOf Gamma => w.val * x = rep j) at he
+    choose w hw using he
+    have hw' : rep j * Inv.inv x = w.val := by rw [<- hw]; simp [mul_assoc]
+    have hm : Membership.mem H ((rep j).val * Inv.inv x.val) := by
+      change Membership.mem H (rep j * Inv.inv x).val
+      rw [hw']
+      exact w.property
+    exact Exists.intro j (Subtype.ext (((hFiber (rep j) x).mpr hm).trans hx))
+
+/-- Translates of an exact Borel domain by left-coset representatives. -/
+def leftSubgroupCosetTile (H Gamma : Subgroup G) (S : Set G) (j : LeftSubgroupCosets H Gamma) :
+    Set G :=
+  Set.preimage (fun x => Inv.inv (leftSubgroupCosetRepresentative H Gamma j).val * x) S
+
+/-- The tiles are disjoint and together give an exact domain for the smaller subgroup. -/
+theorem leftSubgroupCosetTiles_fundamental
+    (H Gamma : Subgroup G) (hSub : H <= Gamma) (S : Set G)
+    (hUnique : forall x : G, ExistsUnique (fun gamma : Gamma => Membership.mem S (gamma.val * x))) :
+    let tile := leftSubgroupCosetTile H Gamma S
+    And (Pairwise (fun i j => Disjoint (tile i) (tile j)))
+      (forall x : G, ExistsUnique (fun h : H =>
+        Membership.mem (Set.iUnion tile) (h.val * x))) := by
+  let rep := leftSubgroupCosetRepresentative H Gamma
+  let tile := leftSubgroupCosetTile H Gamma S
+  let q := Quotient.mk (MulAction.orbitRel (H.subgroupOf Gamma) Gamma)
+  have hRep (j : LeftSubgroupCosets H Gamma) : q (rep j) = j :=
+    leftSubgroupCosetRepresentative_spec H Gamma j
+  refine And.intro ?_ ?_
+  . intro i j hij
+    apply Set.disjoint_left.mpr
+    intro x hi hj
+    have hri : Membership.mem S ((Inv.inv (rep i)).val * x) := hi
+    have hrj : Membership.mem S ((Inv.inv (rep j)).val * x) := hj
+    have hv : Inv.inv (rep i) = Inv.inv (rep j) := (hUnique x).unique hri hrj
+    have he : rep i = rep j := inv_injective hv
+    exact hij ((hRep i).symm.trans ((congrArg q he).trans (hRep j)))
+  . intro x
+    choose gamma hGamma using (hUnique x).exists
+    let t := Inv.inv gamma
+    let i := q t
+    have hr := Quotient.exact (hRep i)
+    change Exists (fun w : H.subgroupOf Gamma => w.val * t = rep i) at hr
+    choose w hw using hr
+    let h : H := Subtype.mk w.val.val w.property
+    refine Exists.intro h (And.intro ?_ ?_)
+    . apply Set.mem_iUnion.mpr
+      refine Exists.intro i ?_
+      change Membership.mem S (Inv.inv (rep i).val * (h.val * x))
+      have hw' : Inv.inv (rep i) * w.val = gamma := by
+        rw [<- hw]
+        simp [t, mul_inv_rev, mul_assoc]
+      rw [<- mul_assoc, show Inv.inv (rep i).val * h.val = gamma.val from congrArg Subtype.val hw']
+      exact hGamma
+    . intro v hv
+      choose j hj using Set.mem_iUnion.mp hv
+      let z : Gamma := Subtype.mk v.val (hSub v.property)
+      have hzS : Membership.mem S ((Inv.inv (rep j) * z).val * x) := by
+        change Membership.mem S ((Inv.inv (rep j).val * v.val) * x)
+        rw [mul_assoc]
+        exact hj
+      have hz : Inv.inv (rep j) * z = gamma := (hUnique x).unique hzS hGamma
+      have hzt : z * t = rep j := calc
+        _ = (rep j * (Inv.inv (rep j) * z)) * t := by simp
+        _ = _ := by rw [hz]; simp [t, mul_assoc]
+      let zH : H.subgroupOf Gamma := Subtype.mk z v.property
+      have hj' : q (rep j) = i := Quotient.sound (Exists.intro zH hzt)
+      have hji : j = i := (hRep j).symm.trans hj'
+      rw [hji] at hzt
+      have he : z = w.val := mul_right_cancel (hzt.trans hw.symm)
+      exact Subtype.ext (congrArg (fun y : Gamma => y.val) he)
+
+variable [MeasurableSpace G] [MeasurableMul G]
+
+/-- The exact domain assembled from the coset tiles is Borel. -/
+theorem measurableSet_leftSubgroupCosetTiles
+    (H Gamma : Subgroup G) [Countable Gamma] {S : Set G} (hS : MeasurableSet S) :
+    MeasurableSet (Set.iUnion (leftSubgroupCosetTile H Gamma S)) := by
+  let : Countable (LeftSubgroupCosets H Gamma) := Quotient.mk_surjective.countable
+  apply MeasurableSet.iUnion
+  intro j
+  exact (MeasurableEquiv.mulLeft (Inv.inv (leftSubgroupCosetRepresentative H Gamma j).val)).measurable hS
+
+/-- Absolute integrability on the nested domain identifies its integral
+with the integral of the corresponding coset sum on the original domain. -/
+theorem integral_leftSubgroupCosetTiles_eq_tsum
+    (H Gamma : Subgroup G) [Countable Gamma] (hSub : H <= Gamma)
+    (mu : Measure G) [mu.IsMulLeftInvariant] (S : Set G) (hS : MeasurableSet S)
+    (hUnique : forall x : G, ExistsUnique (fun gamma : Gamma => Membership.mem S (gamma.val * x)))
+    (F : G -> Complex) (hF : Measurable F)
+    (hInt : IntegrableOn F (Set.iUnion (leftSubgroupCosetTile H Gamma S)) mu) :
+    integral (mu.restrict (Set.iUnion (leftSubgroupCosetTile H Gamma S))) F =
+      integral (mu.restrict S) (fun x =>
+        tsum (fun j : LeftSubgroupCosets H Gamma => F ((leftSubgroupCosetRepresentative H Gamma j).val * x))) := by
+  let J := LeftSubgroupCosets H Gamma
+  let tile := leftSubgroupCosetTile H Gamma S
+  let W := Set.iUnion tile
+  let rep := leftSubgroupCosetRepresentative H Gamma
+  let E (j : J) := MeasurableEquiv.mulLeft (rep j).val
+  let m (j : J) := mu.restrict (tile j)
+  let : Countable J := Quotient.mk_surjective.countable
+  have hT (j : J) : MeasurableSet (tile j) :=
+    (MeasurableEquiv.mulLeft (Inv.inv (rep j).val)).measurable hS
+  have hUnion : mu.restrict W = Measure.sum m :=
+    Measure.restrict_iUnion (leftSubgroupCosetTiles_fundamental H Gamma hSub S hUnique).1 hT
+  have hMP (j : J) : MeasurePreserving (E j) (mu.restrict S) (m j) := by
+    have hp : Set.preimage (E j) (tile j) = S := by
+      ext x
+      change Membership.mem S (Inv.inv (rep j).val * ((rep j).val * x)) <-> Membership.mem S x
+      simp
+    have h := (measurePreserving_mul_left mu (rep j).val).restrict_preimage_emb
+      (E j).measurableEmbedding (tile j)
+    change MeasurePreserving (E j) (mu.restrict (Set.preimage (E j) (tile j))) (m j) at h
+    rwa [hp] at h
+  have hAbs (j : J) : lintegral (mu.restrict S) (fun x => enorm (F (E j x))) =
+      lintegral (m j) (fun x => enorm (F x)) := by
+    have h : lintegral (Measure.map (E j) (mu.restrict S)) (fun x => enorm (F x)) =
+        lintegral (mu.restrict S) (fun x => enorm (F (E j x))) :=
+      lintegral_map hF.enorm (hMP j).measurable
+    rw [(hMP j).map_eq] at h
+    exact h.symm
+  have hFinite : Not (tsum (fun j : J => lintegral (mu.restrict S)
+      (fun x => enorm (F (E j x)))) = (Top.top : ENNReal)) := by
+    intro hinfinite
+    have he : lintegral (mu.restrict W) (fun x => enorm (F x)) = Top.top := calc
+      _ = tsum (fun j : J => lintegral (m j) (fun x => enorm (F x))) := by
+        rw [hUnion, lintegral_sum_measure]
+      _ = tsum (fun j : J => lintegral (mu.restrict S) (fun x => enorm (F (E j x)))) :=
+        tsum_congr (fun j => (hAbs j).symm)
+      _ = _ := hinfinite
+    exact (ne_of_lt hInt.2) he
+  have hInt' : Integrable F (Measure.sum m) := by
+    rw [<- hUnion]
+    exact hInt
+  calc
+    integral (mu.restrict W) F = tsum (fun j : J => integral (m j) F) := by
+      rw [hUnion]
+      exact integral_sum_measure hInt'
+    _ = tsum (fun j : J => integral (mu.restrict S) (fun x => F (E j x))) :=
+      tsum_congr (fun j => ((hMP j).integral_comp (E j).measurableEmbedding F).symm)
+    _ = _ := (integral_tsum (fun j => (hF.comp (hMP j).measurable).aestronglyMeasurable) hFinite).symm
+
+end CosetDomains
+
+section ExactSingularOrbit
+
+variable {K : Type*} [Field K] [NumberField K] {n r k : Nat}
+
+/-- The left orbit of a rational matrix in the adelic matrix space. -/
+def godementJacquetRationalMatrixOrbit (P : Matrix (Fin n) (Fin n) K) :
+    Set (Matrix (Fin n) (Fin n) (Adeles K)) :=
+  Set.range (fun gamma : PrincipalDeterminantOne K n =>
+    gamma.val.val.inv * P.map (algebraMap K (Adeles K)))
+
+private theorem orbitStabilizer_le_principal (P : Matrix (Fin n) (Fin n) K)
+    (e : Equiv (Fin n) (Sum (Fin r) (Fin k))) (a b : Matrix.GeneralLinearGroup (Fin n) K)
+    (h : a.val * P * b.val = (godementJacquetRankProjection K r k).submatrix e e) :
+    RationalStabilizer e a <= PrincipalDeterminantOne K n := by
+  intro g hg
+  exact ((mem_godementJacquetPrincipalSingularStabilizer_iff P e a b h g).mp hg).1
+
+private theorem rationalMatrixOrbit_fiber (P : Matrix (Fin n) (Fin n) K)
+    (e : Equiv (Fin n) (Sum (Fin r) (Fin k))) (a b : Matrix.GeneralLinearGroup (Fin n) K)
+    (h : a.val * P * b.val = (godementJacquetRankProjection K r k).submatrix e e)
+    (x y : PrincipalDeterminantOne K n) :
+    let PA := P.map (algebraMap K (Adeles K))
+    x.val.val.inv * PA = y.val.val.inv * PA <->
+      Membership.mem (RationalStabilizer e a) (x.val * Inv.inv y.val) := by
+  let PA := P.map (algebraMap K (Adeles K))
+  have hstab := mem_godementJacquetPrincipalSingularStabilizer_iff P e a b h
+    (x.val * Inv.inv y.val)
+  constructor
+  . intro he
+    refine hstab.mpr (And.intro
+      ((PrincipalDeterminantOne K n).mul_mem x.property ((PrincipalDeterminantOne K n).inv_mem y.property)) ?_)
+    change (x.val.val.val * y.val.val.inv) * PA = PA
+    rw [Matrix.mul_assoc, <- he, <- Matrix.mul_assoc, x.val.val.val_inv, Matrix.one_mul]
+  . intro hm
+    have hfix := (hstab.mp hm).2
+    change (x.val.val.val * y.val.val.inv) * PA = PA at hfix
+    have he := congrArg (fun M => x.val.val.inv * M) hfix
+    rw [<- Matrix.mul_assoc, <- Matrix.mul_assoc, x.val.val.inv_val, Matrix.one_mul] at he
+    exact he.symm
+
+/-- The singular orbital theta sum over the principal quotient integrates
+to zero by the vanishing of the corresponding unipotent constant term. -/
+theorem integral_godementJacquetSingularOrbit_eq_zero_of_cuspidal
+    (P : Matrix (Fin n) (Fin n) K) (e : Equiv (Fin n) (Sum (Fin r) (Fin k)))
+    (a b : Matrix.GeneralLinearGroup (Fin n) K)
+    (h : a.val * P * b.val = (godementJacquetRankProjection K r k).submatrix e e)
+    [MeasurableSpace (NormGroup K n)] [BorelSpace (NormGroup K n)]
+    [MeasurableSpace (GodementJacquetUnipotentClassGroup K r k)]
+    [BorelSpace (GodementJacquetUnipotentClassGroup K r k)]
+    (nu : Measure (GodementJacquetUnipotentClassGroup K r k))
+    [nu.IsHaarMeasure] [IsProbabilityMeasure nu] [nu.IsMulRightInvariant]
+    (mu : Measure (NormGroup K n)) [SFinite mu] [mu.IsMulLeftInvariant]
+    (D : Set (NormGroup K n)) (hD : MeasurableSet D)
+    (hUnique : forall g : NormGroup K n, ExistsUnique
+      (fun gamma : PrincipalDeterminantOne K n => Membership.mem D (gamma.val * g)))
+    [MeasurableSpace (Matrix (Fin n) (Fin n) (Adeles K))]
+    [BorelSpace (Matrix (Fin n) (Fin n) (Adeles K))]
+    (phi : Matrix (Fin n) (Fin n) (Adeles K) -> Complex) (hPhi : Measurable phi)
+    (cusp : NormGroup K n -> Complex) (hCusp : Measurable cusp)
+    (hInvariant : forall gamma : PrincipalDeterminantOne K n, forall g, cusp (gamma.val * g) = cusp g)
+    (representative : GodementJacquetUnipotentClassGroup K r k ->
+      Matrix (Fin r) (Fin k) (Adeles K))
+    (hRep : Function.RightInverse representative godementJacquetUnipotentClass)
+    (hCuspPeriod : forall g : NormGroup K n,
+      integral nu (fun c => cusp (godementJacquetAdelicUnipotent e a
+        (Multiplicative.ofAdd (representative c)) * g)) = 0) :
+    let H := RationalStabilizer e a
+    let Gamma := PrincipalDeterminantOne K n
+    let S := Set.iUnion (leftSubgroupCosetTile H Gamma D)
+    let PA := P.map (algebraMap K (Adeles K))
+    let F := fun g : NormGroup K n => phi (g.val.inv * PA) * cusp g
+    IntegrableOn F S mu -> integral (mu.restrict D) (fun g =>
+      (tsum (fun Q : godementJacquetRationalMatrixOrbit P => phi (g.val.inv * Q.val))) *
+        cusp g) = 0 := by
+  let G := NormGroup K n
+  let H := RationalStabilizer e a
+  let Gamma := PrincipalDeterminantOne K n
+  let S := Set.iUnion (leftSubgroupCosetTile H Gamma D)
+  let PA := P.map (algebraMap K (Adeles K))
+  let F := fun g : G => phi (g.val.inv * PA) * cusp g
+  change IntegrableOn F S mu -> _
+  intro hInt
+  let : Countable Gamma := countable_adelicPrincipalDeterminantOne K n
+  let : SecondCountableTopology (AdelicGeneralLinearGroup K n) :=
+    secondCountableTopology_adelicGeneralLinearGroup K n
+  let : SecondCountableTopology G :=
+    (Topology.IsEmbedding.subtypeVal : Topology.IsEmbedding (fun g : G => g.val)).secondCountableTopology
+  have hSub := orbitStabilizer_le_principal P e a b h
+  have hS : MeasurableSet S := measurableSet_leftSubgroupCosetTiles H Gamma hD
+  have hUniqueS := (leftSubgroupCosetTiles_fundamental H Gamma hSub D hUnique).2
+  have hZero := integral_godementJacquetSingularTerm_eq_zero_of_cuspidal P e a b h
+    nu mu S hS hUniqueS phi hPhi cusp hCusp hInvariant representative hRep hCuspPeriod hInt
+  have hF : Measurable F := by
+    have hc : Continuous (fun g : G => g.val.inv * PA) :=
+      (Units.continuous_val.comp continuous_subtype_val.inv).mul continuous_const
+    exact (hPhi.comp hc.measurable).mul hCusp
+  have hSum := integral_leftSubgroupCosetTiles_eq_tsum H Gamma hSub mu D hD hUnique F hF hInt
+  let E : Equiv (LeftSubgroupCosets H Gamma) (godementJacquetRationalMatrixOrbit P) :=
+    leftSubgroupCosetEquivRange H Gamma (fun gamma => gamma.val.val.inv * PA)
+      (rationalMatrixOrbit_fiber P e a b h)
+  have he (g : G) :
+      tsum (fun j : LeftSubgroupCosets H Gamma => F ((leftSubgroupCosetRepresentative H Gamma j).val * g)) =
+        (tsum (fun Q : godementJacquetRationalMatrixOrbit P => phi (g.val.inv * Q.val))) * cusp g := by
+    have hTerm (j : LeftSubgroupCosets H Gamma) :
+        F ((leftSubgroupCosetRepresentative H Gamma j).val * g) =
+          phi (g.val.inv * (E j).val) * cusp g := by
+      let gamma := leftSubgroupCosetRepresentative H Gamma j
+      change phi ((g.val.inv * gamma.val.val.inv) * PA) * cusp (gamma.val * g) =
+        phi (g.val.inv * (gamma.val.val.inv * PA)) * cusp g
+      rw [Matrix.mul_assoc, hInvariant gamma g]
+    simp_rw [hTerm, tsum_mul_right]
+    rw [E.tsum_eq (fun Q => phi (g.val.inv * Q.val))]
+  change integral (mu.restrict D)
+    (fun g : G => (tsum (fun Q : godementJacquetRationalMatrixOrbit P =>
+      phi (g.val.inv * Q.val))) * cusp g) = 0
+  simp_rw [he] at hSum
+  exact hSum.symm.trans hZero
+
+end ExactSingularOrbit
+
 end Robin1984.GRH
