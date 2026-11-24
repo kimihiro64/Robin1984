@@ -13,6 +13,7 @@ import Robin1984.GRH.GodementJacquetProductLattice
 import Robin1984.GRH.GodementJacquetSchwartzDilation
 import Robin1984.GRH.GodementJacquetSingularOrbits
 import Robin1984.GRH.GodementJacquetThetaDecay
+import Robin1984.GRH.GodementJacquetThetaKernel
 import Robin1984.GRH.GodementJacquetThetaLatticeDecay
 import Robin1984.GRH.GodementJacquetThetaMellin
 import Robin1984.GRH.GodementJacquetUnfolding

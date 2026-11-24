@@ -1749,6 +1749,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetThetaKernel.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, together with Tonelli's theorem and geometric-series estimates.",
+      "formalization_note": "Unfolds the nonnegative time-zero theta kernel into a convolution and controls the integral by square-integrability on the quotient and a dyadic volume bound for the group weight.",
+      "content_basis": "Uses fundamental domains, invariance under right translation, the quadratic bound on a product, rational lattice summability, and dyadic reciprocal-power estimates.",
+      "dependency_status": "Uses the verified time-zero lattice and unfolding results. The dyadic Haar volume bound and the square-integrability of the quotient functions are stated hypotheses.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetThetaLatticeDecay.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and inverse-power sums over shifted Euclidean lattices.",
