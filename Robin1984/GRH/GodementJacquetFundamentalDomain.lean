@@ -219,4 +219,70 @@ theorem exists_adelicPrincipalDeterminantOneFundamentalDomain
     discreteTopology_adelicPrincipalDeterminantOne K n
   exact exists_isFundamentalDomain_of_discreteSubgroup (adelicPrincipalDeterminantOne K n).range mu
 
+private theorem adelicGeneralLinearGroup_topology :
+    And (T2Space (AdelicGeneralLinearGroup K n))
+      (LocallyCompactSpace (AdelicGeneralLinearGroup K n)) := by
+  let V := InfiniteAdeleRing K
+  let F := FiniteAdeleRing (RingOfIntegers K) K
+  let e : Homeomorph V (mixedEmbedding.mixedSpace K) :=
+    { toEquiv := (InfiniteAdeleRing.ringEquiv_mixedSpace K).toEquiv
+      continuous_toFun := continuous_heckeInfiniteAdele_mixedSpace (K := K)
+      continuous_invFun := continuous_heckeInfiniteAdele_mixedSpace_symm K }
+  let : T2Space V := T2Space.of_injective_continuous e.injective e.continuous
+  let : LocallyCompactSpace V := e.isClosedEmbedding.locallyCompactSpace
+  let : T2Space F := by
+    let projection (x : F) (p : HeightOneSpectrum (RingOfIntegers K)) := x p
+    exact T2Space.of_injective_continuous (show Function.Injective projection from DFunLike.coe_injective)
+      (continuous_pi (fun p => RestrictedProduct.continuous_eval p))
+  let : LocallyCompactSpace F := locallyCompactSpace_heckeFiniteAdeles
+  let A := AdeleRing (RingOfIntegers K) K
+  let : T2Space A := inferInstanceAs (T2Space (Prod V F))
+  let : LocallyCompactSpace A := inferInstanceAs (LocallyCompactSpace (Prod V F))
+  let M := Matrix (Fin n) (Fin n) A
+  let : T2Space M := inferInstanceAs (T2Space (Fin n -> Fin n -> A))
+  let : LocallyCompactSpace M := inferInstanceAs (LocallyCompactSpace (Fin n -> Fin n -> A))
+  let o : Homeomorph (MulOpposite M) M := MulOpposite.opHomeomorph.symm
+  let : T2Space (MulOpposite M) := T2Space.of_injective_continuous o.injective o.continuous
+  let : LocallyCompactSpace (MulOpposite M) := o.isClosedEmbedding.locallyCompactSpace
+  have hU : Topology.IsClosedEmbedding (Units.embedProduct M) := Units.isClosedEmbedding_embedProduct
+  exact And.intro (T2Space.of_injective_continuous hU.injective hU.continuous) hU.locallyCompactSpace
+
+/-- The determinant-norm-one subgroup is closed in the adelic general linear group. -/
+theorem isClosed_adelicDeterminantNormOne :
+    IsClosed ((adelicDeterminantLogNorm K n).ker : Set (AdelicGeneralLinearGroup K n)) := by
+  have hEq : ((adelicDeterminantLogNorm K n).ker : Set (AdelicGeneralLinearGroup K n)) =
+    Set.ofPred (fun g => adelicDeterminantNorm K n g = 1) := by
+    apply Set.ext
+    intro g
+    constructor
+    . intro hg
+      change Real.log (adelicDeterminantNorm K n g) = 0 at hg
+      change adelicDeterminantNorm K n g = 1
+      rw [<- Real.exp_log (adelicDeterminantNorm_pos K n g), hg, Real.exp_zero]
+    . intro hg
+      change adelicDeterminantNorm K n g = 1 at hg
+      change Real.log (adelicDeterminantNorm K n g) = 0
+      rw [hg, Real.log_one]
+  rw [hEq]
+  exact isClosed_eq (continuous_adelicDeterminantNorm K n) continuous_const
+
+/-- The determinant-norm-one adelic group has a left Haar measure and
+a Borel fundamental domain for rational left translation. -/
+theorem exists_adelicDeterminantNormOneHaar_fundamentalDomain
+    [MeasurableSpace (adelicDeterminantLogNorm K n).ker]
+    [BorelSpace (adelicDeterminantLogNorm K n).ker] :
+    Exists (fun mu : Measure (adelicDeterminantLogNorm K n).ker =>
+      And mu.IsHaarMeasure
+        (Exists (fun S : Set (adelicDeterminantLogNorm K n).ker =>
+          And (MeasurableSet S) (IsFundamentalDomain (adelicPrincipalDeterminantOne K n).range S mu)))) := by
+  let G := AdelicGeneralLinearGroup K n
+  let N := (adelicDeterminantLogNorm K n).ker
+  let : T2Space G := (adelicGeneralLinearGroup_topology K n).1
+  let : LocallyCompactSpace G := (adelicGeneralLinearGroup_topology K n).2
+  let : T2Space N := T2Space.of_injective_continuous Subtype.val_injective continuous_subtype_val
+  let : LocallyCompactSpace N := (isClosed_adelicDeterminantNormOne K n).locallyCompactSpace
+  let C : TopologicalSpace.PositiveCompacts N := Classical.choice (inferInstance : Nonempty (TopologicalSpace.PositiveCompacts N))
+  let mu := Measure.haarMeasure C
+  exact Exists.intro mu (And.intro inferInstance (exists_adelicPrincipalDeterminantOneFundamentalDomain K n mu))
+
 end Robin1984.GRH
