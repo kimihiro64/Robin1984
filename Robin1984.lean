@@ -3,6 +3,7 @@ import Robin1984.GRH.DedekindMultiplicity
 import Robin1984.GRH.DirichletMultiplicity
 import Robin1984.GRH.DirichletMultiplicityArithmetic
 import Robin1984.GRH.GodementJacquetCoordinates
+import Robin1984.GRH.GodementJacquetFiniteMatrixVolume
 import Robin1984.GRH.GodementJacquetFiniteRectangleDilation
 import Robin1984.GRH.GodementJacquetFourier
 import Robin1984.GRH.GodementJacquetFundamentalDomain

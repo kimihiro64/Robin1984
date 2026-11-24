@@ -1659,6 +1659,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetFiniteMatrixVolume.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Integral local matrix subgroups and finite adelic approximation in the Godement--Jacquet construction.",
+      "formalization_note": "Bounds the Haar measure of integral finite adelic matrices whose inverses have a fixed denominator by the number of residue matrices times the mass of the integral matrix subgroup.",
+      "content_basis": "Uses simultaneous approximation at the finite places, reduction of integral basis coordinates, the matrix identity for congruence with scaled inverses, and finite subadditivity of Haar measure.",
+      "dependency_status": "Uses the verified rank-one finite adele approximation theorem and Mathlib integral bases, compactness, and left Haar invariance. The inverse denominator is a stated positive integer.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetFiniteRectangleDilation.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Schwartz-Bruhat test functions and matrix dilations in Godement and Jacquet, Zeta Functions of Simple Algebras.",
