@@ -1,3 +1,4 @@
+import Robin1984.GRH.GodementJacquetFiniteRectangleDilation
 import Robin1984.GRH.HeckeTateFiniteFourier
 
 /-!
@@ -128,5 +129,107 @@ theorem norm_heckeFiniteFourierIntegral_principalCoset_le
   change norm (integral mu G) <= mu.real S
   rw [<- hEq, <- one_mul (mu.real S)]
   exact hI
+
+omit [MeasurableSpace (FF K)] [BorelSpace (FF K)] in
+private theorem fourierCosetPhase_eq_one_of_integral (x : FF K)
+    (hx : Membership.mem (heckeIntegralFiniteAdeles (K := K)) x) :
+    heckeFiniteAddChar x = 1 := by
+  let z : AdeleRing (RingOfIntegers K) K := Prod.mk (0 : InfiniteAdeleRing K) x
+  change heckeAdeleAddChar z = 1
+  rw [heckeAdeleAddChar_of_integralFinitePart z hx]
+  change Real.fourierChar (infiniteAdeleTrace (0 : InfiniteAdeleRing K)) = 1
+  rw [map_zero, AddChar.map_zero_eq_one]
+
+omit [BorelSpace (FF K)] in
+/-- If a principal integer clears the denominators of a finite adelic
+test's support, the Fourier transform is periodic modulo that integer. -/
+theorem heckeFiniteFourierIntegral_add_eq_of_principal_denominator
+    (mu : Measure (FF K)) (T : FF K -> Complex) (S : Set (FF K))
+    (hSupport : forall x, Not (Membership.mem S x) -> T x = 0)
+    (d : RingOfIntegers K)
+    (hd : forall x : FF K, Membership.mem S x -> forall p : HeightOneSpectrum (RingOfIntegers K),
+      Membership.mem (p.adicCompletionIntegers K)
+        (x p * algebraMap (RingOfIntegers K) (p.adicCompletion K) d))
+    (y b : FF K)
+    (hb : Membership.mem (heckeScaledIntegralFiniteAdeles (algebraMap (RingOfIntegers K) K d)) b) :
+    heckeFiniteFourierIntegral mu T (y + b) = heckeFiniteFourierIntegral mu T y := by
+  let R := RingOfIntegers K
+  let a := algebraMap K (FF K) (algebraMap R K d)
+  choose z hz using AddSubgroup.mem_map.mp hb
+  have hzB : z * a = b := hz.2
+  apply integral_congr_ae
+  filter_upwards with x
+  change T x * (heckeFiniteAddChar (x * (y + b)) : Complex) =
+    T x * (heckeFiniteAddChar (x * y) : Complex)
+  by_cases hx : Membership.mem S x
+  . have hM : Membership.mem (heckeIntegralFiniteAdeles (K := K)) (x * a) := by
+      intro p
+      change Membership.mem (p.adicCompletionIntegers K)
+        (x p * algebraMap K (p.adicCompletion K) (algebraMap R K d))
+      rw [<- IsScalarTower.algebraMap_apply R K (p.adicCompletion K) d]
+      exact hd x hx p
+    have hI : Membership.mem (heckeIntegralFiniteAdeles (K := K)) (x * b) := by
+      have h : x * b = (x * a) * z := by rw [<- hzB]; ring
+      rw [h]
+      exact fun p => (p.adicCompletionIntegers K).toSubring.mul_mem (hM p) (hz.1 p)
+    rw [mul_add, AddChar.map_add_eq_mul, fourierCosetPhase_eq_one_of_integral (x * b) hI, mul_one]
+  . rw [hSupport x hx, zero_mul, zero_mul]
+
+/-- The finite coefficient in the matrix Fourier transform expands into a
+finite sum of principal rectangle indicators with a common nonzero modulus. -/
+theorem exists_finiteFourierRectangle_indicator_expansion
+    (K : Type*) [Field K] [NumberField K] (I : Type*) [Fintype I]
+    [MeasurableSpace (FF K)] [BorelSpace (FF K)]
+    (mu : Measure (FF K)) [mu.IsAddHaarMeasure]
+    (a : I -> FF K) (d : RingOfIntegers K) (hd : Not (d = 0))
+    (swap : Equiv I I) :
+    let e := algebraMap (RingOfIntegers K) K
+    let G (i : I) (y : FF K) := heckeFiniteFourierIntegral mu
+      ((heckeFiniteAdelePrincipalCoset (a i) (e d)).indicator (fun _ => (1 : Complex))) y
+    let F (y : I -> FF K) := Finset.univ.prod (fun i => G i (-(y (swap i))))
+    Exists (fun b : RingOfIntegers K => And (Not (b = 0))
+      (Exists (fun T : Finset (Set (I -> FF K)) =>
+        Exists (fun x : Set (I -> FF K) -> I -> FF K =>
+          And (forall C, Membership.mem T C ->
+            C = finiteAdelePrincipalRectangle K I (x C) (e b))
+            (forall y, F y = T.sum (fun C => C.indicator (fun _ => F (x C)) y)))))) := by
+  let e := algebraMap (RingOfIntegers K) K
+  let C (i : I) := heckeFiniteAdelePrincipalCoset (a i) (e d)
+  let G (i : I) (y : FF K) :=
+    heckeFiniteFourierIntegral mu ((C i).indicator (fun _ => (1 : Complex))) y
+  let F (y : I -> FF K) := Finset.univ.prod (fun i => G i (-(y (swap i))))
+  choose V hV using fun i : I =>
+    exists_compact_heckeFiniteFourierIntegral_principalCoset_support mu (a i) d hd
+  let W (i : I) := Set.image (fun v : FF K => -v) (V (swap.symm i))
+  let S := Set.pi Set.univ W
+  have hS : IsCompact S := isCompact_univ_pi (fun i => (hV (swap.symm i)).1.image continuous_neg)
+  have hZero (y : I -> FF K) (hy : Not (Membership.mem S y)) : F y = 0 := by
+    have hn : Not (forall i, Membership.mem (W i) (y i)) := fun h => hy (Set.mem_univ_pi.mpr h)
+    choose i hi using not_forall.mp hn
+    let j := swap.symm i
+    have hj : Not (Membership.mem (V j) (-(y (swap j)))) := by
+      intro h
+      apply hi
+      exact Exists.intro (-(y (swap j))) (And.intro h (by simp [j]))
+    exact Finset.prod_eq_zero (Finset.mem_univ j) ((hV j).2 (-(y (swap j))) hj)
+  let U := Set.iUnion C
+  have hU : IsCompact U := isCompact_iUnion (fun i =>
+    ((isCompact_integralFiniteAdeles (K := K)).image (continuous_id.mul continuous_const)).image
+      (continuous_const.add continuous_id))
+  choose b hb using exists_commonDenominator_of_isCompact_finiteAdeles U hU
+  let Hb := heckeScaledIntegralFiniteAdeles (e b)
+  have hb' : Not (e b = 0) :=
+    (map_ne_zero_iff e (FaithfulSMul.algebraMap_injective (RingOfIntegers K) K)).mpr hb.1
+  have hPeriod (y z : I -> FF K) (hz : forall i, Membership.mem Hb (z i)) : F (y + z) = F y := by
+    apply Finset.prod_congr rfl
+    intro i _
+    change G i (-(y (swap i) + z (swap i))) = G i (-(y (swap i)))
+    rw [neg_add]
+    exact heckeFiniteFourierIntegral_add_eq_of_principal_denominator mu
+      ((C i).indicator (fun _ => (1 : Complex))) U
+      (fun x hx => Set.indicator_of_notMem (fun h =>
+        hx (Set.mem_iUnion.mpr (Exists.intro i h))) _)
+      b hb.2 (-(y (swap i))) (-(z (swap i))) (Hb.neg_mem (hz (swap i)))
+  exact Exists.intro b (And.intro hb.1 (exists_finiteAdelePrincipalRectangle_indicator_expansion K I (e b) hb' F S hS hZero hPeriod))
 
 end Robin1984.GRH
