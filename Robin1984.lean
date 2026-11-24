@@ -4,6 +4,8 @@ import Robin1984.GRH.HeckeTateQuotientIntegration
 import Robin1984.GRH.HeckeTateZetaUnfolding
 import Robin1984.GRH.MultiplicityExpansion
 import Robin1984.GRH.MultiplicityFourierSeries
+import Robin1984.GRH.MultiplicityGaussian
+import Robin1984.GRH.RiemannMultiplicityArithmetic
 import Robin1984.Lagarias.Theorem
 import Robin1984.Mathlib
 import Robin1984.Public

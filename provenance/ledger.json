@@ -1695,6 +1695,24 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/MultiplicityGaussian.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Fourier transform of a Gaussian and its derivatives.",
+      "formalization_note": "The explicit kernel is integrable, its multiplier cancels the triangular denominator, and convolution preserves the vanishing error.",
+      "content_basis": "Reviewed the Gaussian normalization, Fourier differentiation, and convolution under summable triangular denominators.",
+      "dependency_status": "Mathlib Gaussian Fourier transform and Robin1984 Fourier series and convolution.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/RiemannMultiplicityArithmetic.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The completed Riemann xi function, Gamma recurrence, and the logarithmic derivative of the zeta Euler product.",
+      "formalization_note": "The pole-cleared ordinary factor is entire of order at most one, preserves the orders of zeta in the strip, and supplies the von Mangoldt coefficients.",
+      "content_basis": "Reviewed denominator removal, order transport, and absolute summability of the von Mangoldt series.",
+      "dependency_status": "Mathlib Dirichlet series, the pinned xi growth theorem, and Robin1984 reciprocal Gamma bounds.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/MultiplicityFourierSeries.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Cesaro means and simultaneous phase recurrence for absolutely convergent Fourier series.",

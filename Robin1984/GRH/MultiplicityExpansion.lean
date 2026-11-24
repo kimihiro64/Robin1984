@@ -231,4 +231,69 @@ theorem eqOn_triangularZeroSeries_of_ae {i : Type*} (rho : i -> Complex)
   have hz := le_antisymm hU (norm_nonneg _)
   exact sub_eq_zero.mp (norm_eq_zero.mp hz)
 
+/-- Put the signed triangular remainder on logarithmic time and normalize
+it by the square root of x. -/
+def triangularLogSignal (R : Real -> Complex) (t : Real) : Complex :=
+  if t < 0 then 0 else (Real.exp (-t / 2) : Complex) * R (Real.exp t)
+
+private theorem norm_triangularCriticalSpectrumTerm_le (rho : Complex) (t : Real) :
+    norm (triangularCriticalSpectrumTerm rho t) <= Inv.inv (norm (rho * (rho + 1))) := by
+  by_cases h : rho.re = 1 / 2
+  case pos =>
+    have hC : (rho - Inv.inv (2 : Complex)).re = 0 := by
+      norm_num [Complex.sub_re, Complex.inv_re, h]
+    rw [triangularCriticalSpectrumTerm, if_pos h, norm_div, Complex.norm_exp]
+    simp only [Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, hC,
+      zero_mul, mul_zero, sub_zero, Real.exp_zero, one_div, le_refl]
+  case neg =>
+    rw [triangularCriticalSpectrumTerm, if_neg h, norm_zero]
+    exact inv_nonneg.mpr (norm_nonneg _)
+
+/-- The logarithmic signal from any continuous triangular Mellin inversion
+converges to its critical-line spectrum when the elementary term decays
+under square-root normalization. -/
+theorem tendsto_triangularLogSignal_sub_criticalSpectrum {i : Type*}
+    (rho : i -> Complex)
+    (hRho : forall j, (rho j).re <= 1 / 2)
+    (hSum : Summable (fun j => Inv.inv (norm (rho j * (rho j + 1)))))
+    {R E : Real -> Complex} (hR : ContinuousOn R (Set.Ioi 1))
+    (hE : ContinuousOn E (Set.Ioi 1))
+    (hAE : Filter.EventuallyEq (ae (volume.restrict (Set.Ioi (1 : Real)))) R
+      (fun x => E x + tsum (fun j => triangularZeroTerm (rho j) x)))
+    (hELim : Tendsto (fun t : Real => (Real.exp (-t / 2) : Complex) * E (Real.exp t)) atTop
+      (nhds 0)) :
+    Tendsto (fun t => triangularLogSignal R t -
+      tsum (fun j => triangularCriticalSpectrumTerm (rho j) t)) atTop (nhds 0) := by
+  let C (t : Real) (j : i) : Complex := triangularCriticalSpectrumTerm (rho j) t
+  let L (t : Real) (j : i) : Complex := logScaledTriangularZeroTerm (rho j) t
+  have hP := eqOn_triangularZeroSeries_of_ae rho hRho hSum hR hE hAE
+  have hGoal := (tendsto_tsum_logarithmicTriangularZeroError rho hRho hSum).add hELim
+  rw [zero_add] at hGoal
+  apply hGoal.congr'
+  filter_upwards [eventually_gt_atTop (0 : Real)] with t ht
+  let z : Complex := (Real.exp (-t / 2) : Complex)
+  have hx : 1 < Real.exp t := Real.one_lt_exp_iff.mpr ht
+  have hNorm (j : i) :
+      norm (triangularZeroTerm (rho j) (Real.exp t)) <=
+        (2 * Real.sqrt (Real.exp t)) * Inv.inv (norm (rho j * (rho j + 1))) := by
+    simpa only [zpow_neg_one] using norm_triangularZeroTerm_le (hRho j) hx.le
+  have hZeroSum : Summable (fun j => triangularZeroTerm (rho j) (Real.exp t)) :=
+    (Summable.of_nonneg_of_le (fun j => norm_nonneg _) hNorm
+      (hSum.mul_left (2 * Real.sqrt (Real.exp t)))).of_norm
+  have hL : Summable (L t) := hZeroSum.mul_left z
+  have hC : Summable (C t) :=
+    (Summable.of_nonneg_of_le (fun j => norm_nonneg _)
+      (fun j => norm_triangularCriticalSpectrumTerm_le (rho j) t) hSum).of_norm
+  have hScale : tsum (L t) = z * tsum (fun j => triangularZeroTerm (rho j) (Real.exp t)) := by
+    change tsum (fun j => z * triangularZeroTerm (rho j) (Real.exp t)) = _
+    exact tsum_mul_left
+  change tsum (fun j => L t j - C t j) + z * E (Real.exp t) =
+    triangularLogSignal R t - tsum (C t)
+  have hRAt : R (Real.exp t) = E (Real.exp t) +
+      tsum (fun j => triangularZeroTerm (rho j) (Real.exp t)) := hP hx
+  rw [triangularLogSignal, if_neg ht.not_gt, hRAt, hL.tsum_sub hC, hScale]
+  change z * _ - tsum (C t) + z * E (Real.exp t) =
+    z * (E (Real.exp t) + _) - tsum (C t)
+  ring
+
 end Robin1984.GRH

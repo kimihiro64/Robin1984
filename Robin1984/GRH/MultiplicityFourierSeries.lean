@@ -5,12 +5,14 @@ import Mathlib.Analysis.Normed.Ring.InfiniteSum
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.Analysis.SpecificLimits.Basic
 import Mathlib.MeasureTheory.Integral.DominatedConvergence
+import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 import Mathlib.Order.LiminfLimsup
 import Mathlib.Tactic.FieldSimp
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
 import Mathlib.Tactic.Positivity
+import Mathlib.Topology.Algebra.Order.LiminfLimsup
 import Mathlib.Topology.Sequences
 
 /-!
@@ -526,5 +528,335 @@ theorem tendsto_spectralConvolution_of_tendsto_zero {k R : Real -> Complex}
     (hk.norm.mul_const C) (Filter.Eventually.of_forall hEach)
   change Tendsto (fun t : Real => integral volume (F t)) atTop (nhds 0)
   simpa only [integral_zero] using h
+
+/-- With one spectral index for each occurrence of a zero, the global
+inequality is equivalent to each ordinate occurring only once. -/
+theorem fourierOccurrenceMultiplicityCriterion {i : Type*} [Countable i]
+    (w gamma : i -> Real) (hW : forall j, 0 < w j)
+    (hSum : Summable w) (hSquare : Summable (fun j => w j ^ 2)) :
+    (Filter.limsup (fun T : Real => (fourierCesaro (fun t =>
+      ((norm (tsum (fun j => (w j : Complex) *
+        Complex.exp ((gamma j : Complex) * Complex.I * (t : Complex)))) ^ 2 : Real) : Complex)) T).re)
+        atTop <=
+      Filter.limsup (fun t : Real => (tsum (fun j => ((w j ^ 2 : Real) : Complex) *
+        Complex.exp ((gamma j : Complex) * Complex.I * (t : Complex)))).re) atTop) <->
+      Function.Injective gamma := by
+  let c (j : i) : Complex := (gamma j : Complex) * Complex.I
+  let a (j : i) : Complex := (w j : Complex)
+  let e (p : Prod i i) : Real := if gamma p.1 = gamma p.2 then w p.1 * w p.2 else 0
+  let d (p : Prod i i) : Real := if p.1 = p.2 then w p.1 ^ 2 else 0
+  let A (p : Prod i i) : Complex := a p.1 * (starRingEnd Complex) (a p.2)
+  let D (p : Prod i i) : Complex := c p.1 - c p.2
+  have hc (j : i) : (c j).re = 0 := by simp [c, Complex.mul_re]
+  have hD (p : Prod i i) : (D p).re = 0 := by simp only [D, Complex.sub_re, hc, sub_self]
+  have ha (j : i) : norm (a j) = w j := by
+    simp only [a, Complex.norm_real, Real.norm_eq_abs, abs_of_pos (hW j)]
+  have hSumA : Summable (fun j => norm (a j)) := by simpa only [ha] using hSum
+  have hConjA : Summable (fun j => norm ((starRingEnd Complex) (a j))) := by
+    simpa only [Complex.norm_conj] using hSumA
+  have hSumPair : Summable (fun p : Prod i i => norm (A p)) :=
+    Summable.mul_norm (f := a) (g := fun j => (starRingEnd Complex) (a j)) hSumA hConjA
+  have hDZero (p : Prod i i) : D p = 0 <-> gamma p.1 = gamma p.2 := by
+    change c p.1 - c p.2 = 0 <-> gamma p.1 = gamma p.2
+    rw [sub_eq_zero]
+    constructor
+    case mp =>
+      intro hh
+      simpa [c, Complex.mul_im] using congrArg Complex.im hh
+    case mpr =>
+      intro hh
+      unfold c
+      rw [hh]
+  have hCoeff : (fun p : Prod i i => if D p = 0 then A p else 0) =
+      fun p : Prod i i => (e p : Complex) := by
+    funext p
+    by_cases he : gamma p.1 = gamma p.2
+    case pos => simp [e, A, a, he, (hDZero p).mpr he]
+    case neg =>
+      have hz : Not (D p = 0) := fun h => he ((hDZero p).mp h)
+      simp [e, he, hz]
+  let E (T : Real) : Complex := fourierCesaro (fun t =>
+    ((norm (tsum (fun j => a j * Complex.exp (c j * (t : Complex)))) ^ 2 : Real) : Complex)) T
+  have hInput : (fun t : Real =>
+      ((norm (tsum (fun j => a j * Complex.exp (c j * (t : Complex)))) ^ 2 : Real) : Complex)) =
+      fun t : Real => tsum (fun p : Prod i i => A p * Complex.exp (D p * (t : Complex))) :=
+    funext (fourier_normSq_tsum_eq_pair a c hc hSumA)
+  have hMean := fourierCesaro_tsum_tendsto A D hD hSumPair
+  have hELim : Tendsto E atTop (nhds ((tsum e : Real) : Complex)) := by
+    rw [Complex.ofReal_tsum]
+    simpa only [E, <- hInput, hCoeff] using hMean
+  have hEReal : Tendsto (fun T : Real => (E T).re) atTop (nhds (tsum e)) := by
+    simpa only [Function.comp_def, Complex.ofReal_re] using
+      Complex.continuous_re.continuousAt.tendsto.comp hELim
+  have hPhase (j : i) (t : Real) : c j * (t : Complex) =
+      ((gamma j * t : Real) : Complex) * Complex.I := by
+    simp only [c, Complex.ofReal_mul]
+    ring
+  have hUpper := limsup_re_positive_fourierSeries_eq_tsum (fun j => w j ^ 2) gamma
+    (fun j => sq_nonneg (w j)) hSquare
+  have hUpper' : Filter.limsup (fun t : Real => (tsum (fun j => ((w j ^ 2 : Real) : Complex) *
+      Complex.exp (c j * (t : Complex)))).re) atTop = tsum (fun j => w j ^ 2) := by
+    simpa only [hPhase] using hUpper
+  have hProd : Summable (fun p : Prod i i => w p.1 * w p.2) :=
+    hSum.mul_of_nonneg hSum (fun j => (hW j).le) (fun j => (hW j).le)
+  have hEP (p : Prod i i) : 0 <= e p /\ e p <= w p.1 * w p.2 := by
+    by_cases he : gamma p.1 = gamma p.2 <;> simp [e, he, mul_nonneg (hW p.1).le (hW p.2).le]
+  have hDE (p : Prod i i) : 0 <= d p /\ d p <= e p := by
+    by_cases hh : p.1 = p.2
+    case pos => simp [d, e, hh, pow_two, mul_self_nonneg]
+    case neg => simpa only [d, if_neg hh, le_refl, true_and] using (hEP p).1
+  have hSumE : Summable e := Summable.of_nonneg_of_le (fun p => (hEP p).1) (fun p => (hEP p).2) hProd
+  have hSumD : Summable d := Summable.of_nonneg_of_le (fun p => (hDE p).1) (fun p => (hDE p).2) hSumE
+  have hDiag : tsum d = tsum (fun j => w j ^ 2) := by
+    let diag : Set (Prod i i) := {p | p.1 = p.2}
+    have hIndicator : d = Set.indicator diag (fun p : Prod i i => w p.1 ^ 2) := by
+      funext p
+      by_cases hh : p.1 = p.2 <;> simp [d, diag, hh]
+    rw [hIndicator, <- tsum_subtype]
+    let q : Equiv i diag :=
+      { toFun := fun j => Subtype.mk (Prod.mk j j) rfl
+        invFun := fun p => p.val.1
+        left_inv := fun _ => rfl
+        right_inv := fun p => Subtype.ext (Prod.ext rfl p.property) }
+    exact (q.tsum_eq (fun p : diag => w p.val.1 ^ 2)).symm
+  change (Filter.limsup (fun T : Real => (E T).re) atTop <=
+    Filter.limsup (fun t : Real => (tsum (fun j => ((w j ^ 2 : Real) : Complex) *
+      Complex.exp (c j * (t : Complex)))).re) atTop) <-> _
+  rw [hEReal.limsup_eq, hUpper', <- hDiag]
+  constructor
+  case mp =>
+    intro h j k hjk
+    by_contra hne
+    let q : Prod i i := Prod.mk j k
+    have hDiff : Summable (fun p : Prod i i => e p - d p) := hSumE.sub hSumD
+    have hNonneg (p : Prod i i) : 0 <= e p - d p := sub_nonneg.mpr (hDE p).2
+    have hZero : tsum (fun p : Prod i i => e p - d p) <= 0 := by
+      rw [hSumE.tsum_sub hSumD]
+      exact sub_nonpos.mpr h
+    have hOne := (hDiff.le_tsum q (fun p _ => hNonneg p)).trans hZero
+    have hq : 0 < e q - d q := by
+      simpa [e, d, q, hjk, hne] using mul_pos (hW j) (hW k)
+    exact (not_lt_of_ge hOne) hq
+  case mpr =>
+    intro h
+    have he : e = d := by
+      funext p
+      by_cases hp : gamma p.1 = gamma p.2
+      case pos => simp [e, d, h hp, pow_two]
+      case neg =>
+        have hne : Not (p.1 = p.2) := fun hi => hp (congrArg gamma hi)
+        simp [e, d, hp, hne]
+    rw [he]
+
+/-- The time average of a locally integrable error tending to zero also
+tends to zero. -/
+theorem fourierCesaro_tendsto_zero_of_tendsto_zero {f : Real -> Complex}
+    (hInt : forall a b : Real, IntervalIntegrable f volume a b)
+    (hLim : Tendsto f atTop (nhds 0)) :
+    Tendsto (fourierCesaro f) atTop (nhds 0) := by
+  apply Metric.tendsto_nhds.2
+  intro eps hEps
+  have hHalf : 0 < eps / 2 := half_pos hEps
+  have hTail := (Metric.tendsto_nhds.1 hLim) (eps / 2) hHalf
+  choose A hA using eventually_atTop.1 hTail
+  let B := max A 0
+  let C := norm (intervalIntegral f 0 B volume)
+  have hB : 0 <= B := le_max_right A 0
+  have hNear (t : Real) (ht : B <= t) : norm (f t) < eps / 2 := by
+    simpa only [dist_zero_right] using hA t ((le_max_left A 0).trans ht)
+  have hHeadLimit : Tendsto (fun t : Real => Inv.inv t * C) atTop (nhds 0) := by
+    simpa only [zero_mul] using
+      (tendsto_inv_atTop_zero : Tendsto (fun t : Real => Inv.inv t) atTop (nhds 0)).mul
+        (tendsto_const_nhds : Tendsto (fun _ : Real => C) atTop (nhds C))
+  have hHead := hHeadLimit.eventually (gt_mem_nhds hHalf)
+  filter_upwards [hHead, eventually_ge_atTop (max B 1)] with T hTsmall hT
+  have hBT : B <= T := (le_max_left B 1).trans hT
+  have hTP : 0 < T := zero_lt_one.trans_le ((le_max_right B 1).trans hT)
+  have hTb : norm (intervalIntegral f B T volume) <= (eps / 2) * (T - B) := by
+    rw [<- abs_of_nonneg (sub_nonneg.mpr hBT)]
+    apply intervalIntegral.norm_integral_le_of_norm_le_const
+    intro t ht
+    rw [uIoc_of_le hBT] at ht
+    exact (hNear t ht.1.le).le
+  have hTailBound : Inv.inv T * ((eps / 2) * (T - B)) <= eps / 2 := by
+    calc
+      _ <= Inv.inv T * ((eps / 2) * T) :=
+        mul_le_mul_of_nonneg_left
+          (mul_le_mul_of_nonneg_left (sub_le_self _ hB) hHalf.le) (inv_nonneg.mpr hTP.le)
+      _ = eps / 2 := by
+        rw [mul_left_comm, mul_comm (Inv.inv T) T, <- div_eq_mul_inv, div_self hTP.ne', mul_one]
+  rw [dist_zero_right, fourierCesaro, norm_mul, norm_inv, Complex.norm_real, Real.norm_eq_abs,
+    abs_of_nonneg hTP.le, <- intervalIntegral.integral_add_adjacent_intervals (hInt 0 B) (hInt B T)]
+  calc
+    _ <= Inv.inv T * (C + norm (intervalIntegral f B T volume)) :=
+      mul_le_mul_of_nonneg_left (norm_add_le _ _) (inv_nonneg.mpr hTP.le)
+    _ <= Inv.inv T * (C + (eps / 2) * (T - B)) :=
+      mul_le_mul_of_nonneg_left (add_le_add (le_refl C) hTb) (inv_nonneg.mpr hTP.le)
+    _ < eps := by rw [mul_add]; linarith only [hTsmall, hTailBound]
+
+private theorem eventual_abs_le_one_of_tendsto_zero {f : Real -> Real}
+    (h : Tendsto f atTop (nhds 0)) :
+    Filter.Eventually (fun t => abs (f t) <= 1) atTop :=
+  ((Metric.tendsto_nhds.1 h) 1 zero_lt_one).mono (fun t ht => by
+    simpa only [dist_zero_right, Real.norm_eq_abs] using ht.le)
+
+/-- An error tending to zero preserves the upper limit of a bounded real
+signal. -/
+theorem limsup_add_tendsto_zero {S E : Real -> Real} {M : Real}
+    (hS : forall t, abs (S t) <= M) (hE : Tendsto E atTop (nhds 0)) :
+    Filter.limsup (S + E) atTop = Filter.limsup S atTop := by
+  have hLower : IsBoundedUnder (fun a b : Real => b <= a) atTop S :=
+    isBoundedUnder_of_eventually_ge (Filter.Eventually.of_forall (fun t => (abs_le.mp (hS t)).1))
+  have hUpper : IsBoundedUnder (fun a b : Real => a <= b) atTop S :=
+    isBoundedUnder_of_eventually_le (Filter.Eventually.of_forall (fun t => (abs_le.mp (hS t)).2))
+  have hSmall := eventual_abs_le_one_of_tendsto_zero hE
+  have hL : IsCoboundedUnder (fun a b : Real => a <= b) atTop E :=
+    IsCoboundedUnder.of_frequently_ge (hSmall.mono (fun t ht => (abs_le.mp ht).1)).frequently
+  have hU : IsBoundedUnder (fun a b : Real => a <= b) atTop E :=
+    isBoundedUnder_of_eventually_le (hSmall.mono (fun t ht => (abs_le.mp ht).2))
+  have hSE := limsup_add_le hLower hUpper hL hU
+  rw [hE.limsup_eq, add_zero] at hSE
+  refine le_antisymm hSE ?_
+  have hNeg : Tendsto (-E) atTop (nhds 0) := by
+    change Tendsto (fun t : Real => -E t) atTop (nhds 0)
+    simpa only [neg_zero] using hE.neg
+  have hN := eventual_abs_le_one_of_tendsto_zero hNeg
+  have hNLower : IsCoboundedUnder (fun a b : Real => a <= b) atTop (-E) :=
+    IsCoboundedUnder.of_frequently_ge (hN.mono (fun t ht => (abs_le.mp ht).1)).frequently
+  have hNUpper : IsBoundedUnder (fun a b : Real => a <= b) atTop (-E) :=
+    isBoundedUnder_of_eventually_le (hN.mono (fun t ht => (abs_le.mp ht).2))
+  have hB : Filter.Eventually (fun t : Real => abs ((S + E) t) <= M + 1) atTop :=
+    hSmall.mono (fun t ht => (abs_add_le (S t) (E t)).trans (add_le_add (hS t) ht))
+  have hBL := isBoundedUnder_of_eventually_ge (hB.mono (fun t ht => (abs_le.mp ht).1))
+  have hBU := isBoundedUnder_of_eventually_le (hB.mono (fun t ht => (abs_le.mp ht).2))
+  have hAdd := limsup_add_le hBL hBU hNLower hNUpper
+  have hEq : (S + E) + -E = S := by rw [add_assoc, add_neg_cancel, add_zero]
+  rwa [hEq, hNeg.limsup_eq, add_zero] at hAdd
+
+/-- The upper Cesaro mean of squared absolute value. -/
+def spectralSquareEnergy (H : Real -> Complex) : Real :=
+  Filter.limsup (fun T : Real => (fourierCesaro
+    (fun t => ((norm (H t) ^ 2 : Real) : Complex)) T).re) atTop
+
+private theorem intervalIntegrable_of_measurable_bounded
+    {f : Real -> Complex} (hf : Measurable f) {B : Real} (hB : forall t, norm (f t) <= B)
+    (a b : Real) : IntervalIntegrable f volume a b := by
+  rw [intervalIntegrable_iff]
+  exact IntegrableOn.of_bound (by rw [Real.volume_uIoc]; exact ENNReal.ofReal_lt_top)
+    hf.aestronglyMeasurable B (Filter.Eventually.of_forall hB)
+
+private theorem norm_fourierCesaro_le_of_bounded {f : Real -> Complex} {B : Real}
+    (hB : forall t, norm (f t) <= B) (T : Real) : norm (fourierCesaro f T) <= B := by
+  by_cases hT : T = 0
+  case pos =>
+    simpa only [fourierCesaro, hT, Complex.ofReal_zero, inv_zero, zero_mul, norm_zero]
+      using (norm_nonneg (f 0)).trans (hB 0)
+  case neg =>
+    have hT' : Not (abs T = 0) := fun h => hT (abs_eq_zero.mp h)
+    have hI := intervalIntegral.norm_integral_le_of_norm_le_const
+      (f := f) (a := 0) (b := T) (fun t _ => hB t)
+    rw [sub_zero] at hI
+    unfold fourierCesaro
+    rw [norm_mul, norm_inv, Complex.norm_real, Real.norm_eq_abs]
+    calc
+      _ <= Inv.inv (abs T) * (B * abs T) :=
+        mul_le_mul_of_nonneg_left hI (inv_nonneg.mpr (abs_nonneg _))
+      _ = B := by
+        rw [mul_left_comm, mul_comm (Inv.inv (abs T)) (abs T), <- div_eq_mul_inv, div_self hT', mul_one]
+
+/-- An additive error tending to zero leaves the global squared time
+average unchanged for bounded measurable signals. -/
+theorem spectralSquareEnergy_eq_of_tendsto_sub_zero {H S : Real -> Complex}
+    (hH : Measurable H) (hS : Measurable S) {M N : Real}
+    (hMBound : forall t, norm (H t) <= M) (hNBound : forall t, norm (S t) <= N)
+    (hDiff : Tendsto (fun t => H t - S t) atTop (nhds 0)) :
+    spectralSquareEnergy H = spectralSquareEnergy S := by
+  let HH (t : Real) : Complex := ((norm (H t) ^ 2 : Real) : Complex)
+  let SS (t : Real) : Complex := ((norm (S t) ^ 2 : Real) : Complex)
+  let E (t : Real) : Complex := HH t - SS t
+  have hHH : Measurable HH := Complex.continuous_ofReal.measurable.comp (hH.norm.pow_const 2)
+  have hSS : Measurable SS := Complex.continuous_ofReal.measurable.comp (hS.norm.pow_const 2)
+  have hNormSq {z : Complex} {C : Real} (hC : norm z <= C) :
+      norm ((norm z ^ 2 : Real) : Complex) <= C ^ 2 := by
+    rw [Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _), pow_two, pow_two]
+    exact mul_le_mul hC hC (norm_nonneg _) ((norm_nonneg _).trans hC)
+  have hHBound (t : Real) : norm (HH t) <= M ^ 2 := hNormSq (hMBound t)
+  have hSBound (t : Real) : norm (SS t) <= N ^ 2 := hNormSq (hNBound t)
+  have hPointwise (t : Real) : norm (E t) <= (M + N) * norm (H t - S t) := by
+    have hDiffNorm : abs (norm (H t) - norm (S t)) <= norm (H t - S t) := by
+      simpa only [norm_sub_rev] using abs_norm_sub_norm_le (H t) (S t)
+    have hp : norm (H t) ^ 2 - norm (S t) ^ 2 =
+        (norm (H t) + norm (S t)) * (norm (H t) - norm (S t)) := by ring
+    rw [show E t = (((norm (H t) ^ 2 - norm (S t) ^ 2 : Real) : Complex)) by
+      simp only [E, HH, SS, Complex.ofReal_sub], Complex.norm_real, Real.norm_eq_abs,
+      hp, abs_mul, abs_of_nonneg (add_nonneg (norm_nonneg _) (norm_nonneg _))]
+    exact mul_le_mul (add_le_add (hMBound t) (hNBound t)) hDiffNorm
+      (abs_nonneg _) (add_nonneg ((norm_nonneg _).trans (hMBound t)) ((norm_nonneg _).trans (hNBound t)))
+  have hE0 : Tendsto E atTop (nhds 0) := by
+    apply tendsto_zero_iff_norm_tendsto_zero.mpr
+    have h := (tendsto_zero_iff_norm_tendsto_zero.mp hDiff).const_mul (M + N)
+    exact squeeze_zero' (Filter.Eventually.of_forall (fun _ => norm_nonneg _))
+      (Filter.Eventually.of_forall hPointwise) (by simpa only [mul_zero] using h)
+  have hIntH := intervalIntegrable_of_measurable_bounded hHH hHBound
+  have hIntS := intervalIntegrable_of_measurable_bounded hSS hSBound
+  have hEAvg := fourierCesaro_tendsto_zero_of_tendsto_zero
+    (fun a b => (hIntH a b).sub (hIntS a b)) hE0
+  have hER : Tendsto (fun T : Real => (fourierCesaro E T).re) atTop (nhds 0) := by
+    simpa only [Function.comp_def, Complex.zero_re] using
+      Complex.continuous_re.continuousAt.tendsto.comp hEAvg
+  have hDecomp : (fun T : Real => (fourierCesaro HH T).re) =
+      (fun T : Real => (fourierCesaro SS T).re) + (fun T : Real => (fourierCesaro E T).re) := by
+    funext T
+    have hPair : fourierCesaro E T = fourierCesaro HH T - fourierCesaro SS T := by
+      unfold fourierCesaro E
+      rw [intervalIntegral.integral_sub (hIntH 0 T) (hIntS 0 T), mul_sub]
+    rw [Pi.add_apply, hPair, Complex.sub_re]
+    ring
+  unfold spectralSquareEnergy
+  change Filter.limsup (fun T : Real => (fourierCesaro HH T).re) atTop =
+    Filter.limsup (fun T : Real => (fourierCesaro SS T).re) atTop
+  rw [hDecomp]
+  exact limsup_add_tendsto_zero
+    (fun T => (Complex.abs_re_le_norm _).trans (norm_fourierCesaro_le_of_bounded hSBound T)) hER
+
+/-- An error tending to zero leaves the upper limit of the real part
+unchanged when the comparison signal is bounded. -/
+theorem limsup_re_eq_of_tendsto_sub_zero {H S : Real -> Complex} {N : Real}
+    (hBound : forall t, norm (S t) <= N) (hDiff : Tendsto (fun t => H t - S t) atTop (nhds 0)) :
+    Filter.limsup (fun t : Real => (H t).re) atTop =
+      Filter.limsup (fun t : Real => (S t).re) atTop := by
+  let E (t : Real) : Real := (H t - S t).re
+  have hE : Tendsto E atTop (nhds 0) := by
+    simpa only [E, Function.comp_def, Complex.zero_re] using
+      Complex.continuous_re.continuousAt.tendsto.comp hDiff
+  have hEq : (fun t : Real => (H t).re) = (fun t : Real => (S t).re) + E := by
+    funext t
+    simp only [E, Pi.add_apply, Complex.sub_re]
+    ring
+  rw [hEq]
+  exact limsup_add_tendsto_zero (fun t => (Complex.abs_re_le_norm _).trans (hBound t)) hE
+
+/-- A convolution of measurable functions has a measurable parameter integral. -/
+theorem measurable_spectralConvolution {k H : Real -> Complex}
+    (hk : Measurable k) (hH : Measurable H) : Measurable (spectralConvolution k H) := by
+  have h : Measurable (fun p : Prod Real Real => k p.2 * H (p.1 - p.2)) :=
+    (hk.comp measurable_snd).mul (hH.comp (measurable_fst.sub measurable_snd))
+  exact (h.stronglyMeasurable.integral_prod_right').measurable
+
+/-- A bounded signal convolved with an integrable kernel remains bounded. -/
+theorem norm_spectralConvolution_le {k H : Real -> Complex}
+    {M : Real} (hk : Integrable k) (hB : forall t, norm (H t) <= M)
+    (t : Real) : norm (spectralConvolution k H t) <= (integral volume (fun v => norm (k v))) * M := by
+  unfold spectralConvolution
+  calc
+    _ <= integral volume (fun v => norm (k v * H (t - v))) := norm_integral_le_integral_norm _
+    _ <= integral volume (fun v => norm (k v) * M) := by
+      apply integral_mono_of_nonneg (Filter.Eventually.of_forall (fun _ => norm_nonneg _))
+        (hk.norm.mul_const _)
+      exact Filter.Eventually.of_forall (fun v => by
+        change norm (k v * H (t - v)) <= norm (k v) * M
+        rw [norm_mul]
+        exact mul_le_mul_of_nonneg_left (hB _) (norm_nonneg _))
+    _ = _ := integral_mul_const _ _
 
 end Robin1984.GRH
