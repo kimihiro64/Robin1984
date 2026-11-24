@@ -234,4 +234,93 @@ theorem exists_godementJacquetSingularStabilizer_map
     exact congrArg (fun Q => Q.submatrix e e) hProjection
   exact And.intro hOrbit.1 (exists_godementJacquetSingularStabilizer (P.map f) e c d hOver)
 
+/-- A matrix fixes the rank projection on the left exactly when its
+first block column is the first block column of the identity. -/
+theorem godementJacquetRankProjection_leftStabilizer_iff
+    (X : Matrix (BlockIndex r k) (BlockIndex r k) R) :
+    X * godementJacquetRankProjection R r k = godementJacquetRankProjection R r k <->
+      Exists (fun B : Matrix (Fin r) (Fin k) R =>
+        Exists (fun D : Matrix (Fin k) (Fin k) R => X = Matrix.fromBlocks 1 B 0 D)) := by
+  let A := X.submatrix Sum.inl Sum.inl
+  let B := X.submatrix Sum.inl Sum.inr
+  let C := X.submatrix Sum.inr Sum.inl
+  let D := X.submatrix Sum.inr Sum.inr
+  have hX : X = Matrix.fromBlocks A B C D := by
+    apply Matrix.ext
+    intro i j
+    cases i <;> cases j <;> rfl
+  have hMul : X * godementJacquetRankProjection R r k = Matrix.fromBlocks A 0 C 0 := calc
+    _ = Matrix.fromBlocks A B C D * godementJacquetRankProjection R r k :=
+      congrArg (fun M => M * godementJacquetRankProjection R r k) hX
+    _ = _ := by
+      rw [godementJacquetRankProjection, Matrix.fromBlocks_multiply]
+      simp
+  constructor
+  . intro h
+    have hz : Matrix.fromBlocks A 0 C 0 = godementJacquetRankProjection R r k := hMul.symm.trans h
+    have hA : A = 1 := Matrix.ext (fun i j =>
+      congrArg (fun M : Matrix (BlockIndex r k) (BlockIndex r k) R => M (Sum.inl i) (Sum.inl j)) hz)
+    have hC : C = 0 := Matrix.ext (fun i j =>
+      congrArg (fun M : Matrix (BlockIndex r k) (BlockIndex r k) R => M (Sum.inr i) (Sum.inl j)) hz)
+    exact Exists.intro B (Exists.intro D (by simpa only [hA, hC] using hX))
+  . intro h
+    choose H V hY using h
+    rw [hY, godementJacquetRankProjection, Matrix.fromBlocks_multiply]
+    simp
+
+/-- The lower-right general linear group in the left stabilizer of the rank projection. -/
+def godementJacquetBlockLevi (V : Matrix.GeneralLinearGroup (Fin k) R) :
+    Matrix.GeneralLinearGroup (BlockIndex r k) R where
+  val := Matrix.fromBlocks 1 0 0 V.val
+  inv := Matrix.fromBlocks 1 0 0 V.inv
+  val_inv := by
+    rw [Matrix.fromBlocks_multiply]
+    simp [Matrix.fromBlocks_one]
+  inv_val := by
+    rw [Matrix.fromBlocks_multiply]
+    simp [Matrix.fromBlocks_one]
+
+/-- Conjugating by a lower-right Levi block acts on the upper
+unipotent coordinates by right multiplication by its inverse. -/
+theorem godementJacquetBlockLevi_upperUnipotent_conj
+    (V : Matrix.GeneralLinearGroup (Fin k) R) (B : Matrix (Fin r) (Fin k) R) :
+    godementJacquetBlockLevi (r := r) V * godementJacquetUpperUnipotent B *
+        Inv.inv (godementJacquetBlockLevi (r := r) V) =
+      godementJacquetUpperUnipotent (B * V.inv) := by
+  apply Units.ext
+  change Matrix.fromBlocks 1 0 0 V.val * Matrix.fromBlocks 1 B 0 1 *
+      Matrix.fromBlocks 1 0 0 V.inv = Matrix.fromBlocks 1 (B * V.inv) 0 1
+  rw [Matrix.fromBlocks_multiply, Matrix.fromBlocks_multiply]
+  simp
+
+/-- Every invertible left stabilizer factors through the upper unipotent and
+lower-right Levi blocks. Its determinant is the determinant of that Levi block. -/
+theorem exists_godementJacquetRankProjection_stabilizer_factorization
+    (X : Matrix.GeneralLinearGroup (BlockIndex r k) R)
+    (h : X.val * godementJacquetRankProjection R r k = godementJacquetRankProjection R r k) :
+    Exists (fun B : Matrix (Fin r) (Fin k) R =>
+      Exists (fun V : Matrix.GeneralLinearGroup (Fin k) R =>
+        And (X = godementJacquetUpperUnipotent B * godementJacquetBlockLevi (r := r) V)
+          (Matrix.GeneralLinearGroup.det V = Matrix.GeneralLinearGroup.det X))) := by
+  choose C D hX using (godementJacquetRankProjection_leftStabilizer_iff X.val).mp h
+  have hDet : X.val.det = D.det := by
+    rw [hX]
+    simp
+  have hUnit : IsUnit D.det := by
+    rw [<- hDet]
+    exact (Matrix.isUnit_iff_isUnit_det X.val).mp X.isUnit
+  have hDU : IsUnit D := (Matrix.isUnit_iff_isUnit_det D).mpr hUnit
+  let V := hDU.unit
+  have hV : V.val = D := hDU.unit_spec
+  have hC : (C * V.inv) * V.val = C := by rw [Matrix.mul_assoc, V.inv_val, Matrix.mul_one]
+  refine Exists.intro (C * V.inv) (Exists.intro V (And.intro ?_ ?_))
+  . apply Units.ext
+    change X.val = Matrix.fromBlocks 1 (C * V.inv) 0 1 * Matrix.fromBlocks 1 0 0 V.val
+    rw [hX, Matrix.fromBlocks_multiply]
+    simp only [Matrix.mul_zero, Matrix.one_mul, Matrix.mul_one, add_zero, zero_add, hC]
+    rw [hV]
+  . apply Units.ext
+    change V.val.det = X.val.det
+    rw [hV, hDet]
+
 end Robin1984.GRH
