@@ -235,4 +235,35 @@ theorem ae_zero_re_of_verticalMellin_eq_zero {f : Real -> Complex} (hf : Measura
   intro t
   simpa only [Complex.ofReal_one, show -(1 : Complex) - 1 = -2 by norm_num] using h t
 
+/-- Fourier uniqueness applied to the real and imaginary parts of a complex Mellin integral. -/
+theorem ae_zero_of_complex_verticalMellin_eq_zero_at {f : Real -> Complex}
+    (hf : Measurable f) (c : Real)
+    (h : forall t : Real,
+      let mu := volume.restrict (Ioi (1 : Real))
+      let g := fun x : Real => (x : Complex) ^ (-(c : Complex) - 1 + (t : Complex) * Complex.I) * f x
+      And (Integrable g mu) (integral mu g = 0)) :
+    Filter.EventuallyEq (ae (volume.restrict (Ioi (1 : Real)))) f (fun _ => 0) := by
+  let mu := volume.restrict (Ioi (1 : Real))
+  let g (x : Real) : Complex := -Complex.I * f x
+  have hg : Measurable g := measurable_const.mul hf
+  have hRe := ae_zero_re_of_verticalMellin_eq_zero_at hf c h
+  have hIm := ae_zero_re_of_verticalMellin_eq_zero_at hg c (by
+    intro t
+    let W (x : Real) := (x : Complex) ^ (-(c : Complex) - 1 + (t : Complex) * Complex.I)
+    have hh : And (Integrable (fun x => W x * f x) mu)
+        (integral mu (fun x => W x * f x) = 0) := h t
+    have hSwap : (fun x => W x * g x) = (fun x => -Complex.I * (W x * f x)) := by
+      funext x
+      unfold g
+      ac_rfl
+    change And (Integrable (fun x => W x * g x) mu)
+      (integral mu (fun x => W x * g x) = 0)
+    rw [hSwap]
+    refine And.intro (hh.1.const_mul _) ?_
+    rw [integral_const_mul, hh.2, mul_zero])
+  filter_upwards [hRe, hIm] with x hx hy
+  apply Complex.ext
+  exact hx
+  simpa [g, Complex.mul_re, Complex.neg_re, Complex.neg_im] using hy
+
 end Robin1984.GRH

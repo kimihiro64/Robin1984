@@ -186,4 +186,79 @@ theorem triangularSquareRootBound_of_canonicalMellin
   rw [add_mul]
   linarith only [hy, hNorm, hReal, hE]
 
+/-- The integrand for the Mellin transform of a complex function at s. -/
+noncomputable def complexMellinIntegrand (f : Real -> Complex) (s : Complex) (x : Real) :
+    Complex :=
+  f x * (x : Complex) ^ (-s - 1)
+
+/-- The inverse triangular zero expansion for a complex, unpaired Euler product. -/
+theorem ae_eq_complex_triangularZeroSeries_of_canonicalMellin
+    {iota : Type*} [Countable iota] (rho : iota -> Complex)
+    {R E : Real -> Complex} (hRMeas : Measurable R) (hEMeas : Measurable E)
+    (hRho : forall i, (rho i).re <= 1 / 2)
+    (hRho0 : forall i, Not (rho i = 0)) (hRho1 : forall i, Not (rho i + 1 = 0))
+    (hSummable : Summable (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int)))
+    (hRInt : forall s : Complex, 1 < s.re -> Integrable (complexMellinIntegrand R s)
+      (volume.restrict (Ioi (1 : Real))))
+    (hEInt : forall s : Complex, 1 < s.re -> Integrable (complexMellinIntegrand E s)
+      (volume.restrict (Ioi (1 : Real))))
+    (hEq : forall s : Complex, 1 < s.re ->
+      integral (volume.restrict (Ioi (1 : Real))) (complexMellinIntegrand R s) =
+        integral (volume.restrict (Ioi (1 : Real))) (complexMellinIntegrand E s) +
+          tsum (fun i => 1 / (s - rho i) + 1 / rho i) / (s * (s + 1))) :
+    Filter.EventuallyEq (ae (volume.restrict (Ioi (1 : Real)))) R
+      (fun x => E x + tsum (fun i => triangularZeroTerm (rho i) x)) := by
+  let mu := volume.restrict (Ioi (1 : Real))
+  let S (x : Real) := tsum (fun i => triangularZeroTerm (rho i) x)
+  let U (x : Real) := R x - E x - S x
+  have hSMeas : Measurable S := measurable_triangularZeroSum rho
+  have hUMeas : Measurable U := (hRMeas.sub hEMeas).sub hSMeas
+  have hUAll (s : Complex) (hs : 1 < s.re) :
+      And (Integrable (complexMellinIntegrand U s) mu)
+        (integral mu (complexMellinIntegrand U s) = 0) := by
+    have hS := triangularZeroSeries_mellin rho hRho hRho0 hRho1 hSummable s hs
+    have hSplit : complexMellinIntegrand U s =
+      fun x => complexMellinIntegrand R s x - complexMellinIntegrand E s x -
+        complexMellinIntegrand S s x := by
+      funext x
+      simp only [complexMellinIntegrand, U, sub_mul]
+    have hSInt : Integrable (complexMellinIntegrand S s) mu := hS.1
+    have hSValue : integral mu (complexMellinIntegrand S s) =
+        tsum (fun i => 1 / (s - rho i) + 1 / rho i) / (s * (s + 1)) := hS.2
+    rw [hSplit]
+    refine And.intro (((hRInt s hs).sub (hEInt s hs)).sub hSInt) ?_
+    calc
+      _ = integral mu (fun x => complexMellinIntegrand R s x - complexMellinIntegrand E s x) -
+          integral mu (complexMellinIntegrand S s) :=
+        integral_sub ((hRInt s hs).sub (hEInt s hs)) hSInt
+      _ = integral mu (complexMellinIntegrand R s) - integral mu (complexMellinIntegrand E s) -
+          integral mu (complexMellinIntegrand S s) := by
+        rw [integral_sub (hRInt s hs) (hEInt s hs)]
+      _ = 0 := by
+        have hEqMu : integral mu (complexMellinIntegrand R s) =
+            integral mu (complexMellinIntegrand E s) +
+              tsum (fun i => 1 / (s - rho i) + 1 / rho i) / (s * (s + 1)) := hEq s hs
+        rw [hEqMu, hSValue]
+        ring
+  have hZero := ae_zero_of_complex_verticalMellin_eq_zero_at hUMeas 2 (by
+    intro t
+    let s := (2 : Complex) - (t : Complex) * Complex.I
+    have hs : 1 < s.re := by
+      norm_num [s, Complex.sub_re, Complex.mul_re]
+    have hExp : -(2 : Complex) - 1 + (t : Complex) * Complex.I = -s - 1 := by
+      unfold s
+      ring
+    let W (x : Real) := (x : Complex) ^ (-(2 : Complex) - 1 + (t : Complex) * Complex.I) * U x
+    have hW : W = complexMellinIntegrand U s := by
+      funext x
+      unfold W complexMellinIntegrand
+      rw [hExp, mul_comm]
+    change And (Integrable W mu) (integral mu W = 0)
+    rw [hW]
+    exact hUAll s hs)
+  filter_upwards [hZero] with x hx
+  change R x - E x - S x = 0 at hx
+  change R x = E x + S x
+  exact sub_eq_zero.mp (by rw [<- sub_sub]; exact hx)
+
 end Robin1984.GRH
