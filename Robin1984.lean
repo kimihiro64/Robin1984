@@ -10,6 +10,7 @@ import Robin1984.GRH.GodementJacquetHaarNormalization
 import Robin1984.GRH.GodementJacquetMatrixMeasure
 import Robin1984.GRH.GodementJacquetMatrixPoisson
 import Robin1984.GRH.GodementJacquetProductLattice
+import Robin1984.GRH.GodementJacquetSchwartzDilation
 import Robin1984.GRH.GodementJacquetSingularOrbits
 import Robin1984.GRH.GodementJacquetUnfolding
 import Robin1984.GRH.GodementJacquetVectorPoisson

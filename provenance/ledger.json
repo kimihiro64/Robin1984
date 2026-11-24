@@ -1722,6 +1722,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetSchwartzDilation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Schwartz-Bruhat test functions and the Fourier transformation of the theta kernel in Godement and Jacquet, Zeta Functions of Simple Algebras.",
+      "formalization_note": "Decomposes an invertible adelic matrix pullback of a Schwartz rectangle into finitely many rectangles and proves the trace-dual transformation with reversed determinant time.",
+      "content_basis": "Conjugates real linear matrix dilation into joint Minkowski coordinates, uses the disjoint partition of the finite inverse image, and normalizes Fourier dilation by the discriminant scalar.",
+      "dependency_status": "Uses the verified finite rectangle partition, matrix Poisson transform, and pinned Mathlib Schwartz pullback and matrix linear-map APIs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetSingularOrbits.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the rank decomposition of the singular-matrix terms.",
