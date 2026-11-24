@@ -1659,6 +1659,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetSingularOrbits.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the rank decomposition of the singular-matrix terms.",
+      "formalization_note": "Identifies the upper unipotent stabilizers of rank projections and transports them to singular rational matrices after scalar extension.",
+      "content_basis": "Uses the matrix rank normal form, determinant-one block matrices, and conjugation to transport the singular stabilizers across rational orbits and scalar extensions.",
+      "dependency_status": "Uses pinned Mathlib matrix rank normal form, block matrices, determinants, and the unit group of the matrix ring.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeAdeleHaar.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Additive Haar measure and Fourier integration over the compact open integral finite adeles.",
