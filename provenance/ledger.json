@@ -1659,6 +1659,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetFiniteMatrixDenominator.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Finite idele norms and adjugate matrices in the Godement--Jacquet construction.",
+      "formalization_note": "Proves that the reciprocal finite determinant norm of an integral finite adelic matrix is a positive integer and clears the inverse matrix at every finite place.",
+      "content_basis": "Writes the finite idele norm as a product of local prime ideal norms, uses membership of the ideal norm in the ideal, and applies the adjugate identity to integral matrices.",
+      "dependency_status": "Uses Mathlib's discrete valuation and ideal norm identities and the verified integral finite matrix denominator sets.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetFiniteMatrixVolume.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Integral local matrix subgroups and finite adelic approximation in the Godement--Jacquet construction.",
