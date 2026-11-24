@@ -1686,6 +1686,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetProductLattice.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Poisson summation for full-rank Euclidean lattices and the matrix lattice in the Godement-Jacquet zeta integral.",
+      "formalization_note": "Identifies the product lattice, its dual, and its covolume, then applies shifted Poisson summation to an arbitrary Schwartz function on the product.",
+      "content_basis": "Uses coordinate embeddings of lattices, the Euclidean product measure, rectangular fundamental domains, and the existing Schwartz periodisation identity.",
+      "dependency_status": "Uses the verified DedekindZeta lattice Poisson theorem and pinned Mathlib product measure, lattice and inner-product-space API.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetSingularOrbits.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the rank decomposition of the singular-matrix terms.",

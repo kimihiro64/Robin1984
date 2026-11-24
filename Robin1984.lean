@@ -6,6 +6,7 @@ import Robin1984.GRH.GodementJacquetCoordinates
 import Robin1984.GRH.GodementJacquetFourier
 import Robin1984.GRH.GodementJacquetHaarNormalization
 import Robin1984.GRH.GodementJacquetMatrixMeasure
+import Robin1984.GRH.GodementJacquetProductLattice
 import Robin1984.GRH.GodementJacquetSingularOrbits
 import Robin1984.GRH.GodementJacquetUnfolding
 import Robin1984.GRH.HeckeTateAdelicEuler
