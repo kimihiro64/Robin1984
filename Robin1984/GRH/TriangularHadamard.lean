@@ -1,3 +1,4 @@
+import Mathlib.Analysis.SpecialFunctions.Pow.Asymptotics
 import PrimeNumberTheoremAnd.Mathlib.Analysis.Complex.HadamardFactorization.Order
 import Robin1984.GRH.DedekindSpectralMellin
 
@@ -24,7 +25,8 @@ set_option autoImplicit false
 
 namespace Robin1984.GRH
 
-private noncomputable def grandElementaryTerm (b : Complex) (m m0 mNeg : Real)
+/-- The elementary contribution from the pole and the zeros at zero and minus one. -/
+noncomputable def grandElementaryTerm (b : Complex) (m m0 mNeg : Real)
     (x : Real) : Complex :=
   (b + m - m0) + ((m0 : Complex) - b - (m : Complex) / 2) * (x : Complex) ^ (-(1 : Complex)) +
     (m0 : Complex) * (Real.log x : Complex) -
@@ -214,7 +216,8 @@ private theorem triangularRemainder_mellin_of_logDeriv {iota : Type*} [Countable
   field_simp [hA, hS, hB]
   ring
 
-private theorem ae_triangularRemainder_eq_re_expansion
+/-- The full complex triangular expansion under a Hadamard logarithmic derivative. -/
+theorem ae_triangularRemainder_eq_complex_expansion
     {iota zeros : Type*} [Countable iota] [Countable zeros]
     (a b : iota -> Real) (m : Real) (F : Complex -> Complex) (rho : zeros -> Complex)
     (beta : Complex) (m0 mNeg : Real)
@@ -230,9 +233,9 @@ private theorem ae_triangularRemainder_eq_re_expansion
       beta + (m0 : Complex) / s + (mNeg : Complex) * (1 / (s + 1) - 1) +
         tsum (fun i => 1 / (s - rho i) + 1 / rho i)) :
     Filter.EventuallyEq (ae (volume.restrict (Ioi (1 : Real))))
-      (triangularRemainder a b m)
-      (fun x => (grandElementaryTerm beta m m0 mNeg x +
-        tsum (fun i => triangularZeroTerm (rho i) x)).re) := by
+      (fun x => (triangularRemainder a b m x : Complex))
+      (fun x => grandElementaryTerm beta m m0 mNeg x +
+        tsum (fun i => triangularZeroTerm (rho i) x)) := by
   let mu := volume.restrict (Ioi (1 : Real))
   let E := grandElementaryTerm beta m m0 mNeg
   let Z := fun x => tsum (fun i => triangularZeroTerm (rho i) x)
@@ -294,12 +297,97 @@ private theorem ae_triangularRemainder_eq_re_expansion
       And (Integrable (fun x => W t x * d0 x) mu) (integral mu (fun x => W t x * d0 x) = 0) := by
     have ht := h0.mono (fun x hx => congrArg (fun z : Complex => W t x * z) hx)
     exact And.intro ((hLine t).1.congr ht) ((integral_congr_ae ht).symm.trans (hLine t).2)
-  have hRe := ae_zero_re_of_verticalMellin_eq_zero_at hd.measurable_mk 2 hRep
-  filter_upwards [hRe, h0] with x hR hx
-  change (d0 x).re = 0 at hR
-  rw [<- hx, show (d x).re = R x - (E x + Z x).re by simp only [d, Complex.sub_re, Complex.ofReal_re]]
-    at hR
-  exact sub_eq_zero.mp hR
+  have hZero := ae_zero_of_complex_verticalMellin_eq_zero_at hd.measurable_mk 2 hRep
+  filter_upwards [hZero, h0] with x hR hx
+  have hh : d x = 0 := hx.trans hR
+  exact sub_eq_zero.mp hh
+
+/-- The elementary remainder is continuous on the open positive tail. -/
+theorem continuousOn_grandElementaryTerm (beta : Complex) (m m0 mNeg : Real) :
+    ContinuousOn (grandElementaryTerm beta m m0 mNeg) (Ioi (1 : Real)) := by
+  have hi : ContinuousOn (fun x : Real => (x : Complex) ^ (-(1 : Complex)))
+      (Ioi (1 : Real)) := by
+    simp only [Complex.cpow_neg, Complex.cpow_one, <- one_div]
+    exact continuousOn_const.div Complex.continuous_ofReal.continuousOn
+      (fun x hx => Complex.ofReal_ne_zero.mpr (zero_lt_one.trans hx).ne')
+  have hl : ContinuousOn (fun x : Real => (Real.log x : Complex)) (Ioi (1 : Real)) := by
+    intro x hx
+    exact (Complex.continuous_ofReal.continuousAt.comp
+      (Real.continuousAt_log (zero_lt_one.trans hx).ne')).continuousWithinAt
+  unfold grandElementaryTerm
+  exact (((continuousOn_const.add (continuousOn_const.mul hi)).add
+    (continuousOn_const.mul hl)).sub (continuousOn_const.mul (hi.mul hl)))
+
+/-- The elementary Hadamard remainder disappears under the square-root
+normalization on logarithmic time. -/
+theorem tendsto_logScaled_grandElementaryTerm (beta : Complex) (m m0 mNeg : Real) :
+    Tendsto (fun t : Real => (Real.exp (-t / 2) : Complex) *
+      grandElementaryTerm beta m m0 mNeg (Real.exp t)) atTop (nhds 0) := by
+  let X (t : Real) : Complex := (Real.exp (-t / 2) : Complex)
+  let Y (t : Real) : Complex := (Real.exp (-t) : Complex)
+  let Z (t : Real) : Complex := (t : Complex) * X t
+  have hXR : Tendsto (fun t : Real => Real.exp (-t / 2)) atTop (nhds 0) := by
+    have h := Real.tendsto_exp_atBot.comp
+      (tendsto_id.const_mul_atTop_of_neg (show (-(1 / 2) : Real) < 0 by norm_num))
+    convert h using 1
+    funext t
+    change Real.exp (-t / 2) = Real.exp (-(1 / 2) * t)
+    congr 1
+    ring
+  have hYR : Tendsto (fun t : Real => Real.exp (-t)) atTop (nhds 0) :=
+    Real.tendsto_exp_atBot.comp tendsto_neg_atTop_atBot
+  have hZR : Tendsto (fun t : Real => t * Real.exp (-t / 2)) atTop (nhds 0) := by
+    have h := tendsto_rpow_mul_exp_neg_mul_atTop_nhds_zero 1 (1 / 2) (by norm_num)
+    convert h using 1
+    funext t
+    rw [Real.rpow_one]
+    congr 2
+    ring
+  have hX : Tendsto X atTop (nhds 0) := by
+    simpa only [X, Function.comp_def, Complex.ofReal_zero] using
+      Complex.continuous_ofReal.continuousAt.tendsto.comp hXR
+  have hY : Tendsto Y atTop (nhds 0) := by
+    simpa only [Y, Function.comp_def, Complex.ofReal_zero] using
+      Complex.continuous_ofReal.continuousAt.tendsto.comp hYR
+  have hZ : Tendsto Z atTop (nhds 0) := by
+    simpa only [Z, X, Function.comp_def, Complex.ofReal_mul, Complex.ofReal_zero] using
+      Complex.continuous_ofReal.continuousAt.tendsto.comp hZR
+  have hSum := (((hX.mul_const (beta + m - m0)).add
+    ((hX.mul hY).mul_const ((m0 : Complex) - beta - (m : Complex) / 2))).add
+    (hZ.mul_const (m0 : Complex))).sub ((hZ.mul hY).mul_const (mNeg : Complex))
+  simp only [zero_mul, add_zero, sub_zero] at hSum
+  refine hSum.congr' (Filter.Eventually.of_forall (fun t => ?_))
+  have hInv : (Real.exp t : Complex) ^ (-(1 : Complex)) = Y t := by
+    simp only [Y, Complex.cpow_neg, Complex.cpow_one, <- Complex.ofReal_inv, <- Real.exp_neg]
+  simp only [grandElementaryTerm, Real.log_exp, hInv]
+  change _ = X t * ((beta + m - m0) +
+    ((m0 : Complex) - beta - (m : Complex) / 2) * Y t + (m0 : Complex) * (t : Complex) -
+    (mNeg : Complex) * (Y t * (t : Complex)))
+  unfold Z
+  ring
+
+private theorem ae_triangularRemainder_eq_re_expansion
+    {iota zeros : Type*} [Countable iota] [Countable zeros]
+    (a b : iota -> Real) (m : Real) (F : Complex -> Complex) (rho : zeros -> Complex)
+    (beta : Complex) (m0 mNeg : Real)
+    (ha : forall i, 1 <= a i)
+    (hSum : forall r : Real, 1 < r -> Summable (fun i => norm (b i) * (a i) ^ (-r)))
+    (hEuler : forall s : Complex, 1 < s.re ->
+      logDeriv F s = (m : Complex) / (s - 1) -
+        tsum (fun i => (b i : Complex) * (a i : Complex) ^ (-s)))
+    (hRho : forall i, (rho i).re <= 1 / 2)
+    (hRho0 : forall i, Not (rho i = 0)) (hRho1 : forall i, Not (rho i + 1 = 0))
+    (hRhoSum : Summable (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int)))
+    (hHadamard : forall s : Complex, 1 < s.re -> logDeriv F s =
+      beta + (m0 : Complex) / s + (mNeg : Complex) * (1 / (s + 1) - 1) +
+        tsum (fun i => 1 / (s - rho i) + 1 / rho i)) :
+    Filter.EventuallyEq (ae (volume.restrict (Ioi (1 : Real))))
+      (triangularRemainder a b m)
+      (fun x => (grandElementaryTerm beta m m0 mNeg x +
+        tsum (fun i => triangularZeroTerm (rho i) x)).re) := by
+  filter_upwards [ae_triangularRemainder_eq_complex_expansion a b m F rho beta m0 mNeg
+    ha hSum hEuler hRho hRho0 hRho1 hRhoSum hHadamard] with x hx
+  exact congrArg Complex.re hx
 
 /-- A Hadamard log-derivative expansion supported in the closed left half
 of the critical line bounds the signed triangular prime-power remainder. -/

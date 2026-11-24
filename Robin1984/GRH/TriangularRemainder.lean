@@ -267,4 +267,115 @@ theorem continuousOn_triangularRemainder {iota : Type*}
     ((hR x hx).continuousAt (isOpen_Ioi.mem_nhds hx)).congr_of_eventuallyEq hEq
   exact hAt.continuousWithinAt
 
+/-- The signed triangular prime-power remainder for complex coefficients. -/
+noncomputable def complexTriangularRemainder {i : Type*}
+    (a : i -> Real) (b : i -> Complex) (m x : Real) : Complex :=
+  ((m / 2 : Real) : Complex) * (x : Complex) -
+    tsum (fun j => (Ioi (a j)).indicator
+      (fun u : Real => b j * (1 - (a j : Complex) / (u : Complex))) x)
+
+theorem measurable_complexTriangularRemainder {i : Type*} [Countable i]
+    (a : i -> Real) (b : i -> Complex) (m : Real) : Measurable (complexTriangularRemainder a b m) := by
+  apply (measurable_const.mul Complex.continuous_ofReal.measurable).sub
+  exact Measurable.tsum (fun i => (measurable_const.mul
+    (measurable_const.sub (measurable_const.div Complex.continuous_ofReal.measurable))).indicator
+      measurableSet_Ioi)
+
+/-- The Mellin transform of the signed complex remainder is its residue
+transform minus its prime-power transform. -/
+theorem complexTriangularRemainder_mellin {i : Type*} [Countable i]
+    (a : i -> Real) (b : i -> Complex) (m : Real) (s : Complex) (hs : 1 < s.re)
+    (ha : forall j, 1 <= a j)
+    (hSum : Summable (fun j => norm (b j) * (a j) ^ (-s.re))) :
+    let K := fun x : Real => complexTriangularRemainder a b m x * (x : Complex) ^ (-s - 1)
+    let mu := volume.restrict (Ioi (1 : Real))
+    Integrable K mu /\
+      integral mu K = ((m / 2 : Real) : Complex) / (s - 1) -
+        tsum (fun j => b j * (a j : Complex) ^ (-s)) / (s * (s + 1)) := by
+  let mu := volume.restrict (Ioi (1 : Real))
+  let Q (x : Real) : Complex := ((m / 2 : Real) : Complex) *
+    (x : Complex) ^ (((1 : Real) : Complex) - s - 1)
+  let T (x : Real) : Complex := tsum (fun j =>
+    (Ioi (a j)).indicator (fun u : Real =>
+      b j * ((1 - (a j : Complex) / (u : Complex)) * (u : Complex) ^ (-s - 1))) x)
+  let K := fun x : Real => complexTriangularRemainder a b m x * (x : Complex) ^ (-s - 1)
+  have hQ := triangular_mellin_monomial 1 (m / 2) s hs
+  have hT := integrable_integral_tsum_triangularMellin a b s
+    (zero_lt_one.trans hs) (fun i => zero_lt_one.trans_le (ha i)) hSum
+  have hQInt : Integrable Q mu := hQ.1
+  have hTInt : Integrable T mu := hT.1.integrableOn
+  have hTValue : integral mu T =
+      tsum (fun j => b j * (a j : Complex) ^ (-s)) / (s * (s + 1)) := by
+    have hTWithin : (Ioi (1 : Real)).indicator T = T := by
+      funext x
+      by_cases hx : Membership.mem (Ioi (1 : Real)) x
+      case pos => exact indicator_of_mem hx T
+      case neg =>
+        rw [indicator_of_notMem hx]
+        have hx1 : x <= 1 := le_of_not_gt hx
+        symm
+        unfold T
+        have hZero (j : i) : Not (Membership.mem (Ioi (a j)) x) :=
+          not_lt_of_ge (hx1.trans (ha j))
+        simp only [indicator_of_notMem (hZero _), tsum_zero]
+    change integral (volume.restrict (Ioi (1 : Real))) T = _
+    rw [<- integral_indicator measurableSet_Ioi, hTWithin]
+    exact hT.2
+  have hEq : EqOn (fun x => Q x - T x) K (Ioi (1 : Real)) := by
+    intro x hx
+    have hx0 : 0 < x := zero_lt_one.trans hx
+    have hxn : Not ((x : Complex) = 0) := Complex.ofReal_ne_zero.mpr hx0.ne'
+    have hLin : (x : Complex) * (x : Complex) ^ (-s - 1) =
+        (x : Complex) ^ (((1 : Real) : Complex) - s - 1) := by
+      calc
+        _ = (x : Complex) ^ (1 : Complex) * (x : Complex) ^ (-s - 1) := by
+          rw [Complex.cpow_one]
+        _ = (x : Complex) ^ (1 + (-s - 1)) := (Complex.cpow_add _ _ hxn).symm
+        _ = _ := by rw [Complex.ofReal_one]; congr 1; ring
+    have hTriangle :
+        tsum (fun j => (Ioi (a j)).indicator
+          (fun u : Real => b j * (1 - (a j : Complex) / (u : Complex))) x) *
+          (x : Complex) ^ (-s - 1) = T x := by
+      unfold T
+      rw [<- tsum_mul_right]
+      refine tsum_congr ?_
+      intro j
+      by_cases h : Membership.mem (Ioi (a j)) x
+      case pos => simp only [indicator_of_mem h, mul_assoc]
+      case neg => simp only [indicator_of_notMem h, zero_mul]
+    unfold K complexTriangularRemainder
+    rw [sub_mul, mul_assoc, hLin, hTriangle]
+  change And (Integrable K mu) (integral mu K = _)
+  have hQSubT : IntegrableOn (fun x => Q x - T x) (Ioi (1 : Real)) := hQInt.sub hTInt
+  refine And.intro (hQSubT.congr_fun hEq measurableSet_Ioi) ?_
+  calc
+    integral mu K = integral mu (fun x => Q x - T x) :=
+      (setIntegral_congr_fun measurableSet_Ioi hEq).symm
+    _ = integral mu Q - integral mu T := integral_sub hQInt hTInt
+    _ = _ := by rw [show integral mu Q = _ from hQ.2, hTValue, Complex.ofReal_one]
+
+/-- The complex arithmetic remainder is the Mellin input for the logarithmic
+derivative of an individual pole-cleared L-function. -/
+theorem complexTriangularRemainder_mellin_of_logDeriv {i : Type*} [Countable i]
+    (a : i -> Real) (b : i -> Complex) (m : Real) (F : Complex -> Complex)
+    (ha : forall j, 1 <= a j) (s : Complex) (hs : 1 < s.re)
+    (hSum : Summable (fun j => norm (b j) * (a j) ^ (-s.re)))
+    (hEuler : logDeriv F s = (m : Complex) / (s - 1) -
+      tsum (fun j => b j * (a j : Complex) ^ (-s))) :
+    let K := fun x : Real => complexTriangularRemainder a b m x * (x : Complex) ^ (-s - 1)
+    let mu := volume.restrict (Ioi (1 : Real))
+    Integrable K mu /\
+      integral mu K = (logDeriv F s + (m : Complex) / 2 * (s + 2)) / (s * (s + 1)) := by
+  have h := complexTriangularRemainder_mellin a b m s hs ha hSum
+  refine And.intro h.1 ?_
+  rw [h.2, hEuler]
+  push_cast
+  have hA : Not (s - 1 = 0) := Complex.ne_zero_of_re_pos (by rwa [Complex.sub_re, Complex.one_re, sub_pos])
+  have hS : Not (s = 0) := Complex.ne_zero_of_re_pos (zero_lt_one.trans hs)
+  have hB : Not (s + 1 = 0) := Complex.ne_zero_of_re_pos (by
+    rw [Complex.add_re, Complex.one_re]
+    linarith only [hs])
+  field_simp [hA, hS, hB]
+  ring
+
 end Robin1984.GRH

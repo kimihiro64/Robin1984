@@ -1686,6 +1686,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/MultiplicityDivisor.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Repeated Hadamard divisors and restriction of the zero series to the critical line.",
+      "formalization_note": "The occurrence index retains analytic orders, so injectivity of its ordinate map detects simple zeros.",
+      "content_basis": "Reviewed the divisor order, restriction to the critical line, and summability of the Gaussian weights.",
+      "dependency_status": "Mathlib analytic orders and Robin1984 Hadamard zero series.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/MultiplicityExpansion.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Mellin inversion and the canonical triangular zero expansion on the positive real axis.",
@@ -1701,6 +1710,15 @@
       "formalization_note": "The explicit kernel is integrable, its multiplier cancels the triangular denominator, and convolution preserves the vanishing error.",
       "content_basis": "Reviewed the Gaussian normalization, Fourier differentiation, and convolution under summable triangular denominators.",
       "dependency_status": "Mathlib Gaussian Fourier transform and Robin1984 Fourier series and convolution.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/RiemannMultiplicity.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The Gaussian-smoothed global multiplicity test for the classical von Mangoldt remainder.",
+      "formalization_note": "Under RH the arithmetic remainder has the critical-line occurrence spectrum, and the mean-square inequality detects simple zeta zeros.",
+      "content_basis": "Reviewed the pointwise arithmetic expansion and transport of analytic orders from the pole-cleared factor.",
+      "dependency_status": "Mathlib Riemann zeta and Robin1984 complex Mellin, Hadamard and Gaussian Fourier proofs.",
       "reviewed": true
     },
     {

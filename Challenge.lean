@@ -1,5 +1,8 @@
+import Mathlib.Analysis.Analytic.Order
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 import Mathlib.NumberTheory.ArithmeticFunction.Misc
+import Mathlib.NumberTheory.ArithmeticFunction.VonMangoldt
 import Mathlib.NumberTheory.Harmonic.EulerMascheroni
 import Mathlib.NumberTheory.LSeries.DirichletContinuation
 import Mathlib.NumberTheory.LSeries.RiemannZeta
@@ -259,6 +262,51 @@ theorem grandRH_iff_triangularPrimePowerBound {index : Type u} {powers : index -
     (forall (pi : index) (s : Complex), family.completedL pi s = 0 -> s.re = 1 / 2) <->
       (forall pi, StandardFamilyTriangularBound family pi) := by
   sorry
+
+/-! ## Classical RH and zero multiplicity -/
+
+section
+
+open MeasureTheory
+
+/-- The signed von Mangoldt remainder with triangular weights and residue one. -/
+noncomputable def riemannMultiplicityPrimePowerRemainder (x : Real) : Real :=
+  1 / 2 * x - tsum (fun n : Nat =>
+    let q : Real := ((max 1 n : Nat) : Real)
+    (Set.Ioi q).indicator (fun y : Real =>
+      ArithmeticFunction.vonMangoldt n * (1 - q / y)) x)
+
+/-- The logarithmic square-root normalization of the classical arithmetic remainder. -/
+noncomputable def riemannMultiplicityLogInput (t : Real) : Complex :=
+  if t < 0 then 0 else (Real.exp (-t / 2) : Complex) *
+    (riemannMultiplicityPrimePowerRemainder (Real.exp t) : Complex)
+
+/-- The Gaussian smoothing with the two differential factors of the triangular kernel. -/
+noncomputable def riemannPrimePowerSmoothing (a t : Real) : Complex :=
+  MeasureTheory.integral MeasureTheory.volume (fun v : Real =>
+    let g := Real.exp (-(v ^ 2) / (4 * a)) / Real.sqrt (4 * Real.pi * a)
+    let k : Real := (v ^ 2 / (4 * a ^ 2) - v / a + 3 / 4 - 1 / (2 * a)) * g
+    (k : Complex) * riemannMultiplicityLogInput (t - v))
+
+/-- The long-time mean-square inequality for the classical prime-power remainder. -/
+def RiemannPrimePowerMultiplicityInequality : Prop :=
+  Filter.limsup (fun T : Real =>
+    (Inv.inv (T : Complex) * intervalIntegral
+      (fun t => ((norm (riemannPrimePowerSmoothing 1 t) ^ 2 : Real) : Complex))
+      0 T MeasureTheory.volume).re) Filter.atTop <=
+    Filter.limsup (fun t : Real => (riemannPrimePowerSmoothing 2 t).re) Filter.atTop
+
+/-- **Classical RH and simple zeros.** Under the Riemann hypothesis,
+every nontrivial zero of the Riemann zeta function is simple exactly when
+the Gaussian-smoothed von Mangoldt remainder satisfies the global
+mean-square inequality. -/
+theorem riemannRH_iff_globalPrimePowerMultiplicityInequality
+    (hRH : RiemannHypothesis) :
+    (forall z : Complex, 0 < z.re -> z.re < 1 -> riemannZeta z = 0 ->
+      analyticOrderNatAt riemannZeta z = 1) <-> RiemannPrimePowerMultiplicityInequality := by
+  sorry
+
+end
 
 /-! # Supporting statements -/
 

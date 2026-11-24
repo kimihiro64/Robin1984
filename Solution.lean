@@ -2,6 +2,7 @@ import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Robin1984.Equivalence.Theorem
 import Robin1984.GRH.CyclotomicFactorization
 import Robin1984.GRH.DedekindTriangular
+import Robin1984.GRH.RiemannMultiplicity
 import Robin1984.GRH.StandardAutomorphicFamily
 import Robin1984.Lagarias.Theorem
 import Robin1984.Public
@@ -20,8 +21,8 @@ set_option autoImplicit false
 /-!
 # Proved solution
 
-The release Comparator checks the three classical equivalences and the
-Dirichlet GRH and Dedekind ERH equivalences against `Challenge.lean`.
+The Comparator checks the classical, Dirichlet GRH, and Dedekind ERH
+headlines listed in its manifest against `Challenge.lean`.
 The supplied-family Grand RH criterion below uses the stated analytic data.
 -/
 
@@ -103,6 +104,53 @@ theorem grandRH_iff_triangularPrimePowerBound {index : Type u} {powers : index -
     analytics.norm_ge_two analytics.norms_locally_finite analytics.log_derivative_summable
     analytics.ordinary_entire analytics.completed_order_one analytics.euler_product
     analytics.completion analytics.functional_equation
+
+/-! ## Classical RH and zero multiplicity -/
+
+section
+
+open MeasureTheory
+
+/-- The signed von Mangoldt remainder with triangular weights and residue one. -/
+noncomputable def riemannMultiplicityPrimePowerRemainder (x : Real) : Real :=
+  1 / 2 * x - tsum (fun n : Nat =>
+    let q : Real := ((max 1 n : Nat) : Real)
+    (Set.Ioi q).indicator (fun y : Real =>
+      ArithmeticFunction.vonMangoldt n * (1 - q / y)) x)
+
+/-- The logarithmic square-root normalization of the classical arithmetic remainder. -/
+noncomputable def riemannMultiplicityLogInput (t : Real) : Complex :=
+  if t < 0 then 0 else (Real.exp (-t / 2) : Complex) *
+    (riemannMultiplicityPrimePowerRemainder (Real.exp t) : Complex)
+
+/-- The Gaussian smoothing with the two differential factors of the triangular kernel. -/
+noncomputable def riemannPrimePowerSmoothing (a t : Real) : Complex :=
+  MeasureTheory.integral MeasureTheory.volume (fun v : Real =>
+    let g := Real.exp (-(v ^ 2) / (4 * a)) / Real.sqrt (4 * Real.pi * a)
+    let k : Real := (v ^ 2 / (4 * a ^ 2) - v / a + 3 / 4 - 1 / (2 * a)) * g
+    (k : Complex) * riemannMultiplicityLogInput (t - v))
+
+/-- The long-time mean-square inequality for the classical prime-power remainder. -/
+def RiemannPrimePowerMultiplicityInequality : Prop :=
+  Filter.limsup (fun T : Real =>
+    (Inv.inv (T : Complex) * intervalIntegral
+      (fun t => ((norm (riemannPrimePowerSmoothing 1 t) ^ 2 : Real) : Complex))
+      0 T MeasureTheory.volume).re) Filter.atTop <=
+    Filter.limsup (fun t : Real => (riemannPrimePowerSmoothing 2 t).re) Filter.atTop
+
+/-- **Classical RH and simple zeros.** Under the Riemann hypothesis,
+every nontrivial zero of the Riemann zeta function is simple exactly when
+the Gaussian-smoothed von Mangoldt remainder satisfies the global
+mean-square inequality. -/
+theorem riemannRH_iff_globalPrimePowerMultiplicityInequality
+    (hRH : RiemannHypothesis) :
+    (forall z : Complex, 0 < z.re -> z.re < 1 -> riemannZeta z = 0 ->
+      analyticOrderNatAt riemannZeta z = 1) <-> RiemannPrimePowerMultiplicityInequality := by
+  have hDef : RiemannPrimePowerMultiplicityInequality = RiemannMultiplicityInequality := rfl
+  rw [hDef]
+  exact riemannRH_simpleZeros_iff_globalMultiplicityInequality hRH
+
+end
 
 /-! ## Supporting statements -/
 
