@@ -1650,6 +1650,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetAdelicMatrixBounds.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Finite determinant norms, adjugate bounds, and compact covering arguments in the Godement--Jacquet setting.",
+      "formalization_note": "Bounds finite inverse denominators and archimedean inverse entries by the archimedean radius and supplies compact matrix sets and finite dyadic covers.",
+      "content_basis": "Uses the factorization of the determinant norm, finite integrality, bounds for minors, compactness of the value and inverse images, and iteration of a half-radius cover.",
+      "dependency_status": "Uses verified finite denominator and theta norm estimates with Mathlib compactness and matrix algebra. The assembled Haar volume bound is separate.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetCoordinates.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the determinant-norm coordinates in the global zeta integral.",
