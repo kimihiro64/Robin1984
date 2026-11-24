@@ -274,41 +274,27 @@ theorem heckeFiniteIdeleInclusion_character_eq_local_product
   intro p _
   rfl
 
-/-- Right translation by a finite integral unit multiplies the Tate test
-by its inverse character value. -/
-theorem heckeFiniteAdditiveTateTest_mul_integralUnit
-    (chi : UnitaryHeckeCharacter K) (b u : FiniteZetaIdeles K)
+/-- The additive Tate test transforms under integral-unit multiplication
+by the inverse character value, at every finite adele. -/
+theorem heckeFiniteAdditiveTateTest_mul_integralUnit_apply
+    (chi : UnitaryHeckeCharacter K) (x : FiniteAdeleRing (RingOfIntegers K) K) (u : Units (FiniteAdeleRing (RingOfIntegers K) K))
     (hu : Membership.mem (heckeIntegralFiniteUnitGroup (K := K)) u) :
-    heckeFiniteAdditiveTateTest chi (b * u).val =
-      heckeFiniteAdditiveTateTest chi b.val * (chi.val (heckeFiniteIdeleInclusion (Inv.inv u)) : Complex) := by
+    heckeFiniteAdditiveTateTest chi (x * u.val) =
+      heckeFiniteAdditiveTateTest chi x * (chi.val (heckeFiniteIdeleInclusion (Inv.inv u)) : Complex) := by
   let R := (finite_heckeRamifiedPlaces chi).toFinset
   have hVals := (mem_heckeIntegralFiniteUnitGroup u).mp hu
-  have hSup : Membership.mem (heckeIntegralFiniteAdeles (K := K)) (b * u).val <->
-      Membership.mem (heckeIntegralFiniteAdeles (K := K)) b.val := by
+  have hSup : Iff (Membership.mem (heckeIntegralFiniteAdeles (K := K)) (x * u.val))
+      (Membership.mem (heckeIntegralFiniteAdeles (K := K)) x) := by
     constructor
-    case mp =>
-      intro h p
+    . intro h p
       have hProd := (p.adicCompletionIntegers K).mul_mem _ _ (h p) (hVals.2 p)
       change Membership.mem (p.adicCompletionIntegers K)
-        ((b.val p * u.val p) * u.inv p) at hProd
-      have hCancel : u.val p * u.inv p = 1 := congrArg
-        (fun a : FiniteAdeleRing (RingOfIntegers K) K => a p) u.val_inv
+        ((x p * u.val p) * u.inv p) at hProd
+      have hCancel : u.val p * u.inv p = 1 := congrArg (fun a : FiniteAdeleRing (RingOfIntegers K) K => a p) u.val_inv
       rw [mul_assoc, hCancel, mul_one] at hProd
       exact hProd
-    case mpr =>
-      intro h p
+    . intro h p
       exact (p.adicCompletionIntegers K).mul_mem _ _ (h p) (hVals.1 p)
-  have hLocal (p : HeightOneSpectrum (RingOfIntegers K)) :
-      heckeLocalAdditiveTateTest p chi ((b * u).val p) =
-        heckeLocalAdditiveTateTest p chi (b.val p) *
-          (chi.val (localIdeleHom K p (heckeFiniteIdeleComponent p (Inv.inv u))) : Complex) := by
-    let a := heckeFiniteIdeleComponent p b
-    let e := heckeFiniteIdeleComponent p u
-    change heckeLocalAdditiveTateTest p chi ((a * e : Units (p.adicCompletion K)) : p.adicCompletion K) =
-      heckeLocalAdditiveTateTest p chi (a : p.adicCompletion K) * _
-    rw [heckeLocalAdditiveTateTest_coe_unit, heckeLocalAdditiveTateTest_coe_unit, map_inv]
-    exact heckeLocalTateTest_mul_integralUnit p chi a e
-      ((mem_heckeIntegralFiniteUnitGroup_iff_valued_one u).mp hu p)
   let f (p : HeightOneSpectrum (RingOfIntegers K)) : Circle :=
     chi.val (localIdeleHom K p (heckeFiniteIdeleComponent p (Inv.inv u)))
   have hChar : chi.val (heckeFiniteIdeleInclusion (Inv.inv u)) = R.prod f :=
@@ -319,15 +305,71 @@ theorem heckeFiniteAdditiveTateTest_mul_integralUnit
     calc
       _ = Circle.coeHom (R.prod f) := congrArg Circle.coeHom hChar
       _ = _ := map_prod Circle.coeHom f R
-  by_cases hb : Membership.mem (heckeIntegralFiniteAdeles (K := K)) b.val
-  case pos =>
-    rw [heckeFiniteAdditiveTateTest, if_pos (hSup.mpr hb), heckeFiniteAdditiveTateTest, if_pos hb, hCharCast]
-    simp_rw [hLocal]
-    exact Finset.prod_mul_distrib
-  case neg =>
-    have hNot : Not (Membership.mem (heckeIntegralFiniteAdeles (K := K)) (b * u).val) :=
-      fun h => hb (hSup.mp h)
-    rw [heckeFiniteAdditiveTateTest, if_neg hNot, heckeFiniteAdditiveTateTest, if_neg hb, zero_mul]
+  by_cases hx : Membership.mem (heckeIntegralFiniteAdeles (K := K)) x
+  . rw [heckeFiniteAdditiveTateTest, if_pos (hSup.mpr hx), heckeFiniteAdditiveTateTest, if_pos hx, hCharCast,
+      <- Finset.prod_mul_distrib]
+    apply Finset.prod_congr rfl
+    intro p hp
+    change heckeLocalAdditiveTateTest p chi (x p * u.val p) =
+      heckeLocalAdditiveTateTest p chi (x p) * (f p : Complex)
+    have hr : Not (HeckeUnramifiedAt chi p) := (finite_heckeRamifiedPlaces chi).mem_toFinset.mp hp
+    by_cases hz : x p = 0
+    . rw [hz, zero_mul]
+      have h0 : heckeLocalAdditiveTateTest p chi 0 = 0 := by
+        simp [heckeLocalAdditiveTateTest, hr]
+      rw [h0, zero_mul]
+    . let a := Units.mk0 (x p) hz
+      let e := heckeFiniteIdeleComponent p u
+      change heckeLocalAdditiveTateTest p chi ((a * e : Units (p.adicCompletion K)) : p.adicCompletion K) =
+        heckeLocalAdditiveTateTest p chi (a : p.adicCompletion K) *
+          (chi.val (localIdeleHom K p (heckeFiniteIdeleComponent p (Inv.inv u))) : Complex)
+      rw [heckeLocalAdditiveTateTest_coe_unit, heckeLocalAdditiveTateTest_coe_unit, map_inv]
+      exact heckeLocalTateTest_mul_integralUnit p chi a e
+        ((mem_heckeIntegralFiniteUnitGroup_iff_valued_one u).mp hu p)
+  . have hNot : Not (Membership.mem (heckeIntegralFiniteAdeles (K := K)) (x * u.val)) :=
+      fun h => hx (hSup.mp h)
+    rw [heckeFiniteAdditiveTateTest, if_neg hNot, heckeFiniteAdditiveTateTest, if_neg hx, zero_mul]
+
+/-- Right translation by a finite integral unit multiplies the Tate test
+by its inverse character value. -/
+theorem heckeFiniteAdditiveTateTest_mul_integralUnit
+    (chi : UnitaryHeckeCharacter K) (b u : FiniteZetaIdeles K)
+    (hu : Membership.mem (heckeIntegralFiniteUnitGroup (K := K)) u) :
+    heckeFiniteAdditiveTateTest chi (b * u).val =
+      heckeFiniteAdditiveTateTest chi b.val * (chi.val (heckeFiniteIdeleInclusion (Inv.inv u)) : Complex) :=
+  heckeFiniteAdditiveTateTest_mul_integralUnit_apply chi b.val u hu
+
+/-- The finite Fourier transform of the Tate test transforms under
+integral-unit multiplication by the character value. -/
+theorem heckeFiniteFourierIntegral_TateTest_mul_integralUnit
+    [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)] [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    (mu : Measure (FiniteAdeleRing (RingOfIntegers K) K)) [mu.IsAddHaarMeasure] [mu.Regular]
+    (chi : UnitaryHeckeCharacter K) (y : FiniteAdeleRing (RingOfIntegers K) K) (u : Units (FiniteAdeleRing (RingOfIntegers K) K))
+    (hu : Membership.mem (heckeIntegralFiniteUnitGroup (K := K)) u) :
+    heckeFiniteFourierIntegral mu (heckeFiniteAdditiveTateTest chi) (y * u.val) =
+      (chi.val (heckeFiniteIdeleInclusion u) : Complex) *
+        heckeFiniteFourierIntegral mu (heckeFiniteAdditiveTateTest chi) y := by
+  let phi := heckeFiniteAdditiveTateTest chi
+  let c := (chi.val (heckeFiniteIdeleInclusion u) : Complex)
+  have hInv := (heckeIntegralFiniteUnitGroup (K := K)).inv_mem hu
+  have hNorm : heckeFiniteIdeleNorm u = 1 := heckeFiniteIdeleNorm_eq_one_of_integralUnit u hu
+  have hTrans : (fun x => phi (x * (Inv.inv u).val)) = fun x => phi x * c := by
+    funext x
+    have h := heckeFiniteAdditiveTateTest_mul_integralUnit_apply chi x (Inv.inv u) hInv
+    rw [inv_inv] at h
+    exact h
+  have hF := heckeFiniteFourierIntegral_translate_ideleNorm mu phi (Inv.inv u) y
+  rw [inv_inv, hNorm, one_smul, hTrans] at hF
+  calc
+    _ = heckeFiniteFourierIntegral mu (fun x => phi x * c) y := hF.symm
+    _ = _ := by
+      change heckeFiniteFourierIntegral mu (fun x => phi x * c) y =
+        c * heckeFiniteFourierIntegral mu phi y
+      unfold heckeFiniteFourierIntegral
+      rw [<- integral_const_mul]
+      congr 1
+      funext x
+      ring
 
 /-- The finite part of the weighted Tate density. -/
 def heckeFiniteTateDensity (chi : UnitaryHeckeCharacter K) (s : Complex)

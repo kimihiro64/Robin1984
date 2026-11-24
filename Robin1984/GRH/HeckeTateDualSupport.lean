@@ -1,3 +1,4 @@
+import Robin1984.GRH.HeckeTateFiniteIntegral
 import Robin1984.GRH.HeckeTateThetaDecay
 
 /-!
@@ -71,6 +72,50 @@ private theorem finiteIntegral_of_globalInteger (c : RingOfIntegers K) :
   intro p
   exact HeightOneSpectrum.coe_algebraMap_mem (RingOfIntegers K) K p c
 
+/-- The finite trace annihilator of the integral adeles consists exactly of
+classes represented by an element of the trace-dual fractional ideal. -/
+theorem heckeFiniteAddChar_annihilator_iff_traceDualRepresentative (y : F K) :
+    Iff (forall a : F K, Membership.mem (heckeIntegralFiniteAdeles (K := K)) a ->
+      heckeFiniteAddChar (a * y) = 1)
+      (exists t : K,
+        And (Membership.mem (DedekindZeta.Theta.dualIdeal K
+          (Ideal.span (Set.singleton (1 : RingOfIntegers K)))) t)
+          (Membership.mem (heckeIntegralFiniteAdeles (K := K)) (y - algebraMap K (F K) t))) := by
+  let R := RingOfIntegers K
+  let H := heckeIntegralFiniteAdeles (K := K)
+  let g := algebraMap K (F K)
+  let Q := DedekindZeta.Theta.dualIdeal K (Ideal.span (Set.singleton (1 : R)))
+  have hChar (t : K) (ht : Membership.mem H (y - g t)) (a : F K)
+      (ha : Membership.mem H a) : heckeFiniteAddChar (a * y) = heckeFiniteAddChar (a * g t) := by
+    have hZ := heckeFiniteAddChar_eq_one_of_integral (a * (y - g t)) (finiteIntegral_mul_mem ha ht)
+    have he : a * y = a * (y - g t) + a * g t := by ring
+    rw [he, AddChar.map_add_eq_mul, hZ, one_mul]
+  have hDiag (t : K) :
+      Iff (forall a : F K, Membership.mem H a -> heckeFiniteAddChar (a * g t) = 1)
+        (Membership.mem Q t) := by
+    have h := heckeAdeleAddChar_finitePrincipalIdeal_annihilator_iff (1 : R) one_ne_zero t
+    constructor
+    . intro ht
+      apply h.mp
+      intro a ha
+      change heckeFiniteAddChar (a * g (algebraMap R K 1 * t)) = 1
+      rw [map_one, one_mul]
+      exact ht a ha
+    . intro ht a ha
+      have hA := h.mpr ht a ha
+      change heckeFiniteAddChar (a * g (algebraMap R K 1 * t)) = 1 at hA
+      rw [map_one, one_mul] at hA
+      exact hA
+  constructor
+  . intro hy
+    choose t ht using exists_finiteAdele_sub_principal_integral y
+    refine Exists.intro t (And.intro ((hDiag t).mp ?_) ht)
+    intro a ha
+    exact (hChar t ht a ha).symm.trans (hy a ha)
+  . intro h a ha
+    choose t ht using h
+    exact (hChar t ht.2 a ha).trans ((hDiag t).mpr ht.1 a ha)
+
 /-- The annihilator of an integral principal modulus is contained in a compact set. -/
 theorem exists_compact_heckeFiniteChar_annihilator_cover
     (d : RingOfIntegers K) (hd : Not (d = 0)) :
@@ -91,24 +136,10 @@ theorem exists_compact_heckeFiniteChar_annihilator_cover
   have hV : IsCompact V := isCompact_integralFiniteAdeles.image (continuous_const.mul continuous_id)
   refine Exists.intro V (And.intro hV ?_)
   intro y hy
-  choose t ht using exists_finiteAdele_sub_principal_integral (g (k d) * y)
+  choose t ht using (heckeFiniteAddChar_annihilator_iff_traceDualRepresentative (g (k d) * y)).mp hy
   let z := g (k d) * y - g t
-  have hz : Membership.mem H z := ht
-  have htChar (a : F K) (ha : Membership.mem H a) :
-      heckeFiniteAddChar (a * g t) = 1 := by
-    have h := hy a ha
-    have hZ := heckeFiniteAddChar_eq_one_of_integral (a * z) (finiteIntegral_mul_mem ha hz)
-    have he : a * (g (k d) * y) = a * z + a * g t := by
-      change _ = a * (g (k d) * y - g t) + a * g t
-      ring
-    rw [he, AddChar.map_add_eq_mul, hZ, one_mul] at h
-    exact h
-  have htQ : Membership.mem Q t := by
-    apply (heckeAdeleAddChar_finitePrincipalIdeal_annihilator_iff (1 : R) one_ne_zero t).mp
-    intro a ha
-    change heckeFiniteAddChar (a * g (k 1 * t)) = 1
-    rw [map_one, one_mul]
-    exact htChar a ha
+  have hz : Membership.mem H z := ht.2
+  have htQ : Membership.mem Q t := ht.1
   choose e he using hcQ t htQ
   have he' : k e = k c * t := he
   have hct : Membership.mem H (g (k c) * g t) := by
@@ -301,6 +332,35 @@ theorem continuous_heckeFiniteFourierIntegral_TateTest
       change Not (Membership.mem (heckeIntegralFiniteAdeles (K := K)) z) at hz
       rw [heckeFiniteAdditiveTateTest, if_neg hz]
     rw [hZero, zero_mul, zero_mul]
+
+/-- If a unit acts nontrivially through the Hecke character but trivially
+through the additive pairing on the integral support, the Fourier value
+vanishes at that frequency. -/
+theorem heckeFiniteFourierIntegral_TateTest_eq_zero_of_trivial_additive_pairing
+    (mu : Measure (F K)) [mu.IsAddHaarMeasure] [mu.Regular]
+    (chi : UnitaryHeckeCharacter K) (y : F K) (u : Units (F K))
+    (hu : Membership.mem (heckeIntegralFiniteUnitGroup (K := K)) u)
+    (hChi : Not ((chi.val (heckeFiniteIdeleInclusion u) : Complex) = 1))
+    (hAdd : forall x : F K,
+      Membership.mem (heckeIntegralFiniteAdeles (K := K)) x ->
+        heckeFiniteAddChar (x * (y * (u.val - 1))) = 1) :
+    heckeFiniteFourierIntegral mu (heckeFiniteAdditiveTateTest chi) y = 0 := by
+  let H := heckeFiniteFourierIntegral mu (heckeFiniteAdditiveTateTest chi)
+  have hF : H (y * u.val) = H y := by
+    unfold H heckeFiniteFourierIntegral
+    congr 1
+    funext x
+    change heckeFiniteAdditiveTateTest chi x * (heckeFiniteAddChar (x * (y * u.val)) : Complex) =
+      heckeFiniteAdditiveTateTest chi x * (heckeFiniteAddChar (x * y) : Complex)
+    by_cases hx : Membership.mem (heckeIntegralFiniteAdeles (K := K)) x
+    . have he : x * (y * u.val) = x * y + x * (y * (u.val - 1)) := by ring
+      rw [he, AddChar.map_add_eq_mul, hAdd x hx, mul_one]
+    . simp only [heckeFiniteAdditiveTateTest, if_neg hx, zero_mul]
+  have h := heckeFiniteFourierIntegral_TateTest_mul_integralUnit mu chi y u hu
+  change H (y * u.val) = _ * H y at h
+  have hz : ((chi.val (heckeFiniteIdeleInclusion u) : Complex) - 1) * H y = 0 := by
+    rw [sub_mul, <- h, hF, one_mul, sub_self]
+  exact (mul_eq_zero.mp hz).resolve_left (sub_ne_zero.mpr hChi)
 
 end Fourier
 
