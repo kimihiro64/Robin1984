@@ -234,8 +234,23 @@ for the limit superior defined above.
 | Dedekind ERH | For the specified holomorphic factorization $\zeta_K=U_K\prod_jL_{K,j}^{e_{K,j}}$, the order at each zero is exactly $\sum_{j:L_{K,j}(w)=0}e_{K,j}$ iff $\sum_j e_{K,j}\mathcal E_j\le\sum_j e_{K,j}\mathcal S_j$ for each field in the test. |
 | Grand RH | Every individual standard completion has simple zeros outside its prescribed exceptions and the stated exact orders at specified exceptions iff $\mathcal E+\mathcal P\le\mathcal S$ for each individual representation. The term $\mathcal P$ is the sum of squared errors in the prescribed orders, weighted by the Gaussian coefficients. |
 
-These statements and their proofs are in the
-[research paper](paper/robin1984-formalization.tex).
+The [research paper](paper/robin1984-formalization.tex) gives the proofs.
+The [Challenge](Challenge.lean) and [Solution](Solution.lean) contain the
+following multiplicity equivalences.
+
+| Hypothesis | Lean declaration |
+| --- | --- |
+| RH | `riemannRH_iff_globalPrimePowerMultiplicityInequality` |
+| Dirichlet GRH | `dirichletGRH_iff_globalPrimePowerMultiplicityInequality` |
+| Dedekind ERH | `dedekindERH_iff_globalPrimePowerMultiplicityInequality` |
+| Grand RH for a supplied standard family | `grandRH_iff_globalPrimePowerMultiplicityInequality` |
+
+The Dedekind proof takes the positive holomorphic factorization and the
+analytic data of its factors as inputs. The Grand RH proof takes the
+individual standard Euler coefficients and Gamma completions through
+`HasStandardMultiplicityAnalytics`. The paper supplies the standard
+automorphic inputs from the cited theorems. Instantiating those inputs in
+Lean over the full automorphic family remains in progress.
 
 ## Mathematical organization
 

@@ -213,7 +213,8 @@ def GaussianMultiplicityInequality (A : Real -> Complex) : Prop :=
   spectralSquareEnergy (gaussianMultiplicitySignal A 1) <=
     Filter.limsup (fun t : Real => (gaussianMultiplicitySignal A 2 t).re) atTop
 
-private theorem measurable_gaussianMultiplicitySignal {A : Real -> Complex}
+/-- A measurable arithmetic signal has measurable Gaussian smoothings. -/
+theorem measurable_gaussianMultiplicitySignal {A : Real -> Complex}
     (hA : Measurable A) (a : Real) :
     Measurable (gaussianMultiplicitySignal A a) := by
   have hK : Continuous (fun v : Real => (multiplicityGaussianKernel a v : Complex)) := by

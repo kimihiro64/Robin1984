@@ -1731,6 +1731,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/MultiplicityExceptions.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Gaussian filtering of the repeated prime-power spectrum and finite-frequency subtraction.",
+      "formalization_note": "An arithmetic mean extracts the order at each prescribed ordinate and the energy inequality detects simple zeros outside the exceptions.",
+      "content_basis": "The repeated Hadamard divisor, Cesaro orthogonality, and Gaussian smoothing.",
+      "dependency_status": "The signed Euler logarithm and entire order-one factor.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/MultiplicityExpansion.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Mellin inversion and the canonical triangular zero expansion on the positive real axis.",
@@ -2079,6 +2088,15 @@
       "formalization_note": "Defines the completed standard family and its analytic input using the same Mathlib expressions as the independent Challenge.",
       "content_basis": "Reviewed the exact finite Gamma factors, logarithmic Euler series, order-one condition, and triangular remainder collected in the Challenge and Solution.",
       "dependency_status": "Uses the Robin1984 Euler-product and completion criterion in the Solution.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/StandardAutomorphicMultiplicity.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Standard automorphic Gamma completion and the Gaussian criterion for prescribed analytic orders.",
+      "formalization_note": "Reduces the completed zero-order comparison for an individual supplied family to its signed prime-power series.",
+      "content_basis": "The Gamma completion preserves analytic order on the critical line and yields the ordinary order-one bound.",
+      "dependency_status": "The supplied standard Euler and archimedean data and the critical-line hypothesis for the family.",
       "reviewed": true
     },
     {

@@ -6,6 +6,7 @@ import Robin1984.GRH.DedekindTriangular
 import Robin1984.GRH.DirichletMultiplicity
 import Robin1984.GRH.RiemannMultiplicity
 import Robin1984.GRH.StandardAutomorphicFamily
+import Robin1984.GRH.StandardAutomorphicMultiplicity
 import Robin1984.Lagarias.Theorem
 import Robin1984.Public
 
@@ -260,6 +261,53 @@ theorem dedekindERH_iff_globalPrimePowerMultiplicityInequality
       DedekindGlobalMultiplicityInequality f := rfl
   rw [hDef]
   exact dedekindERH_iff_globalMultiplicityInequality hERH K f h
+
+end
+
+/-! ## Grand RH and zero multiplicity -/
+
+section
+
+open MeasureTheory
+open scoped Classical
+
+universe v
+
+/-- The global inequality after removing exceptional frequencies and adding the
+penalty for prescribed orders. -/
+def GrandPrimePowerMultiplicityInequality (A : Real -> Complex)
+    (E J : Finset Real) (order : Real -> Nat) : Prop :=
+  let H1 := primePowerGaussianSmoothing A 1
+  let H2 := primePowerGaussianSmoothing A 2
+  Filter.limsup (fun T : Real =>
+    (Inv.inv (T : Complex) * intervalIntegral
+      (fun t => ((norm (removeMultiplicityFrequencies E H1 t) ^ 2 : Real) : Complex))
+      0 T MeasureTheory.volume).re) Filter.atTop +
+    J.sum (fun delta => norm (arithmeticMultiplicityCoefficient H1 delta -
+      (order delta : Complex) * (Real.exp (-(delta ^ 2)) : Complex)) ^ 2) <=
+    Filter.limsup (fun t => (removeMultiplicityFrequencies E H2 t).re) Filter.atTop
+
+/-- **Grand RH and prescribed zero orders.** Suppose all zeros of every
+completed L-function in the supplied standard automorphic family lie on
+the critical line. They are simple outside the chosen finite sets and have
+the designated exact orders if and only if every member satisfies the
+global prime-power inequality with those exceptions. -/
+theorem grandRH_iff_globalPrimePowerMultiplicityInequality
+    {index : Type u} {powers : index -> Type v} [forall pi, Countable (powers pi)]
+    (family : StandardMultiplicityFamilyData index powers)
+    (analytics : HasStandardMultiplicityAnalytics family)
+    (E J : index -> Finset Real) (order : index -> Real -> Nat)
+    (hRH : forall pi s, family.completedL pi s = 0 -> s.re = 1 / 2) :
+    (forall pi, HasPrescribedZeroOrders (family.completedL pi) (E pi) (J pi) (order pi)) <->
+    (forall pi, GrandPrimePowerMultiplicityInequality (standardMultiplicityLogSignal family pi)
+      (E pi) (J pi) (order pi)) := by
+  have hDef (pi : index) :
+      GrandPrimePowerMultiplicityInequality (standardMultiplicityLogSignal family pi)
+          (E pi) (J pi) (order pi) =
+        ExceptionalPrimePowerMultiplicityInequality (standardMultiplicityLogSignal family pi)
+          (E pi) (J pi) (order pi) := rfl
+  simp only [hDef]
+  exact grandRH_prescribedOrders_iff_globalMultiplicityInequality family analytics E J order hRH
 
 end
 

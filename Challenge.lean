@@ -466,6 +466,130 @@ theorem dedekindERH_iff_globalPrimePowerMultiplicityInequality
 
 end
 
+/-! ## Grand RH and zero multiplicity -/
+
+section
+
+open MeasureTheory
+open scoped Classical
+
+universe v
+
+/-- Individual standard L-functions and their arithmetic and archimedean data. -/
+structure StandardMultiplicityFamilyData (index : Type u) (powers : index -> Type v) where
+  completedL : index -> Complex -> Complex
+  poleRemoved : index -> Complex -> Complex
+  primePowerNorm : forall pi, powers pi -> Nat
+  coefficient : forall pi, powers pi -> Complex
+  poleOrder : index -> Nat
+  conductor : index -> Real
+  realFactorCount : index -> Nat
+  complexFactorCount : index -> Nat
+  realShift : forall pi, Fin (realFactorCount pi) -> Complex
+  complexShift : forall pi, Fin (complexFactorCount pi) -> Complex
+
+/-- The conductor, cleared pole at zero, and Gamma factors of a standard completion. -/
+noncomputable def standardMultiplicityCompletionFactor {index : Type u} {powers : index -> Type v}
+    (family : StandardMultiplicityFamilyData index powers) (pi : index) (s : Complex) : Complex :=
+  s ^ family.poleOrder pi * (family.conductor pi : Complex) ^ (s / ((2 : Nat) : Complex)) *
+    (Finset.univ.prod (fun j =>
+      (Real.pi : Complex) ^ (-(s + family.realShift pi j) / ((2 : Nat) : Complex)) *
+        Complex.Gamma ((s + family.realShift pi j) / ((2 : Nat) : Complex)))) *
+    (Finset.univ.prod (fun j =>
+      ((2 : Nat) : Complex) * (((2 : Nat) : Complex) * (Real.pi : Complex)) ^ (-(s + family.complexShift pi j)) *
+        Complex.Gamma (s + family.complexShift pi j)))
+
+/-- Standard completion, growth, and Euler logarithm for an individual family.
+The pole order refers to normalization at zero and one. -/
+structure HasStandardMultiplicityAnalytics {index : Type u} {powers : index -> Type v}
+    (family : StandardMultiplicityFamilyData index powers) : Prop where
+  conductor_pos : forall pi, 0 < family.conductor pi
+  real_shift : forall pi j, -(1 : Real) / 2 < (family.realShift pi j).re
+  complex_shift : forall pi j, -(1 : Real) / 2 < (family.complexShift pi j).re
+  norm_ge_two : forall pi i, (2 : Real) <= (family.primePowerNorm pi i : Real)
+  norms_locally_finite : forall pi (T : Real), Set.Finite {i : powers pi |
+    (family.primePowerNorm pi i : Real) < T}
+  log_derivative_summable : forall pi (r : Real), 1 < r ->
+    Summable (fun i => norm (family.coefficient pi i) * (family.primePowerNorm pi i : Real) ^ (-r))
+  ordinary_entire : forall pi, Differentiable Complex (family.poleRemoved pi)
+  completed_order_one : forall pi, Differentiable Complex (family.completedL pi) /\
+    forall eps : Real, 0 < eps -> exists C : Real, 0 < C /\
+      forall z : Complex, norm (family.completedL pi z) <= Real.exp (C * (1 + norm z) ^ (1 + eps))
+  completion : forall pi s, (1 : Real) / 2 < s.re ->
+    family.completedL pi s = standardMultiplicityCompletionFactor family pi s * family.poleRemoved pi s
+  euler_log_derivative : forall pi s, 1 < s.re ->
+    logDeriv (family.poleRemoved pi) s = (family.poleOrder pi : Complex) / (s - 1) -
+      tsum (fun n => family.coefficient pi n * ((family.primePowerNorm pi n : Real) : Complex) ^ (-s))
+
+/-- The signed triangular prime-power signal of an individual standard L-function. -/
+noncomputable def standardMultiplicityLogSignal {index : Type u} {powers : index -> Type v}
+    (family : StandardMultiplicityFamilyData index powers) (pi : index) (t : Real) : Complex :=
+  if t < 0 then 0 else
+    let x := Real.exp t
+    (Real.exp (-t / 2) : Complex) *
+      ((((family.poleOrder pi : Real) / 2 : Real) : Complex) * (x : Complex) -
+        tsum (fun n : powers pi => (Set.Ioi (family.primePowerNorm pi n : Real)).indicator
+          (fun y : Real => family.coefficient pi n *
+            (1 - ((family.primePowerNorm pi n : Real) : Complex) / (y : Complex))) x))
+
+/-- The point on the critical line of a specified ordinate. -/
+noncomputable def multiplicityCriticalPoint (delta : Real) : Complex :=
+  Complex.mk (1 / 2) delta
+
+/-- Simple zeros outside the omitted ordinates and exact orders at the prescribed ones. -/
+def HasPrescribedZeroOrders (F : Complex -> Complex)
+    (E J : Finset Real) (order : Real -> Nat) : Prop :=
+  (forall delta, Not (Membership.mem E delta) ->
+    analyticOrderNatAt F (multiplicityCriticalPoint delta) <= 1) /\
+  (forall delta, Membership.mem J delta ->
+    analyticOrderNatAt F (multiplicityCriticalPoint delta) = order delta)
+
+/-- The mean Fourier coefficient extracted from the arithmetic signal. -/
+noncomputable def arithmeticMultiplicityCoefficient (H : Real -> Complex) (delta : Real) :
+    Complex :=
+  Filter.limUnder Filter.atTop (fun T : Real => Inv.inv (T : Complex) *
+    intervalIntegral
+      (fun t : Real => H t * Complex.exp (-(delta : Complex) * Complex.I * (t : Complex)))
+      0 T MeasureTheory.volume)
+
+/-- Delete the measured contribution of each exceptional ordinate. -/
+noncomputable def removeMultiplicityFrequencies (E : Finset Real) (H : Real -> Complex) (t : Real) :
+    Complex :=
+  H t - E.sum (fun delta => arithmeticMultiplicityCoefficient H delta *
+    Complex.exp ((delta : Complex) * Complex.I * (t : Complex)))
+
+/-- The global inequality after removing exceptional frequencies and adding the
+penalty for prescribed orders. -/
+def GrandPrimePowerMultiplicityInequality (A : Real -> Complex)
+    (E J : Finset Real) (order : Real -> Nat) : Prop :=
+  let H1 := primePowerGaussianSmoothing A 1
+  let H2 := primePowerGaussianSmoothing A 2
+  Filter.limsup (fun T : Real =>
+    (Inv.inv (T : Complex) * intervalIntegral
+      (fun t => ((norm (removeMultiplicityFrequencies E H1 t) ^ 2 : Real) : Complex))
+      0 T MeasureTheory.volume).re) Filter.atTop +
+    J.sum (fun delta => norm (arithmeticMultiplicityCoefficient H1 delta -
+      (order delta : Complex) * (Real.exp (-(delta ^ 2)) : Complex)) ^ 2) <=
+    Filter.limsup (fun t => (removeMultiplicityFrequencies E H2 t).re) Filter.atTop
+
+/-- **Grand RH and prescribed zero orders.** Suppose all zeros of every
+completed L-function in the supplied standard automorphic family lie on
+the critical line. They are simple outside the chosen finite sets and have
+the designated exact orders if and only if every member satisfies the
+global prime-power inequality with those exceptions. -/
+theorem grandRH_iff_globalPrimePowerMultiplicityInequality
+    {index : Type u} {powers : index -> Type v} [forall pi, Countable (powers pi)]
+    (family : StandardMultiplicityFamilyData index powers)
+    (analytics : HasStandardMultiplicityAnalytics family)
+    (E J : index -> Finset Real) (order : index -> Real -> Nat)
+    (hRH : forall pi s, family.completedL pi s = 0 -> s.re = 1 / 2) :
+    (forall pi, HasPrescribedZeroOrders (family.completedL pi) (E pi) (J pi) (order pi)) <->
+    (forall pi, GrandPrimePowerMultiplicityInequality (standardMultiplicityLogSignal family pi)
+      (E pi) (J pi) (order pi)) := by
+  sorry
+
+end
+
 /-! # Supporting statements -/
 
 /-- The single-field Dedekind equivalence used to prove the family criteria.

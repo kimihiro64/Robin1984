@@ -1248,16 +1248,28 @@ check covers the two generalized statements and the three classical
 statements. Appendix~\ref{sec:formalization} describes statement
 comparison, axiom audits, and kernel replay.
 
-In the research source,
-\path{grandRH_iff_triangularPrimePowerBound} proves the analytic
-equivalence for an indexed family supplied with its Euler product,
-completion, growth, and functional equation. These hypotheses are
-explicit in \path{HasStandardAutomorphicAnalytics}.
-Section~\ref{sec:grand-research} uses the cited classical theorems to
-supply them in the mathematical argument. Supplying them in Lean for
-the full family of standard automorphic \(L\)-functions remains open.
-The checked Dedekind specialization and work on the rank-one
-construction are described in Appendix~\ref{app:hecke-formalization}.
+The four multiplicity statements of
+Theorems~\ref{thm:rh-multiplicity}--\ref{thm:grand-multiplicity}
+also have Mathlib-only Challenge statements and Solution proofs.
+The first two use the actual Riemann zeta and Dirichlet \(L\)-functions.
+The third uses the actual Dedekind zeta continuation and takes the
+positive factorization and its analytic inputs as data.
+The fourth is \path{grandRH_iff_globalPrimePowerMultiplicityInequality}.
+Its inputs are the individual Euler logarithms, order-one completed
+functions, and standard Gamma completions, made explicit by
+\path{HasStandardMultiplicityAnalytics}. Lean proves that these
+completions preserve the zero orders on the line, and that the
+Gaussian frequency mean measures the order at each specified ordinate.
+
+The location theorem \path{grandRH_iff_triangularPrimePowerBound}
+uses the paired Euler products, completions, growth, and functional
+equations in \path{HasStandardAutomorphicAnalytics}.
+Section~\ref{sec:grand-research} uses the cited classical theorems
+to supply the automorphic inputs in the mathematical argument.
+Instantiating the Lean results over the full family of standard
+automorphic \(L\)-functions remains part of the formalization work.
+The checked Dedekind specialization and rank-one construction are
+described in Appendix~\ref{app:hecke-formalization}.
 
 The source, theorem boundary, and verification instructions are
 available at \url{\repositoryurl}.

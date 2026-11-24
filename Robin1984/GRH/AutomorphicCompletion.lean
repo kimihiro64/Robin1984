@@ -598,7 +598,7 @@ private theorem standardCompletionFactor_mul_reciprocal {realPlaces complexPlace
     (m : Nat) (mu : realPlaces -> Complex) (nu : complexPlaces -> Complex)
     (hMu : forall i, -(1 : Real) / 2 < (mu i).re)
     (hNu : forall i, -(1 : Real) / 2 < (nu i).re)
-    {s : Complex} (hs : (1 : Real) / 2 < s.re) :
+    {s : Complex} (hs : (1 : Real) / 2 <= s.re) :
     standardCompletionFactor conductor m mu nu s *
       standardReciprocalArchimedeanFactor conductor mu nu s = s ^ m := by
   have hQ : (conductor : Complex) ^ (s / 2) * (conductor : Complex) ^ (-(s / 2)) = 1 := by
@@ -635,6 +635,34 @@ private theorem standardCompletionFactor_mul_reciprocal {realPlaces complexPlace
           (Finset.univ.prod (fun i => Inv.inv (LComplex (s + nu i))))) := by ac_rfl
     _ = s ^ m := by rw [hQ, hReal, hComplex, mul_one, mul_one, mul_one]
 
+private theorem poleCleared_eq_completed_mul_reciprocal {realPlaces complexPlaces : Type*}
+    [Fintype realPlaces] [Fintype complexPlaces] {conductor : Real} (hConductor : 0 < conductor)
+    (m : Nat) (mu : realPlaces -> Complex) (nu : complexPlaces -> Complex)
+    (hMu : forall i, -(1 : Real) / 2 < (mu i).re)
+    (hNu : forall i, -(1 : Real) / 2 < (nu i).re)
+    {F Lambda : Complex -> Complex}
+    (hF : Differentiable Complex F) (hLambda : Differentiable Complex Lambda)
+    (hCompletion : forall s : Complex, (1 : Real) / 2 < s.re ->
+      Lambda s = standardCompletionFactor conductor m mu nu s * F s) :
+    (fun s : Complex => s ^ m * F s) =
+      (fun s => Lambda s * standardReciprocalArchimedeanFactor conductor mu nu s) := by
+  let Q := standardReciprocalArchimedeanFactor conductor mu nu
+  have hQ := (entireOrderOne_standardReciprocalArchimedeanFactor hConductor mu nu).differentiable
+  have hProduct : Differentiable Complex (fun s => Lambda s * Q s) := hLambda.mul hQ
+  have hPower : Differentiable Complex (fun s : Complex => s ^ m * F s) :=
+    (differentiable_id.pow m).mul hF
+  have hRe : (1 : Real) / 2 < (2 : Complex).re := by norm_num
+  have hAgree : Filter.EventuallyEq (nhds (2 : Complex))
+      (fun s : Complex => s ^ m * F s) (fun s => Lambda s * Q s) := by
+    filter_upwards [(isOpen_lt continuous_const Complex.continuous_re).mem_nhds hRe] with s hs
+    rw [hCompletion s hs, mul_right_comm, standardCompletionFactor_mul_reciprocal hConductor m mu nu hMu hNu hs.le]
+  have hAll : Set.EqOn (fun s : Complex => s ^ m * F s) (fun s => Lambda s * Q s) Set.univ :=
+    (hPower.differentiableOn.analyticOnNhd isOpen_univ).eqOn_of_preconnected_of_eventuallyEq
+      (hProduct.differentiableOn.analyticOnNhd isOpen_univ)
+      isPreconnected_univ (mem_univ (2 : Complex)) hAgree
+  funext s
+  exact hAll (mem_univ s)
+
 /-- The reciprocal archimedean factors transfer the order-one bound for
 the pole-cleared completion to the entire pole-cleared ordinary function. -/
 theorem entireOrderOne_of_standardCompletion {realPlaces complexPlaces : Type*}
@@ -652,18 +680,45 @@ theorem entireOrderOne_of_standardCompletion {realPlaces complexPlaces : Type*}
     entireOrderOne_standardReciprocalArchimedeanFactor hConductor mu nu
   have hProduct : EntireOfOrderAtMost 1 (fun s => Lambda s * Q s) :=
     entireOrderOne_mul hLambda hQ
-  have hPower : Differentiable Complex (fun s : Complex => s ^ m * F s) :=
-    (differentiable_id.pow m).mul hF
-  have hRe : (1 : Real) / 2 < (2 : Complex).re := by norm_num
-  have hAgree : Filter.EventuallyEq (nhds (2 : Complex))
-      (fun s : Complex => s ^ m * F s) (fun s => Lambda s * Q s) := by
-    filter_upwards [(isOpen_lt continuous_const Complex.continuous_re).mem_nhds hRe] with s hs
-    rw [hCompletion s hs, mul_right_comm, standardCompletionFactor_mul_reciprocal hConductor m mu nu hMu hNu hs]
-  have hAll : Set.EqOn (fun s : Complex => s ^ m * F s) (fun s => Lambda s * Q s) Set.univ :=
-    (hPower.differentiableOn.analyticOnNhd isOpen_univ).eqOn_of_preconnected_of_eventuallyEq
-      (hProduct.differentiable.differentiableOn.analyticOnNhd isOpen_univ)
-      isPreconnected_univ (mem_univ (2 : Complex)) hAgree
-  exact entireOrderOne_of_mul_pow hF hProduct m (fun s => hAll (mem_univ s))
+  have hEq := poleCleared_eq_completed_mul_reciprocal hConductor m mu nu hMu hNu
+    hF hLambda.differentiable hCompletion
+  exact entireOrderOne_of_mul_pow hF hProduct m (fun s => congrFun hEq s)
+
+/-- Standard Gamma completion preserves analytic order on the critical line
+and throughout the right half-plane. -/
+theorem analyticOrderNatAt_eq_of_standardCompletion {realPlaces complexPlaces : Type*}
+    [Fintype realPlaces] [Fintype complexPlaces] {conductor : Real} (hConductor : 0 < conductor)
+    (m : Nat) (mu : realPlaces -> Complex) (nu : complexPlaces -> Complex)
+    (hMu : forall i, -(1 : Real) / 2 < (mu i).re)
+    (hNu : forall i, -(1 : Real) / 2 < (nu i).re)
+    {F Lambda : Complex -> Complex}
+    (hF : Differentiable Complex F) (hLambda : Differentiable Complex Lambda)
+    (hCompletion : forall s : Complex, (1 : Real) / 2 < s.re ->
+      Lambda s = standardCompletionFactor conductor m mu nu s * F s)
+    {z : Complex} (hz : (1 : Real) / 2 <= z.re) :
+    analyticOrderNatAt F z = analyticOrderNatAt Lambda z := by
+  let Q := standardReciprocalArchimedeanFactor conductor mu nu
+  have hEq := poleCleared_eq_completed_mul_reciprocal hConductor m mu nu hMu hNu
+    hF hLambda hCompletion
+  have hRe : 0 < z.re := (by norm_num : (0 : Real) < 1 / 2).trans_le hz
+  have hPowZero : Not (z ^ m = 0) := pow_ne_zero _ (Complex.ne_zero_of_re_pos hRe)
+  have hQ0 : Not (Q z = 0) := by
+    intro hQ
+    have hCancel := standardCompletionFactor_mul_reciprocal hConductor m mu nu hMu hNu hz
+    change standardCompletionFactor conductor m mu nu z * Q z = z ^ m at hCancel
+    rw [hQ, mul_zero] at hCancel
+    exact hPowZero hCancel.symm
+  have hPow : AnalyticAt Complex (fun s : Complex => s ^ m) z :=
+    (differentiable_id.pow m).analyticAt z
+  have hQ := (entireOrderOne_standardReciprocalArchimedeanFactor hConductor mu nu).differentiable.analyticAt z
+  have hOrd := congrArg (fun f : Complex -> Complex => analyticOrderAt f z) hEq
+  change analyticOrderAt ((fun s : Complex => s ^ m) * F) z =
+    analyticOrderAt (Lambda * Q) z at hOrd
+  rw [analyticOrderAt_mul hPow (hF.analyticAt z),
+    analyticOrderAt_mul (hLambda.analyticAt z) hQ,
+    hPow.analyticOrderAt_eq_zero.mpr hPowZero, hQ.analyticOrderAt_eq_zero.mpr hQ0,
+    zero_add, add_zero] at hOrd
+  exact congrArg ENat.toNat hOrd
 
 /-- The triangular bound is equivalent to the completed zero assertion
 for a dual-closed standard family with order-one pole-cleared completions.
@@ -731,7 +786,7 @@ theorem exists_entireOrderOne_of_standardCompletion_noPole
   intro s hs
   change Lambda s = standardCompletionFactor conductor 0 mu nu s *
     (Lambda s * standardReciprocalArchimedeanFactor conductor mu nu s)
-  rw [mul_left_comm, standardCompletionFactor_mul_reciprocal hConductor 0 mu nu hMu hNu hs,
+  rw [mul_left_comm, standardCompletionFactor_mul_reciprocal hConductor 0 mu nu hMu hNu hs.le,
     pow_zero, mul_one]
 
 /-- A pole-free completed product of order at most one determines

@@ -212,4 +212,115 @@ theorem summable_gaussian_criticalWeights {i : Type*} (gamma : i -> Real)
       rw [mul_assoc, <- div_eq_mul_inv, div_self hq.ne', mul_one]
     _ <= _ := mul_le_mul_of_nonneg_right hMul (inv_nonneg.mpr hq.le)
 
+/-- The point on the critical line of a specified ordinate. -/
+def multiplicityCriticalPoint (delta : Real) : Complex :=
+  Complex.mk (1 / 2) delta
+
+private def criticalOccurrencesAtEquiv {F : Complex -> Complex} (delta : Real) :
+    Equiv (Fin (Int.toNat (MeromorphicOn.divisor F univ (multiplicityCriticalPoint delta))))
+      {i : criticalHadamardOccurrence F // criticalHadamardOrdinate i = delta} := by
+  let z := multiplicityCriticalPoint delta
+  let n := Int.toNat (MeromorphicOn.divisor F univ z)
+  have hz : z.re = 1 / 2 := rfl
+  let f (j : Fin n) :
+      {i : criticalHadamardOccurrence F // criticalHadamardOrdinate i = delta} :=
+    Subtype.mk (criticalOccurrenceFromFin hz j) rfl
+  apply Equiv.ofBijective f
+  refine And.intro ?_ ?_
+  case refine_1 =>
+    intro j k hjk
+    exact Fin.ext (congrArg (fun i : {i : criticalHadamardOccurrence F //
+      criticalHadamardOrdinate i = delta} => i.val.val.val.val.2.val) hjk)
+  case refine_2 =>
+    intro p
+    have hp : regularHadamardZero p.val.val = z := Complex.ext p.val.property p.property
+    change p.val.val.val.val.1 = z at hp
+    generalize hQ : p.val.val.val.val = q at hp
+    cases q with
+    | mk w j =>
+      change w = z at hp
+      subst w
+      refine Exists.intro j ?_
+      apply Subtype.ext
+      apply Subtype.ext
+      apply Subtype.ext
+      apply Subtype.ext
+      exact hQ.symm
+
+/-- The complete contribution at an ordinate counts the order of that zero. -/
+theorem criticalOccurrenceFiberSum_eq_order {F : Complex -> Complex}
+    (hF : Differentiable Complex F) (delta : Real) (coeff : Real -> Complex) :
+    tsum (fun i : criticalHadamardOccurrence F =>
+      if criticalHadamardOrdinate i = delta then coeff (criticalHadamardOrdinate i) else 0) =
+    (analyticOrderNatAt F (multiplicityCriticalPoint delta) : Complex) * coeff delta := by
+  let S : Set (criticalHadamardOccurrence F) := {i | criticalHadamardOrdinate i = delta}
+  have hIndicator : (fun i : criticalHadamardOccurrence F =>
+      if criticalHadamardOrdinate i = delta then coeff (criticalHadamardOrdinate i) else 0) =
+      S.indicator (fun i => coeff (criticalHadamardOrdinate i)) := by
+    funext i
+    rw [Set.indicator_apply]
+    rfl
+  rw [hIndicator, <- tsum_subtype]
+  let e := criticalOccurrencesAtEquiv (F := F) delta
+  let n := Int.toNat (MeromorphicOn.divisor F univ (multiplicityCriticalPoint delta))
+  change tsum (fun i : {i : criticalHadamardOccurrence F // criticalHadamardOrdinate i = delta} =>
+    coeff (criticalHadamardOrdinate i.val)) = _
+  rw [<- e.tsum_eq]
+  have hFun : (fun j : Fin n => coeff (criticalHadamardOrdinate (e j).val)) =
+      fun _ => coeff delta := by
+    funext j
+    rw [(e j).property]
+  rw [hFun, tsum_fintype, Finset.sum_const, Finset.card_fin, nsmul_eq_mul]
+  rw [divisorOrder_toNat_eq_analyticOrderNatAt hF]
+
+/-- Away from omitted ordinates, distinct zero occurrences have distinct
+frequencies exactly when the corresponding analytic orders are at most one. -/
+theorem injective_criticalHadamardOrdinate_outside_iff {F : Complex -> Complex}
+    (hF : Differentiable Complex F) (E : Finset Real) :
+    Function.Injective
+      (fun i : {i : criticalHadamardOccurrence F // Not (Membership.mem E (criticalHadamardOrdinate i))} =>
+        criticalHadamardOrdinate i.val) <->
+      forall delta, Not (Membership.mem E delta) ->
+        analyticOrderNatAt F (multiplicityCriticalPoint delta) <= 1 := by
+  constructor
+  case mp =>
+    intro h delta hDelta
+    by_contra hOrd
+    let n := Int.toNat (MeromorphicOn.divisor F univ (multiplicityCriticalPoint delta))
+    have hn : 1 < n := by
+      unfold n
+      rw [divisorOrder_toNat_eq_analyticOrderNatAt hF]
+      exact lt_of_not_ge hOrd
+    let e := criticalOccurrencesAtEquiv (F := F) delta
+    let a : Fin n := Fin.mk 0 (Nat.lt_of_succ_lt hn)
+    let b : Fin n := Fin.mk 1 hn
+    have hOff (j : Fin n) : Not (Membership.mem E (criticalHadamardOrdinate (e j).val)) := by
+      rw [(e j).property]
+      exact hDelta
+    have hSame := @h (Subtype.mk (e a).val (hOff a)) (Subtype.mk (e b).val (hOff b))
+      ((e a).property.trans (e b).property.symm)
+    have hVal : (e a).val = (e b).val := congrArg
+      (fun p : {i : criticalHadamardOccurrence F //
+        Not (Membership.mem E (criticalHadamardOrdinate i))} => p.val) hSame
+    have hEq := e.injective (Subtype.ext hVal)
+    exact Nat.zero_ne_one (congrArg Fin.val hEq)
+  case mpr =>
+    intro h i j hIj
+    let delta := criticalHadamardOrdinate i.val
+    let e := criticalOccurrencesAtEquiv (F := F) delta
+    let a : {k : criticalHadamardOccurrence F // criticalHadamardOrdinate k = delta} :=
+      Subtype.mk i.val rfl
+    let b : {k : criticalHadamardOccurrence F // criticalHadamardOrdinate k = delta} :=
+      Subtype.mk j.val hIj.symm
+    have hN : Int.toNat (MeromorphicOn.divisor F univ (multiplicityCriticalPoint delta)) <= 1 := by
+      rw [divisorOrder_toNat_eq_analyticOrderNatAt hF]
+      exact h delta i.property
+    have hFin : e.symm a = e.symm b := Fin.ext (by
+      have ha := (e.symm a).isLt
+      have hb := (e.symm b).isLt
+      omega)
+    have hFib := e.symm.injective hFin
+    have hVal : a.val = b.val := congrArg Subtype.val hFib
+    exact Subtype.ext hVal
+
 end Robin1984.GRH
