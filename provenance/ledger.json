@@ -1695,6 +1695,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetFiniteRectangleFourier.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Fourier transforms of compact open cosets in Tate's thesis and in Godement and Jacquet, Zeta Functions of Simple Algebras.",
+      "formalization_note": "Proves compact support and a uniform Haar mass bound on the Fourier transform of a principal finite adelic coset.",
+      "content_basis": "Translates the test by its additive subgroup, applies the trace annihilator of the integral finite adeles, and bounds the restricted integral by the Haar mass.",
+      "dependency_status": "Uses the proved finite trace duality, translation criterion, compactness of integral finite adeles, and Mathlib integration bounds.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetFourier.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Fourier inversion for the adelic matrix trace pairing.",
