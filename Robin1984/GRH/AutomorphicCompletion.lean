@@ -273,7 +273,8 @@ private theorem norm_le_one_add_norm_rpow (z : Complex) {eps : Real} (heps : 0 <
     simpa only [Real.rpow_one] using
       Real.rpow_le_rpow_of_exponent_le hb (show (1 : Real) <= 1 + eps by linarith))
 
-private theorem entireOrderOne_const (c : Complex) :
+/-- A constant entire function has order at most one. -/
+theorem entireOrderOne_const (c : Complex) :
     EntireOfOrderAtMost 1 (fun _ : Complex => c) := by
   refine And.intro (differentiable_const c) (fun eps heps =>
     Exists.intro (norm c + 1) (And.intro (by positivity) (fun z => ?_)))
@@ -285,7 +286,8 @@ private theorem entireOrderOne_const (c : Complex) :
       exact (le_add_of_nonneg_right (by norm_num : (0 : Real) <= 1)).trans
         (le_mul_of_one_le_right (by positivity) (one_le_one_add_norm_rpow z heps))
 
-private theorem entireOrderOne_mul {f g : Complex -> Complex}
+/-- Products of entire functions of order at most one have order at most one. -/
+theorem entireOrderOne_mul {f g : Complex -> Complex}
     (hf : EntireOfOrderAtMost 1 f) (hg : EntireOfOrderAtMost 1 g) :
     EntireOfOrderAtMost 1 (fun z => f z * g z) := by
   refine And.intro (hf.differentiable.mul hg.differentiable) ?_
@@ -301,7 +303,76 @@ private theorem entireOrderOne_mul {f g : Complex -> Complex}
       mul_le_mul (hC.2 z) (hD.2 z) (norm_nonneg _) (Real.exp_nonneg _)
     _ = _ := by rw [<- Real.exp_add, add_mul]
 
-private theorem entireOrderOne_affine {f : Complex -> Complex}
+/-- Sums of entire functions of order at most one have order at most one. -/
+theorem entireOrderOne_add {f g : Complex -> Complex}
+    (hf : EntireOfOrderAtMost 1 f) (hg : EntireOfOrderAtMost 1 g) :
+    EntireOfOrderAtMost 1 (fun s => f s + g s) := by
+  refine And.intro (hf.differentiable.add hg.differentiable) ?_
+  intro e he
+  choose A hA using hf.2 e he
+  choose B hB using hg.2 e he
+  refine Exists.intro (A + B + 1) (And.intro (by linarith only [hA.1, hB.1]) ?_)
+  intro s
+  let q := (1 + norm s) ^ (1 + e)
+  have hq : 1 <= q := Real.one_le_rpow (le_add_of_nonneg_right (norm_nonneg s))
+    (add_nonneg zero_le_one he.le)
+  have hq0 : 0 <= q := zero_le_one.trans hq
+  have hAB : Real.exp (A * q) <= Real.exp ((A + B) * q) :=
+    Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_right (le_add_of_nonneg_right hB.1.le) hq0)
+  have hBA : Real.exp (B * q) <= Real.exp ((A + B) * q) :=
+    Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_right (le_add_of_nonneg_left hA.1.le) hq0)
+  have hTwo : (2 : Real) <= Real.exp q := by
+    linarith only [Real.add_one_le_exp q, hq]
+  calc
+    _ <= norm (f s) + norm (g s) := norm_add_le _ _
+    _ <= Real.exp ((A + B) * q) + Real.exp ((A + B) * q) :=
+      add_le_add ((hA.2 s).trans hAB) ((hB.2 s).trans hBA)
+    _ = 2 * Real.exp ((A + B) * q) := by ring
+    _ <= Real.exp q * Real.exp ((A + B) * q) :=
+      mul_le_mul_of_nonneg_right hTwo (Real.exp_pos _).le
+    _ = _ := by
+      rw [<- Real.exp_add]
+      congr 1
+      change q + (A + B) * q = (A + B + 1) * q
+      ring
+
+/-- Differences of entire functions of order at most one have order at most one. -/
+theorem entireOrderOne_sub {f g : Complex -> Complex}
+    (hf : EntireOfOrderAtMost 1 f) (hg : EntireOfOrderAtMost 1 g) :
+    EntireOfOrderAtMost 1 (fun s => f s - g s) := by
+  have hNeg := entireOrderOne_mul (entireOrderOne_const (-1)) hg
+  simpa only [neg_one_mul, <- sub_eq_add_neg] using entireOrderOne_add hf hNeg
+
+/-- The identity is entire of order at most one. -/
+theorem entireOrderOne_id : EntireOfOrderAtMost 1 (fun s : Complex => s) := by
+  refine And.intro differentiable_id ?_
+  intro e he
+  refine Exists.intro 1 (And.intro zero_lt_one (fun s => ?_))
+  let u := 1 + norm s
+  have hu : 1 <= u := le_add_of_nonneg_right (norm_nonneg s)
+  have hP : u <= u ^ (1 + e) := by
+    rw [Real.rpow_add (zero_lt_one.trans_le hu), Real.rpow_one]
+    exact le_mul_of_one_le_right (zero_le_one.trans hu) (Real.one_le_rpow hu he.le)
+  simp only [one_mul]
+  change norm s <= Real.exp (u ^ (1 + e))
+  exact (le_add_of_nonneg_left zero_le_one).trans
+    (hP.trans (le_trans (le_add_of_nonneg_right zero_le_one) (Real.add_one_le_exp _)))
+
+/-- A finite sum of entire functions of order at most one has order at most one. -/
+theorem entireOrderOne_finsetSum {iota : Type*} (S : Finset iota)
+    (f : iota -> Complex -> Complex)
+    (hf : forall i, Membership.mem S i -> EntireOfOrderAtMost 1 (f i)) :
+    EntireOfOrderAtMost 1 (fun s => S.sum (fun i => f i s)) := by
+  classical
+  induction S using Finset.induction_on with
+  | empty => simpa only [Finset.sum_empty] using entireOrderOne_const 0
+  | insert i S hi ih =>
+    have hF := hf i (Finset.mem_insert_self _ _)
+    have hS := ih (fun j hj => hf j (Finset.mem_insert_of_mem hj))
+    simpa only [Finset.sum_insert hi] using entireOrderOne_add hF hS
+
+/-- Composition with an affine map preserves an order-one bound. -/
+theorem entireOrderOne_affine {f : Complex -> Complex}
     (hf : EntireOfOrderAtMost 1 f) (a b : Complex) :
     EntireOfOrderAtMost 1 (fun z => f (a * z + b)) := by
   have hD : Differentiable Complex (fun z : Complex => a * z + b) :=
@@ -343,7 +414,8 @@ private theorem entireOrderOne_exp_linear (a : Complex) :
       mul_le_mul_of_nonneg_left (norm_le_one_add_norm_rpow z heps) (norm_nonneg _)
     _ <= _ := mul_le_mul_of_nonneg_right (le_add_of_nonneg_left zero_le_one) (by positivity)
 
-private theorem entireOrderOne_const_cpow {a : Real} (ha : 0 < a) (c : Complex) :
+/-- A positive real base to a complex linear exponent has order at most one. -/
+theorem entireOrderOne_const_cpow {a : Real} (ha : 0 < a) (c : Complex) :
     EntireOfOrderAtMost 1 (fun z => (a : Complex) ^ (c * z)) := by
   have hEq : (fun z : Complex => (a : Complex) ^ (c * z)) =
       (fun z => Complex.exp ((Complex.log (a : Complex) * c) * z)) := by
@@ -422,7 +494,8 @@ theorem standardCompletionFactor_ne_zero {realPlaces complexPlaces : Type*}
     exact LComplex_ne_zero_of_re_pos (hArg (nu i) (hNu i))
   exact mul_ne_zero (mul_ne_zero (mul_ne_zero hS hQ) hReal) hComplex
 
-private theorem entireOrderOne_of_mul_pow {f g : Complex -> Complex}
+/-- Removing a power of the variable preserves order one for an entire quotient. -/
+theorem entireOrderOne_of_mul_pow {f g : Complex -> Complex}
     (hf : Differentiable Complex f) (hg : EntireOfOrderAtMost 1 g) (m : Nat)
     (hEq : forall z, z ^ m * f z = g z) : EntireOfOrderAtMost 1 f := by
   refine And.intro hf ?_
@@ -465,7 +538,8 @@ private theorem entireOrderOne_of_mul_pow {f g : Complex -> Complex}
       _ <= _ := Real.exp_le_exp.mpr
         (le_mul_of_one_le_right hD.le (one_le_one_add_norm_rpow z heps))
 
-private theorem entireOrderOne_inv_LReal :
+/-- The reciprocal real archimedean gamma factor is entire of order at most one. -/
+theorem entireOrderOne_inv_LReal :
     EntireOfOrderAtMost 1 (fun z => Inv.inv (LReal z)) := by
   have hGamma : EntireOfOrderAtMost 1 (fun z : Complex => Inv.inv (Complex.Gamma (z / 2))) := by
     simpa [div_eq_mul_inv, mul_comm] using

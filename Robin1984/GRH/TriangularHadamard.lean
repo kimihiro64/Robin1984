@@ -216,16 +216,15 @@ private theorem triangularRemainder_mellin_of_logDeriv {iota : Type*} [Countable
   field_simp [hA, hS, hB]
   ring
 
-/-- The full complex triangular expansion under a Hadamard logarithmic derivative. -/
-theorem ae_triangularRemainder_eq_complex_expansion
-    {iota zeros : Type*} [Countable iota] [Countable zeros]
-    (a b : iota -> Real) (m : Real) (F : Complex -> Complex) (rho : zeros -> Complex)
+private theorem ae_eq_hadamard_expansion {zeros : Type*} [Countable zeros]
+    (R : Real -> Complex) (m : Real) (F : Complex -> Complex) (rho : zeros -> Complex)
     (beta : Complex) (m0 mNeg : Real)
-    (ha : forall i, 1 <= a i)
-    (hSum : forall r : Real, 1 < r -> Summable (fun i => norm (b i) * (a i) ^ (-r)))
-    (hEuler : forall s : Complex, 1 < s.re ->
-      logDeriv F s = (m : Complex) / (s - 1) -
-        tsum (fun i => (b i : Complex) * (a i : Complex) ^ (-s)))
+    (hTransform : forall s : Complex, 1 < s.re ->
+      let mu := volume.restrict (Ioi (1 : Real))
+      let k := fun x : Real => R x * (x : Complex) ^ (-s - 1)
+      And (Integrable k mu)
+        (integral mu k =
+          (logDeriv F s + (m : Complex) / 2 * (s + 2)) / (s * (s + 1))))
     (hRho : forall i, (rho i).re <= 1 / 2)
     (hRho0 : forall i, Not (rho i = 0)) (hRho1 : forall i, Not (rho i + 1 = 0))
     (hRhoSum : Summable (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int)))
@@ -233,24 +232,22 @@ theorem ae_triangularRemainder_eq_complex_expansion
       beta + (m0 : Complex) / s + (mNeg : Complex) * (1 / (s + 1) - 1) +
         tsum (fun i => 1 / (s - rho i) + 1 / rho i)) :
     Filter.EventuallyEq (ae (volume.restrict (Ioi (1 : Real))))
-      (fun x => (triangularRemainder a b m x : Complex))
+      R
       (fun x => grandElementaryTerm beta m m0 mNeg x +
         tsum (fun i => triangularZeroTerm (rho i) x)) := by
   let mu := volume.restrict (Ioi (1 : Real))
   let E := grandElementaryTerm beta m m0 mNeg
   let Z := fun x => tsum (fun i => triangularZeroTerm (rho i) x)
-  let R := triangularRemainder a b m
-  let d := fun x => (R x : Complex) - (E x + Z x)
+  let d := fun x => R x - (E x + Z x)
   let W (t x : Real) := (x : Complex) ^ (-((2 : Real) : Complex) - 1 + (t : Complex) * Complex.I)
   have hLine (t : Real) :
       And (Integrable (fun x => W t x * d x) mu) (integral mu (fun x => W t x * d x) = 0) := by
     let s : Complex := 2 - (t : Complex) * Complex.I
     have hs : 1 < s.re := by simp [s, Complex.sub_re, Complex.mul_re]
-    have hR := triangularRemainder_mellin_of_logDeriv a b m F ha s hs
-      (hSum s.re hs) (hEuler s hs)
+    have hR := hTransform s hs
     have hE := grandElementaryTerm_mellin beta m m0 mNeg s hs
     have hZ := triangularZeroSeries_mellin rho hRho hRho0 hRho1 hRhoSum s hs
-    let fR := fun x : Real => (R x : Complex) * (x : Complex) ^ (-s - 1)
+    let fR := fun x : Real => R x * (x : Complex) ^ (-s - 1)
     let fE := fun x : Real => E x * (x : Complex) ^ (-s - 1)
     let fZ := fun x : Real => Z x * (x : Complex) ^ (-s - 1)
     have hEq : (fun x => W t x * d x) = fun x => fR x - (fE x + fZ x) := by
@@ -301,6 +298,59 @@ theorem ae_triangularRemainder_eq_complex_expansion
   filter_upwards [hZero, h0] with x hR hx
   have hh : d x = 0 := hx.trans hR
   exact sub_eq_zero.mp hh
+
+/-- The full complex triangular expansion under a Hadamard logarithmic derivative. -/
+theorem ae_triangularRemainder_eq_complex_expansion
+    {iota zeros : Type*} [Countable iota] [Countable zeros]
+    (a b : iota -> Real) (m : Real) (F : Complex -> Complex) (rho : zeros -> Complex)
+    (beta : Complex) (m0 mNeg : Real)
+    (ha : forall i, 1 <= a i)
+    (hSum : forall r : Real, 1 < r -> Summable (fun i => norm (b i) * (a i) ^ (-r)))
+    (hEuler : forall s : Complex, 1 < s.re ->
+      logDeriv F s = (m : Complex) / (s - 1) -
+        tsum (fun i => (b i : Complex) * (a i : Complex) ^ (-s)))
+    (hRho : forall i, (rho i).re <= 1 / 2)
+    (hRho0 : forall i, Not (rho i = 0)) (hRho1 : forall i, Not (rho i + 1 = 0))
+    (hRhoSum : Summable (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int)))
+    (hHadamard : forall s : Complex, 1 < s.re -> logDeriv F s =
+      beta + (m0 : Complex) / s + (mNeg : Complex) * (1 / (s + 1) - 1) +
+        tsum (fun i => 1 / (s - rho i) + 1 / rho i)) :
+    Filter.EventuallyEq (ae (volume.restrict (Ioi (1 : Real))))
+      (fun x => (triangularRemainder a b m x : Complex))
+      (fun x => grandElementaryTerm beta m m0 mNeg x +
+        tsum (fun i => triangularZeroTerm (rho i) x)) := by
+  apply ae_eq_hadamard_expansion (fun x => (triangularRemainder a b m x : Complex)) m F
+    rho beta m0 mNeg ?_
+    hRho hRho0 hRho1 hRhoSum hHadamard
+  intro s hs
+  exact triangularRemainder_mellin_of_logDeriv a b m F ha s hs (hSum s.re hs) (hEuler s hs)
+
+/-- The Hadamard expansion of a signed prime-power remainder with complex coefficients. -/
+theorem ae_complexTriangularRemainder_eq_expansion
+    {iota zeros : Type*} [Countable iota] [Countable zeros]
+    (a : iota -> Real) (b : iota -> Complex) (m : Real) (F : Complex -> Complex) (rho : zeros -> Complex)
+    (beta : Complex) (m0 mNeg : Real)
+    (ha : forall i, 1 <= a i)
+    (hSum : forall r : Real, 1 < r -> Summable (fun i => norm (b i) * (a i) ^ (-r)))
+    (hEuler : forall s : Complex, 1 < s.re ->
+      logDeriv F s = (m : Complex) / (s - 1) -
+        tsum (fun i => b i * (a i : Complex) ^ (-s)))
+    (hRho : forall i, (rho i).re <= 1 / 2)
+    (hRho0 : forall i, Not (rho i = 0)) (hRho1 : forall i, Not (rho i + 1 = 0))
+    (hRhoSum : Summable (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int)))
+    (hHadamard : forall s : Complex, 1 < s.re -> logDeriv F s =
+      beta + (m0 : Complex) / s + (mNeg : Complex) * (1 / (s + 1) - 1) +
+        tsum (fun i => 1 / (s - rho i) + 1 / rho i)) :
+    Filter.EventuallyEq (ae (volume.restrict (Ioi (1 : Real))))
+      (complexTriangularRemainder a b m)
+      (fun x => grandElementaryTerm beta m m0 mNeg x +
+        tsum (fun i => triangularZeroTerm (rho i) x)) := by
+  apply ae_eq_hadamard_expansion (complexTriangularRemainder a b m) m F
+    rho beta m0 mNeg ?_
+    hRho hRho0 hRho1 hRhoSum hHadamard
+  intro s hs
+  exact complexTriangularRemainder_mellin_of_logDeriv a b m F ha s hs
+    (hSum s.re hs) (hEuler s hs)
 
 /-- The elementary remainder is continuous on the open positive tail. -/
 theorem continuousOn_grandElementaryTerm (beta : Complex) (m m0 mNeg : Real) :

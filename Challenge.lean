@@ -308,6 +308,63 @@ theorem riemannRH_iff_globalPrimePowerMultiplicityInequality
 
 end
 
+/-! ## Dirichlet GRH and zero multiplicity -/
+
+section
+
+open MeasureTheory
+open scoped Classical
+
+/-- The Gaussian smoothing of a square-root normalized prime-power signal. -/
+noncomputable def primePowerGaussianSmoothing (A : Real -> Complex) (a t : Real) : Complex :=
+  MeasureTheory.integral MeasureTheory.volume (fun v : Real =>
+    let g := Real.exp (-(v ^ 2) / (4 * a)) / Real.sqrt (4 * Real.pi * a)
+    let k : Real := (v ^ 2 / (4 * a ^ 2) - v / a + 3 / 4 - 1 / (2 * a)) * g
+    (k : Complex) * A (t - v))
+
+/-- The global mean-square inequality for a prime-power signal. -/
+def PrimePowerGaussianInequality (A : Real -> Complex) : Prop :=
+  Filter.limsup (fun T : Real =>
+    (Inv.inv (T : Complex) * intervalIntegral
+      (fun t => ((norm (primePowerGaussianSmoothing A 1 t) ^ 2 : Real) : Complex))
+      0 T MeasureTheory.volume).re) Filter.atTop <=
+    Filter.limsup (fun t : Real => (primePowerGaussianSmoothing A 2 t).re) Filter.atTop
+
+/-- The signed triangular remainder with the twisted von Mangoldt coefficients. -/
+noncomputable def dirichletMultiplicityPrimePowerRemainder {N : Nat} [NeZero N]
+    (chi : DirichletCharacter Complex N) (x : Real) : Complex :=
+  let m : Real := if chi = 1 then 1 else 0
+  ((m / 2 : Real) : Complex) * (x : Complex) -
+    tsum (fun n : Nat =>
+      let q : Real := ((max 1 n : Nat) : Real)
+      (Set.Ioi q).indicator (fun y : Real =>
+        (chi (n : ZMod N) * (ArithmeticFunction.vonMangoldt n : Complex)) *
+          (1 - (q : Complex) / (y : Complex))) x)
+
+/-- The normalized Dirichlet remainder extended by zero to negative log time. -/
+noncomputable def dirichletMultiplicityLogInput {N : Nat} [NeZero N]
+    (chi : DirichletCharacter Complex N) (t : Real) : Complex :=
+  if t < 0 then 0 else (Real.exp (-t / 2) : Complex) *
+    dirichletMultiplicityPrimePowerRemainder chi (Real.exp t)
+
+/-- The arithmetic multiplicity inequality for an individual Dirichlet L-function. -/
+def DirichletPrimePowerMultiplicityInequality {N : Nat} [NeZero N]
+    (chi : DirichletCharacter Complex N) : Prop :=
+  PrimePowerGaussianInequality (dirichletMultiplicityLogInput chi)
+
+/-- **Dirichlet GRH and simple zeros.** Under Dirichlet GRH, every
+nontrivial zero of every Dirichlet L-function is simple exactly when each
+character satisfies the global Gaussian-smoothed prime-power inequality. -/
+theorem dirichletGRH_iff_globalPrimePowerMultiplicityInequality (hGRH : DirichletGRH) :
+    (forall (N : Nat) [NeZero N] (chi : DirichletCharacter Complex N) (z : Complex),
+      0 < z.re -> z.re < 1 -> DirichletCharacter.LFunction chi z = 0 ->
+        analyticOrderNatAt (DirichletCharacter.LFunction chi) z = 1) <->
+    (forall (N : Nat) [NeZero N] (chi : DirichletCharacter Complex N),
+      DirichletPrimePowerMultiplicityInequality chi) := by
+  sorry
+
+end
+
 /-! # Supporting statements -/
 
 /-- The single-field Dedekind equivalence used to prove the family criteria.

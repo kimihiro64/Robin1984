@@ -529,18 +529,18 @@ theorem tendsto_spectralConvolution_of_tendsto_zero {k R : Real -> Complex}
   change Tendsto (fun t : Real => integral volume (F t)) atTop (nhds 0)
   simpa only [integral_zero] using h
 
-/-- With one spectral index for each occurrence of a zero, the global
-inequality is equivalent to each ordinate occurring only once. -/
-theorem fourierOccurrenceMultiplicityCriterion {i : Type*} [Countable i]
+/-- The arithmetic Fourier energy is bounded below by its diagonal mass,
+and equality holds exactly when each occurring ordinate has a single occurrence. -/
+theorem fourierOccurrenceMultiplicityComparison {i : Type*} [Countable i]
     (w gamma : i -> Real) (hW : forall j, 0 < w j)
     (hSum : Summable w) (hSquare : Summable (fun j => w j ^ 2)) :
-    (Filter.limsup (fun T : Real => (fourierCesaro (fun t =>
+    let energy := Filter.limsup (fun T : Real => (fourierCesaro (fun t =>
       ((norm (tsum (fun j => (w j : Complex) *
-        Complex.exp ((gamma j : Complex) * Complex.I * (t : Complex)))) ^ 2 : Real) : Complex)) T).re)
-        atTop <=
-      Filter.limsup (fun t : Real => (tsum (fun j => ((w j ^ 2 : Real) : Complex) *
-        Complex.exp ((gamma j : Complex) * Complex.I * (t : Complex)))).re) atTop) <->
-      Function.Injective gamma := by
+      Complex.exp ((gamma j : Complex) * Complex.I * (t : Complex)))) ^ 2 : Real) : Complex)) T).re)
+      atTop
+    let mass := Filter.limsup (fun t : Real => (tsum (fun j => ((w j ^ 2 : Real) : Complex) *
+      Complex.exp ((gamma j : Complex) * Complex.I * (t : Complex)))).re) atTop
+    And (mass <= energy) ((energy <= mass) <-> Function.Injective gamma) := by
   let c (j : i) : Complex := (gamma j : Complex) * Complex.I
   let a (j : i) : Complex := (w j : Complex)
   let e (p : Prod i i) : Real := if gamma p.1 = gamma p.2 then w p.1 * w p.2 else 0
@@ -619,10 +619,13 @@ theorem fourierOccurrenceMultiplicityCriterion {i : Type*} [Countable i]
         left_inv := fun _ => rfl
         right_inv := fun p => Subtype.ext (Prod.ext rfl p.property) }
     exact (q.tsum_eq (fun p : diag => w p.val.1 ^ 2)).symm
-  change (Filter.limsup (fun T : Real => (E T).re) atTop <=
-    Filter.limsup (fun t : Real => (tsum (fun j => ((w j ^ 2 : Real) : Complex) *
-      Complex.exp (c j * (t : Complex)))).re) atTop) <-> _
+  let mass := Filter.limsup (fun t : Real => (tsum (fun j => ((w j ^ 2 : Real) : Complex) *
+    Complex.exp (c j * (t : Complex)))).re) atTop
+  change And (mass <= Filter.limsup (fun T : Real => (E T).re) atTop)
+    ((Filter.limsup (fun T : Real => (E T).re) atTop <= mass) <-> _)
+  dsimp only [mass]
   rw [hEReal.limsup_eq, hUpper', <- hDiag]
+  refine And.intro (hSumD.tsum_le_tsum (fun p => (hDE p).2) hSumE) ?_
   constructor
   case mp =>
     intro h j k hjk
@@ -647,6 +650,20 @@ theorem fourierOccurrenceMultiplicityCriterion {i : Type*} [Countable i]
         have hne : Not (p.1 = p.2) := fun hi => hp (congrArg gamma hi)
         simp [e, d, hp, hne]
     rw [he]
+
+/-- With one spectral index for each occurrence of a zero, the global
+inequality is equivalent to each ordinate occurring only once. -/
+theorem fourierOccurrenceMultiplicityCriterion {i : Type*} [Countable i]
+    (w gamma : i -> Real) (hW : forall j, 0 < w j)
+    (hSum : Summable w) (hSquare : Summable (fun j => w j ^ 2)) :
+    (Filter.limsup (fun T : Real => (fourierCesaro (fun t =>
+      ((norm (tsum (fun j => (w j : Complex) *
+        Complex.exp ((gamma j : Complex) * Complex.I * (t : Complex)))) ^ 2 : Real) : Complex)) T).re)
+        atTop <=
+      Filter.limsup (fun t : Real => (tsum (fun j => ((w j ^ 2 : Real) : Complex) *
+        Complex.exp ((gamma j : Complex) * Complex.I * (t : Complex)))).re) atTop) <->
+      Function.Injective gamma :=
+  (fourierOccurrenceMultiplicityComparison w gamma hW hSum hSquare).2
 
 /-- The time average of a locally integrable error tending to zero also
 tends to zero. -/
@@ -858,5 +875,158 @@ theorem norm_spectralConvolution_le {k H : Real -> Complex}
         rw [norm_mul]
         exact mul_le_mul_of_nonneg_left (hB _) (norm_nonneg _))
     _ = _ := integral_mul_const _ _
+
+/-- Demodulation gives the arithmetic mean at a specified ordinate. -/
+def multiplicityFrequencyMean (H : Real -> Complex) (delta T : Real) : Complex :=
+  fourierCesaro (fun t => H t * Complex.exp (-(delta : Complex) * Complex.I * (t : Complex))) T
+
+/-- A global arithmetic frequency mean recovers the sum of weights at
+that frequency, including every zero occurrence in a repeated divisor. -/
+theorem tendsto_multiplicityFrequencyMean {i : Type*} [Countable i]
+    (H : Real -> Complex) (gamma : i -> Real) (a : i -> Complex) (delta : Real)
+    (hSum : Summable (fun j => norm (a j)))
+    (hH : Measurable H) {M N : Real} (hM : forall t, norm (H t) <= M)
+    (hSpectrum :
+      let S := fun t : Real => tsum (fun j => a j *
+        Complex.exp ((gamma j : Complex) * Complex.I * (t : Complex)))
+      And (Measurable S)
+        (And (forall t, norm (S t) <= N)
+          (Tendsto (fun t => H t - S t) atTop (nhds 0)))) :
+    Tendsto (multiplicityFrequencyMean H delta) atTop
+      (nhds (tsum (fun j => if gamma j = delta then a j else 0))) := by
+  let S := fun t : Real => tsum (fun j => a j *
+    Complex.exp ((gamma j : Complex) * Complex.I * (t : Complex)))
+  let W (t : Real) : Complex := Complex.exp (-(delta : Complex) * Complex.I * (t : Complex))
+  let c (j : i) : Complex := (gamma j : Complex) * Complex.I - (delta : Complex) * Complex.I
+  let E (t : Real) : Complex := (H t - S t) * W t
+  have hW : Continuous W := Complex.continuous_exp.comp
+    (continuous_const.mul Complex.continuous_ofReal)
+  have hWNorm (t : Real) : norm (W t) = 1 := by
+    simp [W, Complex.norm_exp, Complex.mul_re, Complex.mul_im]
+  have hc (j : i) : (c j).re = 0 := by
+    simp [c, Complex.sub_re, Complex.mul_re]
+  have hcz (j : i) : c j = 0 <-> gamma j = delta := by
+    constructor
+    case mp =>
+      intro h
+      have hIm := congrArg Complex.im h
+      exact sub_eq_zero.mp (by simpa [c, Complex.sub_im, Complex.mul_im] using hIm)
+    case mpr =>
+      intro h
+      simp [c, h]
+  have hMod (t : Real) : S t * W t =
+      tsum (fun j => a j * Complex.exp (c j * (t : Complex))) := by
+    unfold S
+    rw [<- tsum_mul_right]
+    apply tsum_congr
+    intro j
+    have h := show c j * (t : Complex) =
+        (gamma j : Complex) * Complex.I * (t : Complex) +
+          (-(delta : Complex) * Complex.I * (t : Complex)) by
+      dsimp [c]
+      ring
+    rw [h, Complex.exp_add, mul_assoc]
+  have hSM := fourierCesaro_tsum_tendsto a c hc hSum
+  have hST : Tendsto (fourierCesaro (fun t => S t * W t)) atTop
+      (nhds (tsum (fun j => if gamma j = delta then a j else 0))) := by
+    simpa only [hcz, hMod] using hSM
+  have hE : Measurable E := (hH.sub hSpectrum.1).mul hW.measurable
+  have hEbound (t : Real) : norm (E t) <= M + N := by
+    rw [show E t = (H t - S t) * W t from rfl, norm_mul, hWNorm, mul_one]
+    exact (norm_sub_le _ _).trans (add_le_add (hM t) (hSpectrum.2.1 t))
+  have hELim : Tendsto E atTop (nhds 0) := by
+    apply Metric.tendsto_nhds.2
+    intro eps heps
+    filter_upwards [Metric.tendsto_nhds.1 hSpectrum.2.2 eps heps] with t ht
+    rw [dist_zero_right] at ht
+    rw [dist_zero_right, show E t = (H t - S t) * W t from rfl, norm_mul, hWNorm, mul_one]
+    exact ht
+  have hET := fourierCesaro_tendsto_zero_of_tendsto_zero
+    (intervalIntegrable_of_measurable_bounded hE hEbound) hELim
+  have hBT (t : Real) : norm (S t * W t) <= N := by
+    rw [norm_mul, hWNorm, mul_one]
+    exact hSpectrum.2.1 t
+  have hB := intervalIntegrable_of_measurable_bounded (hSpectrum.1.mul hW.measurable) hBT
+  have hI := intervalIntegrable_of_measurable_bounded hE hEbound
+  have hSumT := hST.add hET
+  rw [add_zero] at hSumT
+  refine hSumT.congr' (Filter.Eventually.of_forall (fun T => ?_))
+  have hFun : (fun t => H t * W t) = fun t => S t * W t + E t := by
+    funext t
+    dsimp [E]
+    ring
+  unfold multiplicityFrequencyMean fourierCesaro
+  change Inv.inv (T : Complex) * intervalIntegral (fun t => S t * W t) 0 T volume +
+      Inv.inv (T : Complex) * intervalIntegral E 0 T volume =
+    Inv.inv (T : Complex) * intervalIntegral (fun t => H t * W t) 0 T volume
+  rw [hFun]
+  have hAdded := intervalIntegral.integral_add
+    (f := fun t => S t * W t) (g := E) (hB 0 T) (hI 0 T)
+  exact (mul_add _ _ _).symm.trans (congrArg (fun v : Complex => Inv.inv (T : Complex) * v)
+    hAdded.symm)
+
+/-- Subtracting the finite set of detected arithmetic frequencies removes
+exactly the occurrences at those ordinates from the Fourier spectrum. -/
+theorem subtract_finiteFrequencies_eq_occurrences_outside {i : Type*}
+    (E : Finset Real) (gamma : i -> Real) (a : i -> Complex)
+    (hSum : Summable (fun j => norm (a j))) (t : Real) :
+    let W (delta : Real) := Complex.exp ((delta : Complex) * Complex.I * (t : Complex))
+    tsum (fun j => a j * W (gamma j)) -
+      E.sum (fun delta => (tsum (fun j => if gamma j = delta then a j else 0)) * W delta) =
+      tsum (fun j : {j : i // Not (Membership.mem E (gamma j))} => a j.val * W (gamma j.val)) := by
+  classical
+  let W (delta : Real) := Complex.exp ((delta : Complex) * Complex.I * (t : Complex))
+  let U (j : i) := a j * W (gamma j)
+  let B (delta : Real) (j : i) := (if gamma j = delta then a j else 0) * W delta
+  let M (j : i) := if Membership.mem E (gamma j) then U j else 0
+  have hw (delta : Real) : norm (W delta) = 1 := by
+    simp [W, Complex.norm_exp, Complex.mul_re, Complex.mul_im]
+  have hU : Summable U := Summable.of_norm_bounded hSum (fun j => by
+    rw [show U j = a j * W (gamma j) from rfl, norm_mul, hw, mul_one])
+  have hB (delta : Real) : Summable (B delta) := Summable.of_norm_bounded hSum (fun j => by
+    by_cases h : gamma j = delta
+    case pos => simp only [B, if_pos h, norm_mul, hw, mul_one, le_refl]
+    case neg => simp only [B, if_neg h, zero_mul, norm_zero, norm_nonneg])
+  have hM : Summable M := Summable.of_norm_bounded hSum (fun j => by
+    by_cases h : Membership.mem E (gamma j)
+    case pos => simp only [M, U, if_pos h, norm_mul, hw, mul_one, le_refl]
+    case neg => simp only [M, if_neg h, norm_zero, norm_nonneg])
+  have hPoint (j : i) : E.sum (fun delta => B delta j) = M j := by
+    by_cases h : Membership.mem E (gamma j)
+    case pos =>
+      have hSingle : E.sum (fun delta => B delta j) = B (gamma j) j := by
+        apply Finset.sum_eq_single
+        next =>
+          intro delta _ hNe
+          simp only [B, if_neg (Ne.symm hNe), zero_mul]
+        next =>
+          intro hMissing
+          exact False.elim (hMissing h)
+      rw [hSingle]
+      simp [B, M, U, h]
+    case neg =>
+      rw [show M j = 0 from if_neg h]
+      apply Finset.sum_eq_zero
+      intro delta hd
+      have hNe : Not (gamma j = delta) := fun e => h (e.symm.subst hd)
+      simp only [B, if_neg hNe, zero_mul]
+  have hStep : E.sum (fun delta => tsum (B delta)) = tsum M := by
+    rw [<- Summable.tsum_finsetSum (fun delta _ => hB delta)]
+    exact tsum_congr hPoint
+  have hCorrection :
+      E.sum (fun delta => (tsum (fun j => if gamma j = delta then a j else 0)) * W delta) =
+        tsum M := by
+    rw [<- hStep]
+    apply Finset.sum_congr rfl
+    intro delta _
+    rw [<- tsum_mul_right]
+  let outside : Set i := {j | Not (Membership.mem E (gamma j))}
+  have hOut : (fun j => U j - M j) = Set.indicator outside U := by
+    funext j
+    by_cases h : Membership.mem E (gamma j)
+    case pos => simp [M, outside, h]
+    case neg => simp [M, outside, h]
+  change tsum U - _ = tsum (fun j : outside => U j.val)
+  rw [hCorrection, <- hU.tsum_sub hM, hOut, <- tsum_subtype]
 
 end Robin1984.GRH

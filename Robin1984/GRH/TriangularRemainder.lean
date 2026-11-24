@@ -378,4 +378,63 @@ theorem complexTriangularRemainder_mellin_of_logDeriv {i : Type*} [Countable i]
   field_simp [hA, hS, hB]
   ring
 
+/-- The vanishing weight at the prime-power cutoff makes the complex
+triangular remainder continuous on the open positive tail. -/
+theorem continuousOn_complexTriangularRemainder {iota : Type*}
+    (a : iota -> Real) (b : iota -> Complex) (m : Real)
+    (hFinite : forall T : Real, Set.Finite {i : iota | a i < T}) :
+    ContinuousOn (complexTriangularRemainder a b m) (Ioi (1 : Real)) := by
+  classical
+  intro x hx
+  let cutoff : Real := x + 1
+  let S := (hFinite cutoff).toFinset
+  let w (i : iota) (y : Real) : Real := 1 - a i / y
+  let g (i : iota) (y : Real) : Complex :=
+    b i * (((abs (w i y) + w i y) / 2 : Real) : Complex)
+  let R (y : Real) : Complex := ((m / 2 : Real) : Complex) * (y : Complex) -
+    S.sum (fun i => g i y)
+  have hG (i : iota) : ContinuousOn (g i) (Ioi (1 : Real)) := by
+    have hw : ContinuousOn (w i) (Ioi (1 : Real)) :=
+      continuousOn_const.sub (continuousOn_const.div continuousOn_id
+        (fun y hy => (zero_lt_one.trans hy).ne'))
+    have hAbs : ContinuousOn (fun y => abs (w i y)) (Ioi (1 : Real)) :=
+      continuous_abs.comp_continuousOn hw
+    exact continuousOn_const.mul
+      (Complex.continuous_ofReal.comp_continuousOn ((hAbs.add hw).div_const 2))
+  have hR : ContinuousOn R (Ioi (1 : Real)) :=
+    (continuousOn_const.mul Complex.continuous_ofReal.continuousOn).sub
+      (continuousOn_finsetSum S (fun i _ => hG i))
+  have hEq : Filter.EventuallyEq (nhds x) (complexTriangularRemainder a b m) R := by
+    have hxCut : x < cutoff := lt_add_of_pos_right x zero_lt_one
+    filter_upwards [isOpen_Ioo.mem_nhds (show Membership.mem (Ioo (1 : Real) cutoff) x
+      from And.intro hx hxCut)] with y hy
+    have hy0 : 0 < y := zero_lt_one.trans hy.1
+    let term (i : iota) : Complex := (Ioi (a i)).indicator
+      (fun z : Real => b i * (1 - (a i : Complex) / (z : Complex))) y
+    have hterm (i : iota) : term i = g i y := by
+      by_cases h : a i < y
+      case pos =>
+        unfold term
+        rw [indicator_of_mem (show Membership.mem (Ioi (a i)) y from h)]
+        have hpos : 0 <= w i y := sub_nonneg.mpr ((div_le_one hy0).mpr h.le)
+        have hhalf : (w i y + w i y) / 2 = w i y := by ring
+        dsimp only [g]
+        rw [abs_of_nonneg hpos, hhalf]
+        simp only [w, Complex.ofReal_sub, Complex.ofReal_one, Complex.ofReal_div]
+      case neg =>
+        unfold term
+        rw [indicator_of_notMem (show Not (Membership.mem (Ioi (a i)) y) from h)]
+        have hneg : w i y <= 0 := sub_nonpos.mpr ((one_le_div hy0).mpr (le_of_not_gt h))
+        simp only [g, abs_of_nonpos hneg, neg_add_cancel, zero_div, Complex.ofReal_zero, mul_zero]
+    have hSum : tsum term = S.sum term := by
+      apply tsum_eq_sum
+      intro i hi
+      have hiCut : Not (a i < cutoff) := fun h => hi ((hFinite cutoff).mem_toFinset.mpr h)
+      exact indicator_of_notMem (fun h => hiCut (lt_trans h hy.2)) _
+    change ((m / 2 : Real) : Complex) * (y : Complex) - tsum term = R y
+    simp only [R, hSum, hterm]
+  have hAt : ContinuousAt (complexTriangularRemainder a b m) x :=
+    ((hR x hx).continuousAt (isOpen_Ioi.mem_nhds hx)).congr_of_eventuallyEq hEq
+  exact hAt.continuousWithinAt
+
 end Robin1984.GRH

@@ -993,6 +993,24 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/DirichletMultiplicity.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The global arithmetic multiplicity criterion applied to every Dirichlet L-function.",
+      "formalization_note": "Under Dirichlet GRH this proves equivalence of the complex prime-power inequality and simplicity in the open critical strip.",
+      "content_basis": "Reviewed reuse of the exact ordinary L-function, zero orders, and the complex arithmetic spectrum.",
+      "dependency_status": "Mathlib Dirichlet L-functions and Robin1984 arithmetic multiplicity providers.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DirichletMultiplicityArithmetic.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Hurwitz theta functional equations and the explicit Euler series for ordinary Dirichlet L-functions.",
+      "formalization_note": "The split Hurwitz Mellin tails give order one for the actual pole-cleared functions, including imprimitive characters.",
+      "content_basis": "Reviewed the even and odd Mellin tails, the gamma and pole factors, and the exact twisted von Mangoldt logarithmic derivative.",
+      "dependency_status": "Mathlib Hurwitz zeta and Dirichlet-series libraries plus Robin1984 order-one bounds.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeIdeleClassCompactness.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Compactness of norm-one idele classes via Dirichlet's unit theorem and finiteness of the ideal class group, as in Tate's thesis.",
@@ -1071,6 +1089,15 @@
       "formalization_note": "Identifies the weighted physical orbit sum with the theta series and unfolds the integral in the logarithmic norm coordinates.",
       "content_basis": "Checks the diagonal principal embedding, the two reindexings, the full unitary character weight, joint continuity, and the conditional integral identity.",
       "dependency_status": "Uses the actual principal quotient measure and the norm-one theta bounds. The integral identity takes integrability of the original test as a hypothesis.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/MultiplicityArithmetic.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Gaussian smoothing of the triangular explicit formula and positive Fourier spectra.",
+      "formalization_note": "The exact complex prime-power remainder has the repeated critical-line spectrum and the global Gaussian inequality detects its repetitions.",
+      "content_basis": "Reviewed Mellin inversion, pointwise logarithmic normalization, and the Gaussian mean-square comparison.",
+      "dependency_status": "Robin1984 Hadamard, Mellin, and Fourier series proofs.",
       "reviewed": true
     },
     {
