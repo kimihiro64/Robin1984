@@ -745,4 +745,188 @@ end GlobalHaar
 
 end EulerClassNormalization
 
+section InvariantClassMeasure
+
+open NumberField.InfinitePlace Topology TopologicalSpace
+open scoped Pointwise
+
+private theorem locallyCompactSpace_heckeFiniteIdeles : LocallyCompactSpace (Units (TateEulerFiniteAdeles K)) := by
+  let F := TateEulerFiniteAdeles K
+  let _ : LocallyCompactSpace F := locallyCompactSpace_heckeFiniteAdeles
+  let _ : LocallyCompactSpace (MulOpposite F) :=
+    (MulOpposite.opHomeomorph.symm : Homeomorph (MulOpposite F) F).isClosedEmbedding.locallyCompactSpace
+  let _ : T2Space F := by
+    let pi (x : F) (v : HeightOneSpectrum (RingOfIntegers K)) := x v
+    exact T2Space.of_injective_continuous
+      (show Function.Injective pi from DFunLike.coe_injective)
+      (continuous_pi (fun v => RestrictedProduct.continuous_eval v))
+  exact (show IsClosedEmbedding (Units.embedProduct F) from
+    Units.isClosedEmbedding_embedProduct).locallyCompactSpace
+
+private theorem secondCountableTopology_heckeNormOneIdeles :
+    SecondCountableTopology (heckeNormOneIdeles K) := by
+  let _ : SecondCountableTopology (Units (TateEulerMixedSpace K)) :=
+    Units.isOpenEmbedding_val.isEmbedding.secondCountableTopology
+  let _ : SecondCountableTopology (Units (TateEulerFiniteAdeles K)) :=
+    secondCountableTopology_heckeFiniteIdeles K
+  let _ : SecondCountableTopology (Units (AdeleRing (RingOfIntegers K) K)) :=
+    (heckeTateProductIdelesHomeomorph K).symm.secondCountableTopology
+  exact (Topology.IsEmbedding.subtypeVal :
+    Topology.IsEmbedding (fun a : heckeNormOneIdeles K => a.val)).secondCountableTopology
+
+private theorem finite_measurePreserving_inv_of_mulLeftInvariant
+    {G : Type*} [Group G] [TopologicalSpace G] [IsTopologicalGroup G]
+    [SecondCountableTopology G] [MeasurableSpace G] [BorelSpace G]
+    (mu : Measure G) [IsFiniteMeasure mu] [mu.IsMulLeftInvariant] :
+    MeasurePreserving (Inv.inv : G -> G) mu mu := by
+  refine MeasurePreserving.mk measurable_inv ?_
+  by_cases hZero : mu Set.univ = 0
+  . have hmu : mu = 0 := Measure.measure_univ_eq_zero.mp hZero
+    rw [hmu, Measure.map_zero]
+  . ext A hA
+    rw [Measure.map_apply measurable_inv hA]
+    have hSet : Set.preimage (fun z : Prod G G => (z.2 * z.1, Inv.inv z.1))
+        (Set.prod Set.univ A) = Set.prod (Set.preimage Inv.inv A) Set.univ := by
+      ext z
+      change Iff (And True (Membership.mem A (Inv.inv z.1))) (And (Membership.mem A (Inv.inv z.1)) True)
+      simp
+    have h := (measurePreserving_mul_prod_inv mu mu).measure_preimage
+      (MeasurableSet.univ.prod hA).nullMeasurableSet
+    change (mu.prod mu) (Set.preimage (fun z : Prod G G => (z.2 * z.1, Inv.inv z.1))
+        (Set.prod Set.univ A)) = (mu.prod mu) (Set.prod Set.univ A) at h
+    rw [hSet] at h
+    have hL : (mu.prod mu) (Set.prod (Set.preimage Inv.inv A) Set.univ) =
+        mu (Set.preimage Inv.inv A) * mu Set.univ := Measure.prod_prod _ _
+    have hR : (mu.prod mu) (Set.prod Set.univ A) =
+        mu Set.univ * mu A := Measure.prod_prod _ _
+    apply (ENNReal.mul_left_inj hZero (measure_ne_top mu Set.univ)).mp
+    exact hL.symm.trans (h.trans (hR.trans (mul_comm _ _)))
+
+variable [MeasurableSpace (Units (TateEulerMixedSpace K))] [BorelSpace (Units (TateEulerMixedSpace K))]
+  [MeasurableSpace (TateEulerFiniteAdeles K)] [BorelSpace (TateEulerFiniteAdeles K)]
+  [MeasurableSpace (Units (TateEulerFiniteAdeles K))] [BorelSpace (Units (TateEulerFiniteAdeles K))]
+  [MeasurableSpace (Units (AdeleRing (RingOfIntegers K) K))] [BorelSpace (Units (AdeleRing (RingOfIntegers K) K))]
+  [MeasurableSpace (heckeNormOneIdeles K)] [BorelSpace (heckeNormOneIdeles K)]
+  [MeasurableSpace (heckeIdeleClass K)] [BorelSpace (heckeIdeleClass K)]
+  [MeasurableSpace (heckeNormOneIdeleClass K)] [BorelSpace (heckeNormOneIdeleClass K)]
+
+/-- A single finite measure on the norm-one idele class group is invariant
+under translation and inversion and realizes the completed Euler integral
+of every unitary Hecke character on the half-plane of absolute convergence. -/
+theorem exists_heckeTateClassThetaEulerMeasure
+    [MeasurableSpace (Units (FractionalIdeal (nonZeroDivisors (RingOfIntegers K)) K))]
+    [MeasurableSingletonClass (Units (FractionalIdeal (nonZeroDivisors (RingOfIntegers K)) K))] :
+    exists kappa : Measure (heckeNormOneIdeleClass K),
+      And (IsFiniteMeasure kappa) (And (kappa.IsMulLeftInvariant)
+        (And (MeasurePreserving Inv.inv kappa kappa) (forall chi : UnitaryHeckeCharacter K,
+          exists f : SchwartzMap (TateEulerMixedSpace K) Complex,
+            And (forall x, f x = heckeTateInfiniteTest chi x)
+              (forall s : Complex, 1 < s.re ->
+                integral (volume.prod kappa)
+                  (heckeTateClassZetaIntegrand chi s f (heckeFiniteAdditiveTateTest chi)) =
+                  ((Finset.univ.prod (fun v : {w : InfinitePlace K // w.IsReal} =>
+                    DedekindZeta.LReal (s + realInfiniteHeckeShift chi v.property))) *
+                  (Finset.univ.prod (fun v : {w : InfinitePlace K // w.IsComplex} =>
+                    DedekindZeta.LComplex (s + complexInfiniteHeckeShift chi v.property)))) *
+                  heckeEulerL K chi s)))) := by
+  let F := Units (TateEulerFiniteAdeles K)
+  let N := heckeNormOneIdeles K
+  let _ : LocallyCompactSpace F := locallyCompactSpace_heckeFiniteIdeles K
+  let _ : SecondCountableTopology F := secondCountableTopology_heckeFiniteIdeles K
+  let _ : LocallyCompactSpace N := locallyCompactSpace_heckeNormOneIdeles K
+  let _ : SecondCountableTopology N := secondCountableTopology_heckeNormOneIdeles K
+  let U : Set F := heckeIntegralFiniteUnitGroup (K := K)
+  have hU : (interior U).Nonempty := by
+    rw [(isOpen_heckeIntegralFiniteUnitGroup K).interior_eq]
+    exact Exists.intro 1 (heckeIntegralFiniteUnitGroup (K := K)).one_mem
+  let Omega : PositiveCompacts F :=
+    { toCompacts := Compacts.mk U isCompact_heckeIntegralFiniteUnitGroup
+      interior_nonempty' := hU }
+  let mu := Measure.haarMeasure Omega
+  have hUnit : mu U = 1 := Measure.haarMeasure_self
+  let nu := Measure.haarMeasure (Classical.choice (inferInstance : Nonempty (PositiveCompacts N)))
+  choose nu' hnu using exists_heckeTateProductIdelicMeasure_eq_logNorm K mu hUnit nu
+  let _ : nu'.IsHaarMeasure := hnu.1
+  let _ : SFinite nu' := hnu.2.1
+  let _ : nu'.IsMulRightInvariant := by
+    constructor
+    intro a
+    change Measure.map (fun b : N => b * a) nu' = nu'
+    simp_rw [mul_comm _ a]
+    exact (measurePreserving_mul_left nu' a).map_eq
+  choose S C hS using exists_heckeNormOneClassBorelSection K
+  let P := (heckePrincipalNormOneIdele K).range
+  let _ : Countable P := countable_heckePrincipalNormOneIdeles K
+  let _ : Countable P.op := countable_heckePrincipalNormOneIdeles_op K
+  have hFund := isFundamentalDomain_of_quotientSection P nu'
+    hS.2.2.1 hS.2.2.2.1 hS.2.2.2.2
+  let kappa := heckeNormOneClassQuotientMeasure K nu' S
+  have hFinite : IsFiniteMeasure kappa :=
+    isFiniteMeasure_heckeNormOneClassQuotientMeasure K nu' hS.1 hS.2.1
+  have hLeft : kappa.IsMulLeftInvariant := by
+    constructor
+    intro d
+    let q := QuotientGroup.mk' P
+    choose a ha using QuotientGroup.mk'_surjective P d
+    have hq : Measurable q := (show Continuous q from QuotientGroup.continuous_mk).measurable
+    rw [<- ha]
+    ext T hT
+    rw [Measure.map_apply (measurable_const_mul (q a)) hT]
+    have hPre : MeasurableSet (Set.preimage (fun d => q a * d) T) :=
+      (measurable_const_mul (q a)) hT
+    change Measure.map q (nu'.restrict S) (Set.preimage (fun d => q a * d) T) =
+      Measure.map q (nu'.restrict S) T
+    rw [Measure.map_apply hq hPre, Measure.map_apply hq hT,
+      Measure.restrict_apply (hq hPre), Measure.restrict_apply (hq hT)]
+    let A := Set.preimage q T
+    have hA : MeasurableSet A := hq hT
+    have hSat (b : P.op) : Set.preimage (fun x : N => SMul.smul b x) A = A := by
+      ext x
+      change Iff (Membership.mem T (q (x * MulOpposite.unop b.val))) (Membership.mem T (q x))
+      have hOne : q (MulOpposite.unop b.val) = 1 :=
+        (QuotientGroup.eq_one_iff _).mpr b.property
+      have he : q (x * MulOpposite.unop b.val) = q x := by
+        rw [q.map_mul, hOne]
+        exact mul_one (q x)
+      exact Iff.of_eq (congrArg (fun d => Membership.mem T d) he)
+    have hShift : Set.preimage (fun x : N => Inv.inv a * x) S = SMul.smul a S := by
+      apply Set.Subset.antisymm
+      . intro x hx
+        refine Exists.intro (Inv.inv a * x) (And.intro hx ?_)
+        change a * (Inv.inv a * x) = x
+        rw [<- mul_assoc, mul_inv_cancel, one_mul]
+      . intro x hx
+        choose y hy he using hx
+        change a * y = x at he
+        change Membership.mem S (Inv.inv a * x)
+        rw [<- he, <- mul_assoc, inv_mul_cancel, one_mul]
+        exact hy
+    have hShiftMeas : MeasurableSet (SMul.smul a S) := by
+      rw [<- hShift]
+      exact (measurable_const_mul (Inv.inv a)) hS.2.2.1
+    calc
+      _ = nu' (Set.preimage (fun x : N => a * x) (Set.inter A (SMul.smul a S))) := by
+        congr 1
+        rw [<- hShift]
+        ext x
+        change Iff (And (Membership.mem T (q a * q x)) (Membership.mem S x))
+          (And (Membership.mem T (q (a * x))) (Membership.mem S (Inv.inv a * (a * x))))
+        rw [q.map_mul, <- mul_assoc, inv_mul_cancel, one_mul]
+      _ = nu' (Set.inter A (SMul.smul a S)) :=
+        (measurePreserving_mul_left nu' a).measure_preimage (hA.inter hShiftMeas).nullMeasurableSet
+      _ = nu' (Set.inter A S) := (hFund.smul_of_comm a).measure_set_eq hFund hA hSat
+  let _ : SecondCountableTopology (heckeNormOneIdeleClass K) :=
+    QuotientGroup.instSecondCountableTopology (N := P)
+  have hInversion : MeasurePreserving Inv.inv kappa kappa :=
+    finite_measurePreserving_inv_of_mulLeftInvariant kappa
+  refine Exists.intro kappa (And.intro hFinite (And.intro hLeft (And.intro hInversion ?_)))
+  intro chi
+  choose f hf using exists_heckeTateInfiniteSchwartz chi
+  refine Exists.intro f (And.intro hf ?_)
+  intro s hs
+  exact integral_heckeTateEulerClassTheta K mu hUnit nu' hnu.2.2
+    hS.2.2.1 hS.2.2.2.1 hS.2.2.2.2 chi f hf hs
+
+end InvariantClassMeasure
+
 end Robin1984.GRH

@@ -908,4 +908,283 @@ theorem exists_heckeTateInfiniteSchwartz (chi : UnitaryHeckeCharacter K) :
 
 end TateSchwartz
 
+section TateFourier
+
+open FourierTransform
+open scoped RealInnerProductSpace
+
+/-- The real Gaussian in the normalization of the Tate test. -/
+def realTateGaussian (x : Real) : Complex :=
+  Complex.exp (-(Real.pi : Complex) * (x : Complex) ^ 2)
+
+private theorem realTateGaussian_eq_ofReal (x : Real) :
+    realTateGaussian x = (Real.exp (-Real.pi * x ^ 2) : Complex) := by
+  simp only [realTateGaussian, Complex.ofReal_exp, Complex.ofReal_mul, Complex.ofReal_neg,
+    Complex.ofReal_pow]
+
+private theorem fourier_realTateGaussian : fourier realTateGaussian = realTateGaussian := by
+  unfold realTateGaussian
+  simpa only [mul_one, Complex.one_cpow, div_one, one_mul] using
+    (fourier_gaussian_pi (b := (1 : Complex)) (by norm_num))
+
+private theorem fourier_realTateGaussian_mul_coordinate (y : Real) :
+    fourier (fun x : Real => (x : Complex) * realTateGaussian x) y =
+      -Complex.I * (y : Complex) * realTateGaussian y := by
+  let c : Complex := -2 * Real.pi
+  let h (x : Real) := (x : Complex) * realTateGaussian x
+  have hPi : 0 < (Real.pi : Complex).re := Real.pi_pos
+  have hInt : Integrable realTateGaussian := integrable_cexp_neg_mul_sq hPi
+  have hOdd : Integrable h := integrable_mul_cexp_neg_mul_sq hPi
+  have hDeriv (x : Real) : HasDerivAt realTateGaussian (c * h x) x := by
+    have hq : HasDerivAt (fun t : Real => -Real.pi * t ^ 2) (-Real.pi * (2 * x)) x := by
+      simpa using ((hasDerivAt_id x).pow 2).const_mul (-Real.pi)
+    have hExp := ((Real.hasDerivAt_exp (-Real.pi * x ^ 2)).comp x hq).ofReal_comp
+    convert hExp using 1
+    . funext t
+      exact realTateGaussian_eq_ofReal t
+    . dsimp only [c, h, Function.comp_apply]
+      rw [realTateGaussian_eq_ofReal]
+      push_cast
+      ring
+  have hD : deriv realTateGaussian = fun x => c * h x := funext (fun x => (hDeriv x).deriv)
+  have hDI : Integrable (deriv realTateGaussian) := by
+    rw [hD]
+    exact hOdd.const_mul c
+  have hScaling : fourier (fun x => c * h x) y = c * fourier h y := by
+    simp only [Real.fourier_real_eq_integral_exp_smul, smul_eq_mul]
+    rw [<- integral_const_mul]
+    congr 1
+    funext t
+    ring
+  have H := congrFun (Real.fourier_deriv hInt
+    (fun x => (hDeriv x).differentiableAt) hDI) y
+  rw [hD, hScaling, fourier_realTateGaussian, smul_eq_mul] at H
+  have hc : Not (c = 0) := mul_ne_zero (by norm_num) (Complex.ofReal_ne_zero.mpr Real.pi_pos.ne')
+  apply (mul_right_inj' hc).mp
+  exact H.trans (by dsimp [c]; ring)
+
+/-- A real Tate test of parity zero or one transforms into itself times the
+corresponding power of the Fourier phase. -/
+theorem fourier_realTatePolynomialGaussian (n : Nat) (hn : Or (n = 0) (n = 1)) (y : Real) :
+    fourier (fun x : Real => (x : Complex) ^ n * realTateGaussian x) y =
+      (-Complex.I) ^ n * (y : Complex) ^ n * realTateGaussian y := by
+  rcases hn with h | h
+  . subst n
+    simpa only [pow_zero, one_mul] using congrFun fourier_realTateGaussian y
+  . subst n
+    simpa only [pow_one] using fourier_realTateGaussian_mul_coordinate y
+
+private def complexTateGaussian (z : Complex) : Complex :=
+  (Real.exp (-2 * Real.pi * norm z ^ 2) : Complex)
+
+private def complexTateMonomial (n : Nat) (z : Complex) : Complex :=
+  z ^ n * complexTateGaussian z
+
+set_option backward.isDefEq.respectTransparency false in
+private theorem hasLineDerivAt_complexTateMonomial (n : Nat) (z u : Complex) :
+    HasLineDerivAt Real (complexTateMonomial n)
+      (((n : Complex) * z ^ (n - 1) * u) * complexTateGaussian z +
+        z ^ n * (complexTateGaussian z *
+          (-4 * (Real.pi : Complex) * (inner Real z u : Complex)))) z u := by
+  have hIdF : HasFDerivAt (fun x : Complex => x) (ContinuousLinearMap.id Real Complex) z :=
+    hasFDerivAt_id z
+  have hId : HasLineDerivAt Real (fun x : Complex => x) u z u := hIdF.hasLineDerivAt u
+  have hnorm : HasLineDerivAt Real (fun x : Complex => norm x ^ 2)
+      (2 * inner Real z u) z u := by
+    simpa only [_root_.smul_apply, two_smul, two_mul, add_apply, innerSL_apply_apply] using
+      (hasStrictFDerivAt_norm_sq z).hasFDerivAt.hasLineDerivAt u
+  have hQ : HasLineDerivAt Real (fun x : Complex => -2 * Real.pi * norm x ^ 2)
+      (-2 * Real.pi * (2 * inner Real z u)) z u := by
+    exact (show HasDerivAt (fun t : Real => norm (z + HSMul.hSMul t u) ^ 2)
+      (2 * inner Real z u) 0 from hnorm).const_mul (-2 * Real.pi)
+  have hGauss : HasLineDerivAt Real complexTateGaussian
+      (complexTateGaussian z * (-4 * (Real.pi : Complex) * (inner Real z u : Complex))) z u := by
+    change HasDerivAt (fun t : Real => (Real.exp (-2 * Real.pi * norm (z + HSMul.hSMul t u) ^ 2) : Complex)) _ 0
+    have hDeriv : HasDerivAt (fun t : Real => -2 * Real.pi * norm (z + HSMul.hSMul t u) ^ 2)
+        (-2 * Real.pi * (2 * inner Real z u)) 0 := hQ
+    have hExp := Real.hasDerivAt_exp (-2 * Real.pi * norm (z + HSMul.hSMul (0 : Real) u) ^ 2)
+    convert (hExp.comp 0 hDeriv).ofReal_comp using 1 <;>
+      simp only [zero_smul, add_zero, complexTateGaussian, Function.comp_apply] <;>
+      push_cast <;> ring
+  change HasDerivAt (fun t : Real => complexTateMonomial n (z + HSMul.hSMul t u)) _ 0
+  have hID : HasDerivAt (fun t : Real => z + HSMul.hSMul t u) u 0 := hId
+  have hG : HasDerivAt (fun t : Real => complexTateGaussian (z + HSMul.hSMul t u))
+      (complexTateGaussian z * (-4 * (Real.pi : Complex) * (inner Real z u : Complex))) 0 := hGauss
+  convert (hID.pow n).mul hG using 1 <;>
+    first
+    | rfl
+    | simp only [Pi.pow_apply, zero_smul, add_zero]
+
+private theorem complexTate_inner_coordinates (z : Complex) :
+    (inner Real z (1 : Complex) : Complex) + Complex.I * (inner Real z Complex.I : Complex) = z := by
+  have hR : inner Real z (1 : Complex) = z.re := by simp [Complex.inner]
+  have hI : inner Real z Complex.I = z.im := by simp [Complex.inner, Complex.mul_re]
+  rw [hR, hI, mul_comm Complex.I]
+  exact Complex.re_add_im z
+
+private abbrev complexTateLineDerivative (u : Complex) (f : SchwartzMap Complex Complex) :
+    SchwartzMap Complex Complex :=
+  LineDeriv.lineDerivOp u f
+
+set_option backward.isDefEq.respectTransparency false in
+private theorem complexTateMonomial_lineDerivativeCombination
+    (f g : SchwartzMap Complex Complex) (n : Nat)
+    (hf : forall z, f z = complexTateMonomial n z)
+    (hg : forall z, g z = complexTateMonomial (n + 1) z) :
+    complexTateLineDerivative 1 f +
+      HSMul.hSMul Complex.I (complexTateLineDerivative Complex.I f) =
+        HSMul.hSMul (-4 * (Real.pi : Complex)) g := by
+  ext z
+  have hD (u : Complex) : complexTateLineDerivative u f z =
+      ((n : Complex) * z ^ (n - 1) * u) * complexTateGaussian z +
+        z ^ n * (complexTateGaussian z *
+          (-4 * (Real.pi : Complex) * (inner Real z u : Complex))) := by
+    unfold complexTateLineDerivative
+    rw [SchwartzMap.lineDerivOp_apply, show (f : Complex -> Complex) = complexTateMonomial n from funext hf]
+    exact (hasLineDerivAt_complexTateMonomial n z u).lineDeriv
+  change complexTateLineDerivative 1 f z + Complex.I * complexTateLineDerivative Complex.I f z =
+    (-4 * (Real.pi : Complex)) * g z
+  rw [hD, hD, hg, complexTateMonomial]
+  calc
+    _ = ((n : Complex) * z ^ (n - 1) * complexTateGaussian z) * (1 + Complex.I * Complex.I) +
+        (z ^ n * complexTateGaussian z) * (-4 * (Real.pi : Complex)) *
+          ((inner Real z (1 : Complex) : Complex) + Complex.I * (inner Real z Complex.I : Complex)) := by ring
+    _ = _ := by
+      rw [Complex.I_mul_I, complexTate_inner_coordinates, pow_succ]
+      ring
+
+set_option backward.isDefEq.respectTransparency false in
+private theorem fourier_complexTateMonomial_succ
+    (f g : SchwartzMap Complex Complex) (n : Nat)
+    (hf : forall z, f z = complexTateMonomial n z)
+    (hg : forall z, g z = complexTateMonomial (n + 1) z)
+    (w : Complex) :
+    fourier g w = (-Complex.I / 2) * w * fourier f w := by
+  have hD := complexTateMonomial_lineDerivativeCombination f g n hf hg
+  have hF (u : Complex) :
+      fourier (complexTateLineDerivative u f) w =
+        (2 * (Real.pi : Complex) * Complex.I) * ((inner Real w u : Complex) * fourier f w) := by
+    unfold complexTateLineDerivative
+    rw [SchwartzMap.fourier_lineDerivOp_eq]
+    have hGrowth : (fun z : Complex => inner Real z u).HasTemperateGrowth :=
+      ((innerSL Real).flip u).hasTemperateGrowth
+    change (2 * (Real.pi : Complex) * Complex.I) *
+      (SchwartzMap.smulLeftCLM Complex (fun z => inner Real z u) (fourier f)) w = _
+    rw [SchwartzMap.smulLeftCLM_apply hGrowth]
+    rfl
+  have H := congrArg (fun h => (SchwartzMap.fourierTransformCLM Complex h) w) hD
+  simp only [map_add, map_smul, SchwartzMap.fourierTransformCLM_apply] at H
+  change fourier (complexTateLineDerivative 1 f) w +
+      Complex.I * fourier (complexTateLineDerivative Complex.I f) w =
+        (-4 * (Real.pi : Complex)) * fourier g w at H
+  rw [hF, hF] at H
+  have hC : Not ((-4 * (Real.pi : Complex)) = 0) :=
+    mul_ne_zero (by norm_num) (Complex.ofReal_ne_zero.mpr Real.pi_pos.ne')
+  apply (mul_right_inj' hC).mp
+  calc
+    _ = _ := H.symm
+    _ = (2 * (Real.pi : Complex) * Complex.I) *
+        ((inner Real w (1 : Complex) : Complex) + Complex.I * (inner Real w Complex.I : Complex)) *
+        fourier f w := by ring
+    _ = _ := by rw [complexTate_inner_coordinates]; ring
+
+private theorem fourier_complexTateGaussian_eq (w : Complex) :
+    fourier complexTateGaussian w =
+      (1 / 2 : Complex) * (Real.exp (-Real.pi * norm w ^ 2 / 2) : Complex) := by
+  have hb : 0 < ((2 : Complex) * (Real.pi : Complex)).re := by
+    norm_num [Complex.mul_re]
+    all_goals positivity
+  have hf : complexTateGaussian = fun z : Complex =>
+      Complex.exp (-((2 : Complex) * (Real.pi : Complex)) * (norm z : Complex) ^ 2) := by
+    funext z
+    rw [complexTateGaussian, Complex.ofReal_exp]
+    congr 1
+    push_cast
+    ring
+  rw [hf, fourier_gaussian_innerProductSpace hb, Complex.finrank_real_complex]
+  have hExp : (((2 : Nat) : Complex) / 2) = 1 := by norm_num
+  rw [hExp, Complex.cpow_one, Complex.ofReal_exp]
+  have hPi : Not ((Real.pi : Complex) = 0) := Complex.ofReal_ne_zero.mpr Real.pi_pos.ne'
+  have hHalf : (Real.pi : Complex) / (2 * (Real.pi : Complex)) = 1 / 2 := by
+    field_simp
+  rw [hHalf]
+  congr 2
+  push_cast
+  field_simp
+
+private theorem fourier_complexTateMonomial_of_schwartz
+    (f : Nat -> SchwartzMap Complex Complex)
+    (hf : forall n z, f n z = complexTateMonomial n z) (n : Nat) (w : Complex) :
+    fourier (f n) w =
+      (-Complex.I / 2) ^ n * w ^ n * ((1 / 2 : Complex) *
+        (Real.exp (-Real.pi * norm w ^ 2 / 2) : Complex)) := by
+  induction n with
+  | zero =>
+    change fourier (f 0 : Complex -> Complex) w = _
+    have h : (f 0 : Complex -> Complex) = complexTateGaussian := by
+      funext z
+      simpa only [complexTateMonomial, pow_zero, one_mul] using hf 0 z
+    rw [h, fourier_complexTateGaussian_eq, pow_zero, pow_zero, one_mul, one_mul]
+  | succ n ih =>
+    rw [fourier_complexTateMonomial_succ (f n) (f (n + 1)) n (hf n) (hf (n + 1)), ih,
+      pow_succ, pow_succ]
+    ring
+
+private def complexTateGaussianSchwartz : SchwartzMap Complex Complex :=
+  SchwartzMap.postcompCLM Complex.ofRealCLM
+    (schwartzExp_of_negativeQuadratic
+      ((Function.HasTemperateGrowth.const (-(2 * Real.pi))).mul
+        (Function.hasTemperateGrowth_norm_sq Complex))
+      (show 0 < 2 * Real.pi by positivity) (fun _ => le_rfl))
+
+private def complexTateMonomialSchwartz (n : Nat) : SchwartzMap Complex Complex :=
+  SchwartzMap.smulLeftCLM Complex (fun z : Complex => z ^ n) complexTateGaussianSchwartz
+
+private theorem complexTateMonomialSchwartz_apply (n : Nat) (z : Complex) :
+    complexTateMonomialSchwartz n z = complexTateMonomial n z := by
+  have hP : (fun w : Complex => w ^ n).HasTemperateGrowth :=
+    (ContinuousLinearMap.id Real Complex).hasTemperateGrowth.pow n
+  rw [complexTateMonomialSchwartz, SchwartzMap.smulLeftCLM_apply hP]
+  change z ^ n * (Real.exp (-(2 * Real.pi) * norm z ^ 2) : Complex) =
+    z ^ n * (Real.exp (-2 * Real.pi * norm z ^ 2) : Complex)
+  have hArg : -(2 * Real.pi) * norm z ^ 2 = -2 * Real.pi * norm z ^ 2 := by ring
+  rw [hArg]
+
+/-- The Euclidean Fourier transform of a holomorphic monomial times the
+complex Tate Gaussian. -/
+theorem fourier_complexTatePolynomialGaussian (n : Nat) (w : Complex) :
+    fourier (fun z : Complex => z ^ n * (Real.exp (-2 * Real.pi * norm z ^ 2) : Complex)) w =
+      (-Complex.I / 2) ^ n * w ^ n * ((1 / 2 : Complex) *
+        (Real.exp (-Real.pi * norm w ^ 2 / 2) : Complex)) := by
+  have h := fourier_complexTateMonomial_of_schwartz complexTateMonomialSchwartz
+    complexTateMonomialSchwartz_apply n w
+  change fourier (complexTateMonomialSchwartz n : Complex -> Complex) w = _ at h
+  rw [show (complexTateMonomialSchwartz n : Complex -> Complex) = complexTateMonomial n
+    from funext (complexTateMonomialSchwartz_apply n)] at h
+  exact h
+
+/-- The complex trace pairing evaluates the Euclidean Fourier transform at
+twice the conjugate frequency and uses twice Euclidean measure. The resulting
+transform changes the angular monomial to its conjugate and contributes the
+Fourier phase. -/
+theorem fourier_complexTatePolynomialGaussian_trace (n : Nat) (w : Complex) :
+    (2 : Complex) *
+        fourier (fun z : Complex => z ^ n * (Real.exp (-2 * Real.pi * norm z ^ 2) : Complex))
+          (2 * starRingEnd Complex w) =
+      (-Complex.I) ^ n * (starRingEnd Complex w) ^ n *
+        (Real.exp (-2 * Real.pi * norm w ^ 2) : Complex) := by
+  rw [fourier_complexTatePolynomialGaussian]
+  have hNorm : norm ((2 : Complex) * starRingEnd Complex w) = 2 * norm w := by
+    simp
+  have hExp : -Real.pi * (2 * norm w) ^ 2 / 2 = -2 * Real.pi * norm w ^ 2 := by ring
+  rw [hNorm, hExp, mul_pow]
+  have hPhase : (-Complex.I / 2) ^ n * (2 : Complex) ^ n = (-Complex.I) ^ n := by
+    rw [<- mul_pow]
+    congr 1
+    ring
+  rw [<- hPhase]
+  ring
+
+end TateFourier
+
 end Robin1984.GRH
