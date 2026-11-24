@@ -1065,6 +1065,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeTateZetaUnfolding.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's unfolding of an idelic zeta integral into a principal-idele theta sum.",
+      "formalization_note": "Identifies the weighted physical orbit sum with the theta series and unfolds the integral in the logarithmic norm coordinates.",
+      "content_basis": "Checks the diagonal principal embedding, the two reindexings, the full unitary character weight, joint continuity, and the conditional integral identity.",
+      "dependency_status": "Uses the actual principal quotient measure and the norm-one theta bounds. The integral identity takes integrability of the original test as a hypothesis.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/Helpers/Event.lean",
       "classification": "Primarily project-original",
       "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
