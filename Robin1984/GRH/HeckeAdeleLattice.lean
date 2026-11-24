@@ -571,4 +571,101 @@ theorem compactSpace_adeleModuloPrincipal :
 
 end Cocompactness
 
+section MatrixBlockCocompactness
+
+variable (K : Type*) [Field K] [NumberField K] (r k : Nat)
+
+private abbrev BlockAdeles :=
+  AdeleRing (RingOfIntegers K) K
+
+/-- The diagonal number field in each entry of the off-diagonal block. -/
+noncomputable def godementJacquetPrincipalMatrixBlock :
+    AddSubgroup (Matrix (Fin r) (Fin k) (BlockAdeles K)) :=
+  AddSubgroup.pi Set.univ (fun _ => AddSubgroup.pi Set.univ
+    (fun _ => AdeleRing.principalSubgroup (RingOfIntegers K) K))
+
+private theorem principalMatrixBlock_mem_iff
+    (M : Matrix (Fin r) (Fin k) (BlockAdeles K)) :
+    Membership.mem (godementJacquetPrincipalMatrixBlock K r k) M <->
+      forall i j, Membership.mem (AdeleRing.principalSubgroup (RingOfIntegers K) K) (M i j) := by
+  change (forall i : Fin r, Membership.mem (Set.univ : Set (Fin r)) i ->
+    forall j : Fin k, Membership.mem (Set.univ : Set (Fin k)) j ->
+      Membership.mem (AdeleRing.principalSubgroup (RingOfIntegers K) K) (M i j)) <-> _
+  simp only [Set.mem_univ, true_implies]
+
+theorem mem_godementJacquetPrincipalMatrixBlock
+    (M : Matrix (Fin r) (Fin k) (BlockAdeles K)) :
+    Membership.mem (godementJacquetPrincipalMatrixBlock K r k) M <->
+      Exists (fun P : Matrix (Fin r) (Fin k) K => P.map (algebraMap K (BlockAdeles K)) = M) := by
+  rw [principalMatrixBlock_mem_iff]
+  constructor
+  . intro h
+    have hP : forall i j, Exists (fun x : K => algebraMap K (BlockAdeles K) x = M i j) := h
+    choose P hP using hP
+    exact Exists.intro P (Matrix.ext hP)
+  . intro h
+    choose P hP using h
+    intro i j
+    rw [<- hP]
+    exact Exists.intro (P i j) rfl
+
+/-- Rational blocks form a closed subgroup of the adelic blocks. -/
+theorem isClosed_godementJacquetPrincipalMatrixBlock :
+    IsClosed (godementJacquetPrincipalMatrixBlock K r k :
+      Set (Matrix (Fin r) (Fin k) (BlockAdeles K))) := by
+  let A := BlockAdeles K
+  let H := AdeleRing.principalSubgroup (RingOfIntegers K) K
+  let T : Fin r -> Fin k -> Set (Matrix (Fin r) (Fin k) A) :=
+    fun i j => Set.preimage (fun M => M i j) (H : Set A)
+  have hT (i : Fin r) (j : Fin k) : IsClosed (T i j) :=
+    (isClosed_principalAdeles K).preimage ((continuous_apply j).comp (continuous_apply i))
+  have hEq : (godementJacquetPrincipalMatrixBlock K r k : Set (Matrix (Fin r) (Fin k) A)) =
+      Set.iInter (fun i => Set.iInter (T i)) := by
+    ext M
+    change Membership.mem (godementJacquetPrincipalMatrixBlock K r k) M <-> _
+    rw [principalMatrixBlock_mem_iff]
+    simp only [Set.mem_iInter, T, Set.mem_preimage, H, SetLike.mem_coe]
+  rw [hEq]
+  exact isClosed_iInter (fun i => isClosed_iInter (hT i))
+
+/-- The off-diagonal unipotent adelic block modulo its rational points is
+compact. A product of scalar compact reduction sets surjects to it. -/
+theorem compactSpace_godementJacquetMatrixBlockModuloPrincipal :
+    CompactSpace (HasQuotient.Quotient (Matrix (Fin r) (Fin k) (BlockAdeles K))
+      (godementJacquetPrincipalMatrixBlock K r k)) := by
+  let A := BlockAdeles K
+  let M := Matrix (Fin r) (Fin k) A
+  let H := godementJacquetPrincipalMatrixBlock K r k
+  let Q := HasQuotient.Quotient M H
+  let q : M -> Q := QuotientAddGroup.mk' H
+  have hSurj : Function.Surjective q := QuotientAddGroup.mk_surjective
+  have hCont : Continuous q := QuotientAddGroup.continuous_mk
+  choose C hC using exists_compact_adele_principal_reduction (K := K)
+  let D : Set M := Set.pi Set.univ (fun _ => Set.pi Set.univ (fun _ => C))
+  have hD : IsCompact D := isCompact_univ_pi (fun _ => isCompact_univ_pi (fun _ => hC.1))
+  have hImage : Set.image q D = (Set.univ : Set Q) := by
+    apply Set.eq_univ_of_forall
+    intro z
+    choose X hX using hSurj z
+    have hEntry : forall i j, Exists (fun x : K =>
+        Membership.mem C (X i j - algebraMap K A x)) := fun i j => hC.2 (X i j)
+    choose P hP using hEntry
+    let Y : M := X - Matrix.map P (algebraMap K A)
+    have hY : Membership.mem D Y := by
+      change forall i : Fin r, Membership.mem (Set.univ : Set (Fin r)) i ->
+        forall j : Fin k, Membership.mem (Set.univ : Set (Fin k)) j -> Membership.mem C (Y i j)
+      exact fun i _ j _ => hP i j
+    have hH : Membership.mem H (Matrix.map P (algebraMap K A)) :=
+      (mem_godementJacquetPrincipalMatrixBlock K r k _).mpr (Exists.intro P rfl)
+    have hZero : (QuotientAddGroup.mk' H) (Matrix.map P (algebraMap K A)) = 0 :=
+      (QuotientAddGroup.eq_zero_iff _).mpr hH
+    refine Exists.intro Y (And.intro hY ?_)
+    rw [<- hX]
+    change (QuotientAddGroup.mk' H) (X - Matrix.map P (algebraMap K A)) =
+        (QuotientAddGroup.mk' H) X
+    rw [map_sub, hZero, sub_zero]
+  exact CompactSpace.mk (hImage.subst (hD.image hCont))
+
+end MatrixBlockCocompactness
+
 end Robin1984.GRH
