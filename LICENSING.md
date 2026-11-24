@@ -46,12 +46,6 @@ The Linux Lean-build release archive contains the repository's compiled build
 outputs and a copy of this licensing information. It does not include the
 checked-out dependency source trees under `.lake/packages`.
 
-The API-documentation archive is an aggregate: doc-gen4 emits pages for
-Robin1984 and its transitive imports so declaration links work offline. CI
-therefore adds a `licensing/` directory containing this project notice, the
-root Apache-2.0 text, the Lean toolchain notices, and the licence or notice
-files from every pinned package represented in the documentation. Nothing in
-that archive changes the terms that apply to third-party material.
 
 ## Contributions
 

@@ -59,10 +59,7 @@ if ($IncludeDependencyLicenses) {
   }
 
   $packagesByIdentity = [ordered]@{}
-  foreach ($manifestPath in @(
-    (Join-Path $repositoryRoot 'lake-manifest.json'),
-    (Join-Path $repositoryRoot 'docbuild/lake-manifest.json')
-  )) {
+  foreach ($manifestPath in @((Join-Path $repositoryRoot 'lake-manifest.json'))) {
     $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
     foreach ($package in $manifest.packages | Where-Object { $_.type -eq 'git' }) {
       $identity = "$(Normalize-GitUrl $package.url)@$($package.rev)"

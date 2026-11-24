@@ -92,15 +92,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9
-        with:
-          build: false
-      - name: Fetch the pinned project and documentation dependencies
-        run: |
-          lake resolve-deps
-          (cd docbuild && lake resolve-deps)
-          git diff --exit-code -- lean-toolchain lakefile.lean lake-manifest.json docbuild/lean-toolchain docbuild/lakefile.toml docbuild/lake-manifest.json
-      - name: Exercise producer and release-consumer packaging
+      - name: Check the Lean-build archive licensing bundle
         shell: pwsh
         run: ./test/release_licensing_test.ps1
 
@@ -260,66 +252,6 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  docs:
-    name: Build API documentation
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 180
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-      - uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9
-        with:
-          build: false
-      - name: Fetch pinned dependencies and caches
-        run: |
-          lake resolve-deps
-          lake exe cache get
-          (cd docbuild && lake resolve-deps)
-          git diff --exit-code -- lean-toolchain lakefile.lean lake-manifest.json docbuild/lean-toolchain docbuild/lakefile.toml docbuild/lake-manifest.json
-      - name: Restore the built formalization
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
-        with:
-          name: robin1984-linux-build
-          path: .lake/build
-      - name: Check the restored proof artifacts
-        run: |
-          test -s .lake/build/lib/lean/Challenge.olean
-          test -s .lake/build/lib/lean/Solution.olean
-      - name: Restore the API documentation cache
-        id: restore-docs
-        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
-        with:
-          path: docbuild/.lake/build
-          key: robin1984-docs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', 'docbuild/lean-toolchain', 'docbuild/lakefile.toml', 'docbuild/lake-manifest.json', '*.lean', 'Robin1984/**/*.lean', 'TauCeti/**/*.lean', 'DedekindZeta/**/*.lean') }}
-          restore-keys: |
-            robin1984-docs-${{ runner.os }}-${{ runner.arch }}-
-      - name: Build doc-gen4 output
-        working-directory: docbuild
-        env:
-          # Limit concurrent Lake jobs so the documentation build fits the runner.
-          LEAN_NUM_THREADS: "1"
-          MATHLIB_NO_CACHE_ON_UPDATE: "1"
-          DISABLE_EQUATIONS: "1"
-          DOCGEN_SRC: github
-        run: lake build Robin1984:docs
-      - name: Check the dependency pins
-        run: git diff --exit-code -- lean-toolchain lakefile.lean lake-manifest.json docbuild/lean-toolchain docbuild/lakefile.toml docbuild/lake-manifest.json
-      - name: Prepare the offline API-documentation landing page
-        shell: pwsh
-        run: ./scripts/prepare-api-docs.ps1 -DocumentationRoot docbuild/.lake/build/doc
-      - name: Save the API documentation cache
-        if: steps.restore-docs.outputs.cache-hit != 'true'
-        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
-        with:
-          path: docbuild/.lake/build
-          key: robin1984-docs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json', 'docbuild/lean-toolchain', 'docbuild/lakefile.toml', 'docbuild/lake-manifest.json', '*.lean', 'Robin1984/**/*.lean', 'TauCeti/**/*.lean', 'DedekindZeta/**/*.lean') }}
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: api-documentation
-          path: docbuild/.lake/build/doc
-          if-no-files-found: error
 
   comparator:
     name: Check statement against solution
@@ -362,7 +294,6 @@ jobs:
       - paper
       - sandbox
       - build
-      - docs
       - comparator
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -403,7 +334,6 @@ jobs:
           fi
 
           expected=$(printf '%s\n' \
-            "robin1984-api-documentation-$RELEASE_TAG.zip" \
             'robin1984-formalization.pdf' \
             "robin1984-linux-lean-$RELEASE_TAG.tar.zst" | sort)
           actual=$(gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" \
@@ -431,55 +361,38 @@ jobs:
         with:
           name: robin1984-linux-build
           path: release-inputs/linux-build
-      - name: Download the API documentation
-        if: steps.release_state.outputs.complete != 'true'
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
-        with:
-          name: api-documentation
-          path: release-inputs/api-documentation
-      - name: Validate and package the three release assets
+      - name: Validate and package the release assets
         if: steps.release_state.outputs.complete != 'true'
         shell: bash
         run: |
           set -euo pipefail
-          for command in gh jq sha256sum stat tar zip zstd; do
+          for command in gh jq sha256sum stat tar zstd; do
             command -v "$command" >/dev/null
           done
           test -s release-inputs/paper/robin1984-formalization.pdf
           test -s release-inputs/linux-build/lib/lean/Challenge.olean
           test -s release-inputs/linux-build/lib/lean/Solution.olean
-          test -s release-inputs/api-documentation/licensing/index.html
-          test -s release-inputs/api-documentation/licensing/Robin1984-Apache-2.0.txt
-          pwsh -File scripts/prepare-api-docs.ps1 \
-            -DocumentationRoot release-inputs/api-documentation \
-            -UsePreparedLicensing
           pwsh -File scripts/prepare-release-licensing.ps1 \
             -DestinationRoot release-inputs/linux-build
 
           mkdir release-assets
           cp release-inputs/paper/robin1984-formalization.pdf \
             release-assets/robin1984-formalization.pdf
-          (
-            cd release-inputs/api-documentation
-            zip -q -r -6 \
-              "$GITHUB_WORKSPACE/release-assets/robin1984-api-documentation-$RELEASE_TAG.zip" .
-          )
           tar -C release-inputs/linux-build -cf - . |
             zstd -T0 -10 -q \
               -o "release-assets/robin1984-linux-lean-$RELEASE_TAG.tar.zst"
 
-          test "$(find release-assets -maxdepth 1 -type f | wc -l)" -eq 3
+          test "$(find release-assets -maxdepth 1 -type f | wc -l)" -eq 2
           sha256sum release-assets/* > release-assets.sha256
           {
             echo "Automated release for commit \`$GITHUB_SHA\`."
             echo
-            echo "Every CI gate passed, including the full Lean build, metadata and provenance checks, research-paper and API-documentation builds, Comparator statement matching, NanoDa replay, and Lean default-kernel replay."
+            echo "Every CI gate passed, including the full Lean build, metadata and provenance checks, the research-paper build, Comparator statement matching, NanoDa replay, and Lean default-kernel replay."
             echo
             echo "## Assets"
             echo
             echo "- \`robin1984-formalization.pdf\`: research paper."
             echo "- \`robin1984-linux-lean-$RELEASE_TAG.tar.zst\`: completed Ubuntu \`.lake/build\` contents with project licensing information."
-            echo "- \`robin1984-api-documentation-$RELEASE_TAG.zip\`: complete API site with an offline-safe landing page and applicable third-party licence notices."
             echo
             echo "## SHA-256"
             echo
@@ -513,7 +426,7 @@ jobs:
             --jq ".[] | select(.tag_name == \"$RELEASE_TAG\" and .draft == true) | .id")
           test -n "$release_id"
           test "$(gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" \
-            --jq '.assets | length')" -eq 3
+            --jq '.assets | length')" -eq 2
           for asset in release-assets/*; do
             name=$(basename "$asset")
             local_size=$(stat -c '%s' "$asset")
@@ -531,6 +444,6 @@ jobs:
           test "$(jq -r .draft <<< "$release")" = false
           test "$(jq -r .prerelease <<< "$release")" = false
           test "$(jq -r .target_commitish <<< "$release")" = "$GITHUB_SHA"
-          test "$(jq '.assets | length' <<< "$release")" -eq 3
+          test "$(jq '.assets | length' <<< "$release")" -eq 2
           test "$(jq '[.assets[] | select(.state != "uploaded" or .size <= 0)] | length' \
             <<< "$release")" -eq 0

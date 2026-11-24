@@ -449,23 +449,6 @@ from every Lean source and build-defining file. A source change therefore
 forces a new kernel build, while documentation-only changes can reuse the exact
 Linux `.olean`s.
 
-API documentation is checked by the Linux CI job and can be built from the
-nested `docbuild` project on a host with a compatible native C toolchain:
-
-```sh
-cd docbuild
-lake build Robin1984:docs
-```
-
-doc-gen4 includes every transitive import so that declaration links resolve.
-The project therefore avoids umbrella `import Mathlib` declarations and CI
-caches `docbuild/.lake/build`, allowing later documentation runs to update the
-existing database rather than regenerate every imported module.
-After doc-gen4 finishes, CI replaces its server-oriented root page with the
-committed [offline landing page](assets/api-documentation-index.html) and
-checks every link before uploading the site. The resulting `index.html` works
-when the documentation archive is opened directly after extraction, without a
-web server, iframe, external script or CDN.
 
 The same CI run publishes the compiled research paper as the
 `robin1984-research-paper` artifact. Its cached PDF is keyed only by
@@ -480,12 +463,9 @@ job has passed, including Comparator statement matching, NanoDa replay and
 Lean's default-kernel replay. The committed [RELEASE_VERSION](RELEASE_VERSION)
 file supplies the semantic version and must be bumped before a new release;
 CI checks tag collisions before starting the long Lean build. The release
-contains exactly the paper PDF, a compressed Ubuntu `.lake/build` tree, and a
-ZIP of the complete offline-safe API site. The build archive includes the
-project's licensing statement, while the documentation ZIP also includes the
-licence and notice files for Lean and every pinned dependency represented in
-the generated pages. A rerun at an already published commit verifies the
-existing release instead of creating a duplicate.
+contains the paper PDF and a compressed Ubuntu `.lake/build` tree with the
+project's licensing information. A rerun at an already published commit
+verifies the existing release.
 
 ## Production and review disclosure
 
