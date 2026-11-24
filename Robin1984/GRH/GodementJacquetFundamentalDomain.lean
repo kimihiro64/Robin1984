@@ -600,4 +600,339 @@ theorem setIntegral_eq_zero_of_orbitAverage
 
 end OrbitCancellation
 
+section QuotientTower
+
+variable {G : Type*} [Group G] [MeasurableSpace G] [MeasurableMul G]
+
+/-- Lift an exact fundamental domain for a split subgroup to an exact
+fundamental domain for its first factor. The image of the original
+domain has the restricted quotient measure from that domain. -/
+theorem exists_leftOrbitRestriction_of_splitSubgroup
+    (U L H : Subgroup G) [Countable U] [Countable L]
+    (hU : U <= H) (hL : L <= H)
+    (split : Equiv (Prod U L) H)
+    (hSplit : forall a : Prod U L, (split a).val = a.1.val * a.2.val)
+    (mu : Measure G) (S : Set G) (hS : MeasurableSet S)
+    (hUnique : forall x : G, ExistsUnique (fun h : H => Membership.mem S (h.val * x))) :
+    let q := Quotient.mk (MulAction.orbitRel U G)
+    let T := Set.image q S
+    Exists (fun W : Set G => And (MeasurableSet W)
+      (And (forall x : G, ExistsUnique (fun u : U => Membership.mem W (u.val * x)))
+        (And (MeasurableSet T)
+          (((mu.restrict W).map q).restrict T = (mu.restrict S).map q)))) := by
+  let q := Quotient.mk (MulAction.orbitRel U G)
+  let T := Set.image q S
+  let A (l : L) : Set G := Set.preimage (MeasurableEquiv.mulLeft l.val).symm S
+  let W : Set G := Set.iUnion A
+  have hW' (x : G) : Membership.mem W x <->
+      Exists (fun l : L => Membership.mem S (Inv.inv l.val * x)) :=
+    Set.mem_iUnion
+  have hW : MeasurableSet W := MeasurableSet.iUnion (fun l => (MeasurableEquiv.mulLeft l.val).symm.measurable hS)
+  have hSU : forall x : G, ExistsUnique (fun u : U => Membership.mem W (u.val * x)) := by
+    intro x
+    have h := hUnique x
+    change Exists (fun h : H => And (Membership.mem S (h.val * x))
+      (forall v : H, Membership.mem S (v.val * x) -> v = h)) at h
+    choose h hh using h
+    let a := split.symm (Inv.inv h)
+    have ha : a.1.val * a.2.val = Inv.inv h.val := by
+      rw [<- hSplit, show split a = Inv.inv h from split.apply_symm_apply _]
+      rfl
+    refine Exists.intro (Inv.inv a.1) (And.intro ?_ ?_)
+    . apply (hW' _).mpr
+      refine Exists.intro a.2 ?_
+      change Membership.mem S (Inv.inv a.2.val * (Inv.inv a.1.val * x))
+      have he : Inv.inv a.2.val * (Inv.inv a.1.val * x) = h.val * x := calc
+        _ = Inv.inv (a.1.val * a.2.val) * x := by rw [mul_inv_rev, mul_assoc]
+        _ = _ := by rw [ha, inv_inv]
+      rw [he]
+      exact hh.1
+    . intro v hv
+      choose l hl using (hW' _).mp hv
+      let b : H := Subtype.mk (Inv.inv l.val * v.val) (H.mul_mem (H.inv_mem (hL l.property)) (hU v.property))
+      have hb : b = h := hh.2 b (by
+        change Membership.mem S ((Inv.inv l.val * v.val) * x)
+        rw [mul_assoc]
+        exact hl)
+      have hc : split (Prod.mk (Inv.inv v) l) = Inv.inv h := by
+        apply Subtype.ext
+        rw [hSplit]
+        change Inv.inv v.val * l.val = Inv.inv h.val
+        have hd := congrArg (fun a : H => Inv.inv a.val) hb
+        change Inv.inv (Inv.inv l.val * v.val) = Inv.inv h.val at hd
+        simpa only [mul_inv_rev, inv_inv] using hd
+      have hPair : Prod.mk (Inv.inv v) l = a :=
+        split.injective (hc.trans (split.apply_symm_apply _).symm)
+      have hu : Inv.inv v = a.1 := congrArg Prod.fst hPair
+      simpa only [inv_inv] using congrArg Inv.inv hu
+  have hSub : S.Subset W := by
+    intro x hx
+    apply (hW' x).mpr
+    exact Exists.intro (1 : L) (by simpa using hx)
+  have hq : Measurable q := fun _ hs => measurableSet_quotient.mp hs
+  have hPre : Set.preimage q T =
+      Set.iUnion (fun u : U => Set.preimage (MeasurableEquiv.mulLeft u.val) S) := by
+    ext x
+    constructor
+    . intro hx
+      change Membership.mem (Set.image q S) (q x) at hx
+      choose y hy using hx
+      have hr := Quotient.exact hy.2
+      change Exists (fun u : U => u.val * x = y) at hr
+      choose u hu using hr
+      exact Set.mem_iUnion.mpr (Exists.intro u (by
+        change Membership.mem S (u.val * x)
+        rw [hu]
+        exact hy.1))
+    . intro hx
+      choose u hu using Set.mem_iUnion.mp hx
+      change Membership.mem (Set.image q S) (q x)
+      exact Exists.intro (u.val * x) (And.intro hu (Quotient.sound (Exists.intro u rfl)))
+  have hT : MeasurableSet T := measurableSet_quotient.mpr (by
+    rw [hPre]
+    exact MeasurableSet.iUnion (fun u => (MeasurableEquiv.mulLeft u.val).measurable hS))
+  have hInj : Set.InjOn q W := by
+    intro x hx y hy hxy
+    have hr := Quotient.exact hxy
+    change Exists (fun u : U => u.val * y = x) at hr
+    choose u hu using hr
+    have huW : Membership.mem W (u.val * y) := by rw [hu]; exact hx
+    have hOne : Membership.mem W ((1 : U).val * y) := by simpa using hy
+    have hEq := (hSU y).unique huW hOne
+    simpa [hEq] using hu.symm
+  have hCut : Inter.inter (Set.preimage q T) W = S := by
+    ext x
+    constructor
+    . intro hx
+      have h := hx.1
+      change Membership.mem (Set.image q S) (q x) at h
+      choose y hy using h
+      have he := hInj (hSub hy.1) hx.2 hy.2
+      rw [<- he]
+      exact hy.1
+    . intro hx
+      exact And.intro (Exists.intro x (And.intro hx rfl)) (hSub hx)
+  refine Exists.intro W (And.intro hW (And.intro hSU (And.intro hT ?_)))
+  ext B hB
+  change ((mu.restrict W).map q).restrict T B = (mu.restrict S).map q B
+  rw [Measure.restrict_apply hB, Measure.map_apply hq (hB.inter hT), Measure.map_apply hq hB,
+    Measure.restrict_apply (hq (hB.inter hT)), Measure.restrict_apply (hq hB),
+    Set.preimage_inter, Set.inter_assoc, hCut]
+
+end QuotientTower
+
+section LeviAction
+
+variable {G : Type*} [Group G] [MeasurableSpace G] [MeasurableMul G]
+
+/-- The action of an element of a normalizing subgroup on rational unipotent cosets. -/
+def leftOrbitNormalizerSubgroupEquiv (U L : Subgroup G)
+    (hNorm : forall (l : L) (u : U), Membership.mem U (l.val * u.val * Inv.inv l.val))
+    (l : L) : MeasurableEquiv (LeftOrbit U) (LeftOrbit U) :=
+  leftOrbitNormalizerEquiv U l.val (hNorm l) (fun u => by
+    simpa only [Subgroup.coe_inv, inv_inv] using hNorm (Inv.inv l) u)
+
+/-- The normalizer action on the quotient by the first subgroup. -/
+@[instance_reducible]
+def leftOrbitNormalizerMulAction (U L : Subgroup G)
+    (hNorm : forall (l : L) (u : U), Membership.mem U (l.val * u.val * Inv.inv l.val)) :
+    MulAction L (LeftOrbit U) where
+  smul l x := leftOrbitNormalizerSubgroupEquiv U L hNorm l x
+  one_smul := by
+    intro x
+    refine Quotient.inductionOn x ?_
+    intro y
+    change Quotient.mk (MulAction.orbitRel U G) ((1 : G) * y) =
+      Quotient.mk (MulAction.orbitRel U G) y
+    rw [one_mul]
+  mul_smul := by
+    intro l k x
+    refine Quotient.inductionOn x ?_
+    intro y
+    change Quotient.mk (MulAction.orbitRel U G) ((l.val * k.val) * y) =
+      Quotient.mk (MulAction.orbitRel U G) (l.val * (k.val * y))
+    rw [mul_assoc]
+
+/-- The image of the rational stabilizer fundamental domain is an
+exact fundamental domain for the Levi action on unipotent cosets. -/
+theorem existsUnique_leftOrbitNormalizerSubgroup_imageDomain
+    (U L H : Subgroup G)
+    (hNorm : forall (l : L) (u : U), Membership.mem U (l.val * u.val * Inv.inv l.val))
+    (split : Equiv (Prod U L) H)
+    (hSplit : forall a : Prod U L, (split a).val = a.1.val * a.2.val)
+    (S : Set G)
+    (hUnique : forall x : G, ExistsUnique (fun h : H => Membership.mem S (h.val * x))) :
+    let T := Set.image (Quotient.mk (MulAction.orbitRel U G)) S
+    forall x : LeftOrbit U, ExistsUnique
+      (fun l : L => Membership.mem T (leftOrbitNormalizerSubgroupEquiv U L hNorm l x)) := by
+  let q := Quotient.mk (MulAction.orbitRel U G)
+  let T := Set.image q S
+  change forall x : LeftOrbit U, ExistsUnique
+    (fun l : L => Membership.mem T (leftOrbitNormalizerSubgroupEquiv U L hNorm l x))
+  intro x
+  refine Quotient.inductionOn x ?_
+  intro y
+  have h := hUnique y
+  change Exists (fun a : H => And (Membership.mem S (a.val * y))
+    (forall b : H, Membership.mem S (b.val * y) -> b = a)) at h
+  choose a ha using h
+  let p := split.symm a
+  have hp : p.1.val * p.2.val = a.val := by
+    rw [<- hSplit, show split p = a from split.apply_symm_apply _]
+  refine Exists.intro p.2 (And.intro ?_ ?_)
+  . change Membership.mem T (q (p.2.val * y))
+    refine Exists.intro (a.val * y) (And.intro ha.1 (Quotient.sound ?_))
+    refine Exists.intro p.1 ?_
+    change p.1.val * (p.2.val * y) = a.val * y
+    rw [<- mul_assoc, hp]
+  . intro l hl
+    change Membership.mem T (q (l.val * y)) at hl
+    choose z hz using hl
+    have hr := Quotient.exact hz.2
+    change Exists (fun u : U => u.val * (l.val * y) = z) at hr
+    choose u hu using hr
+    let b := split (Prod.mk u l)
+    have hb : b.val * y = z := by
+      change (split (Prod.mk u l)).val * y = z
+      rw [hSplit, mul_assoc]
+      exact hu
+    have hd : b = a := ha.2 b (by rw [hb]; exact hz.1)
+    have hpair : Prod.mk u l = p :=
+      split.injective (hd.trans (split.apply_symm_apply a).symm)
+    exact congrArg Prod.snd hpair
+
+end LeviAction
+
+section UnipotentHaar
+
+variable (K : Type*) [Field K] [NumberField K] (r k : Nat)
+
+/-- The compact group of adelic upper unipotent coordinates modulo rational coordinates. -/
+abbrev GodementJacquetUnipotentClassGroup :=
+  Multiplicative (HasQuotient.Quotient
+    (Matrix (Fin r) (Fin k) (AdeleRing (RingOfIntegers K) K))
+    (godementJacquetPrincipalMatrixBlock K r k))
+
+/-- The compact unipotent quotient admits a bi-invariant Haar probability measure. -/
+theorem exists_godementJacquetUnipotentClassHaarProbability
+    [MeasurableSpace (GodementJacquetUnipotentClassGroup K r k)]
+    [BorelSpace (GodementJacquetUnipotentClassGroup K r k)] :
+    Exists (fun mu : Measure (GodementJacquetUnipotentClassGroup K r k) =>
+      And mu.IsHaarMeasure (And (IsProbabilityMeasure mu) mu.IsMulRightInvariant)) := by
+  let A := AdeleRing (RingOfIntegers K) K
+  let M := Matrix (Fin r) (Fin k) A
+  let H := godementJacquetPrincipalMatrixBlock K r k
+  let Q := HasQuotient.Quotient M H
+  let C := GodementJacquetUnipotentClassGroup K r k
+  let : IsClosed (H : Set M) := isClosed_godementJacquetPrincipalMatrixBlock K r k
+  let : T2Space Q := inferInstance
+  let : T2Space C := show T2Space Q from inferInstance
+  let : CompactSpace Q := compactSpace_godementJacquetMatrixBlockModuloPrincipal K r k
+  let : CompactSpace C := inferInstanceAs (CompactSpace (Multiplicative Q))
+  let S : TopologicalSpace.PositiveCompacts C :=
+    { carrier := Set.univ
+      isCompact' := isCompact_univ
+      interior_nonempty' := by rw [interior_univ]; exact Set.univ_nonempty }
+  let mu := Measure.haarMeasure S
+  let : mu.IsHaarMeasure := inferInstance
+  have hMass : mu (Set.univ : Set C) = 1 :=
+    (Measure.haarMeasure_self : mu (S : Set C) = 1)
+  let : IsProbabilityMeasure mu := { measure_univ := hMass }
+  have hRight : mu.IsMulRightInvariant := by
+    constructor
+    intro u
+    have hEq : (fun v : C => v * u) = (fun v : C => u * v) :=
+      funext (fun v => mul_comm v u)
+    rw [hEq]
+    exact map_mul_left_eq_self mu u
+  exact Exists.intro mu (And.intro inferInstance (And.intro inferInstance hRight))
+
+private abbrev LeviAdeles := AdeleRing (RingOfIntegers K) K
+private abbrev UnipotentBlock := Matrix (Fin r) (Fin k) (LeviAdeles K)
+private abbrev UnipotentQuotient :=
+  HasQuotient.Quotient (UnipotentBlock K r k) (godementJacquetPrincipalMatrixBlock K r k)
+
+private def blockLeviAddEquiv (V : Matrix.GeneralLinearGroup (Fin k) K) :
+    AddEquiv (UnipotentBlock K r k) (UnipotentBlock K r k) :=
+  let T := Matrix.GeneralLinearGroup.map (algebraMap K (LeviAdeles K)) V
+  { toFun := fun B => B * T.val
+    invFun := fun B => B * T.inv
+    left_inv := fun B => by
+      change (B * T.val) * T.inv = B
+      rw [Matrix.mul_assoc, T.val_inv, Matrix.mul_one]
+    right_inv := fun B => by
+      change (B * T.inv) * T.val = B
+      rw [Matrix.mul_assoc, T.inv_val, Matrix.mul_one]
+    map_add' := fun B D => Matrix.add_mul B D T.val }
+
+private theorem rightMul_mem_principalBlock (D : Matrix (Fin k) (Fin k) K)
+    (B : UnipotentBlock K r k) (hB : Membership.mem (godementJacquetPrincipalMatrixBlock K r k) B) :
+    Membership.mem (godementJacquetPrincipalMatrixBlock K r k) (B * D.map (algebraMap K (LeviAdeles K))) := by
+  choose P hP using (mem_godementJacquetPrincipalMatrixBlock K r k B).mp hB
+  apply (mem_godementJacquetPrincipalMatrixBlock K r k _).mpr
+  refine Exists.intro (P * D) ?_
+  rw [<- hP]
+  apply Matrix.ext
+  intro i j
+  simp [Matrix.mul_apply]
+
+private theorem blockLeviAddEquiv_map (V : Matrix.GeneralLinearGroup (Fin k) K) :
+    (godementJacquetPrincipalMatrixBlock K r k).map (blockLeviAddEquiv K r k V).toAddMonoidHom =
+      godementJacquetPrincipalMatrixBlock K r k := by
+  let H := godementJacquetPrincipalMatrixBlock K r k
+  let e := blockLeviAddEquiv K r k V
+  change H.map e.toAddMonoidHom = H
+  apply le_antisymm
+  . intro B hB
+    choose A hA using AddSubgroup.mem_map.mp hB
+    rw [<- hA.2]
+    exact rightMul_mem_principalBlock K r k V.val A hA.1
+  . intro B hB
+    apply AddSubgroup.mem_map.mpr
+    exact Exists.intro (e.symm B) (And.intro
+      (rightMul_mem_principalBlock K r k V.inv B hB) (e.apply_symm_apply B))
+
+private def quotientBlockLeviAddEquiv (V : Matrix.GeneralLinearGroup (Fin k) K) :
+    AddEquiv (UnipotentQuotient K r k) (UnipotentQuotient K r k) :=
+  let H := godementJacquetPrincipalMatrixBlock K r k
+  QuotientAddGroup.congr H H (blockLeviAddEquiv K r k V) (blockLeviAddEquiv_map K r k V)
+
+/-- Right multiplication by a rational Levi block descends to an
+automorphism of the compact unipotent quotient. -/
+def godementJacquetUnipotentClassLeviEquiv (V : Matrix.GeneralLinearGroup (Fin k) K) :
+    MulEquiv (GodementJacquetUnipotentClassGroup K r k) (GodementJacquetUnipotentClassGroup K r k) :=
+  let e := quotientBlockLeviAddEquiv K r k V
+  { toFun := fun x => Multiplicative.ofAdd (e (Multiplicative.toAdd x))
+    invFun := fun x => Multiplicative.ofAdd (e.symm (Multiplicative.toAdd x))
+    left_inv := fun x => congrArg Multiplicative.ofAdd (e.symm_apply_apply (Multiplicative.toAdd x))
+    right_inv := fun x => congrArg Multiplicative.ofAdd (e.apply_symm_apply (Multiplicative.toAdd x))
+    map_mul' := fun x y => congrArg Multiplicative.ofAdd
+      (map_add e (Multiplicative.toAdd x) (Multiplicative.toAdd y)) }
+
+/-- The Levi automorphism preserves normalized Haar measure on the compact quotient. -/
+theorem measurePreserving_godementJacquetUnipotentClassLeviEquiv
+    (V : Matrix.GeneralLinearGroup (Fin k) K)
+    [MeasurableSpace (GodementJacquetUnipotentClassGroup K r k)]
+    [BorelSpace (GodementJacquetUnipotentClassGroup K r k)]
+    (mu : Measure (GodementJacquetUnipotentClassGroup K r k))
+    [mu.IsHaarMeasure] [IsProbabilityMeasure mu] :
+    MeasurePreserving (godementJacquetUnipotentClassLeviEquiv K r k V) mu mu := by
+  let C := GodementJacquetUnipotentClassGroup K r k
+  let H := godementJacquetPrincipalMatrixBlock K r k
+  let : IsClosed (H : Set (UnipotentBlock K r k)) :=
+    isClosed_godementJacquetPrincipalMatrixBlock K r k
+  let : T2Space C := show T2Space (UnipotentQuotient K r k) from inferInstance
+  let : CompactSpace C := show CompactSpace (UnipotentQuotient K r k) from
+    compactSpace_godementJacquetMatrixBlockModuloPrincipal K r k
+  let e := godementJacquetUnipotentClassLeviEquiv K r k V
+  let T := Matrix.GeneralLinearGroup.map (algebraMap K (LeviAdeles K)) V
+  have hC : Continuous e := by
+    change Continuous (quotientBlockLeviAddEquiv K r k V)
+    apply (QuotientAddGroup.isQuotientMap_mk H).continuous_iff.mpr
+    exact QuotientAddGroup.continuous_mk.comp
+      (continuous_id.matrix_mul (continuous_const (y := T.val)))
+  exact MonoidHom.measurePreserving (f := e.toMonoidHom) hC e.surjective rfl
+
+end UnipotentHaar
+
 end Robin1984.GRH
