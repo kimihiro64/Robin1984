@@ -1740,6 +1740,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetThetaMellin.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Mellin reflection of the adelic matrix theta integral.",
+      "formalization_note": "Integrates the matrix Poisson reflection over the two quotient variables and proves the standard Mellin reflection after cuspidal cancellation.",
+      "content_basis": "Uses Fubini for the singular cancellation, swaps the two factors of the quotient measure, and changes the sign of the real determinant coordinate with the normalized Mellin exponent.",
+      "dependency_status": "Uses the verified adelic matrix Schwartz Poisson reflection and the verified cuspidal theta cancellation over the principal quotient.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetUnfolding.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the global matrix-coefficient zeta integral.",

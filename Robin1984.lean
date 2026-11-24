@@ -12,6 +12,7 @@ import Robin1984.GRH.GodementJacquetMatrixPoisson
 import Robin1984.GRH.GodementJacquetProductLattice
 import Robin1984.GRH.GodementJacquetSchwartzDilation
 import Robin1984.GRH.GodementJacquetSingularOrbits
+import Robin1984.GRH.GodementJacquetThetaMellin
 import Robin1984.GRH.GodementJacquetUnfolding
 import Robin1984.GRH.GodementJacquetVectorPoisson
 import Robin1984.GRH.HeckeTateAdelicEuler
