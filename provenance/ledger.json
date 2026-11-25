@@ -2586,6 +2586,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/ValuationUnitriangularMeasure.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Unipotent Haar integration in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
+      "formalization_note": "Constructs normalized unitriangular Haar coordinates and evaluates every scaled upper-entry box as a product of scalar volumes.",
+      "content_basis": "First-row coordinates split the integral box. Left translation is an additive shear in the row and left multiplication in the trailing block. Induction counts one scalar factor per strictly upper entry.",
+      "dependency_status": "Uses the verified diagonal-unipotent Iwasawa coordinates and Mathlib finite product measures. The scalar local volume is the input to the box formula.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/ValuationIwasawaSubgroups.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Local Iwasawa integration over GL in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
