@@ -2604,6 +2604,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/UniversalRHDisk.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The support of a finite exponential sum is determined by its exponential growth under real translations.",
+      "formalization_note": "Shows that compact pieces of an admissible zero set are finite and proves the whole-disk triangular equivalence for Universal RH.",
+      "content_basis": "Checked compactness and isolation, separation by a positive argument shift, nonzero triangular weights at zeros, and the two real scale directions.",
+      "dependency_status": "Mathlib compactness, discrete subsets, complex exponentials, and the finite triangular bound for Universal RH.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/ValuationIwasawa.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The algebraic Iwasawa decomposition for the local unramified calculation in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
