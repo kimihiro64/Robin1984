@@ -46,10 +46,9 @@ local notation "L" => p.adicCompletion K
 local notation "G" => Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L)
 local notation "Test" => LocallyConstant (Matrix (Fin (n + 1)) (Fin (n + 1)) L) Complex
 
-/-- A reciprocal polynomial realized with polynomial coefficients is also
-realized by a finite sum of translated local zeta integrals with fixed
-compact tests and constant coefficients. -/
-theorem exists_heckeLocalZeta_fixedReciprocalCombination
+/-- The fixed local combination also makes each translated term absolutely
+integrable on the same right half-plane. -/
+theorem exists_heckeLocalZeta_fixedReciprocalCombination_termwise
     [MeasurableSpace G] [MeasurableMul G]
     (mu : Measure G) [mu.IsMulLeftInvariant]
     (u : Units L) (hu : Valued.v u.val = finiteUniformizerValue)
@@ -63,8 +62,11 @@ theorem exists_heckeLocalZeta_fixedReciprocalCombination
           let f (g : G) := Finset.univ.sum (fun i : Fin m =>
             (S i).sum (fun j => a i j * ((norm g.val.det : Complex) ^ s *
               (Phi i j g.val * c (U i ^ j * g)))))
-          And (Integrable f mu)
-            (integral mu f = Inv.inv (D.eval ((norm u.val : Complex) ^ s)))) := by
+          And (forall i : Fin m, forall j : Int,
+            Integrable (fun g : G => (norm g.val.det : Complex) ^ s *
+              (Phi i j g.val * c (U i ^ j * g))) mu)
+            (And (Integrable f mu)
+              (integral mu f = Inv.inv (D.eval ((norm u.val : Complex) ^ s))))) := by
   classical
   choose m Phi A tau h using hGen
   have hTranslate (i : Fin m) :=
@@ -95,7 +97,13 @@ theorem exists_heckeLocalZeta_fixedReciprocalCombination
       (integral mu (new i) = (A i).eval z * integral mu (old i)) := by
     rw [hEval i]
     exact (hPsi i).2 (S i) (a i) s (hOld i)
-  refine And.intro (integrable_finsetSum Finset.univ (fun i _ => (hNew i).1)) ?_
+  have hEach (i : Fin m) (j : Int) :
+      Integrable (fun g : G => (norm g.val.det : Complex) ^ s *
+        (Psi i j g.val * c (U i ^ j * g))) mu := by
+    have hSingleton := ((hPsi i).2 ({j} : Finset Int) (fun _ => 1) s (hOld i)).1
+    simpa only [Finset.sum_singleton, one_mul] using hSingleton
+  refine And.intro hEach
+    (And.intro (integrable_finsetSum Finset.univ (fun i _ => (hNew i).1)) ?_)
   let fOld (g : G) := Finset.univ.sum (fun i : Fin m => (A i).eval z * old i g)
   have hF : integral mu fOld = Inv.inv (D.eval z) := (h.2 s hs).2.2
   have hTerms (i : Fin m) : Integrable (fun g => (A i).eval z * old i g) mu :=
@@ -109,6 +117,30 @@ theorem exists_heckeLocalZeta_fixedReciprocalCombination
       rw [(hNew i).2, integral_const_mul]
     _ = integral mu fOld := (integral_finsetSum Finset.univ (fun i _ => hTerms i)).symm
     _ = _ := hF
+
+/-- A reciprocal polynomial realized with polynomial coefficients is also
+realized by a finite sum of translated local zeta integrals with fixed
+compact tests and constant coefficients. -/
+theorem exists_heckeLocalZeta_fixedReciprocalCombination
+    [MeasurableSpace G] [MeasurableMul G]
+    (mu : Measure G) [mu.IsMulLeftInvariant]
+    (u : Units L) (hu : Valued.v u.val = finiteUniformizerValue)
+    (D : Polynomial Complex) (c : G -> Complex)
+    (hGen : HasHeckeLocalZetaInverseCombination mu
+      (fun s : Complex => (norm u.val : Complex) ^ s) D c) :
+    exists (m : Nat) (U : Fin m -> G) (Phi : Fin m -> Int -> Test)
+        (S : Fin m -> Finset Int) (a : Fin m -> Int -> Complex) (tau : Real),
+      And (forall i j, HasCompactSupport (fun X => Phi i j X))
+        (forall s : Complex, tau < s.re ->
+          let f (g : G) := Finset.univ.sum (fun i : Fin m =>
+            (S i).sum (fun j => a i j * ((norm g.val.det : Complex) ^ s *
+              (Phi i j g.val * c (U i ^ j * g)))))
+          And (Integrable f mu)
+            (integral mu f = Inv.inv (D.eval ((norm u.val : Complex) ^ s)))) := by
+  choose m U Phi S a tau h using exists_heckeLocalZeta_fixedReciprocalCombination_termwise p n mu u hu D c hGen
+  refine Exists.intro m (Exists.intro U (Exists.intro Phi (Exists.intro S (Exists.intro a
+    (Exists.intro tau ?_)))))
+  exact And.intro h.1 (fun s hs => (h.2 s hs).2)
 
 end
 

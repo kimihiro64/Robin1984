@@ -1686,6 +1686,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetFiniteAdelicFixedTensors.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Finite multilinearity of restricted products and the normalized finite adelic matrix-unit charts.",
+      "formalization_note": "Expands the finite ramified sums as fixed tensor selections and transports the identity through the Haar chart cover and the integral.",
+      "content_basis": "Splits the restricted product at the ramified set, expands the finite product of sums, and uses termwise integrability for the integral identity.",
+      "dependency_status": "Uses the finite adelic chart cover and the finite translated local test space.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetFiniteMatrixDenominator.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Finite idele norms and adjugate matrices in the Godement--Jacquet construction.",
