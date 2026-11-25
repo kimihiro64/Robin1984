@@ -12,6 +12,7 @@ import Robin1984.GRH.GodementJacquetFourier
 import Robin1984.GRH.GodementJacquetFullThetaGrowth
 import Robin1984.GRH.GodementJacquetFundamentalDomain
 import Robin1984.GRH.GodementJacquetHaarNormalization
+import Robin1984.GRH.GodementJacquetHaarUnimodularity
 import Robin1984.GRH.GodementJacquetHaarVolume
 import Robin1984.GRH.GodementJacquetMatrixMeasure
 import Robin1984.GRH.GodementJacquetMatrixPoisson

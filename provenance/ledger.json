@@ -1740,6 +1740,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetHaarUnimodularity.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Haar measure, the modular character, and finite-covolume quotients of locally compact groups.",
+      "formalization_note": "Proves right invariance of left Haar measure from a measurable left fundamental domain of positive finite mass.",
+      "content_basis": "Compares the Haar masses of a fundamental domain and its right translate, then cancels that mass in the defining identity of the modular character.",
+      "dependency_status": "Uses Mathlib's modular character, exact fundamental representatives, and equality of fundamental-domain measures.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetHaarVolume.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Haar measure on adelic general linear groups and the determinant coordinates in Godement and Jacquet, Zeta Functions of Simple Algebras.",
