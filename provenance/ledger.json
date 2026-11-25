@@ -1668,6 +1668,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetAdelicProductMeasure.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The archimedean and finite factorization of the adelic general linear group and uniqueness of Haar measure.",
+      "formalization_note": "Splits the actual adelic matrix group, determinant weight, and global Haar integral into archimedean and finite parts, with a positive normalization scalar for determinant coordinates.",
+      "content_basis": "Uses the matrix ring product, the topological equivalence of units, functoriality of determinants, product integration, and Haar uniqueness.",
+      "dependency_status": "Uses Mathlib ring and measure equivalences together with the existing idelic norm and determinant-coordinate Haar measure.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetCoordinates.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the determinant-norm coordinates in the global zeta integral.",
