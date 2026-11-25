@@ -41,6 +41,31 @@ noncomputable def heckeFiniteAdditiveModulus : MonoidHom (Units (FiniteDilationA
   letI : LocallyCompactSpace (FiniteDilationAdeles K) := locallyCompactSpace_heckeFiniteAdeles
   exact distribHaarChar (FiniteDilationAdeles K)
 
+/-- The domain action of an inverse finite idele scales additive Haar
+measure by the inverse idele's additive modulus. -/
+private theorem domMulAct_finiteAdele_mul_unit_additiveHaar
+    (mu : Measure (FiniteDilationAdeles K)) [mu.IsAddHaarMeasure] [mu.Regular]
+    (b : Units (FiniteDilationAdeles K)) :
+    HSMul.hSMul (DomMulAct.mk (Inv.inv b)) mu =
+      HSMul.hSMul (heckeFiniteAdditiveModulus (Inv.inv b)) mu := by
+  let : LocallyCompactSpace (FiniteDilationAdeles K) := locallyCompactSpace_heckeFiniteAdeles
+  rw [isAddLeftInvariant_eq_smul_of_regular (HSMul.hSMul (DomMulAct.mk (Inv.inv b)) mu) mu,
+    addHaarScalarFactor_smul_eq_distribHaarChar]
+  rfl
+
+/-- Pushing additive Haar measure forward by multiplication by a finite
+idele scales it by the inverse idele's additive modulus. -/
+theorem map_finiteAdele_mul_unit_additiveHaar
+    (mu : Measure (FiniteDilationAdeles K)) [mu.IsAddHaarMeasure] [mu.Regular]
+    (b : Units (FiniteDilationAdeles K)) :
+    Measure.map (fun z : FiniteDilationAdeles K => b.val * z) mu =
+      HSMul.hSMul (heckeFiniteAdditiveModulus (Inv.inv b)) mu := by
+  refine Eq.trans ?_ (domMulAct_finiteAdele_mul_unit_additiveHaar mu b)
+  change Measure.map (fun z : FiniteDilationAdeles K => b.val * z) mu =
+    Measure.map (fun z : FiniteDilationAdeles K => HSMul.hSMul (Inv.inv (Inv.inv b)) z) mu
+  rw [inv_inv]
+  rfl
+
 /-- The additive Fourier integral on the finite adeles at a finite-adelic frequency. -/
 noncomputable def heckeFiniteFourierIntegral
     (mu : Measure (FiniteDilationAdeles K)) (value : FiniteDilationAdeles K -> Complex) (y : FiniteDilationAdeles K) : Complex :=
@@ -54,11 +79,8 @@ theorem integral_finiteAdele_mul_unit
       HSMul.hSMul (heckeFiniteAdditiveModulus (Inv.inv b)) (integral mu F) := by
   let : LocallyCompactSpace (FiniteDilationAdeles K) := locallyCompactSpace_heckeFiniteAdeles
   let pulled : Measure (FiniteDilationAdeles K) := HSMul.hSMul (DomMulAct.mk (Inv.inv b)) mu
-  have hMeasure : pulled = HSMul.hSMul (heckeFiniteAdditiveModulus (Inv.inv b)) mu := by
-    change HSMul.hSMul (DomMulAct.mk (Inv.inv b)) mu = _
-    rw [isAddLeftInvariant_eq_smul_of_regular (HSMul.hSMul (DomMulAct.mk (Inv.inv b)) mu) mu,
-      addHaarScalarFactor_smul_eq_distribHaarChar]
-    rfl
+  have hMeasure : pulled = HSMul.hSMul (heckeFiniteAdditiveModulus (Inv.inv b)) mu :=
+    domMulAct_finiteAdele_mul_unit_additiveHaar mu b
   calc
     integral mu (fun z => F (z * (b : FiniteDilationAdeles K))) = integral pulled F := by
       dsimp only [pulled]

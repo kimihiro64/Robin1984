@@ -1,3 +1,4 @@
+import Robin1984.GRH.GodementJacquetMatrixMeasure
 import Robin1984.GRH.HeckeFiniteHaarDilation
 import Robin1984.GRH.ValuationUnitriangularMeasure
 
@@ -299,6 +300,101 @@ theorem sigmaFinite_heckeLocalAdditiveMeasure
   let _ := secondCountableLocalAdditiveCompletion p
   let _ := isLocallyFiniteMeasure_heckeLocalAdditiveMeasure p
   infer_instance
+
+/-- Multiplication by a unit of the completion pushes normalized
+additive measure forward to its inverse-norm multiple. -/
+theorem map_heckeLocalAdditiveMeasure_mul_unit
+    (p : Place) [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    (a : Units (p.adicCompletion K)) :
+    Measure.map (fun y : p.adicCompletion K => a.val * y) (heckeLocalAdditiveMeasure p) =
+      HSMul.hSMul (Real.toNNReal (Inv.inv (norm a.val))) (heckeLocalAdditiveMeasure p) := by
+  let L := p.adicCompletion K
+  let D := heckeFiniteLocalSlab p
+  let mu := heckeFiniteAdeleHaar (K := K)
+  let b := heckeFiniteLocalIdele p a
+  let c := heckeFiniteAdditiveModulus (Inv.inv b)
+  let : LocallyCompactSpace A := locallyCompactSpace_heckeFiniteAdeles
+  let : mu.IsAddHaarMeasure := by
+    unfold mu heckeFiniteAdeleHaar
+    infer_instance
+  let : mu.Regular := by
+    unfold mu heckeFiniteAdeleHaar
+    infer_instance
+  have hD : MeasurableSet (D : Set A) := (isOpen_heckeFiniteLocalSlab p).measurableSet
+  have hCEval : Continuous (fun z : A => z p) := RestrictedProduct.continuous_eval p
+  have hEval : Measurable (fun z : A => z p) := hCEval.measurable
+  have hLocal : Measurable (fun y : L => a.val * y) := (continuous_const.mul continuous_id).measurable
+  have hGlobal : Measurable (fun z : A => b.val * z) := (continuous_const.mul continuous_id).measurable
+  have hPre : Set.preimage (fun z : A => b.val * z) (D : Set A) = D := by
+    ext z
+    change Membership.mem D (b.val * z) <-> Membership.mem D z
+    constructor
+    . intro hz q hq
+      have hm := hz q hq
+      change Membership.mem (q.adicCompletionIntegers K) (b.val q * z q) at hm
+      rwa [show b.val q = 1 from heckeFiniteLocalIdele_away p q hq a, one_mul] at hm
+    . intro hz q hq
+      change Membership.mem (q.adicCompletionIntegers K) (b.val q * z q)
+      rw [show b.val q = 1 from heckeFiniteLocalIdele_away p q hq a, one_mul]
+      exact hz q hq
+  have hRel : Function.comp (fun y : L => a.val * y) (fun z : A => z p) =
+      Function.comp (fun z : A => z p) (fun z : A => b.val * z) := by
+    funext z
+    change a.val * z p = b.val p * z p
+    rw [show b.val p = a.val from heckeFiniteLocalIdele_at p a]
+  have hScale : Measure.map (fun z : A => b.val * z) mu = HSMul.hSMul c mu :=
+    map_finiteAdele_mul_unit_additiveHaar mu b
+  have hRestrict : (Measure.map (fun z : A => b.val * z) mu).restrict (D : Set A) =
+      Measure.map (fun z : A => b.val * z)
+        (mu.restrict (Set.preimage (fun z : A => b.val * z) (D : Set A))) :=
+    Measure.restrict_map hGlobal hD
+  rw [hScale, Measure.restrict_smul, hPre] at hRestrict
+  have hNorm : c = Real.toNNReal (Inv.inv (norm a.val)) := by
+    change heckeFiniteAdditiveModulus (Inv.inv b) = _
+    rw [show Inv.inv b = heckeFiniteLocalIdele p (Inv.inv a) from (map_inv (heckeFiniteLocalIdele p) a).symm]
+    have h := heckeFiniteAdditiveModulus_localIdele_eq_norm p (Inv.inv a)
+    rw [Units.val_inv_eq_inv_val, norm_inv] at h
+    rw [<- h]
+    exact Real.toNNReal_coe.symm
+  change Measure.map (fun y : L => a.val * y)
+      (Measure.map (fun z : A => z p) (mu.restrict (D : Set A))) =
+    HSMul.hSMul (Real.toNNReal (Inv.inv (norm a.val)))
+      (Measure.map (fun z : A => z p) (mu.restrict (D : Set A)))
+  rw [Measure.map_map hLocal hEval, hRel, <- Measure.map_map hEval hGlobal, <- hRestrict,
+    Measure.map_smul, hNorm]
+
+/-- The inverse normalized local absolute value as a multiplier. -/
+def heckeLocalInverseNorm (p : Place) : MonoidHom (p.adicCompletion K) NNReal where
+  toFun x := Real.toNNReal (Inv.inv (norm x))
+  map_one' := by simp
+  map_mul' := by
+    intro x y
+    change Real.toNNReal (Inv.inv (norm (x * y))) =
+      Real.toNNReal (Inv.inv (norm x)) * Real.toNNReal (Inv.inv (norm y))
+    rw [norm_mul, show Inv.inv (norm x * norm y) = Inv.inv (norm x) * Inv.inv (norm y) from by
+      simp only [<- one_div, div_mul_div_comm, one_mul]]
+    exact Real.toNNReal_mul (inv_nonneg.mpr (norm_nonneg x))
+
+/-- An invertible matrix on a finite vector space over the completion
+scales product additive measure by the inverse norm of its determinant. -/
+theorem map_heckeLocalAdditiveMeasure_mulVec_det
+    (p : Place) [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I]
+    (M : Matrix I I (p.adicCompletion K)) (hM : IsUnit M) :
+    Measure.map M.mulVec (Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p)) =
+      HSMul.hSMul (heckeLocalInverseNorm p M.det)
+        (Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p)) := by
+  let L := p.adicCompletion K
+  let mu := heckeLocalAdditiveMeasure p
+  let : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  let : SigmaFinite mu := sigmaFinite_heckeLocalAdditiveMeasure p
+  let : mu.IsAddLeftInvariant := isAddLeftInvariant_heckeLocalAdditiveMeasure p
+  have hadd : Measurable (fun q : Prod L L => q.1 + q.2) :=
+    (continuous_fst.add continuous_snd).measurable
+  have hmul (a : L) : Measurable (fun y : L => a * y) :=
+    (continuous_const.mul continuous_id).measurable
+  exact map_localRing_matrix_mulVec_det mu (heckeLocalInverseNorm p) hadd hmul
+    (map_heckeLocalAdditiveMeasure_mul_unit p) M hM
 
 /-- The normalized standard local measure gives one inverse norm for
 each scaled entry strictly above the diagonal of a unitriangular matrix. -/

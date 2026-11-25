@@ -54,16 +54,7 @@ private theorem map_finiteAdele_mul_unit_haar
     rw [<- heckeFiniteAdditiveModulus_eq_ideleNorm]
     exact Real.toNNReal_coe.symm
   rw [<- hb]
-  have hmeasure : HSMul.hSMul (DomMulAct.mk (Inv.inv b)) mu =
-      HSMul.hSMul (heckeFiniteAdditiveModulus (Inv.inv b)) mu := by
-    rw [isAddLeftInvariant_eq_smul_of_regular (HSMul.hSMul (DomMulAct.mk (Inv.inv b)) mu) mu,
-      addHaarScalarFactor_smul_eq_distribHaarChar]
-    rfl
-  refine Eq.trans ?_ hmeasure
-  change Measure.map (fun z : FiniteAdeles K => b.val * z) mu =
-    Measure.map (fun z : FiniteAdeles K => HSMul.hSMul (Inv.inv (Inv.inv b)) z) mu
-  rw [inv_inv]
-  rfl
+  exact map_finiteAdele_mul_unit_additiveHaar mu b
 
 end FiniteHaar
 
