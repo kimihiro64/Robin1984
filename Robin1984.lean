@@ -37,6 +37,7 @@ import Robin1984.GRH.GodementJacquetLocalZetaRationality
 import Robin1984.GRH.GodementJacquetMatrixMeasure
 import Robin1984.GRH.GodementJacquetMatrixPoisson
 import Robin1984.GRH.GodementJacquetMellinAbsolute
+import Robin1984.GRH.GodementJacquetMellinFromSquareIntegrability
 import Robin1984.GRH.GodementJacquetMellinGrowth
 import Robin1984.GRH.GodementJacquetMellinIdentification
 import Robin1984.GRH.GodementJacquetOrderedDiagonalSeries

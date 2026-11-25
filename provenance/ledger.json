@@ -1893,6 +1893,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetMellinFromSquareIntegrability.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Godement-Jacquet unfolding and square integrability of the matrix-coefficient vectors on the norm-one quotient.",
+      "formalization_note": "Uses quotient right-translation invariance to supply the absolute double integrability required by the theta Mellin identity.",
+      "content_basis": "Bounds the absolute quotient integral by the sum of the two squared L2 norms independently of the outer matrix, then applies Tonelli to the weighted test.",
+      "dependency_status": "Uses the project norm-one quotient right-translation result and the measurable absolute Mellin unfolding.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetMellinGrowth.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and absolute bounds for Mellin transforms on vertical strips.",
