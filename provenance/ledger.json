@@ -1695,6 +1695,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanIwasawaHaar.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Archimedean Iwasawa coordinates and uniqueness of Haar measure.",
+      "formalization_note": "Transfers Haar measure to triangular and compact unitary factors.",
+      "content_basis": "Proves closedness of the positive upper-triangular subgroup, compactness of the unitary group, and triviality of the Haar modular character on that compact subgroup.",
+      "dependency_status": "Uses the positive triangular factorization and Mathlib group topology, product measure, and Haar uniqueness.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetEulerMellinContinuation.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The Godement-Jacquet global zeta unfolding and Euler product realization by test vectors.",
