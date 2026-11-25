@@ -1686,6 +1686,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetEulerMellinContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Godement-Jacquet global zeta unfolding and Euler product realization by test vectors.",
+      "formalization_note": "Constructs an entire continuation of a half-plane Euler product by the fixed weighted sum of theta Mellin transforms.",
+      "content_basis": "Matches termwise global zeta integrals with the theta Mellins using the quotient L2 theorem and removes the common positive Haar normalization.",
+      "dependency_status": "Uses the project zeta tensor product identity and square-integrable Mellin unfolding. The resulting continuation assumes entire theta Mellins and the specified local integrals.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetCoordinates.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the determinant-norm coordinates in the global zeta integral.",
