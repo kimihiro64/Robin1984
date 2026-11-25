@@ -1677,6 +1677,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetGlobalZetaProduct.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Godement-Jacquet global zeta integral and its tensor factorization over the places.",
+      "formalization_note": "Assembles the archimedean test and the fixed finite adelic zeta tensors into the weighted global zeta integral.",
+      "content_basis": "Factors the determinant weight in the product Haar measure, matches the two matrix vector projections, and transports the fixed finite sum to the Euler product.",
+      "dependency_status": "Uses the adelic product Haar measure and the matrix test coordinates. Local integrability and factorization of the matrix coefficients are stated hypotheses.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetCoordinates.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the determinant-norm coordinates in the global zeta integral.",
