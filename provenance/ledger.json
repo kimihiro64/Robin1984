@@ -2586,6 +2586,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/UniversalRH.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The condition that the full zero set of a complex function is contained in a vertical line.",
+      "formalization_note": "Defines the line condition for all functions from Complex to Complex and proves the uniqueness of a critical line as the midpoint of the zero strip.",
+      "content_basis": "Checked infinite distinct zero locations, equality of real parts for every pair, and the effect of reflection on the zero strip endpoints.",
+      "dependency_status": "Mathlib complex numbers and elementary logic.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/ValuationIwasawa.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The algebraic Iwasawa decomposition for the local unramified calculation in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
