@@ -921,10 +921,7 @@ variable [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)
 variable [MeasurableSpace (Units (p.adicCompletion K))]
 variable [BorelSpace (Units (p.adicCompletion K))]
 
-/-- The positive determinant weight on integral matrices is absolutely
-integrable. Its integral is the local Euler factor of the trivial spherical
-coefficient, expressed with the normalized prime norm. -/
-theorem integrableAndIntegral_heckeUnramifiedLocalMatrixWeight
+private theorem integrableAndIntegral_heckeUnramifiedLocalMatrixWeight_localRange
     [SigmaFinite (heckeLocalHaar p)]
     (n : Nat) (u0 : GU) (hu0 : Valued.v u0.val = finiteUniformizerValue)
     [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
@@ -932,7 +929,7 @@ theorem integrableAndIntegral_heckeUnramifiedLocalMatrixWeight
     (muG : Measure (Units (Matrix (Fin n) (Fin n) L))) [muG.IsMulLeftInvariant] [SFinite muG]
     (hMass : muG (valuationIntegralMatrixSubgroup v n :
       Set (Units (Matrix (Fin n) (Fin n) L))) = 1)
-    (sigma : Real) (hsigma : ((n : Real) + 1) / 2 < sigma) :
+    (sigma : Real) (hsigma : ((n : Real) - 1) / 2 < sigma) :
     let w := heckeUnramifiedLocalMatrixWeight p n (sigma : Complex)
     And (Integrable w muG) (integral muG w = Finset.univ.prod
       (fun i : Fin n =>
@@ -995,6 +992,26 @@ theorem integrableAndIntegral_heckeUnramifiedLocalMatrixWeight
   dsimp only at hInt
   simpa only [hCoeff, mul_one, hParam] using hInt
 
+/-- The positive determinant weight on integral matrices is absolutely
+integrable. Its integral is the local Euler factor of the trivial spherical
+coefficient, expressed with the normalized prime norm. -/
+theorem integrableAndIntegral_heckeUnramifiedLocalMatrixWeight
+    [SigmaFinite (heckeLocalHaar p)]
+    (n : Nat) (u0 : GU) (hu0 : Valued.v u0.val = finiteUniformizerValue)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) L))]
+    (muG : Measure (Units (Matrix (Fin n) (Fin n) L))) [muG.IsMulLeftInvariant] [SFinite muG]
+    (hMass : muG (valuationIntegralMatrixSubgroup v n :
+      Set (Units (Matrix (Fin n) (Fin n) L))) = 1)
+    (sigma : Real) (hsigma : ((n : Real) + 1) / 2 < sigma) :
+    let w := heckeUnramifiedLocalMatrixWeight p n (sigma : Complex)
+    And (Integrable w muG) (integral muG w = Finset.univ.prod
+      (fun i : Fin n =>
+        Inv.inv (1 - (((dedekindPrimeNorm K p : Real) ^
+          (((n : Real) - 1) / 2 - (i.val : Real) - sigma) : Real) : Complex)))) := by
+  exact integrableAndIntegral_heckeUnramifiedLocalMatrixWeight_localRange
+    p n u0 hu0 muG hMass sigma (by linarith)
+
 /-- In the half-plane where the product of local majorants converges, a
 spherical coefficient bounded by one gives an absolutely integrable local
 zeta integrand. The same Euler factor bounds its integral of the norm. -/
@@ -1041,6 +1058,149 @@ theorem integrableAndAbsoluteIntegral_le_unramifiedLocalWeight
       Complex.ofReal_prod]
     simpa only [Complex.ofReal_inv, Complex.ofReal_sub, Complex.ofReal_one] using hI.2
   exact And.intro hF (hDomInt.trans_eq hPosInt)
+
+private theorem integrable_heckeLocalZetaIntegrand_of_boundedMatrixTest
+    [SigmaFinite (heckeLocalHaar p)]
+    (n : Nat) (u0 : GU) (hu0 : Valued.v u0.val = finiteUniformizerValue)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [MeasurableMul (Units (Matrix (Fin n) (Fin n) L))]
+    (muG : Measure (Units (Matrix (Fin n) (Fin n) L))) [muG.IsMulLeftInvariant] [SFinite muG]
+    (hMass : muG (valuationIntegralMatrixSubgroup v n :
+      Set (Units (Matrix (Fin n) (Fin n) L))) = 1)
+    (s : Complex) (hs : ((n : Real) - 1) / 2 < s.re)
+    (A : Units (Matrix (Fin n) (Fin n) L))
+    (a : Units (Matrix (Fin n) (Fin n) L) -> Complex)
+    (hSupport : forall g, Not (a g = 0) -> forall i j : Fin n,
+      Membership.mem (v).integer ((A * g).val i j))
+    (B : Real) (hB0 : 0 <= B)
+    (hB : Filter.Eventually (fun g => norm (a g) <= B) (ae muG))
+    (hMeas : AEStronglyMeasurable (fun g => (norm g.val.det : Complex) ^
+      (s + (((n : Real) - 1) / 2 : Real)) * a g) muG) :
+    Integrable (fun g => (norm g.val.det : Complex) ^
+      (s + (((n : Real) - 1) / 2 : Real)) * a g) muG := by
+  let G := Units (Matrix (Fin n) (Fin n) L)
+  let e := s.re + ((n : Real) - 1) / 2
+  let W := heckeUnramifiedLocalMatrixWeight p n (s.re : Complex)
+  let S : Set G := {g : G | forall i j : Fin n, Membership.mem (v).integer (g.val i j)}
+  let D : Real := norm A.val.det ^ e
+  have hPos (g : G) : 0 < norm g.val.det :=
+    norm_pos_iff.mpr (g.isUnit.map Matrix.detMonoidHom).ne_zero
+  have hD : 0 < D := Real.rpow_pos_of_pos (hPos A) _
+  have hComplex (g : G) : norm ((norm g.val.det : Complex) ^
+      (s + (((n : Real) - 1) / 2 : Real))) = norm g.val.det ^ e := by
+    rw [Complex.norm_cpow_eq_rpow_re_of_pos (hPos g), Complex.add_re, Complex.ofReal_re]
+  have hReal (g : G) (hg : Membership.mem S g) : norm (W g) = norm g.val.det ^ e := by
+    unfold W heckeUnramifiedLocalMatrixWeight
+    rw [Set.indicator_of_mem hg, Complex.norm_cpow_eq_rpow_re_of_pos (hPos g),
+      Complex.add_re, Complex.ofReal_re, Complex.ofReal_re]
+  have hMul (g : G) : norm (A * g).val.det ^ e = D * norm g.val.det ^ e := by
+    rw [show (A * g).val.det = A.val.det * g.val.det from Matrix.det_mul _ _,
+      norm_mul, Real.mul_rpow (norm_nonneg _) (norm_nonneg _)]
+  have hW : Integrable W muG :=
+    (integrableAndIntegral_heckeUnramifiedLocalMatrixWeight_localRange p n u0 hu0 muG hMass
+      s.re hs).1
+  have hComp : Integrable (fun g : G => norm (W (A * g))) muG :=
+    (measurePreserving_mul_left muG A).integrable_comp_of_integrable hW.norm
+  refine (hComp.const_mul (B / D)).mono' hMeas ?_
+  filter_upwards [hB] with g hg
+  by_cases hZero : a g = 0
+  next =>
+    rw [hZero, mul_zero, norm_zero]
+    exact mul_nonneg (div_nonneg hB0 hD.le) (norm_nonneg _)
+  next =>
+    have hKeep : Membership.mem S (A * g) := hSupport g hZero
+    rw [norm_mul, hComplex, hReal (A * g) hKeep, hMul]
+    calc
+      norm g.val.det ^ e * norm (a g) <= norm g.val.det ^ e * B :=
+        mul_le_mul_of_nonneg_left hg (Real.rpow_nonneg (norm_nonneg _) _)
+      _ = (B / D) * (D * norm g.val.det ^ e) := by
+        field_simp [hD.ne']
+
+/-- The local Godement--Jacquet integral with a continuous compactly
+supported matrix test is absolutely convergent for a measurable matrix
+coefficient bounded by one. The hypothesis on the real part is the single-place bound. -/
+theorem integrable_heckeLocalZetaIntegrand_of_compactlySupportedTest
+    [SigmaFinite (heckeLocalHaar p)]
+    (n : Nat) (u0 : GU) (hu0 : Valued.v u0.val = finiteUniformizerValue)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [MeasurableMul (Units (Matrix (Fin n) (Fin n) L))]
+    (muG : Measure (Units (Matrix (Fin n) (Fin n) L))) [muG.IsMulLeftInvariant] [SFinite muG]
+    (hMass : muG (valuationIntegralMatrixSubgroup v n :
+      Set (Units (Matrix (Fin n) (Fin n) L))) = 1)
+    (s : Complex) (hs : ((n : Real) - 1) / 2 < s.re)
+    (Phi : Matrix (Fin n) (Fin n) L -> Complex) (hPhi : Continuous Phi)
+    (hCompact : HasCompactSupport Phi)
+    (c : Units (Matrix (Fin n) (Fin n) L) -> Complex)
+    (hc : AEStronglyMeasurable c muG)
+    (hcBound : Filter.Eventually (fun g => norm (c g) <= 1) (ae muG)) :
+    Integrable (fun g => (norm g.val.det : Complex) ^
+      (s + (((n : Real) - 1) / 2 : Real)) * (Phi g.val * c g)) muG := by
+  classical
+  let G := Units (Matrix (Fin n) (Fin n) L)
+  let a (g : G) := Phi g.val * c g
+  have hEntries (i j : Fin n) : Exists (fun C : Real => forall x,
+      Membership.mem (tsupport Phi) x -> norm (x i j) <= C) :=
+    hCompact.exists_bound_of_continuousOn
+      (f := fun x : Matrix (Fin n) (Fin n) L => x i j)
+      (((continuous_apply j).comp (continuous_apply i) :
+        Continuous (fun x : Matrix (Fin n) (Fin n) L => x i j)).continuousOn)
+  choose C hC using hEntries
+  let R (i j : Fin n) := max 1 (C i j)
+  have hR (i j : Fin n) : 0 < R i j := zero_lt_one.trans_le (le_max_left _ _)
+  have hPrime : (1 : Real) < (dedekindPrimeNorm K p : Real) := by
+    exact_mod_cast one_lt_dedekindPrimeNorm K p
+  have hu : norm u0.val < 1 := by
+    rw [norm_eq_inv_of_valuation_finiteUniformizer p u0.val hu0]
+    simpa only [one_div, inv_one] using one_div_lt_one_div_of_lt zero_lt_one hPrime
+  have ht : Filter.Tendsto (fun m : Nat => norm u0.val ^ m) Filter.atTop (nhds (0 : Real)) :=
+    tendsto_pow_atTop_nhds_zero_of_lt_one (norm_nonneg _) hu
+  have hSmall : Filter.Eventually (fun m : Nat => forall i j : Fin n,
+      norm u0.val ^ m < 1 / R i j) Filter.atTop :=
+    Filter.eventually_all.mpr (fun i => Filter.eventually_all.mpr (fun j =>
+      (tendsto_order.1 ht).2 _ (div_pos zero_lt_one (hR i j))))
+  choose m hm using hSmall.exists
+  let A : G := Units.map (Matrix.scalar (Fin n)).toMonoidHom (u0 ^ m)
+  have hSupport (g : G) (hg : Not (a g = 0)) (i j : Fin n) :
+      Membership.mem (v).integer ((A * g).val i j) := by
+    have hPhiNonzero : Not (Phi g.val = 0) := fun h => hg (by simp [a, h])
+    have hT : Membership.mem (tsupport Phi) g.val :=
+      subset_closure (show Membership.mem (Function.support Phi) g.val from hPhiNonzero)
+    have hNum : norm (g.val i j) <= R i j := (hC i j g.val hT).trans (le_max_right _ _)
+    have hScale := (mul_lt_mul_of_pos_right (hm i j) (hR i j)).le
+    have hCancel : (1 / R i j) * R i j = 1 := by field_simp [(hR i j).ne']
+    rw [hCancel] at hScale
+    apply (heckeLocal_mem_integers_iff_norm_le_one p _).mpr
+    change norm ((Matrix.scalar (Fin n) (u0 ^ m).val * g.val) i j) <= 1
+    rw [Matrix.scalar_apply, Matrix.diagonal_mul, norm_mul, Units.val_pow_eq_pow_val, norm_pow]
+    exact (mul_le_mul_of_nonneg_left hNum (pow_nonneg (norm_nonneg _) _)).trans hScale
+  choose D hD using hCompact.exists_bound_of_continuousOn hPhi.continuousOn
+  let B := max 0 D
+  have hPhiBound (x : Matrix (Fin n) (Fin n) L) : norm (Phi x) <= B := by
+    by_cases hx : Phi x = 0
+    next =>
+      rw [hx, norm_zero]
+      exact le_max_left _ _
+    next =>
+      exact (hD x (subset_closure
+        (show Membership.mem (Function.support Phi) x from hx))).trans (le_max_right _ _)
+  have hBound : Filter.Eventually (fun g => norm (a g) <= B) (ae muG) := by
+    filter_upwards [hcBound] with g hg
+    dsimp [a]
+    rw [norm_mul]
+    exact (mul_le_of_le_one_right (norm_nonneg _) hg).trans (hPhiBound g.val)
+  have hVal : Continuous (fun g : G => g.val) := Units.continuous_val
+  have hBase : Continuous (fun g : G => (norm g.val.det : Complex)) :=
+    Complex.continuous_ofReal.comp hVal.matrix_det.norm
+  have hPow : Continuous (fun g : G => (norm g.val.det : Complex) ^
+      (s + (((n : Real) - 1) / 2 : Real))) :=
+    hBase.cpow continuous_const (fun g => Complex.ofReal_mem_slitPlane.mpr
+      (norm_pos_iff.mpr (g.isUnit.map Matrix.detMonoidHom).ne_zero))
+  have ha : AEStronglyMeasurable a muG :=
+    (hPhi.comp hVal).measurable.aestronglyMeasurable.mul hc
+  exact integrable_heckeLocalZetaIntegrand_of_boundedMatrixTest p n u0 hu0 muG hMass
+    s hs A a hSupport B (le_max_left _ _) hBound (hPow.measurable.aestronglyMeasurable.mul ha)
 
 end AbsoluteEulerMajorant
 
