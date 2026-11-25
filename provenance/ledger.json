@@ -1704,6 +1704,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanIwasawaProduct.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Archimedean Iwasawa integration and Gaussian change of variables.",
+      "formalization_note": "Splits the triangular Haar measure into its diagonal and unitriangular measures, then evaluates the Gaussian over the upper entries.",
+      "content_basis": "Restricts the existing triangular homeomorphism to the positive diagonal, proves product Haar invariance by a shear, and evaluates the scaled row integrals using the additive Haar scaling rule and the scalar Gaussian integral.",
+      "dependency_status": "Uses the matrix Iwasawa Haar formula, the unitriangular coordinate measure, and Mathlib Gaussian and product integration.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetEulerMellinContinuation.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The Godement-Jacquet global zeta unfolding and Euler product realization by test vectors.",

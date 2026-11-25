@@ -7,6 +7,7 @@ import Robin1984.GRH.GodementJacquetAdelicProductMeasure
 import Robin1984.GRH.GodementJacquetAdelicProductTest
 import Robin1984.GRH.GodementJacquetArchimedeanIwasawa
 import Robin1984.GRH.GodementJacquetArchimedeanIwasawaHaar
+import Robin1984.GRH.GodementJacquetArchimedeanIwasawaProduct
 import Robin1984.GRH.GodementJacquetCanonicalPrimePower
 import Robin1984.GRH.GodementJacquetCartanDoubleCosets
 import Robin1984.GRH.GodementJacquetCartanHaarVolume
