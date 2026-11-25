@@ -20,6 +20,7 @@ import Robin1984.GRH.GodementJacquetMellinAbsolute
 import Robin1984.GRH.GodementJacquetMellinGrowth
 import Robin1984.GRH.GodementJacquetMellinIdentification
 import Robin1984.GRH.GodementJacquetProductLattice
+import Robin1984.GRH.GodementJacquetReductionContinuation
 import Robin1984.GRH.GodementJacquetReductionWeights
 import Robin1984.GRH.GodementJacquetSchwartzDilation
 import Robin1984.GRH.GodementJacquetSingularOrbits

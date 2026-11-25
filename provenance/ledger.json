@@ -1812,6 +1812,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetReductionContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and finite-covolume quotients of locally compact groups.",
+      "formalization_note": "Derives square integrability and right Haar invariance for representatives inside a finite-measure reduction cover and applies the checked theta cancellation and Mellin continuation.",
+      "content_basis": "The height weights are at least one, so the weighted bounds give bounded quotient functions. Finite positive covolume gives unimodularity.",
+      "dependency_status": "Uses the checked reduction-set cancellation and Mellin reflection. The finite-measure cover and the bounded cusp values on the cover are explicit inputs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetReductionWeights.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and integration over a measurable fundamental domain.",

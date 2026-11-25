@@ -176,11 +176,30 @@ The same two weights apply to the Fourier dual.
 Lean proves cancellation of the singular terms for both tests when
 $c,f$ have zero mean and vanishing unipotent periods and both weighted
 absolute values $|u|H_L^m,|u|H_R^m$ belong to $L^1(D,\mu)$ for
-$u=c,f$. The resulting identities give entire Mellin continuation and
-reflection under the square-integrability assumptions above. The
-higher-rank instantiation needs the weighted bounds for actual
-cuspidal data and the local and global Euler products.
-[Weighted theta cancellation](Robin1984/GRH/GodementJacquetThetaWeightedCancellation.lean)
+$u=c,f$. A measurable orbit cover $S$ of finite measure, with compact
+bounds on the finite entries and uniformly bounded weighted cusp values,
+supplies a fundamental domain $D\subseteq S$ with the required weighted
+$L^1$ and unweighted $L^2$ bounds. Its positive finite covolume supplies
+right invariance of the inner-regular Haar measure. Therefore the primal
+and dual invertible theta integrals give entire Mellin transforms related
+by $s\mapsto 1-s$.
+[Reduction cover and continuation](Robin1984/GRH/GodementJacquetReductionContinuation.lean)
+
+For $f$ invariant under rational left translation with $f(z_tB)=f(B)$, let
+$Z_{\Phi,c,f}(s)$ be the Godement–Jacquet zeta integral for the matrix
+coefficient $\int_D f(Ag)c(A)\,d\mu(A)$. Then
+$$
+Z_{\Phi,c,f}(s)=\int_{\mathbb R} e^{t(s+(n-1)/2)}
+\int_{D\times D} c(A)f(B)
+  \sum_{P\in\mathrm{GL}_n(K)}\Phi(A^{-1}z_tPB)\,d\mu(A)d\mu(B)\,dt.
+$$
+The theta kernel's absolute integrability follows from the original
+zeta kernel's absolute convergence by Tonelli and the triangle
+inequality. The higher-rank application still requires the reduction
+cover and cusp bounds for actual automorphic data, absolute convergence
+on a right half-plane, and identification with the standard Euler
+product.
+[Absolute Mellin identity](Robin1984/GRH/GodementJacquetMellinAbsolute.lean)
 [Generalized criteria](docs/GRH.md)
 
 ## Critical-line zeros and multiplicity

@@ -3098,13 +3098,64 @@ that the full theta integral equals its invertible part for both tests
 when $c$ and $f$ have zero mean and vanishing unipotent periods, and when
 $|u|H_L^m$ and $|u|H_R^m$ lie in $L^1(D,\mu)$ for each $u=c,f$. These
 weighted hypotheses supply the absolute integrability required for
-Fubini. Together with the square-integrability conditions above, the
-two cancellation identities give entire Mellin continuation and
-reflection. Right invariance of an inner-regular Haar measure follows from a measurable
-fundamental domain of positive finite covolume. The higher-rank
-instantiation still requires verification of the weighted hypotheses
-for actual cuspidal data and of the local and global Euler products.
-\cite{GodementJacquet1972}
+Fubini. Let $S$ be a measurable set of finite measure meeting every
+rational left orbit. Choose the first rational translate into $S$ of
+each point of an existing measurable fundamental domain. The resulting
+subsets of the original domain form a countable measurable partition.
+Their chosen translates give a measurable fundamental domain
+$D\subseteq S$. Compact bounds on the finite projections of $A$ and
+$B^{-1}$ give common finite denominators there. Uniform bounds on
+$|u|H_L^m$ and $|u|H_R^m$ on $S$ then give their $L^1$ bounds on $D$.
+Since both heights are at least one, these bounds also imply
+$u\in L^2(D,\mu)$ for $u=c,f$. The domain has positive measure since its
+countably many translates cover the group and Haar measure is nonzero.
+Its measure is finite since $D\subseteq S$. The resulting positive finite
+covolume gives right invariance of the inner-regular Haar measure.
+The two cancellation identities now give entire Mellin continuation
+and reflection by \path{GodementJacquetReductionContinuation.lean}.
+
+\paragraph{Identification with the matrix-coefficient integral.}
+Let $f$ be invariant under rational left translation and let
+$f(z_tB)=f(B)$ on the positive central determinant section.
+Normalize $d^\times g$ so the substitution $g=z_tB$ pulls it back to
+$dt\,d\mu(B)$ on the product of the determinant line and the
+determinant-norm-one group. With $\lambda=s+(n-1)/2$, put
+\[
+ Z_{\Phi,c,f}(s)=
+ \int_{\mathrm{GL}_n(\mathbb A_K)}
+ \Phi(g)|\det g|_{\mathbb A_K}^{\lambda}
+ \left(\int_D f(Ag)c(A)\,d\mu(A)\right)d^\times g .
+\]
+On the domain of absolute convergence of the original product kernel,
+\[
+ Z_{\Phi,c,f}(s)=
+ \int_{\mathbb R} e^{t\lambda}
+ \int_{D\times D} c(A)f(B)
+ \sum_{P\in\mathrm{GL}_n(K)}\Phi(A^{-1}z_tPB)
+ \,d\mu(A)d\mu(B)\,dt .
+\]
+Indeed, after translating on the left by $A^{-1}$, the determinant
+weight is unchanged because $|\det A|_{\mathbb A_K}=1$.
+Split the new variable into determinant coordinates and unfold the
+norm-one Haar integral into a sum of integrals over $D$.
+The rational matrices commute with $z_t$, which gives the displayed
+ordering of the matrix arguments. For the absolute values, Tonelli
+gives equality of the original nonnegative integral and the
+unfolded integral of the sum of absolute values. The triangle
+inequality thus supplies absolute integrability of the theta kernel
+before the complex-valued integral is rearranged. These steps are
+verified in \path{GodementJacquetMellinAbsolute.lean} for measurable
+test data and pointwise summable theta series.
+
+On the closed strip $-2\le\Re s\le3$, the two exponential moments
+bound each Mellin transform uniformly in the imaginary direction.
+Together with the Euler identification and Gamma estimates on the
+right and norm reflection on the left, this gives order at most
+one for the paired completion in \path{GodementJacquetMellinGrowth.lean}.
+The higher-rank instantiation still needs reduction covers and
+weighted bounds for actual cuspidal data, the original kernel's
+right-half-plane absolute convergence, and the local and global
+standard Euler identifications. \cite{GodementJacquet1972}
 
 The three classical equivalence declarations have the
 mathematical types
