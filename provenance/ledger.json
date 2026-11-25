@@ -1182,6 +1182,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/LocalIwasawaMeasure.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The normalized local Haar integral in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
+      "formalization_note": "Transfers integrability and the integral of a right-invariant complex kernel from G = BK to B with normalized left Haar measures.",
+      "content_basis": "Representatives in B partition G into countably many open K cosets. The same representatives partition B by the intersection subgroup, and both measures assign mass one to each corresponding coset.",
+      "dependency_status": "Mathlib quotient, topology and measure theory. The Iwasawa factorization, compact-open matrix subgroup and spherical measure computation are supplied separately.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/MultiplicityArithmetic.lean",
       "classification": "Primarily project-original",
       "mathematical_source": "Gaussian smoothing of the triangular explicit formula and positive Fourier spectra.",
