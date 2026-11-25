@@ -464,6 +464,22 @@ private theorem heckeUnramifiedSphericalIntegrand_rightInvariant
   next =>
     rw [Set.indicator_of_notMem (fun hh => h (hMem.mp hh)), Set.indicator_of_notMem h]
 
+private theorem heckeNormalizedInducingCharacter_eq_one_of_integral
+    (n : Nat) (chi : Fin n -> MonoidHom GU Complex)
+    (hUnit : forall i x, Membership.mem (heckeLocalUnitShell p) x -> chi i x = 1)
+    (b : valuationUpperTriangularSubgroup L n)
+    (hb : Membership.mem (valuationIntegralMatrixSubgroup v n) b.val) :
+    valuationNormalizedInducingCharacter L n (productDiagonalCharacter n chi) b = 1 := by
+  have hChiDiag (a : Units (Fin n -> L))
+      (ha : Membership.mem (valuationDiagonalIntegralSubgroup L n v) a) :
+      productDiagonalCharacter n chi a = 1 := by
+    have hLocal := (mem_heckeDiagonalIntegral_iff_localUnitShell p n a).mp ha
+    change Finset.univ.prod (fun i : Fin n => chi i (MulEquiv.piUnits a i)) = 1
+    have h1 (i : Fin n) : chi i (MulEquiv.piUnits a i) = 1 := hUnit i _ (hLocal i)
+    simp only [h1, Finset.prod_const_one]
+  exact valuationNormalizedInducingCharacter_eq_one L v (heckeLocal_mem_integers_iff_norm_le_one p)
+    n _ hChiDiag b hb
+
 private theorem measurableMul_of_continuousBorel (H : Type*) [Mul H] [TopologicalSpace H]
     [ContinuousMul H] [MeasurableSpace H] [BorelSpace H] : MeasurableMul H :=
   { measurable_const_mul := fun x => (continuous_const_mul x).measurable
@@ -558,16 +574,9 @@ theorem integrableAndIntegral_heckeUnramifiedSpherical_haar
   have hMassU : muU (valuationUnitriangularIntegralSubgroup L n v : Set U) = 1 :=
     measure_valuationUnitriangularProduct_integral L v (heckeLocalAdditiveMeasure p)
       (heckeLocalAdditiveMeasure_integral p) n
-  have hChiDiag (a : A) (ha : Membership.mem (valuationDiagonalIntegralSubgroup L n v) a) :
-      productDiagonalCharacter n chi a = 1 := by
-    have hLocal := (mem_heckeDiagonalIntegral_iff_localUnitShell p n a).mp ha
-    change Finset.univ.prod (fun i : Fin n => chi i (MulEquiv.piUnits a i)) = 1
-    have h1 (i : Fin n) : chi i (MulEquiv.piUnits a i) = 1 := hUnit i _ (hLocal i)
-    simp only [h1, Finset.prod_const_one]
   have hInducing (b : B) (hb : Membership.mem (valuationIntegralMatrixSubgroup v n) b.val) :
       valuationNormalizedInducingCharacter L n (productDiagonalCharacter n chi) b = 1 :=
-    valuationNormalizedInducingCharacter_eq_one L v (heckeLocal_mem_integers_iff_norm_le_one p)
-      n _ hChiDiag b hb
+    heckeNormalizedInducingCharacter_eq_one_of_integral p n chi hUnit b hb
   let f := valuationUnramifiedSphericalIntegrand L v n (productDiagonalCharacter n chi) s
   have hF : Continuous f :=
     continuous_valuationUnramifiedSphericalIntegrand L v n hOpen _ hInducing s
@@ -604,6 +613,55 @@ def heckeUnramifiedSphericalCoefficient (n : Nat)
     Complex :=
   integral nu (fun k : valuationIntegralMatrixSubgroup v n =>
     valuationSphericalSection v n (valuationNormalizedInducingCharacter L n chi) (k.val * g))
+
+/-- The standard unramified finite-place zeta integrand. Its determinant
+weight includes the characteristic function of the integral matrices. -/
+def heckeUnramifiedLocalZetaIntegrand (n : Nat)
+    [MeasurableSpace (valuationIntegralMatrixSubgroup v n)]
+    (nu : Measure (valuationIntegralMatrixSubgroup v n))
+    (chi : Fin n -> MonoidHom GU Complex) (s : Complex)
+    (g : Units (Matrix (Fin n) (Fin n) L)) : Complex :=
+  heckeUnramifiedLocalMatrixWeight p n s g *
+    heckeUnramifiedSphericalCoefficient p n nu (productDiagonalCharacter n chi) g
+
+omit [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+  [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+  [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+  [MeasurableSpace (Units (p.adicCompletion K))] [BorelSpace (Units (p.adicCompletion K))] in
+/-- The unramified zeta integrand is one on the integral matrix subgroup. -/
+theorem heckeUnramifiedLocalZetaIntegrand_eq_one_of_mem_integral
+    (n : Nat)
+    [MeasurableSpace (valuationIntegralMatrixSubgroup v n)]
+    (nu : Measure (valuationIntegralMatrixSubgroup v n)) [IsProbabilityMeasure nu]
+    (chi : Fin n -> MonoidHom GU Complex)
+    (hUnit : forall i x, Membership.mem (heckeLocalUnitShell p) x -> chi i x = 1)
+    (s : Complex) (g : Units (Matrix (Fin n) (Fin n) L))
+    (hg : Membership.mem (valuationIntegralMatrixSubgroup v n) g) :
+    heckeUnramifiedLocalZetaIntegrand p n nu chi s g = 1 := by
+  let C := valuationIntegralMatrixSubgroup v n
+  let B := valuationUpperTriangularSubgroup L n
+  let w := valuationNormalizedInducingCharacter L n (productDiagonalCharacter n chi)
+  have hW (b : B) (hb : Membership.mem C b.val) : w b = 1 :=
+    heckeNormalizedInducingCharacter_eq_one_of_integral p n chi hUnit b hb
+  have hDet : heckeUnramifiedLocalMatrixWeight p n s g = 1 := by
+    unfold heckeUnramifiedLocalMatrixWeight
+    have hEntries : Membership.mem {x : Units (Matrix (Fin n) (Fin n) L) |
+        forall i j : Fin n, Membership.mem (v).integer (x.val i j)} g :=
+      ((mem_valuationIntegralMatrixSubgroup_iff v n g).mp hg).1
+    rw [Set.indicator_of_mem hEntries, norm_det_heckeIntegralMatrixUnit p n g hg]
+    simp
+  have hPoint (k : C) : valuationSphericalSection v n w (k.val * g) = 1 := by
+    have hk : Membership.mem C (Inv.inv ((1 : B).val) * (k.val * g)) := by
+      simpa only [Subgroup.coe_one, inv_one, one_mul] using C.mul_mem k.property hg
+    rw [valuationSphericalSection_eq v n w hW hk, map_one]
+  have hCoeff :
+      heckeUnramifiedSphericalCoefficient p n nu (productDiagonalCharacter n chi) g = 1 := by
+    unfold heckeUnramifiedSphericalCoefficient
+    change integral nu (fun k : C => valuationSphericalSection v n w (k.val * g)) = 1
+    rw [show (fun k : C => valuationSphericalSection v n w (k.val * g)) =
+      (fun _ : C => (1 : Complex)) from funext hPoint, integral_const,
+      measureReal_def, measure_univ, ENNReal.toReal_one, one_smul]
+  simp only [heckeUnramifiedLocalZetaIntegrand, hDet, hCoeff, mul_one]
 
 /-- Compact averaging preserves absolute convergence and the Euler factor
 in the normalized full-group local Godement-Jacquet zeta integral. -/
