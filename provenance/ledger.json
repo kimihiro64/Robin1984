@@ -2478,6 +2478,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/StandardEulerSummability.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Rankin--Selberg logarithmic coefficients and absolute convergence of the Dedekind zeta logarithmic derivative.",
+      "formalization_note": "Derives individual and paired logarithmic-derivative summability from the unramified Rankin--Selberg bound and a local parameter bound at finitely many ramified primes.",
+      "content_basis": "The inequality 2*x <= 1 + x^2 gives a Dedekind and Rankin--Selberg majorant. Each ramified prime gives a geometric series.",
+      "dependency_status": "Uses the checked Dedekind logarithmic derivative. The unramified Rankin--Selberg summability and the ramified local parameter bounds remain explicit inputs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/SupportingLine.lean",
       "classification": "Primarily project-original",
       "mathematical_source": "The supporting-line comparison in the project's corrected ideal Robin criterion and its weighted Hecke extension.",
