@@ -18,6 +18,8 @@ two-sided change of variables move all group translates into the same
 test-function space. Integer determinant weights are cleared by powers
 of the local Euler variable. The resulting denominator is preserved by
 finite linear combinations and therefore by the vector and dual orbit spans.
+Comparing the numerator ideal with any competing certificate proves
+leastness by divisibility for the normalized polynomial.
 -/
 
 set_option autoImplicit false
@@ -465,6 +467,189 @@ private theorem matrixCoefficient_mem_twoSidedTranslateSpan
     exact hCore b hEll
   exact hExtend hU
 
+private theorem polynomial_eq_of_eval_cpow_on_rightHalfPlane
+    {q : Real} (hq0 : 0 < q) (hq1 : q < 1) (sigma : Real)
+    (A B : Polynomial Complex)
+    (h : forall s : Complex, sigma < s.re ->
+      A.eval ((q : Complex) ^ s) = B.eval ((q : Complex) ^ s)) :
+    A = B := by
+  classical
+  let P := A - B
+  by_contra! hAB
+  have hP : Not (P = 0) := sub_ne_zero.mpr hAB
+  let t (m : Nat) : Real := sigma + 1 + (m : Real)
+  let z (m : Nat) : Complex := (q : Complex) ^ (t m : Complex)
+  have hEval (m : Nat) : z m = (Real.exp (Real.log q * t m) : Complex) := by
+    change (q : Complex) ^ (t m : Complex) = _
+    rw [Complex.cpow_def_of_ne_zero (Complex.ofReal_ne_zero.mpr hq0.ne'),
+      <- Complex.ofReal_log hq0.le, <- Complex.ofReal_mul, <- Complex.ofReal_exp]
+  have hInj : Function.Injective z := by
+    intro a b hab
+    rw [hEval, hEval] at hab
+    have he := Real.exp_injective (Complex.ofReal_injective hab)
+    have hProd : Real.log q * (t a - t b) = 0 := by rw [mul_sub, he, sub_self]
+    have ht : t a = t b :=
+      sub_eq_zero.mp ((mul_eq_zero.mp hProd).resolve_left (Real.log_neg hq0 hq1).ne)
+    have hc : (a : Real) = (b : Real) := by
+      change sigma + 1 + (a : Real) = sigma + 1 + (b : Real) at ht
+      linarith
+    exact_mod_cast hc
+  have hSub : Set.Subset (Set.range z) (P.roots.toFinset : Set Complex) := by
+    intro x hx
+    choose m hm using hx
+    rw [<- hm]
+    apply Multiset.mem_toFinset.mpr
+    apply (Polynomial.mem_roots hP).mpr
+    change (A - B).eval (z m) = 0
+    have hRe : sigma < ((t m : Real) : Complex).re := by
+      rw [Complex.ofReal_re]
+      change sigma < sigma + 1 + (m : Real)
+      have hm : 0 <= (m : Real) := Nat.cast_nonneg m
+      linarith
+    rw [Polynomial.eval_sub, h (t m : Complex) hRe, sub_self]
+  exact (Set.infinite_range_of_injective hInj).not_finite
+    (P.roots.toFinset.finite_toSet.subset hSub)
+
+private theorem dvd_of_dvd_X_pow_mul_of_eval_zero_one
+    (D P : Polynomial Complex) (hD : D.eval 0 = 1) (k : Nat)
+    (h : Dvd.dvd D (Polynomial.X ^ k * P)) : Dvd.dvd D P := by
+  have hX : Dvd.dvd Polynomial.X (D - 1) := by
+    have h0 : D.coeff 0 = 1 := (Polynomial.coeff_zero_eq_eval_zero D).trans hD
+    exact Polynomial.X_dvd_iff.mpr (by simp [h0])
+  choose T hT using hX
+  have hCoprime : IsCoprime D Polynomial.X := by
+    refine Exists.intro 1 (Exists.intro (-T) ?_)
+    rw [one_mul, neg_mul, mul_comm T Polynomial.X, <- hT]
+    ring
+  have hc : IsCoprime D (Polynomial.X ^ k) := hCoprime.pow_right
+  exact hc.dvd_of_dvd_mul_left h
+
+
+private theorem leastDenominator_dvd_of_numeratorIdeal
+    {Test : Type*} {q : Real} (hq0 : 0 < q) (hq1 : q < 1)
+    (F : Test -> Complex -> Complex) (Admissible : Test -> Prop) (Converges : Test -> Complex -> Prop)
+    (Q B D E : Polynomial Complex) (hQ : Q.eval 0 = 1) (hB : B.eval 0 = 1)
+    (hFactor : Q = B * D) :
+    let Z (s : Complex) := (q : Complex) ^ s
+    let S : Set (Polynomial Complex) := {N |
+      exists (test : Test) (k : Nat) (sigma : Real), And (Admissible test)
+        (forall s : Complex, sigma < s.re ->
+          And (Converges test s)
+            (Z s ^ k * Q.eval (Z s) * F test s = N.eval (Z s)))}
+    Ideal.span S = Ideal.span (Set.singleton B) ->
+    (forall test : Test, Admissible test -> exists (l : Nat) (tau : Real) (A : Polynomial Complex),
+      forall s : Complex, tau < s.re ->
+      And (Converges test s) (Z s ^ l * E.eval (Z s) * F test s = A.eval (Z s))) ->
+    Dvd.dvd D E := by
+  intro Z S hSpan hTest
+  have hEach (N : Polynomial Complex) (hN : Membership.mem S N) : Dvd.dvd Q (E * N) := by
+    choose test k sigma hSig using hN
+    choose l tau A hTau using hTest test hSig.1
+    have hCross : Polynomial.X ^ l * (E * N) = Polynomial.X ^ k * Q * A := by
+      apply polynomial_eq_of_eval_cpow_on_rightHalfPlane hq0 hq1 (max sigma tau)
+      intro s hs
+      have hsSigma := (le_max_left sigma tau).trans_lt hs
+      have hsTau := (le_max_right sigma tau).trans_lt hs
+      change (Polynomial.X ^ l * (E * N)).eval (Z s) =
+        (Polynomial.X ^ k * Q * A).eval (Z s)
+      simp only [Polynomial.eval_mul, Polynomial.eval_pow, Polynomial.eval_X]
+      rw [<- (hSig.2 s hsSigma).2, <- (hTau s hsTau).2]
+      ring
+    have hQDiv : Dvd.dvd Q (Polynomial.X ^ l * (E * N)) := by
+      rw [hCross]
+      exact Dvd.intro (Polynomial.X ^ k * A) (by ring)
+    exact dvd_of_dvd_X_pow_mul_of_eval_zero_one Q (E * N) hQ l hQDiv
+  let f : LinearMap (RingHom.id (Polynomial Complex)) (Polynomial Complex) (Polynomial Complex) :=
+    { toFun := fun N => E * N
+      map_add' := fun N M => mul_add E N M
+      map_smul' := fun a N => by
+        change E * (a * N) = a * (E * N)
+        ring }
+  let J : Ideal (Polynomial Complex) := Submodule.comap f (Ideal.span (Set.singleton Q))
+  have hLe : Ideal.span S <= J := by
+    apply Ideal.span_le.mpr
+    intro N hN
+    change Membership.mem (Ideal.span (Set.singleton Q)) (E * N)
+    exact Ideal.mem_span_singleton.mpr (hEach N hN)
+  have hBMem : Membership.mem (Ideal.span S) B := by
+    rw [hSpan]
+    exact Ideal.subset_span (Set.mem_singleton B)
+  have hDiv : Dvd.dvd Q (E * B) := Ideal.mem_span_singleton.mp (hLe hBMem)
+  choose C hC using hDiv
+  have hB0 : Not (B = 0) := by
+    intro hb
+    rw [hb, Polynomial.eval_zero] at hB
+    exact zero_ne_one hB
+  have hProd : B * (E - D * C) = 0 := by
+    rw [mul_sub, mul_comm B E, hC, hFactor]
+    ring
+  exact Dvd.intro C (sub_eq_zero.mp ((mul_eq_zero.mp hProd).resolve_left hB0)).symm
+
+/-- The reduced denominator works throughout the two orbit spans and
+divides every common denominator for the normalized seed coefficient. -/
+theorem heckeLocal_matrixCoefficients_leastDenominator_of_orbitSpans
+    {K V : Type*} [Field K] [NumberField K] [AddCommGroup V] [Module Complex V]
+    [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    (p : HeightOneSpectrum (RingOfIntegers K))
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    (n R : Nat) (hR : 0 < R) (pi : Units (p.adicCompletion K))
+    (hPi : Valued.v (pi : p.adicCompletion K) = finiteUniformizerValue)
+    (hLt : Valued.v (pi : p.adicCompletion K) < 1) (hp : norm pi.val < 1)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))) [mu.IsHaarMeasure]
+    (rho : MonoidHom (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))) (Module.End Complex V))
+    (P : HeckeLocalSubgroupAverage rho
+      (valuationPrincipalCongruenceSubgroup Valued.v n (Valued.v (pi : p.adicCompletion K) ^ R)))
+    [FiniteDimensional Complex (LinearMap.range P.proj)]
+    (ell0 : LinearMap (RingHom.id Complex) V Complex) (u0 : V) :
+    let L := p.adicCompletion K
+    let G := Units (Matrix (Fin n) (Fin n) L)
+    let v : Valuation L (WithZero (Multiplicative Int)) := Valued.v
+    let C := valuationIntegralMatrixSubgroup v n
+    let H := valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R)
+    let Z (s : Complex) := (norm pi.val : Complex) ^ s
+    (forall (h : H) (x : V), ell0 (rho h.val x) = ell0 x) ->
+    (forall h : H, rho h.val u0 = u0) ->
+    mu (C : Set G) = 1 ->
+    ell0 u0 = 1 ->
+    exists D : Polynomial Complex, And (D.eval 0 = 1)
+      (And (forall (ell : LinearMap (RingHom.id Complex) V Complex) (u : V),
+        Membership.mem (Submodule.span Complex (Set.range (fun a : G => ell0.comp (rho a)))) ell ->
+        Membership.mem (Submodule.span Complex (Set.range (fun b : G => rho b u0))) u ->
+        HasHeckeLocalZetaDenominator mu Z D (fun g : G => ell (rho g u)))
+        (forall E : Polynomial Complex,
+          HasHeckeLocalZetaDenominator mu Z E (fun g : G => ell0 (rho g u0)) ->
+          Dvd.dvd D E)) := by
+  intro L G v C H Z hEll0 hU0 hNorm hOne
+  choose B D hBD using heckeLocal_compactlySupportedTest_reducedDenominator p n R hR
+    pi hPi hLt hp mu rho P ell0 u0 hEll0 hU0 hNorm hOne
+  have hSeed : HasHeckeLocalZetaDenominator mu Z D (fun g : G => ell0 (rho g u0)) :=
+    hBD.2.2.2.2
+  refine Exists.intro D (And.intro hBD.2.1 (And.intro ?_ ?_))
+  . intro ell u hEll hU
+    exact hasHeckeLocalZetaDenominator_of_mem_translateSpan p n mu pi hPi D hNorm
+      (fun g : G => ell0 (rho g u0)) (fun g : G => ell (rho g u)) hSeed
+      (matrixCoefficient_mem_twoSidedTranslateSpan rho ell0 ell u0 u hEll hU)
+  . intro E hE
+    let hRad : v pi.val ^ R < 1 := (pow_lt_one_iff_of_nonneg (zero_le : 0 <= v pi.val) hR.ne').mpr hLt
+    let alpha (i : Fin n) : Complex :=
+      ((Inv.inv (norm pi.val) : Real) : Complex) ^ ((i.val + 1) * (n - (i.val + 1)))
+    let Q := valuationUniformizerConeDenominator v n (v pi.val ^ R) hRad rho P pi hLt.le alpha
+    have hF : Q = B * D := hBD.2.2.1
+    have hQ0 : Q.eval 0 = 1 := by
+      rw [hF, Polynomial.eval_mul, hBD.1, hBD.2.1, one_mul]
+    let Test := LocallyConstant (Matrix (Fin n) (Fin n) L) Complex
+    let f (Phi : Test) (s : Complex) (g : G) :=
+      (norm g.val.det : Complex) ^ s * (Phi g.val * ell0 (rho g u0))
+    exact leastDenominator_dvd_of_numeratorIdeal
+      (norm_pos_iff.mpr pi.ne_zero) hp
+      (fun Phi : Test => fun s => integral mu (f Phi s))
+      (fun Phi : Test => HasCompactSupport (fun X => Phi X))
+      (fun Phi : Test => fun s => Integrable (f Phi s) mu)
+      Q B D E hQ0 hBD.1 hBD.2.2.1 hBD.2.2.2.1 hE
+
 /-- The reduced denominator obtained from a normalized congruence-fixed
 coefficient works for every coefficient formed from the vector orbit span
 and the dual orbit span of its two defining entries. -/
@@ -501,15 +686,9 @@ theorem heckeLocal_matrixCoefficients_commonReducedDenominator_of_orbitSpans
         Membership.mem (Submodule.span Complex (Set.range (fun b : G => rho b u0))) u ->
         HasHeckeLocalZetaDenominator mu Z D (fun g : G => ell (rho g u))) := by
   intro L G v C H Z hEll0 hU0 hNorm hOne
-  choose B D hBD using heckeLocal_compactlySupportedTest_reducedDenominator p n R hR
-    pi hPi hLt hp mu rho P ell0 u0 hEll0 hU0 hNorm hOne
-  have hSeed : HasHeckeLocalZetaDenominator mu Z D (fun g : G => ell0 (rho g u0)) :=
-    hBD.2.2.2.2
-  refine Exists.intro D (And.intro hBD.2.1 ?_)
-  intro ell u hEll hU
-  exact hasHeckeLocalZetaDenominator_of_mem_translateSpan p n mu pi hPi D hNorm
-    (fun g : G => ell0 (rho g u0)) (fun g : G => ell (rho g u)) hSeed
-    (matrixCoefficient_mem_twoSidedTranslateSpan rho ell0 ell u0 u hEll hU)
+  choose D hD using heckeLocal_matrixCoefficients_leastDenominator_of_orbitSpans
+    p n R hR pi hPi hLt hp mu rho P ell0 u0 hEll0 hU0 hNorm hOne
+  exact Exists.intro D (And.intro hD.1 hD.2.1)
 section
 
 variable {G V : Type*} [Group G]
@@ -745,10 +924,11 @@ private theorem exists_localZeta_normalizingFunctional (u : V) (hu : Not (u = 0)
   rw [one_smul] at hEval
   exact Exists.intro ell hEval
 
-/-- A smooth irreducible admissible finite-place representation has one
-normalized polynomial denominator for the local zeta integrals of all of its
-smooth matrix coefficients and compactly supported locally constant tests. -/
-theorem heckeLocal_smoothIrreducible_commonDenominator
+/-- For a smooth irreducible admissible finite-place representation, the
+local zeta integrals of all tests and smooth coefficients share a
+denominator with constant term one. It divides every polynomial with
+the same common-denominator property. -/
+theorem heckeLocal_smoothIrreducible_leastDenominator
     [Nontrivial V]
     [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)]
     [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
@@ -764,9 +944,12 @@ theorem heckeLocal_smoothIrreducible_commonDenominator
     (hNorm : mu ((valuationIntegralMatrixSubgroup v n : Subgroup G) : Set G) = 1) :
     let Z (s : Complex) := (norm pi.val : Complex) ^ s
     exists D : Polynomial Complex, And (D.eval 0 = 1)
-      (forall (ell : DualV) (u : V),
+      (And (forall (ell : DualV) (u : V),
         Membership.mem (heckeLocalSmoothDual rho) ell ->
-        HasHeckeLocalZetaDenominator mu Z D (fun g : G => ell (rho g u))) := by
+        HasHeckeLocalZetaDenominator mu Z D (fun g : G => ell (rho g u)))
+        (forall E : Polynomial Complex, (forall (ell : DualV) (u : V),
+        Membership.mem (heckeLocalSmoothDual rho) ell ->
+        HasHeckeLocalZetaDenominator mu Z E (fun g : G => ell (rho g u))) -> Dvd.dvd D E)) := by
   intro Z
   choose u0 hu0 using exists_ne (0 : V)
   let U : Set G := {g | rho g u0 = u0}
@@ -798,16 +981,45 @@ theorem heckeLocal_smoothIrreducible_commonDenominator
     intro g hg
     ext x
     exact hFixEll (Subtype.mk g hg) x
-  choose D hD using heckeLocal_matrixCoefficients_commonReducedDenominator_of_orbitSpans
+  choose D hD using heckeLocal_matrixCoefficients_leastDenominator_of_orbitSpans
     p n R hR.1 pi hPi hLt hp mu rho P ell0 u0 hFixEll hFixU hNorm hOne
-  refine Exists.intro D (And.intro hD.1 ?_)
-  intro ell u hell
-  have hEll := mem_dualOrbitSpan_of_smooth_admissible p n pi hp rho ell0 ell u0
-    hOne hSeed hell hIrred hSmooth hAdmissible
-  have hVec : Membership.mem (Submodule.span Complex (Set.range (fun b : G => rho b u0))) u := by
-    rw [hIrred u0 hu0]
-    exact Submodule.mem_top
-  exact hD.2 ell u hEll hVec
+  refine Exists.intro D (And.intro hD.1 (And.intro ?_ ?_))
+  . intro ell u hell
+    have hEll := mem_dualOrbitSpan_of_smooth_admissible p n pi hp rho ell0 ell u0
+      hOne hSeed hell hIrred hSmooth hAdmissible
+    have hVec : Membership.mem (Submodule.span Complex (Set.range (fun b : G => rho b u0))) u := by
+      rw [hIrred u0 hu0]
+      exact Submodule.mem_top
+    exact hD.2.1 ell u hEll hVec
+  . intro E hE
+    exact hD.2.2 E (hE ell0 u0 hSeed)
+
+/-- A smooth irreducible admissible finite-place representation has one
+normalized polynomial denominator for the local zeta integrals of all of its
+smooth matrix coefficients and compactly supported locally constant tests. -/
+theorem heckeLocal_smoothIrreducible_commonDenominator
+    [Nontrivial V]
+    [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    [MeasurableSpace L] [BorelSpace L] [MeasurableSpace G] [BorelSpace G]
+    (hPi : v pi.val = finiteUniformizerValue) (hLt : v pi.val < 1) (hp : norm pi.val < 1)
+    (mu : Measure G) [mu.IsHaarMeasure]
+    (rho : MonoidHom G (Module.End Complex V))
+    (hIrred : forall x : V, Not (x = 0) ->
+      Submodule.span Complex (Set.range (fun g : G => rho g x)) = Top.top)
+    (hSmooth : forall x : V, Filter.Eventually (fun g : G => rho g x = x) (nhds 1))
+    (hAdmissible : forall R : Nat, FiniteDimensional Complex (heckeLocalFixedSubmodule rho
+      (valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R))))
+    (hNorm : mu ((valuationIntegralMatrixSubgroup v n : Subgroup G) : Set G) = 1) :
+    let Z (s : Complex) := (norm pi.val : Complex) ^ s
+    exists D : Polynomial Complex, And (D.eval 0 = 1)
+      (forall (ell : DualV) (u : V),
+        Membership.mem (heckeLocalSmoothDual rho) ell ->
+        HasHeckeLocalZetaDenominator mu Z D (fun g : G => ell (rho g u))) := by
+  intro Z
+  choose D hD using heckeLocal_smoothIrreducible_leastDenominator
+    p n pi hPi hLt hp mu rho hIrred hSmooth hAdmissible hNorm
+  exact Exists.intro D (And.intro hD.1 hD.2.1)
 
 end FinitePlace
 
