@@ -103,43 +103,6 @@ private theorem cartan_gapVolume_add_of_positiveGaps
   intro i _
   rw [pow_mul]
 
-private theorem exists_common_rational_denominator_finset
-    {I : Type*} (s : Finset I) (f : I -> Complex -> Complex)
-    (h : forall i, Membership.mem s i ->
-      exists M : Real, exists P Q : Polynomial Complex,
-        And (1 <= M) (And (Q.eval 0 = 1)
-          (forall z : Complex, M * norm z < 1 -> Q.eval z * f i z = P.eval z))) :
-    exists M : Real, exists P Q : Polynomial Complex,
-      And (1 <= M) (And (Q.eval 0 = 1)
-        (forall z : Complex, M * norm z < 1 ->
-          Q.eval z * s.sum (fun i => f i z) = P.eval z)) := by
-  classical
-  induction s using Finset.induction_on with
-  | empty =>
-    refine Exists.intro 1 (Exists.intro 0 (Exists.intro 1 (And.intro le_rfl (And.intro ?_ ?_))))
-    . exact Polynomial.eval_one
-    . intro z _
-      simp
-  | insert a s ha ih =>
-    have hA := h a (Finset.mem_insert_self a s)
-    have hS := ih (fun i hi => h i (Finset.mem_insert_of_mem hi))
-    choose M A B hab using hA
-    choose N C D hcd using hS
-    refine Exists.intro (max M N) (Exists.intro (A * D + B * C)
-      (Exists.intro (B * D) (And.intro (hab.1.trans (le_max_left _ _)) (And.intro ?_ ?_))))
-    . rw [Polynomial.eval_mul, hab.2.1, hcd.2.1, one_mul]
-    . intro z hz
-      have hzM := (mul_le_mul_of_nonneg_right (le_max_left M N) (norm_nonneg z)).trans_lt hz
-      have hzN := (mul_le_mul_of_nonneg_right (le_max_right M N) (norm_nonneg z)).trans_lt hz
-      rw [Finset.sum_insert ha, Polynomial.eval_mul, Polynomial.eval_add, Polynomial.eval_mul,
-        Polynomial.eval_mul]
-      calc
-        _ = (B.eval z * f a z) * D.eval z +
-            B.eval z * (D.eval z * s.sum (fun i => f i z)) := by
-          rw [mul_add]
-          ac_rfl
-        _ = _ := by rw [hab.2.2 z hzM, hcd.2.2 z hzN]
-
 private theorem principalCongruence_translated_fixed_pair
     {F W V : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
     [AddCommGroup V] [Module Complex V] (v : Valuation F W) (n : Nat) (r : W)
@@ -304,247 +267,6 @@ theorem hasSum_heckeLocal_detWeightedIntegral_finiteCartanAverages
     Finset.univ.sum (fun j => (j.val + 1) * b j) * integral (mu.restrict (D b)) f) _ at h
   simpa only [hAvg] using h
 
-private theorem masked_uniformizerCone_near_zero
-    {F W V : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
-    [AddCommGroup V] [Module Complex V]
-    (v : Valuation F W) (n R : Nat) (r : W) (hr : r < 1)
-    (rho : MonoidHom (Units (Matrix (Fin n) (Fin n) F)) (Module.End Complex V))
-    (P : HeckeLocalSubgroupAverage rho (valuationPrincipalCongruenceSubgroup v n r))
-    [FiniteDimensional Complex (LinearMap.range P.proj)]
-    (pi : Units F) (hp : v pi.val <= 1) (pat : Fin n -> Fin (R + 1))
-    (alpha : Fin n -> Complex)
-    (ell : LinearMap (RingHom.id Complex) V Complex) (u : V)
-    (hEll : forall (h : valuationPrincipalCongruenceSubgroup v n r) (x : V),
-      ell (rho h.val x) = ell x)
-    (hU : forall h : valuationPrincipalCongruenceSubgroup v n r, rho h.val u = u) :
-    let B (i : Fin n) := (pat i).val
-    let E (e : Fin n -> Nat) := Finset.univ.sum (fun i => (i.val + 1) * e i)
-    let Active (e : Fin n -> Nat) := forall i, (pat i).val < R -> e i = 0
-    let T (z : Complex) (e : Fin n -> Nat) :=
-      ell (rho ((valuationDiagonalSection F n
-        (valuationUniformizerGapDiagonal n pi (fun i => B i + e i))).val) u) *
-        Finset.univ.prod (fun i => alpha i ^ e i) * z ^ E e
-    exists M : Real, exists N D : Polynomial Complex,
-      And (1 <= M) (And (D.eval 0 = 1)
-        (forall z : Complex, M * norm z < 1 ->
-          And (Summable (fun e : {e : Fin n -> Nat // Active e} => T z e.val))
-            (D.eval z * tsum (fun e : {e : Fin n -> Nat // Active e} => T z e.val) =
-              N.eval z))) := by
-  classical
-  intro B E Active T
-  let a := valuationUniformizerConeDirections v n pi hp
-  let base : valuationOrderedDiagonalSubmonoid v n :=
-    Finset.univ.prod (fun i => a i ^ B i)
-  let beta (i : Fin n) := if (pat i).val < R then (0 : Complex) else alpha i
-  let w (i : Fin n) := i.val + 1
-  have hW (i : Fin n) : 0 < w i := Nat.succ_pos _
-  let op := P.orderedDiagonalOperators v n r hr rho
-  let d := Module.finrank Complex (LinearMap.range P.proj)
-  let c (i : Fin n) := (op (a i)).charpoly.coeff
-  let D : Polynomial Complex := Finset.univ.prod (fun i =>
-    (Finset.range (d + 1)).sum (fun j => Polynomial.C (c i j * beta i ^ (d - j)) *
-      Polynomial.X ^ (w i * (d - j))))
-  let F0 (z : Complex) (e : Fin n -> Nat) :=
-    ell (rho ((valuationDiagonalSection F n
-      (base * Finset.univ.prod (fun i => a i ^ e i)).val).val) u) *
-      Finset.univ.prod (fun i => beta i ^ e i) * z ^ E e
-  have hProd (e : Fin n -> Nat) : (Finset.univ.prod (fun i => a i ^ e i)).val =
-      valuationUniformizerGapDiagonal n pi e := by
-    change (valuationOrderedDiagonalSubmonoid v n).subtype (Finset.univ.prod (fun i => a i ^ e i)) = _
-    rw [map_prod]
-    refine Finset.prod_congr rfl (fun i _ => ?_)
-    exact map_pow (valuationOrderedDiagonalSubmonoid v n).subtype (a i) (e i)
-  have hDiag (e : Fin n -> Nat) :
-      (base * Finset.univ.prod (fun i => a i ^ e i)).val =
-        valuationUniformizerGapDiagonal n pi (fun i => B i + e i) := by
-    change base.val * (Finset.univ.prod (fun i => a i ^ e i)).val = _
-    rw [hProd e]
-    change (Finset.univ.prod (fun i => a i ^ B i)).val * valuationUniformizerGapDiagonal n pi e = _
-    rw [hProd B]
-    simp only [valuationUniformizerGapDiagonal, pow_add, Finset.prod_mul_distrib]
-  have hF (z : Complex) (e : Fin n -> Nat) :
-      F0 z e = if Active e then T z e else 0 := by
-    unfold F0
-    rw [hDiag]
-    have hMask := masked_gap_weights n R pat alpha e
-    change Finset.univ.prod (fun i => beta i ^ e i) =
-      (if Active e then Finset.univ.prod (fun i => alpha i ^ e i) else 0) at hMask
-    rw [hMask]
-    by_cases he : Active e
-    . simp only [if_pos he, T]
-    . simp only [if_neg he, mul_zero, zero_mul]
-  have h := valuationPrincipalCongruence_diagonalCone_series_mul_powers_near_zero
-    v n r hr rho P n a w hW beta base ell hEll u hU
-  choose M hM using h
-  choose N hn using hM.2
-  have hD : D.eval 0 = 1 := hn.1
-  refine Exists.intro M (Exists.intro N (Exists.intro D (And.intro hM.1 (And.intro hD ?_))))
-  intro z hz
-  have hSum : Summable (F0 z) := hn.2.1 z hz
-  have hF0 : D.eval z * tsum (F0 z) = N.eval z := hn.2.2 z hSum
-  have hFace : Summable (fun e : {e : Fin n -> Nat // Active e} => T z e.val) :=
-    (hSum.comp_injective Subtype.val_injective).congr
-      (fun e => (hF z e.val).trans (if_pos e.property))
-  have hTsum : tsum (fun e : {e : Fin n -> Nat // Active e} => T z e.val) = tsum (F0 z) := by
-    let S := Set.ofPred Active
-    change tsum (fun e : S => T z e.val) = _
-    exact (tsum_subtype S (T z)).trans (tsum_congr (fun e => by
-      change S.indicator (T z) e = F0 z e
-      rw [hF]
-      by_cases he : Active e
-      . have hm : Membership.mem S e := he
-        rw [Set.indicator_of_mem hm, if_pos he]
-      . have hn : Not (Membership.mem S e) := he
-        rw [Set.indicator_of_notMem hn, if_neg he]))
-  exact And.intro hFace (by rw [hTsum, hF0])
-
-private theorem heckeLocal_cartanPattern_pair_rational
-    {K V : Type*} [Field K] [NumberField K] [AddCommGroup V] [Module Complex V]
-    [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)]
-    [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
-    (p : HeightOneSpectrum (RingOfIntegers K))
-    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
-    (n R : Nat) (hR : 0 < R) (pi : Units (p.adicCompletion K))
-    (hPi : Valued.v (pi : p.adicCompletion K) = finiteUniformizerValue)
-    (hLt : Valued.v (pi : p.adicCompletion K) < 1)
-    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
-    [BorelSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
-    (mu : Measure (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))))
-    [mu.IsHaarMeasure]
-    (rho : MonoidHom (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))) (Module.End Complex V))
-    (P : HeckeLocalSubgroupAverage rho
-      (valuationPrincipalCongruenceSubgroup Valued.v n (Valued.v (pi : p.adicCompletion K) ^ R)))
-    [FiniteDimensional Complex (LinearMap.range P.proj)]
-    (ell : LinearMap (RingHom.id Complex) V Complex) (u : V)
-    (phi : (Fin n -> Fin n -> p.adicCompletion K) -> Complex) :
-    let L := p.adicCompletion K
-    let G := Units (Matrix (Fin n) (Fin n) L)
-    let v : Valuation L (WithZero (Multiplicative Int)) := Valued.v
-    let C := valuationIntegralMatrixSubgroup v n
-    let U := valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R)
-    let d (g : Fin n -> Nat) := (valuationDiagonalSection L n (valuationUniformizerGapDiagonal n pi g)).val
-    let D (g : Fin n -> Nat) := valuationIntegralDiagonalDoubleCoset v n (valuationUniformizerGapDiagonal n pi g)
-    let E (g : Fin n -> Nat) := Finset.univ.sum (fun i => (i.val + 1) * g i)
-    let f (g : G) := phi (fun i j => g.val i j) * ell (rho g u)
-    (forall (h : U) (x : V), ell (rho h.val x) = ell x) ->
-    (forall h : U, rho h.val u = u) ->
-    (forall X Y : Fin n -> Fin n -> L, (forall i j, v (X i j) <= 1) ->
-      (forall i j, v (Y i j - X i j) <= v pi.val ^ R) -> phi Y = phi X) ->
-    mu (C : Set G) = 1 ->
-    forall (pat : Fin n -> Fin (R + 1)) (l k : C),
-      let A := {e : Fin n -> Nat // forall i, (pat i).val < R -> e i = 0}
-      let b (i : Fin n) := (pat i).val
-      let F (z : Complex) (e : A) :=
-        z ^ E (b + e.val) * ((mu (D (b + e.val))).toReal : Complex) *
-          f (l.val * d (b + e.val) * k.val)
-      exists M : Real, exists N Q : Polynomial Complex,
-        And (1 <= M) (And (Q.eval 0 = 1)
-          (forall z : Complex, M * norm z < 1 ->
-            And (Summable (F z)) (Q.eval z * tsum (F z) = N.eval z))) := by
-  intro L G v C U d D E f hEll hU hMod hNorm pat l k A b F
-  have hRad : v pi.val ^ R < 1 :=
-    (pow_lt_one_iff_of_nonneg (zero_le : 0 <= v pi.val) hR.ne').mpr hLt
-  let ell' := ell.comp (rho l.val)
-  let u' := rho k.val u
-  have hL := (principalCongruence_translated_fixed_pair v n (v pi.val ^ R)
-    rho ell u hEll hU l).1
-  have hK := (principalCongruence_translated_fixed_pair v n (v pi.val ^ R)
-    rho ell u hEll hU k).2
-  let alpha (i : Fin n) : Complex :=
-    ((Inv.inv (norm pi.val) : Real) : Complex) ^ ((i.val + 1) * (n - (i.val + 1)))
-  let T (z : Complex) (e : A) :=
-    ell' (rho (d (b + e.val)) u') * Finset.univ.prod (fun i => alpha i ^ e.val i) * z ^ E e.val
-  have hCone := masked_uniformizerCone_near_zero v n R (v pi.val ^ R) hRad rho P
-    pi hLt.le pat alpha ell' u' hL hK
-  choose M N Q hQ using hCone
-  let base := l.val * d b * k.val
-  let ph := phi (fun i j => base.val i j)
-  let factor : Complex := ((mu (D b)).toReal : Complex) * ph
-  let poly := Polynomial.C factor * Polynomial.X ^ E b * N
-  refine Exists.intro M (Exists.intro poly (Exists.intro Q (And.intro hQ.1 (And.intro hQ.2.1 ?_))))
-  intro z hz
-  have hz0 := hQ.2.2 z hz
-  have hSum : Summable (T z) := hz0.1
-  have hRat : Q.eval z * tsum (T z) = N.eval z := hz0.2
-  have hUnion : Set.iUnion D = Set.ofPred (fun g : G => forall i j, v (g.val i j) <= 1) :=
-    iUnion_heckeLocal_valuationUniformizerGapDoubleCosets p n pi hPi
-  have hBaseMem : Membership.mem (D b) base := by
-    have hSet : D b = DoubleCoset.doubleCoset (d b) (C : Set G) (C : Set G) :=
-      valuationIntegralDiagonalDoubleCoset_eq_doubleCoset v n (valuationUniformizerGapDiagonal n pi b)
-    rw [hSet]
-    exact DoubleCoset.mem_doubleCoset.mpr (Exists.intro l.val
-      (And.intro l.property (Exists.intro k.val (And.intro k.property rfl))))
-  have hBase (i j : Fin n) : v (base.val i j) <= 1 := by
-    have h := Set.mem_iUnion_of_mem b hBaseMem
-    rw [hUnion] at h
-    exact h i j
-  have hl (i j : Fin n) : v (l.val.val i j) <= 1 :=
-    ((mem_valuationIntegralMatrixSubgroup_iff v n l.val).mp l.property).1 i j
-  have hk (i j : Fin n) : v (k.val.val i j) <= 1 :=
-    ((mem_valuationIntegralMatrixSubgroup_iff v n k.val).mp k.property).1 i j
-  have hTerm (e : A) : F z e = (factor * z ^ E b) * T z e := by
-    have hCut (i : Fin n) : min R ((b + e.val) i) = min R (b i) := by
-      have he := ((gapPatternFiber_equiv_zeroInactive n R pat).symm e).property i
-      change min R ((b + e.val) i) = b i at he
-      exact he.trans (min_eq_right (Nat.le_of_lt_succ (pat i).isLt)).symm
-    have hDiag : forall i j, v ((d (b + e.val)).val i j - (d b).val i j) <= v pi.val ^ R :=
-      valuationUniformizerGapDiagonal_congruent_of_min_gaps v n R pi hLt.le _ _ hCut
-    have hPhi : phi (fun i j => (l.val * d (b + e.val) * k.val).val i j) = ph := by
-      apply hMod _ _ hBase
-      exact valuation_integral_matrix_multipliers_preserve_congruence v n (v pi.val ^ R)
-        l.val.val (d (b + e.val)).val (d b).val k.val.val hl hk hDiag
-    have hSupport (i : Fin n) : 0 < (b + e.val) i <-> 0 < b i :=
-      (positiveGap_iff_of_min_gaps n R hR _ _ hCut) i
-    have hVol : ((mu (D (b + e.val))).toReal : Complex) = ((mu (D b)).toReal : Complex) *
-        Finset.univ.prod (fun i => alpha i ^ e.val i) :=
-      cartan_gapVolume_add_of_positiveGaps p n pi mu b e.val hPi hLt hNorm hSupport
-    have hE : E (b + e.val) = E b + E e.val := by
-      simp only [E, Pi.add_apply, Nat.mul_add, Finset.sum_add_distrib]
-    unfold F f
-    rw [hE, pow_add, hVol, hPhi]
-    simp only [T, factor, ell', u', map_mul, Module.End.mul_apply, LinearMap.comp_apply]
-    ac_rfl
-  have hSumF : Summable (F z) := (hSum.mul_left (factor * z ^ E b)).congr (fun e => (hTerm e).symm)
-  have hTF : tsum (F z) = (factor * z ^ E b) * tsum (T z) :=
-    (tsum_congr hTerm).trans (hSum.tsum_mul_left _)
-  refine And.intro hSumF ?_
-  rw [hTF, mul_left_comm, hRat]
-  simp only [poly, Polynomial.eval_mul, Polynomial.eval_pow, Polynomial.eval_C, Polynomial.eval_X]
-
-private theorem finite_family_rational_series
-    {I A : Type*} [Fintype I] (u : I -> Complex -> A -> Complex)
-    (h : forall i, exists M : Real, exists N Q : Polynomial Complex,
-      And (1 <= M) (And (Q.eval 0 = 1)
-        (forall z : Complex, M * norm z < 1 ->
-          And (Summable (u i z)) (Q.eval z * tsum (u i z) = N.eval z)))) :
-    exists M : Real, exists N Q : Polynomial Complex,
-      And (1 <= M) (And (Q.eval 0 = 1)
-        (forall z : Complex, M * norm z < 1 ->
-          And (forall i, Summable (u i z))
-            (And (Summable (fun a => Finset.univ.sum (fun i => u i z a)))
-              (Q.eval z * tsum (fun a => Finset.univ.sum (fun i => u i z a)) = N.eval z)))) := by
-  classical
-  choose M N Q hQ using h
-  have hR := exists_common_rational_denominator_finset Finset.univ
-    (fun i z => tsum (u i z)) (fun i _ =>
-      Exists.intro (M i) (Exists.intro (N i) (Exists.intro (Q i)
-        (And.intro (hQ i).1 (And.intro (hQ i).2.1 (fun z hz => ((hQ i).2.2 z hz).2))))))
-  choose K P D hD using hR
-  let B := 1 + Finset.univ.sum M
-  have hB (i : I) : M i <= B :=
-    (Finset.single_le_sum (fun j _ => zero_le_one.trans (hQ j).1) (Finset.mem_univ i)).trans
-      (le_add_of_nonneg_left zero_le_one)
-  refine Exists.intro (max B K) (Exists.intro P (Exists.intro D
-    (And.intro (hD.1.trans (le_max_right _ _)) (And.intro hD.2.1 ?_))))
-  intro z hz
-  have hzK := (mul_le_mul_of_nonneg_right (le_max_right B K) (norm_nonneg z)).trans_lt hz
-  have hSummable (i : I) (_ : Membership.mem (Finset.univ : Finset I) i) : Summable (u i z) :=
-    ((hQ i).2.2 z ((mul_le_mul_of_nonneg_right ((hB i).trans (le_max_left B K))
-      (norm_nonneg z)).trans_lt hz)).1
-  refine And.intro (fun i => hSummable i (Finset.mem_univ i)) (And.intro (summable_sum hSummable) ?_)
-  rw [Summable.tsum_finsetSum hSummable]
-  exact hD.2.2 z hzK
-
 private theorem continuousOn_of_open_right_invariance
     {G E : Type*} [Group G] [TopologicalSpace G] [IsTopologicalGroup G]
     [TopologicalSpace E] (U : Subgroup G) (hOpen : IsOpen (U : Set G))
@@ -619,6 +341,566 @@ private theorem summable_nonneg_of_truncatedGapPartition
       (B.symm e).val = fun i => (pat i).val + e.val i := rfl
   exact B.symm.summable_iff.mp ((h pat).congr (fun e => congrArg F (hInv e).symm))
 
+private theorem masked_characteristic_denominator_factor
+    (n d : Nat) (w : Fin n -> Nat) (hw : forall i, 0 < w i)
+    (c : Fin n -> Nat -> Complex) (hc : forall i, c i d = 1)
+    (alpha : Fin n -> Complex) (inactive : Fin n -> Prop) [DecidablePred inactive] :
+    let P (i : Fin n) (a : Complex) :=
+      (Finset.range (d + 1)).sum (fun j =>
+        Polynomial.C (c i j * a ^ (d - j)) * Polynomial.X ^ (w i * (d - j)))
+    let full := Finset.univ.prod (fun i => P i (alpha i))
+    exists E : Polynomial Complex, And (full.eval 0 = 1)
+      (full = E * Finset.univ.prod (fun i => P i (if inactive i then (0 : Complex) else alpha i))) := by
+  classical
+  intro P full
+  have hZero (i : Fin n) : P i 0 = 1 := by
+    unfold P
+    rw [Finset.sum_eq_single d]
+    . simp only [Nat.sub_self, pow_zero, mul_one, Nat.mul_zero, hc, Polynomial.C_1]
+    . intro j hj hne
+      have hjd : j <= d := Nat.le_of_lt_succ (Finset.mem_range.mp hj)
+      have hsub : Not (d - j = 0) := Nat.ne_of_gt (Nat.sub_pos_of_lt (lt_of_le_of_ne hjd hne))
+      simp only [zero_pow hsub, mul_zero, Polynomial.C_0, zero_mul]
+    . intro hd
+      exact False.elim (hd (Finset.mem_range.mpr (Nat.lt_succ_self d)))
+  have hEval (i : Fin n) (a : Complex) : (P i a).eval 0 = 1 := by
+    change Polynomial.evalRingHom 0 ((Finset.range (d + 1)).sum (fun j =>
+      Polynomial.C (c i j * a ^ (d - j)) * Polynomial.X ^ (w i * (d - j)))) = _
+    rw [map_sum, Finset.sum_eq_single d]
+    . simp [hc]
+    . intro j hj hne
+      have hjd : j <= d := Nat.le_of_lt_succ (Finset.mem_range.mp hj)
+      have hsub : Not (d - j = 0) := Nat.ne_of_gt (Nat.sub_pos_of_lt (lt_of_le_of_ne hjd hne))
+      have hExp : Not (w i * (d - j) = 0) := mul_ne_zero (hw i).ne' hsub
+      change (Polynomial.C (c i j * a ^ (d - j)) * Polynomial.X ^ (w i * (d - j))).eval 0 = 0
+      rw [Polynomial.eval_mul, Polynomial.eval_pow, Polynomial.eval_X, zero_pow hExp, mul_zero]
+    . intro hd
+      exact False.elim (hd (Finset.mem_range.mpr (Nat.lt_succ_self d)))
+  let E := Finset.univ.prod (fun i => if inactive i then P i (alpha i) else 1)
+  refine Exists.intro E (And.intro ?_ ?_)
+  . change Polynomial.evalRingHom 0 (Finset.univ.prod (fun i => P i (alpha i))) = _
+    rw [map_prod]
+    exact Finset.prod_eq_one (fun i _ => hEval i (alpha i))
+  . unfold full E
+    rw [<- Finset.prod_mul_distrib]
+    apply Finset.prod_congr rfl
+    intro i _
+    by_cases hi : inactive i
+    . rw [if_pos hi, if_pos hi, hZero, mul_one]
+    . rw [if_neg hi, if_neg hi, one_mul]
+
+/-- The product of the reversed characteristic polynomials of the fixed-space
+Cartan operators. The Haar weights scale the variable in each factor. -/
+noncomputable def valuationUniformizerConeDenominator
+    {F W V : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
+    [AddCommGroup V] [Module Complex V]
+    (v : Valuation F W) (n : Nat) (r : W) (hr : r < 1)
+    (rho : MonoidHom (Units (Matrix (Fin n) (Fin n) F)) (Module.End Complex V))
+    (P : HeckeLocalSubgroupAverage rho (valuationPrincipalCongruenceSubgroup v n r))
+    [FiniteDimensional Complex (LinearMap.range P.proj)]
+    (pi : Units F) (hp : v pi.val <= 1) (alpha : Fin n -> Complex) :
+    Polynomial Complex :=
+  let d := Module.finrank Complex (LinearMap.range P.proj)
+  let a := valuationUniformizerConeDirections v n pi hp
+  let op := P.orderedDiagonalOperators v n r hr rho
+  let c (i : Fin n) := (op (a i)).charpoly.coeff
+  Finset.univ.prod (fun i => (Finset.range (d + 1)).sum
+    (fun j => Polynomial.C (c i j * alpha i ^ (d - j)) * Polynomial.X ^ ((i.val + 1) * (d - j))))
+
+private theorem masked_uniformizerCone_commonDenominator
+    {F W V : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
+    [AddCommGroup V] [Module Complex V]
+    (v : Valuation F W) (n R : Nat) (r : W) (hr : r < 1)
+    (rho : MonoidHom (Units (Matrix (Fin n) (Fin n) F)) (Module.End Complex V))
+    (P : HeckeLocalSubgroupAverage rho (valuationPrincipalCongruenceSubgroup v n r))
+    [FiniteDimensional Complex (LinearMap.range P.proj)]
+    (pi : Units F) (hp : v pi.val <= 1) (pat : Fin n -> Fin (R + 1))
+    (alpha : Fin n -> Complex)
+    (ell : LinearMap (RingHom.id Complex) V Complex) (u : V)
+    (hEll : forall (h : valuationPrincipalCongruenceSubgroup v n r) (x : V),
+      ell (rho h.val x) = ell x)
+    (hU : forall h : valuationPrincipalCongruenceSubgroup v n r, rho h.val u = u) :
+    let D0 := valuationUniformizerConeDenominator v n r hr rho P pi hp alpha
+    let B (i : Fin n) := (pat i).val
+    let E (e : Fin n -> Nat) := Finset.univ.sum (fun i => (i.val + 1) * e i)
+    let Active (e : Fin n -> Nat) := forall i, (pat i).val < R -> e i = 0
+    let T (z : Complex) (e : Fin n -> Nat) :=
+      ell (rho ((valuationDiagonalSection F n
+        (valuationUniformizerGapDiagonal n pi (fun i => B i + e i))).val) u) *
+        Finset.univ.prod (fun i => alpha i ^ e i) * z ^ E e
+    exists M : Real, exists N : Polynomial Complex,
+      And (1 <= M) (And (D0.eval 0 = 1)
+        (forall z : Complex, M * norm z < 1 ->
+          And (Summable (fun e : {e : Fin n -> Nat // Active e} => T z e.val))
+            (D0.eval z * tsum (fun e : {e : Fin n -> Nat // Active e} => T z e.val) =
+              N.eval z))) := by
+  classical
+  intro D0 B E Active T
+  let a := valuationUniformizerConeDirections v n pi hp
+  let base : valuationOrderedDiagonalSubmonoid v n :=
+    Finset.univ.prod (fun i => a i ^ B i)
+  let beta (i : Fin n) := if (pat i).val < R then (0 : Complex) else alpha i
+  let w (i : Fin n) := i.val + 1
+  have hW (i : Fin n) : 0 < w i := Nat.succ_pos _
+  let op := P.orderedDiagonalOperators v n r hr rho
+  let d := Module.finrank Complex (LinearMap.range P.proj)
+  let c (i : Fin n) := (op (a i)).charpoly.coeff
+  let D : Polynomial Complex := Finset.univ.prod (fun i =>
+    (Finset.range (d + 1)).sum (fun j => Polynomial.C (c i j * beta i ^ (d - j)) *
+      Polynomial.X ^ (w i * (d - j))))
+  let F0 (z : Complex) (e : Fin n -> Nat) :=
+    ell (rho ((valuationDiagonalSection F n
+      (base * Finset.univ.prod (fun i => a i ^ e i)).val).val) u) *
+      Finset.univ.prod (fun i => beta i ^ e i) * z ^ E e
+  have hProd (e : Fin n -> Nat) : (Finset.univ.prod (fun i => a i ^ e i)).val =
+      valuationUniformizerGapDiagonal n pi e := by
+    change (valuationOrderedDiagonalSubmonoid v n).subtype (Finset.univ.prod (fun i => a i ^ e i)) = _
+    rw [map_prod]
+    refine Finset.prod_congr rfl (fun i _ => ?_)
+    exact map_pow (valuationOrderedDiagonalSubmonoid v n).subtype (a i) (e i)
+  have hDiag (e : Fin n -> Nat) :
+      (base * Finset.univ.prod (fun i => a i ^ e i)).val =
+        valuationUniformizerGapDiagonal n pi (fun i => B i + e i) := by
+    change base.val * (Finset.univ.prod (fun i => a i ^ e i)).val = _
+    rw [hProd e]
+    change (Finset.univ.prod (fun i => a i ^ B i)).val * valuationUniformizerGapDiagonal n pi e = _
+    rw [hProd B]
+    simp only [valuationUniformizerGapDiagonal, pow_add, Finset.prod_mul_distrib]
+  have hF (z : Complex) (e : Fin n -> Nat) :
+      F0 z e = if Active e then T z e else 0 := by
+    unfold F0
+    rw [hDiag]
+    have hMask := masked_gap_weights n R pat alpha e
+    change Finset.univ.prod (fun i => beta i ^ e i) =
+      (if Active e then Finset.univ.prod (fun i => alpha i ^ e i) else 0) at hMask
+    rw [hMask]
+    by_cases he : Active e
+    . simp only [if_pos he, T]
+    . simp only [if_neg he, mul_zero, zero_mul]
+  have h := valuationPrincipalCongruence_diagonalCone_series_mul_powers_near_zero
+    v n r hr rho P n a w hW beta base ell hEll u hU
+  choose M hM using h
+  choose N hn using hM.2
+  have hLead (i : Fin n) : c i d = 1 := by
+    change (op (a i)).charpoly.coeff d = 1
+    have hDeg : (op (a i)).charpoly.natDegree = d := LinearMap.charpoly_natDegree (op (a i))
+    rw [<- hDeg]
+    exact LinearMap.charpoly_monic _
+  have hFct := masked_characteristic_denominator_factor n d w hW c hLead alpha
+    (fun i => (pat i).val < R)
+  choose J hJ using hFct
+  have hD0 : D0.eval 0 = 1 := hJ.1
+  have hDecomp : D0 = J * D := hJ.2
+  refine Exists.intro M (Exists.intro (J * N) (And.intro hM.1 (And.intro hD0 ?_)))
+  intro z hz
+  have hSum : Summable (F0 z) := hn.2.1 z hz
+  have hF0 : D.eval z * tsum (F0 z) = N.eval z := hn.2.2 z hSum
+  have hFace : Summable (fun e : {e : Fin n -> Nat // Active e} => T z e.val) :=
+    (hSum.comp_injective Subtype.val_injective).congr
+      (fun e => (hF z e.val).trans (if_pos e.property))
+  have hTsum : tsum (fun e : {e : Fin n -> Nat // Active e} => T z e.val) = tsum (F0 z) := by
+    let S := Set.ofPred Active
+    change tsum (fun e : S => T z e.val) = _
+    exact (tsum_subtype S (T z)).trans (tsum_congr (fun e => by
+      change S.indicator (T z) e = F0 z e
+      rw [hF]
+      by_cases he : Active e
+      . have hm : Membership.mem S e := he
+        rw [Set.indicator_of_mem hm, if_pos he]
+      . have hn : Not (Membership.mem S e) := he
+        rw [Set.indicator_of_notMem hn, if_neg he]))
+  exact And.intro hFace (by rw [hDecomp, Polynomial.eval_mul, mul_assoc, hTsum, hF0, Polynomial.eval_mul])
+
+private theorem heckeLocal_cartanPattern_pair_commonDenominator
+    {K V : Type*} [Field K] [NumberField K] [AddCommGroup V] [Module Complex V]
+    [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    (p : HeightOneSpectrum (RingOfIntegers K))
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    (n R T : Nat) (hR : 0 < R) (hT : 0 < T) (pi : Units (p.adicCompletion K))
+    (hPi : Valued.v (pi : p.adicCompletion K) = finiteUniformizerValue)
+    (hLt : Valued.v (pi : p.adicCompletion K) < 1)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))))
+    [mu.IsHaarMeasure]
+    (rho : MonoidHom (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))) (Module.End Complex V))
+    (P : HeckeLocalSubgroupAverage rho
+      (valuationPrincipalCongruenceSubgroup Valued.v n (Valued.v (pi : p.adicCompletion K) ^ R)))
+    [FiniteDimensional Complex (LinearMap.range P.proj)]
+    (ell : LinearMap (RingHom.id Complex) V Complex) (u : V)
+    (phi : (Fin n -> Fin n -> p.adicCompletion K) -> Complex) :
+    let L := p.adicCompletion K
+    let G := Units (Matrix (Fin n) (Fin n) L)
+    let v : Valuation L (WithZero (Multiplicative Int)) := Valued.v
+    let C := valuationIntegralMatrixSubgroup v n
+    let U := valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R)
+    let hRad : v pi.val ^ R < 1 := (pow_lt_one_iff_of_nonneg (zero_le : 0 <= v pi.val) hR.ne').mpr hLt
+    let alpha (i : Fin n) : Complex :=
+      ((Inv.inv (norm pi.val) : Real) : Complex) ^ ((i.val + 1) * (n - (i.val + 1)))
+    let Q := valuationUniformizerConeDenominator v n (v pi.val ^ R) hRad rho P pi hLt.le alpha
+    let d (g : Fin n -> Nat) := (valuationDiagonalSection L n (valuationUniformizerGapDiagonal n pi g)).val
+    let D (g : Fin n -> Nat) := valuationIntegralDiagonalDoubleCoset v n (valuationUniformizerGapDiagonal n pi g)
+    let E (g : Fin n -> Nat) := Finset.univ.sum (fun i => (i.val + 1) * g i)
+    let f (g : G) := phi (fun i j => g.val i j) * ell (rho g u)
+    (forall (h : U) (x : V), ell (rho h.val x) = ell x) ->
+    (forall h : U, rho h.val u = u) ->
+    (forall X Y : Fin n -> Fin n -> L, (forall i j, v (X i j) <= 1) ->
+      (forall i j, v (Y i j - X i j) <= v pi.val ^ T) -> phi Y = phi X) ->
+    mu (C : Set G) = 1 ->
+    forall (pat : Fin n -> Fin (T + 1)) (l k : C),
+      let A := {e : Fin n -> Nat // forall i, (pat i).val < T -> e i = 0}
+      let b (i : Fin n) := (pat i).val
+      let F (z : Complex) (e : A) :=
+        z ^ E (b + e.val) * ((mu (D (b + e.val))).toReal : Complex) *
+          f (l.val * d (b + e.val) * k.val)
+      exists M : Real, exists N : Polynomial Complex,
+        And (1 <= M) (And (Q.eval 0 = 1)
+          (forall z : Complex, M * norm z < 1 ->
+            And (Summable (F z)) (Q.eval z * tsum (F z) = N.eval z))) := by
+  intro L G v C U hRad alpha Q d D E f hEll hU hMod hNorm pat l k A b F
+  let ell' := ell.comp (rho l.val)
+  let u' := rho k.val u
+  have hL := (principalCongruence_translated_fixed_pair v n (v pi.val ^ R)
+    rho ell u hEll hU l).1
+  have hK := (principalCongruence_translated_fixed_pair v n (v pi.val ^ R)
+    rho ell u hEll hU k).2
+  let G0 (z : Complex) (e : A) :=
+    ell' (rho (d (b + e.val)) u') * Finset.univ.prod (fun i => alpha i ^ e.val i) * z ^ E e.val
+  have hCone := masked_uniformizerCone_commonDenominator v n T (v pi.val ^ R) hRad rho P
+    pi hLt.le pat alpha ell' u' hL hK
+  choose M N hQ using hCone
+  let base := l.val * d b * k.val
+  let ph := phi (fun i j => base.val i j)
+  let factor : Complex := ((mu (D b)).toReal : Complex) * ph
+  let poly := Polynomial.C factor * Polynomial.X ^ E b * N
+  refine Exists.intro M (Exists.intro poly (And.intro hQ.1 (And.intro hQ.2.1 ?_)))
+  intro z hz
+  have hz0 := hQ.2.2 z hz
+  have hSum : Summable (G0 z) := hz0.1
+  have hRat : Q.eval z * tsum (G0 z) = N.eval z := hz0.2
+  have hUnion : Set.iUnion D = Set.ofPred (fun g : G => forall i j, v (g.val i j) <= 1) :=
+    iUnion_heckeLocal_valuationUniformizerGapDoubleCosets p n pi hPi
+  have hBaseMem : Membership.mem (D b) base := by
+    have hSet : D b = DoubleCoset.doubleCoset (d b) (C : Set G) (C : Set G) :=
+      valuationIntegralDiagonalDoubleCoset_eq_doubleCoset v n (valuationUniformizerGapDiagonal n pi b)
+    rw [hSet]
+    exact DoubleCoset.mem_doubleCoset.mpr (Exists.intro l.val
+      (And.intro l.property (Exists.intro k.val (And.intro k.property rfl))))
+  have hBase (i j : Fin n) : v (base.val i j) <= 1 := by
+    have h := Set.mem_iUnion_of_mem b hBaseMem
+    rw [hUnion] at h
+    exact h i j
+  have hl (i j : Fin n) : v (l.val.val i j) <= 1 :=
+    ((mem_valuationIntegralMatrixSubgroup_iff v n l.val).mp l.property).1 i j
+  have hk (i j : Fin n) : v (k.val.val i j) <= 1 :=
+    ((mem_valuationIntegralMatrixSubgroup_iff v n k.val).mp k.property).1 i j
+  have hTerm (e : A) : F z e = (factor * z ^ E b) * G0 z e := by
+    have hCut (i : Fin n) : min T ((b + e.val) i) = min T (b i) := by
+      have he := ((gapPatternFiber_equiv_zeroInactive n T pat).symm e).property i
+      change min T ((b + e.val) i) = b i at he
+      exact he.trans (min_eq_right (Nat.le_of_lt_succ (pat i).isLt)).symm
+    have hDiag : forall i j, v ((d (b + e.val)).val i j - (d b).val i j) <= v pi.val ^ T :=
+      valuationUniformizerGapDiagonal_congruent_of_min_gaps v n T pi hLt.le _ _ hCut
+    have hPhi : phi (fun i j => (l.val * d (b + e.val) * k.val).val i j) = ph := by
+      apply hMod _ _ hBase
+      exact valuation_integral_matrix_multipliers_preserve_congruence v n (v pi.val ^ T)
+        l.val.val (d (b + e.val)).val (d b).val k.val.val hl hk hDiag
+    have hSupport (i : Fin n) : 0 < (b + e.val) i <-> 0 < b i :=
+      (positiveGap_iff_of_min_gaps n T hT _ _ hCut) i
+    have hVol : ((mu (D (b + e.val))).toReal : Complex) = ((mu (D b)).toReal : Complex) *
+        Finset.univ.prod (fun i => alpha i ^ e.val i) :=
+      cartan_gapVolume_add_of_positiveGaps p n pi mu b e.val hPi hLt hNorm hSupport
+    have hE : E (b + e.val) = E b + E e.val := by
+      simp only [E, Pi.add_apply, Nat.mul_add, Finset.sum_add_distrib]
+    unfold F f
+    rw [hE, pow_add, hVol, hPhi]
+    simp only [G0, factor, ell', u', map_mul, Module.End.mul_apply, LinearMap.comp_apply]
+    ac_rfl
+  have hSumF : Summable (F z) := (hSum.mul_left (factor * z ^ E b)).congr (fun e => (hTerm e).symm)
+  have hTF : tsum (F z) = (factor * z ^ E b) * tsum (G0 z) :=
+    (tsum_congr hTerm).trans (hSum.tsum_mul_left _)
+  refine And.intro hSumF ?_
+  rw [hTF, mul_left_comm, hRat]
+  simp only [poly, Polynomial.eval_mul, Polynomial.eval_pow, Polynomial.eval_C, Polynomial.eval_X]
+
+private theorem finite_family_rational_series_sharedDenominator
+    {I A : Type*} [Fintype I] (Q : Polynomial Complex) (u : I -> Complex -> A -> Complex)
+    (h : forall i, exists M : Real, exists N : Polynomial Complex,
+      And (1 <= M) (forall z : Complex, M * norm z < 1 ->
+        And (Summable (u i z)) (Q.eval z * tsum (u i z) = N.eval z))) :
+    exists M : Real, exists N : Polynomial Complex,
+      And (1 <= M) (forall z : Complex, M * norm z < 1 ->
+        And (forall i, Summable (u i z))
+          (And (Summable (fun a => Finset.univ.sum (fun i => u i z a)))
+            (Q.eval z * tsum (fun a => Finset.univ.sum (fun i => u i z a)) = N.eval z))) := by
+  classical
+  choose M N hN using h
+  let B := 1 + Finset.univ.sum M
+  have hM (i : I) : M i <= B :=
+    (Finset.single_le_sum (fun j _ => zero_le_one.trans (hN j).1) (Finset.mem_univ i)).trans
+      (le_add_of_nonneg_left zero_le_one)
+  have hB : 1 <= B := le_add_of_nonneg_right
+    (Finset.sum_nonneg (fun i _ => zero_le_one.trans (hN i).1))
+  refine Exists.intro B (Exists.intro (Finset.univ.sum N) (And.intro hB ?_))
+  intro z hz
+  have hEach (i : I) := (hN i).2 z
+    ((mul_le_mul_of_nonneg_right (hM i) (norm_nonneg z)).trans_lt hz)
+  refine And.intro (fun i => (hEach i).1) (And.intro (summable_sum (fun i _ => (hEach i).1)) ?_)
+  rw [Summable.tsum_finsetSum (fun i _ => (hEach i).1), Finset.mul_sum]
+  change _ = Polynomial.evalRingHom z (Finset.univ.sum N)
+  rw [map_sum]
+  exact Finset.sum_congr rfl (fun i _ => (hEach i).2)
+
+/-- Fixed vectors and functionals at depth `R` give the same denominator for
+every matrix test constant at a depth `T` with `R <= T`. The integral on the
+integral matrix locus converges absolutely for sufficiently small uniformizer
+weight. -/
+theorem heckeLocal_detWeightedIntegral_commonDenominator
+    {K V : Type*} [Field K] [NumberField K] [AddCommGroup V] [Module Complex V]
+    [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    (p : HeightOneSpectrum (RingOfIntegers K))
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    (n R T : Nat) (hR : 0 < R) (hDepth : R <= T) (pi : Units (p.adicCompletion K))
+    (hPi : Valued.v (pi : p.adicCompletion K) = finiteUniformizerValue)
+    (hLt : Valued.v (pi : p.adicCompletion K) < 1)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))))
+    [mu.IsHaarMeasure]
+    (rho : MonoidHom (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))) (Module.End Complex V))
+    (P : HeckeLocalSubgroupAverage rho
+      (valuationPrincipalCongruenceSubgroup Valued.v n (Valued.v (pi : p.adicCompletion K) ^ R)))
+    [FiniteDimensional Complex (LinearMap.range P.proj)]
+    (ell : LinearMap (RingHom.id Complex) V Complex) (u : V)
+    (phi : (Fin n -> Fin n -> p.adicCompletion K) -> Complex) :
+    let L := p.adicCompletion K
+    let G := Units (Matrix (Fin n) (Fin n) L)
+    let v : Valuation L (WithZero (Multiplicative Int)) := Valued.v
+    let C := valuationIntegralMatrixSubgroup v n
+    let Ufix := valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R)
+    let hRad : v pi.val ^ R < 1 := (pow_lt_one_iff_of_nonneg (zero_le : 0 <= v pi.val) hR.ne').mpr hLt
+    let alpha (i : Fin n) : Complex :=
+      ((Inv.inv (norm pi.val) : Real) : Complex) ^ ((i.val + 1) * (n - (i.val + 1)))
+    let Q := valuationUniformizerConeDenominator v n (v pi.val ^ R) hRad rho P pi hLt.le alpha
+    let f (g : G) := phi (fun i j => g.val i j) * ell (rho g u)
+    (forall (h : Ufix) (x : V), ell (rho h.val x) = ell x) ->
+    (forall h : Ufix, rho h.val u = u) ->
+    (forall X Y : Fin n -> Fin n -> L, (forall i j, v (X i j) <= 1) ->
+      (forall i j, v (Y i j - X i j) <= v pi.val ^ T) -> phi Y = phi X) ->
+    mu (C : Set G) = 1 ->
+    let S := Set.ofPred (fun g : G => forall i j, v (g.val i j) <= 1)
+    let Z (s : Complex) := (norm pi.val : Complex) ^ s
+    let F (s : Complex) (g : G) := (norm g.val.det : Complex) ^ s * f g
+    exists M : Real, exists N : Polynomial Complex,
+      And (1 <= M) (And (Q.eval 0 = 1)
+        (forall s : Complex, M * norm (Z s) < 1 ->
+          And (IntegrableOn (F s) S mu)
+            (Q.eval (Z s) * integral (mu.restrict S) (F s) = N.eval (Z s)))) := by
+  classical
+  intro L G v C Ufix hRad alpha Q f hEll hU hMod hNorm S Z F
+  have hT : 0 < T := hR.trans_le hDepth
+  let U := valuationPrincipalCongruenceSubgroup v n (v pi.val ^ T)
+  have hAnti : Antitone (fun k : Nat => v pi.val ^ k) := by
+    apply antitone_nat_of_succ_le
+    intro k
+    rw [pow_succ]
+    exact (mul_le_mul' le_rfl hLt.le).trans_eq (mul_one _)
+  have hSubU : U <= Ufix := valuationPrincipalCongruenceSubgroup_mono v n (hAnti hDepth)
+  have hEllT (h : U) (x : V) : ell (rho h.val x) = ell x :=
+    hEll (Subtype.mk h.val (hSubU h.property)) x
+  have hUT (h : U) : rho h.val u = u := hU (Subtype.mk h.val (hSubU h.property))
+  let d (g : Fin n -> Nat) := (valuationDiagonalSection L n (valuationUniformizerGapDiagonal n pi g)).val
+  let D (g : Fin n -> Nat) := valuationIntegralDiagonalDoubleCoset v n (valuationUniformizerGapDiagonal n pi g)
+  let E (g : Fin n -> Nat) := Finset.univ.sum (fun i => (i.val + 1) * g i)
+  let H := U.comap C.subtype
+  let Q0 := Quotient (QuotientGroup.leftRel H)
+  have hVO : IsOpen (v.integer : Set L) := Valued.isOpen_valuationSubring L
+  have hVC : IsCompact (v.integer : Set L) := isCompact_iff_compactSpace.mpr (compactSpace_heckeLocalIntegers p)
+  let _ : CompactSpace C := isCompact_iff_compactSpace.mp (isCompact_valuationIntegralMatrixSubgroup v n hVC)
+  have hVPowAux (j : Nat) : v (pi ^ j).val = v pi.val ^ j := by
+    induction j with
+    | zero =>
+      rw [pow_zero, pow_zero]
+      exact map_one v
+    | succ j ih =>
+      rw [pow_succ pi, Units.val_mul, map_mul, ih, pow_succ]
+  have hVPow := hVPowAux T
+  have hOpenU : IsOpen (U : Set G) := by
+    change IsOpen (valuationPrincipalCongruenceSubgroup v n (v pi.val ^ T) : Set G)
+    rw [<- hVPow]
+    exact isOpen_valuationPrincipalCongruenceSubgroup v n (pi ^ T) hVO
+  have hOpenH : IsOpen (H : Set C) := hOpenU.preimage continuous_subtype_val
+  let _ : Finite Q0 := H.quotient_finite_of_isOpen hOpenH
+  let _ : Fintype Q0 := Fintype.ofFinite Q0
+  let w := Inv.inv (Nat.card Q0 : Real)
+  let B := Fin n -> Fin (T + 1)
+  let O (pat : B) := {e : Fin n -> Nat // forall i, (pat i).val < T -> e i = 0}
+  let Gaps (pat : B) (e : O pat) := fun i => (pat i).val + e.val i
+  let term (pat : B) (q : Prod Q0 Q0) (z : Complex) (e : O pat) :=
+    z ^ E (Gaps pat e) * ((mu (D (Gaps pat e))).toReal : Complex) *
+      f (q.1.out.val * d (Gaps pat e) * q.2.out.val)
+  have hAt (pat : B) (q : Prod Q0 Q0) :
+      exists M : Real, exists N : Polynomial Complex,
+        And (1 <= M) (And (Q.eval 0 = 1)
+          (forall z : Complex, M * norm z < 1 ->
+            And (Summable (term pat q z)) (Q.eval z * tsum (term pat q z) = N.eval z))) :=
+    heckeLocal_cartanPattern_pair_commonDenominator p n R T hR hT pi hPi hLt mu
+      rho P ell u phi hEll hU hMod hNorm pat q.1.out q.2.out
+  have hQ0 : Q.eval 0 = 1 := by
+    let pat0 : B := fun _ => Fin.mk 0 (Nat.zero_lt_succ T)
+    let q0 : Q0 := Quotient.mk _ (1 : C)
+    have h := hAt pat0 (Prod.mk q0 q0)
+    choose MM NN hh using h
+    exact hh.2.1
+  have hp (pat : B) := finite_family_rational_series_sharedDenominator Q (term pat)
+    (fun q => by
+      have h := hAt pat q
+      choose M N hN using h
+      exact Exists.intro M (Exists.intro N (And.intro hN.1 hN.2.2)))
+  choose M0 N0 hQ1 using hp
+  let g (pat : B) (z : Complex) :=
+    (w : Complex) ^ 2 * tsum (fun e => Finset.univ.sum (fun q => term pat q z e))
+  let poly (pat : B) := Polynomial.C ((w : Complex) ^ 2) * N0 pat
+  let L0 := 1 + Finset.univ.sum M0
+  have hL (pat : B) : M0 pat <= L0 :=
+    (Finset.single_le_sum (fun j _ => zero_le_one.trans (hQ1 j).1) (Finset.mem_univ pat)).trans
+      (le_add_of_nonneg_left zero_le_one)
+  have hL0 : 1 <= L0 := le_add_of_nonneg_right
+    (Finset.sum_nonneg (fun j _ => zero_le_one.trans (hQ1 j).1))
+  refine Exists.intro L0 (Exists.intro (Finset.univ.sum poly) (And.intro hL0 (And.intro hQ0 ?_)))
+  intro s hs
+  let z := Z s
+  have hz0 (pat : B) : M0 pat * norm z < 1 :=
+    (mul_le_mul_of_nonneg_right (hL pat) (norm_nonneg z)).trans_lt hs
+  have hPat (pat : B) : Q.eval z * g pat z = (poly pat).eval z := by
+    unfold g poly
+    rw [mul_left_comm, ((hQ1 pat).2 z (hz0 pat)).2.2, Polynomial.eval_mul, Polynomial.eval_C]
+  let _ : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  have hRow : IsOpenEmbedding (heckeLocalMatrixUnitEntries (I := Fin n) (F := L)) :=
+    isOpenEmbedding_heckeLocalMatrixUnitEntries
+  let _ : SecondCountableTopology G := hRow.isEmbedding.secondCountableTopology
+  have hCOpen := isOpen_valuationIntegralMatrixSubgroup v n hVO
+  have hCCompact := isCompact_valuationIntegralMatrixSubgroup v n hVC
+  have hUeq : H.map C.subtype = U :=
+    map_comap_principalCongruence_integralMatrixSubgroup v n (v pi.val ^ T)
+  have hMapOpen : IsOpen ((H.map C.subtype : Subgroup G) : Set G) := by
+    rw [hUeq]
+    exact hOpenU
+  have hCr := principalCongruence_normal_in_integralMatrixSubgroup v n (v pi.val ^ T)
+  have hUnion : Set.iUnion D = S := iUnion_heckeLocal_valuationUniformizerGapDoubleCosets p n pi hPi
+  have hSub (b : Fin n -> Nat) : D b <= S := by
+    intro x hx
+    rw [<- hUnion]
+    exact Set.mem_iUnion_of_mem b hx
+  have hDopen (b : Fin n -> Nat) : IsOpen (D b) :=
+    isOpen_valuationIntegralDiagonalDoubleCoset v n (valuationUniformizerGapDiagonal n pi b) hVO
+  have hDCompact (b : Fin n -> Nat) : IsCompact (D b) :=
+    isCompact_valuationIntegralDiagonalDoubleCoset v n (valuationUniformizerGapDiagonal n pi b) hVC
+  have hDSet (b : Fin n -> Nat) : D b = DoubleCoset.doubleCoset (d b) (C : Set G) (C : Set G) :=
+    valuationIntegralDiagonalDoubleCoset_eq_doubleCoset v n (valuationUniformizerGapDiagonal n pi b)
+  have hUnweighted (b : Fin n -> Nat) :
+      And (IntegrableOn f (D b) mu)
+        (integral (mu.restrict (D b)) (fun x => norm (f x)) =
+          (mu (D b)).toReal * tsum (fun l : Q0 =>
+            w * tsum (fun r : Q0 => w * norm (f (l.out.val * d b * r.out.val))))) := by
+    rw [hDSet b]
+    refine integrableOn_and_integral_norm_cartanDoubleCoset mu C H hCCompact hCOpen hNorm
+      hCr (d b) f hMapOpen ?_ ?_ ?_
+    . rw [<- hDSet b]
+      exact hDCompact b
+    . intro x hx k hk
+      rw [<- hDSet b] at hx
+      have hkU : Membership.mem U k := by rw [<- hUeq]; exact hk
+      exact (local_test_coefficient_biinvariant v n (v pi.val ^ T) rho ell u hEllT hUT phi hMod
+        x (hSub b hx) (Subtype.mk k hkU)).1
+    . intro x hx k hk
+      rw [<- hDSet b] at hx
+      have hkU : Membership.mem U k := by rw [<- hUeq]; exact hk
+      exact (local_test_coefficient_biinvariant v n (v pi.val ^ T) rho ell u hEllT hUT phi hMod
+        x (hSub b hx) (Subtype.mk k hkU)).2
+  have hNormPow (m : Nat) : (((norm pi.val ^ m : Real) : Complex) ^ s) = z ^ m := by
+    induction m with
+    | zero => simp
+    | succ m ih =>
+      rw [pow_succ (norm pi.val), Complex.ofReal_mul,
+        Complex.mul_cpow_ofReal_nonneg (pow_nonneg (norm_nonneg _) _) (norm_nonneg _), ih]
+      exact (pow_succ z m).symm
+  have hScaled (b : Fin n -> Nat) (x : G) (hx : Membership.mem (D b) x) :
+      F s x = z ^ E b * f x := by
+    have hh := norm_det_of_mem_heckeLocal_valuationUniformizerGapDoubleCoset p n pi b x hx
+    change (norm x.val.det : Complex) ^ s * f x = _
+    rw [hh, hNormPow]
+  have hIntD (b : Fin n -> Nat) : IntegrableOn (F s) (D b) mu :=
+    (integrableOn_congr_fun (hScaled b) (hDopen b).measurableSet).mpr
+      ((hUnweighted b).1.const_mul (z ^ E b))
+  let Tnorm (b : Fin n -> Nat) := integral (mu.restrict (D b)) (fun x => norm (F s x))
+  have hIntegralNorm (b : Fin n -> Nat) :
+      Tnorm b = w ^ 2 * Finset.univ.sum (fun q : Prod Q0 Q0 =>
+        norm (z ^ E b * ((mu (D b)).toReal : Complex) * f (q.1.out.val * d b * q.2.out.val))) := by
+    have hNormF (x : G) (hx : Membership.mem (D b) x) :
+        norm (F s x) = norm (z ^ E b) * norm (f x) := by rw [hScaled b x hx, norm_mul]
+    have hInner (l : Q0) :
+        tsum (fun r : Q0 => w * norm (f (l.out.val * d b * r.out.val))) =
+          w * Finset.univ.sum (fun r : Q0 => norm (f (l.out.val * d b * r.out.val))) := by
+      rw [tsum_fintype, Finset.mul_sum]
+    unfold Tnorm
+    rw [setIntegral_congr_fun (hDopen b).measurableSet hNormF, integral_const_mul, (hUnweighted b).2]
+    simp only [hInner, tsum_fintype, <- Finset.mul_sum, <- mul_assoc]
+    rw [<- Finset.univ_product_univ, Finset.sum_product]
+    simp only [norm_mul, Complex.norm_real, Real.norm_eq_abs,
+      abs_of_nonneg ENNReal.toReal_nonneg, <- Finset.mul_sum, pow_two]
+    ac_rfl
+  have hAbs : Summable Tnorm := by
+    refine summable_nonneg_of_truncatedGapPartition n T Tnorm (fun _ =>
+      integral_nonneg (fun _ => norm_nonneg _)) ?_
+    intro pat
+    have hEach (q : Prod Q0 Q0) : Summable (fun e : O pat => norm (term pat q z e)) :=
+      summable_norm_iff.mpr (((hQ1 pat).2 z (hz0 pat)).1 q)
+    have hAll : Summable (fun e : O pat => Finset.univ.sum (fun q => norm (term pat q z e))) :=
+      summable_sum (fun q _ => hEach q)
+    exact (hAll.mul_left (w ^ 2)).congr (fun e => (hIntegralNorm (Gaps pat e)).symm)
+  have hInt : IntegrableOn (F s) S mu := by
+    rw [<- hUnion]
+    exact integrableOn_iUnion_of_summable_integral_norm hIntD hAbs
+  refine And.intro hInt ?_
+  have hEll0 : forall (h : valuationPrincipalCongruenceSubgroup v n (v (pi ^ T).val)) (x : V),
+      ell (rho h.val x) = ell x := by rw [hVPow]; exact hEllT
+  have hU0 : forall (h : valuationPrincipalCongruenceSubgroup v n (v (pi ^ T).val)), rho h.val u = u := by
+    rw [hVPow]; exact hUT
+  have hMod0 : forall X Y : Fin n -> Fin n -> L, (forall i j, v (X i j) <= 1) ->
+      (forall i j, v (Y i j - X i j) <= v (pi ^ T).val) -> phi Y = phi X := by rw [hVPow]; exact hMod
+  let Series (b : Fin n -> Nat) := z ^ E b * ((mu (D b)).toReal : Complex) *
+    tsum (fun l : Q0 => (w : Complex) * tsum (fun r : Q0 => (w : Complex) * f (l.out.val * d b * r.out.val)))
+  have hSum : HasSum Series (integral (mu.restrict S) (F s)) := by
+    have h := hasSum_heckeLocal_detWeightedIntegral_finiteCartanAverages p n pi (pi ^ T)
+      hPi mu rho ell u phi s hEll0 hU0 hMod0 hNorm hInt
+    rw [hVPow] at h
+    simpa only [Series, Complex.real_smul, mul_assoc] using h
+  have hTerm (pat : B) (e : O pat) :
+      Series (Gaps pat e) = (w : Complex) ^ 2 * Finset.univ.sum (fun q : Prod Q0 Q0 => term pat q z e) := by
+    have hInner (l : Q0) :
+        tsum (fun r : Q0 => (w : Complex) * f (l.out.val * d (Gaps pat e) * r.out.val)) =
+          (w : Complex) * Finset.univ.sum (fun r : Q0 => f (l.out.val * d (Gaps pat e) * r.out.val)) := by
+      rw [tsum_fintype, Finset.mul_sum]
+    unfold Series
+    simp only [hInner, tsum_fintype, <- Finset.mul_sum, <- mul_assoc]
+    rw [<- Finset.univ_product_univ, Finset.sum_product]
+    simp only [term, <- Finset.mul_sum]
+    rw [pow_two]
+    ac_rfl
+  have hTotal : integral (mu.restrict S) (F s) = Finset.univ.sum (fun pat : B => g pat z) := by
+    rw [<- hSum.tsum_eq, tsum_truncatedGapPartition n T Series hSum.summable]
+    apply Finset.sum_congr rfl
+    intro pat _
+    change tsum (fun e : O pat => Series (Gaps pat e)) = g pat z
+    exact (tsum_congr (hTerm pat)).trans (((hQ1 pat).2 z (hz0 pat)).2.1.tsum_mul_left _)
+  rw [hTotal, Finset.mul_sum]
+  change _ = Polynomial.evalRingHom z (Finset.univ.sum poly)
+  rw [map_sum]
+  exact Finset.sum_congr rfl (fun pat _ => hPat pat)
+
 /-- For a congruence-constant test and a coefficient fixed at the same depth,
 the finite-place determinant-weighted integral on the integral matrix locus
 converges absolutely for sufficiently small uniformizer weight and equals a
@@ -662,188 +944,16 @@ theorem heckeLocal_detWeightedIntegral_integrable_rational
         (forall s : Complex, M * norm (Z s) < 1 ->
           And (IntegrableOn (F s) S mu)
             (Q.eval (Z s) * integral (mu.restrict S) (F s) = N.eval (Z s)))) := by
-  classical
   intro L G v C U f hEll hU hMod hNorm S Z F
-  let d (g : Fin n -> Nat) := (valuationDiagonalSection L n (valuationUniformizerGapDiagonal n pi g)).val
-  let D (g : Fin n -> Nat) := valuationIntegralDiagonalDoubleCoset v n (valuationUniformizerGapDiagonal n pi g)
-  let E (g : Fin n -> Nat) := Finset.univ.sum (fun i => (i.val + 1) * g i)
-  let H := U.comap C.subtype
-  let Q0 := Quotient (QuotientGroup.leftRel H)
-  have hVO : IsOpen (v.integer : Set L) := Valued.isOpen_valuationSubring L
-  have hVC : IsCompact (v.integer : Set L) := isCompact_iff_compactSpace.mpr (compactSpace_heckeLocalIntegers p)
-  let _ : CompactSpace C := isCompact_iff_compactSpace.mp (isCompact_valuationIntegralMatrixSubgroup v n hVC)
-  have hVPowAux (j : Nat) : v (pi ^ j).val = v pi.val ^ j := by
-    induction j with
-    | zero =>
-      rw [pow_zero, pow_zero]
-      exact map_one v
-    | succ j ih =>
-      rw [pow_succ pi, Units.val_mul, map_mul, ih, pow_succ]
-  have hVPow := hVPowAux R
-  have hOpenU : IsOpen (U : Set G) := by
-    change IsOpen (valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R) : Set G)
-    rw [<- hVPow]
-    exact isOpen_valuationPrincipalCongruenceSubgroup v n (pi ^ R) hVO
-  have hOpenH : IsOpen (H : Set C) := hOpenU.preimage continuous_subtype_val
-  let _ : Finite Q0 := H.quotient_finite_of_isOpen hOpenH
-  let _ : Fintype Q0 := Fintype.ofFinite Q0
-  let w := Inv.inv (Nat.card Q0 : Real)
-  let B := Fin n -> Fin (R + 1)
-  let O (pat : B) := {e : Fin n -> Nat // forall i, (pat i).val < R -> e i = 0}
-  let Gaps (pat : B) (e : O pat) := fun i => (pat i).val + e.val i
-  let term (pat : B) (q : Prod Q0 Q0) (z : Complex) (e : O pat) :=
-    z ^ E (Gaps pat e) * ((mu (D (Gaps pat e))).toReal : Complex) *
-      f (q.1.out.val * d (Gaps pat e) * q.2.out.val)
-  have hp (pat : B) := finite_family_rational_series (term pat)
-    (fun q => heckeLocal_cartanPattern_pair_rational p n R hR pi hPi hLt mu
-      rho P ell u phi hEll hU hMod hNorm pat q.1.out q.2.out)
-  choose M0 N0 Q1 hQ1 using hp
-  let g (pat : B) (z : Complex) :=
-    (w : Complex) ^ 2 * tsum (fun e => Finset.univ.sum (fun q => term pat q z e))
-  have hPat (pat : B) (_ : Membership.mem (Finset.univ : Finset B) pat) :
-      exists M : Real, exists N Q : Polynomial Complex,
-        And (1 <= M) (And (Q.eval 0 = 1)
-          (forall z : Complex, M * norm z < 1 -> Q.eval z * g pat z = N.eval z)) := by
-    refine Exists.intro (M0 pat) (Exists.intro (Polynomial.C ((w : Complex) ^ 2) * N0 pat)
-      (Exists.intro (Q1 pat) (And.intro (hQ1 pat).1 (And.intro (hQ1 pat).2.1 ?_))))
-    intro z hz
-    unfold g
-    rw [mul_left_comm, ((hQ1 pat).2.2 z hz).2.2, Polynomial.eval_mul, Polynomial.eval_C]
-  have hComb := exists_common_rational_denominator_finset Finset.univ g hPat
-  choose M1 N Q hQ using hComb
-  let L0 := 1 + Finset.univ.sum M0
-  have hL (pat : B) : M0 pat <= L0 :=
-    (Finset.single_le_sum (fun j _ => zero_le_one.trans (hQ1 j).1) (Finset.mem_univ pat)).trans
-      (le_add_of_nonneg_left zero_le_one)
-  refine Exists.intro (max L0 M1) (Exists.intro N (Exists.intro Q
-    (And.intro (hQ.1.trans (le_max_right _ _)) (And.intro hQ.2.1 ?_))))
-  intro s hs
-  let z := Z s
-  have hz1 : M1 * norm z < 1 :=
-    (mul_le_mul_of_nonneg_right (le_max_right L0 M1) (norm_nonneg z)).trans_lt hs
-  have hz0 (pat : B) : M0 pat * norm z < 1 :=
-    (mul_le_mul_of_nonneg_right ((hL pat).trans (le_max_left L0 M1)) (norm_nonneg z)).trans_lt hs
-  let _ : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
-  have hRow : IsOpenEmbedding (heckeLocalMatrixUnitEntries (I := Fin n) (F := L)) :=
-    isOpenEmbedding_heckeLocalMatrixUnitEntries
-  let _ : SecondCountableTopology G := hRow.isEmbedding.secondCountableTopology
-  have hCOpen := isOpen_valuationIntegralMatrixSubgroup v n hVO
-  have hCCompact := isCompact_valuationIntegralMatrixSubgroup v n hVC
-  have hUeq : H.map C.subtype = U :=
-    map_comap_principalCongruence_integralMatrixSubgroup v n (v pi.val ^ R)
-  have hMapOpen : IsOpen ((H.map C.subtype : Subgroup G) : Set G) := by
-    rw [hUeq]
-    exact hOpenU
-  have hCr := principalCongruence_normal_in_integralMatrixSubgroup v n (v pi.val ^ R)
-  have hUnion : Set.iUnion D = S := iUnion_heckeLocal_valuationUniformizerGapDoubleCosets p n pi hPi
-  have hSub (b : Fin n -> Nat) : D b <= S := by
-    intro x hx
-    rw [<- hUnion]
-    exact Set.mem_iUnion_of_mem b hx
-  have hDopen (b : Fin n -> Nat) : IsOpen (D b) :=
-    isOpen_valuationIntegralDiagonalDoubleCoset v n (valuationUniformizerGapDiagonal n pi b) hVO
-  have hDCompact (b : Fin n -> Nat) : IsCompact (D b) :=
-    isCompact_valuationIntegralDiagonalDoubleCoset v n (valuationUniformizerGapDiagonal n pi b) hVC
-  have hDSet (b : Fin n -> Nat) : D b = DoubleCoset.doubleCoset (d b) (C : Set G) (C : Set G) :=
-    valuationIntegralDiagonalDoubleCoset_eq_doubleCoset v n (valuationUniformizerGapDiagonal n pi b)
-  have hUnweighted (b : Fin n -> Nat) :
-      And (IntegrableOn f (D b) mu)
-        (integral (mu.restrict (D b)) (fun x => norm (f x)) =
-          (mu (D b)).toReal * tsum (fun l : Q0 =>
-            w * tsum (fun r : Q0 => w * norm (f (l.out.val * d b * r.out.val))))) := by
-    rw [hDSet b]
-    refine integrableOn_and_integral_norm_cartanDoubleCoset mu C H hCCompact hCOpen hNorm
-      hCr (d b) f hMapOpen ?_ ?_ ?_
-    . rw [<- hDSet b]
-      exact hDCompact b
-    . intro x hx k hk
-      rw [<- hDSet b] at hx
-      have hkU : Membership.mem U k := by rw [<- hUeq]; exact hk
-      exact (local_test_coefficient_biinvariant v n (v pi.val ^ R) rho ell u hEll hU phi hMod
-        x (hSub b hx) (Subtype.mk k hkU)).1
-    . intro x hx k hk
-      rw [<- hDSet b] at hx
-      have hkU : Membership.mem U k := by rw [<- hUeq]; exact hk
-      exact (local_test_coefficient_biinvariant v n (v pi.val ^ R) rho ell u hEll hU phi hMod
-        x (hSub b hx) (Subtype.mk k hkU)).2
-  have hNormPow (m : Nat) : (((norm pi.val ^ m : Real) : Complex) ^ s) = z ^ m := by
-    induction m with
-    | zero => simp
-    | succ m ih =>
-      rw [pow_succ (norm pi.val), Complex.ofReal_mul,
-        Complex.mul_cpow_ofReal_nonneg (pow_nonneg (norm_nonneg _) _) (norm_nonneg _), ih]
-      exact (pow_succ z m).symm
-  have hScaled (b : Fin n -> Nat) (x : G) (hx : Membership.mem (D b) x) :
-      F s x = z ^ E b * f x := by
-    have hh := norm_det_of_mem_heckeLocal_valuationUniformizerGapDoubleCoset p n pi b x hx
-    change (norm x.val.det : Complex) ^ s * f x = _
-    rw [hh, hNormPow]
-  have hIntD (b : Fin n -> Nat) : IntegrableOn (F s) (D b) mu :=
-    (integrableOn_congr_fun (hScaled b) (hDopen b).measurableSet).mpr
-      ((hUnweighted b).1.const_mul (z ^ E b))
-  let Tnorm (b : Fin n -> Nat) := integral (mu.restrict (D b)) (fun x => norm (F s x))
-  have hIntegralNorm (b : Fin n -> Nat) :
-      Tnorm b = w ^ 2 * Finset.univ.sum (fun q : Prod Q0 Q0 =>
-        norm (z ^ E b * ((mu (D b)).toReal : Complex) * f (q.1.out.val * d b * q.2.out.val))) := by
-    have hNormF (x : G) (hx : Membership.mem (D b) x) :
-        norm (F s x) = norm (z ^ E b) * norm (f x) := by rw [hScaled b x hx, norm_mul]
-    have hInner (l : Q0) :
-        tsum (fun r : Q0 => w * norm (f (l.out.val * d b * r.out.val))) =
-          w * Finset.univ.sum (fun r : Q0 => norm (f (l.out.val * d b * r.out.val))) := by
-      rw [tsum_fintype, Finset.mul_sum]
-    unfold Tnorm
-    rw [setIntegral_congr_fun (hDopen b).measurableSet hNormF, integral_const_mul, (hUnweighted b).2]
-    simp only [hInner, tsum_fintype, <- Finset.mul_sum, <- mul_assoc]
-    rw [<- Finset.univ_product_univ, Finset.sum_product]
-    simp only [norm_mul, Complex.norm_real, Real.norm_eq_abs,
-      abs_of_nonneg ENNReal.toReal_nonneg, <- Finset.mul_sum, pow_two]
-    ac_rfl
-  have hAbs : Summable Tnorm := by
-    refine summable_nonneg_of_truncatedGapPartition n R Tnorm (fun _ =>
-      integral_nonneg (fun _ => norm_nonneg _)) ?_
-    intro pat
-    have hEach (q : Prod Q0 Q0) : Summable (fun e : O pat => norm (term pat q z e)) :=
-      summable_norm_iff.mpr (((hQ1 pat).2.2 z (hz0 pat)).1 q)
-    have hAll : Summable (fun e : O pat => Finset.univ.sum (fun q => norm (term pat q z e))) :=
-      summable_sum (fun q _ => hEach q)
-    exact (hAll.mul_left (w ^ 2)).congr (fun e => (hIntegralNorm (Gaps pat e)).symm)
-  have hInt : IntegrableOn (F s) S mu := by
-    rw [<- hUnion]
-    exact integrableOn_iUnion_of_summable_integral_norm hIntD hAbs
-  refine And.intro hInt ?_
-  have hEll0 : forall (h : valuationPrincipalCongruenceSubgroup v n (v (pi ^ R).val)) (x : V),
-      ell (rho h.val x) = ell x := by rw [hVPow]; exact hEll
-  have hU0 : forall (h : valuationPrincipalCongruenceSubgroup v n (v (pi ^ R).val)), rho h.val u = u := by
-    rw [hVPow]; exact hU
-  have hMod0 : forall X Y : Fin n -> Fin n -> L, (forall i j, v (X i j) <= 1) ->
-      (forall i j, v (Y i j - X i j) <= v (pi ^ R).val) -> phi Y = phi X := by rw [hVPow]; exact hMod
-  let T (b : Fin n -> Nat) := z ^ E b * ((mu (D b)).toReal : Complex) *
-    tsum (fun l : Q0 => (w : Complex) * tsum (fun r : Q0 => (w : Complex) * f (l.out.val * d b * r.out.val)))
-  have hSum : HasSum T (integral (mu.restrict S) (F s)) := by
-    have h := hasSum_heckeLocal_detWeightedIntegral_finiteCartanAverages p n pi (pi ^ R)
-      hPi mu rho ell u phi s hEll0 hU0 hMod0 hNorm hInt
-    rw [hVPow] at h
-    simpa only [T, Complex.real_smul, mul_assoc] using h
-  have hTerm (pat : B) (e : O pat) :
-      T (Gaps pat e) = (w : Complex) ^ 2 * Finset.univ.sum (fun q : Prod Q0 Q0 => term pat q z e) := by
-    have hInner (l : Q0) :
-        tsum (fun r : Q0 => (w : Complex) * f (l.out.val * d (Gaps pat e) * r.out.val)) =
-          (w : Complex) * Finset.univ.sum (fun r : Q0 => f (l.out.val * d (Gaps pat e) * r.out.val)) := by
-      rw [tsum_fintype, Finset.mul_sum]
-    unfold T
-    simp only [hInner, tsum_fintype, <- Finset.mul_sum, <- mul_assoc]
-    rw [<- Finset.univ_product_univ, Finset.sum_product]
-    simp only [term, <- Finset.mul_sum]
-    rw [pow_two]
-    ac_rfl
-  have hTotal : integral (mu.restrict S) (F s) = Finset.univ.sum (fun pat : B => g pat z) := by
-    rw [<- hSum.tsum_eq, tsum_truncatedGapPartition n R T hSum.summable]
-    apply Finset.sum_congr rfl
-    intro pat _
-    change tsum (fun e : O pat => T (Gaps pat e)) = g pat z
-    exact (tsum_congr (hTerm pat)).trans (((hQ1 pat).2.2 z (hz0 pat)).2.1.tsum_mul_left _)
-  rw [hTotal]
-  exact hQ.2.2 z hz1
+  have hRad : v pi.val ^ R < 1 :=
+    (pow_lt_one_iff_of_nonneg (zero_le : 0 <= v pi.val) hR.ne').mpr hLt
+  let alpha (i : Fin n) : Complex :=
+    ((Inv.inv (norm pi.val) : Real) : Complex) ^ ((i.val + 1) * (n - (i.val + 1)))
+  let Q := valuationUniformizerConeDenominator v n (v pi.val ^ R) hRad rho P pi hLt.le alpha
+  have h := heckeLocal_detWeightedIntegral_commonDenominator p n R R hR le_rfl pi hPi hLt mu
+    rho P ell u phi hEll hU hMod hNorm
+  choose M N hQ using h
+  exact Exists.intro M (Exists.intro N (Exists.intro Q hQ))
 
 /-- For a congruence-constant test and a coefficient fixed at the same depth,
 the finite-place determinant-weighted integral on the integral matrix locus
