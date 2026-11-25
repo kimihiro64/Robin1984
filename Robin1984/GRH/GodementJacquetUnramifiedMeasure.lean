@@ -559,6 +559,153 @@ theorem map_heckeLocalDeterminantWeightedMeasure_mul_right (p : Place)
     unfold heckeLocalMatrixDeterminantWeight
     rw [hd, map_mul, mul_pow, ENNReal.coe_mul, mul_comm]
 
+private theorem map_matrixTranspose_pi
+    {I E : Type*} [Fintype I] [MeasurableSpace E] (mu : Measure E) [SigmaFinite mu] :
+    Measure.map (fun X : I -> I -> E => fun i j => X j i)
+      (Measure.pi (fun _ : I => Measure.pi (fun _ : I => mu))) =
+      Measure.pi (fun _ : I => Measure.pi (fun _ : I => mu)) := by
+  let nu := Measure.pi (fun _ : I => Measure.pi (fun _ : I => mu))
+  let omega := Measure.pi (fun _ : Prod I I => mu)
+  let encode (X : I -> I -> E) (p : Prod I I) := X p.1 p.2
+  let decode (x : Prod I I -> E) (i j : I) := x (Prod.mk i j)
+  let e := Equiv.prodComm I I
+  let swap := MeasurableEquiv.piCongrLeft (fun _ : Prod I I => E) e
+  have hmEncode : Measurable encode :=
+    measurable_pi_lambda _ (fun p => (measurable_pi_apply p.2).comp (measurable_pi_apply p.1))
+  have hmDecode : Measurable decode :=
+    measurable_pi_lambda _ (fun i => measurable_pi_lambda _ (fun j => measurable_pi_apply (Prod.mk i j)))
+  have hEncode : Measure.map encode nu = omega := by
+    symm
+    apply Measure.pi_eq
+    intro s hs
+    rw [Measure.map_apply hmEncode (MeasurableSet.pi Set.countable_univ (fun p _ => hs p))]
+    have hPre : Set.preimage encode (Set.pi Set.univ s) =
+        Set.pi Set.univ (fun i : I => Set.pi Set.univ (fun j : I => s (Prod.mk i j))) := by
+      ext X
+      simp only [Set.mem_preimage, Set.mem_pi, Set.mem_univ, true_implies, encode]
+      exact Iff.intro (fun h i j => h (Prod.mk i j)) (fun h p => h p.1 p.2)
+    rw [hPre]
+    change Measure.pi (fun _ : I => Measure.pi (fun _ : I => mu)) _ = _
+    simp only [Measure.pi_pi]
+    exact (Fintype.prod_prod_type (fun p : Prod I I => mu (s p))).symm
+  have hDecode : Measure.map decode omega = nu := by
+    rw [<- hEncode, Measure.map_map hmDecode hmEncode]
+    have hId : Function.comp decode encode = id := rfl
+    rw [hId, Measure.map_id]
+  have hSwap : MeasurePreserving swap omega omega := measurePreserving_piCongrLeft (fun _ => mu) e
+  have hTranspose : Function.comp decode (Function.comp swap encode) =
+      (fun X : I -> I -> E => fun i j => X j i) := by
+    funext X i j
+    change swap (encode X) (e (Prod.mk j i)) = encode X (Prod.mk j i)
+    exact @MeasurableEquiv.piCongrLeft_apply_apply (Prod I I) (Prod I I) e (fun _ => E)
+      (fun _ => inferInstance) (encode X) (Prod.mk j i)
+  change Measure.map (fun X : I -> I -> E => fun i j => X j i) nu = nu
+  rw [<- hTranspose, <- Measure.map_map hmDecode (swap.measurable.comp hmEncode),
+    <- Measure.map_map swap.measurable hmEncode, hEncode, hSwap.map_eq, hDecode]
+
+
+private def matrixTransposeCoordinatesEquiv {I E : Type*} [MeasurableSpace E] :
+    MeasurableEquiv (I -> I -> E) (I -> I -> E) := by
+  let flip (X : I -> I -> E) (i j : I) := X j i
+  have hf : Measurable flip :=
+    measurable_pi_lambda _ (fun i => measurable_pi_lambda _ (fun j =>
+      (measurable_pi_apply i).comp (measurable_pi_apply j)))
+  exact
+    { toFun := flip
+      invFun := flip
+      left_inv := fun _ => rfl
+      right_inv := fun _ => rfl
+      measurable_toFun := hf
+      measurable_invFun := hf }
+
+private theorem map_heckeLocalDeterminantWeightedMeasure_transpose (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I] :
+    Measure.map (matrixTransposeCoordinatesEquiv (I := I) (E := p.adicCompletion K))
+        (heckeLocalDeterminantWeightedMeasure p I) =
+      heckeLocalDeterminantWeightedMeasure p I := by
+  let mu := heckeLocalAdditiveMeasure p
+  let : SigmaFinite mu := by
+    exact sigmaFinite_heckeLocalAdditiveMeasure p
+  let e := matrixTransposeCoordinatesEquiv (I := I) (E := p.adicCompletion K)
+  unfold heckeLocalDeterminantWeightedMeasure
+  apply map_withDensity_eq_of_scaling e _ (heckeLocalMatrixDeterminantWeight p) 1
+  . rw [ENNReal.coe_one, one_smul]
+    exact map_matrixTranspose_pi mu
+  . intro X
+    rw [ENNReal.coe_one, one_mul]
+    have hTrans : Matrix.of (e X) = (Matrix.of X).transpose := rfl
+    unfold heckeLocalMatrixDeterminantWeight
+    rw [hTrans, Matrix.det_transpose]
+
+/-- Left multiplication by an invertible matrix preserves the
+determinant-weighted additive measure on local matrix coordinates. -/
+theorem map_heckeLocalDeterminantWeightedMeasure_mul_left (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I]
+    (m : Units (Matrix I I (p.adicCompletion K))) :
+    @Measure.map (I -> I -> p.adicCompletion K) (I -> I -> p.adicCompletion K) _ _
+      (fun X => @Mul.mul (Matrix I I (p.adicCompletion K)) inferInstance m.val (Matrix.of X))
+      (heckeLocalDeterminantWeightedMeasure p I) =
+      heckeLocalDeterminantWeightedMeasure p I := by
+  let L := p.adicCompletion K
+  let mt : Units (Matrix I I L) :=
+    { val := m.val.transpose
+      inv := m.inv.transpose
+      val_inv := by rw [<- Matrix.transpose_mul, m.inv_val, Matrix.transpose_one]
+      inv_val := by rw [<- Matrix.transpose_mul, m.val_inv, Matrix.transpose_one] }
+  let e := matrixTransposeCoordinatesEquiv (I := I) (E := L)
+  let right := heckeLocalRightMatrix p mt.val
+  let left (X : I -> I -> L) : I -> I -> L :=
+    @Mul.mul (Matrix I I L) inferInstance m.val (Matrix.of X)
+  let nu := heckeLocalDeterminantWeightedMeasure p I
+  have hRight : Measurable right := measurable_heckeLocalRightMatrix p mt.val
+  have hComp : Function.comp e (Function.comp right e) = left := by
+    funext X i j
+    change (Matrix.of (fun i j => X j i) * m.val.transpose) j i =
+      (m.val * Matrix.of X) i j
+    have hTrans : Matrix.of (fun i j => X j i) = (Matrix.of X).transpose := rfl
+    rw [hTrans, <- Matrix.transpose_mul]
+    rfl
+  have hT : Measure.map e nu = nu := map_heckeLocalDeterminantWeightedMeasure_transpose p
+  have hR : Measure.map right nu = nu := map_heckeLocalDeterminantWeightedMeasure_mul_right p mt
+  change Measure.map left nu = nu
+  calc
+    Measure.map left nu = Measure.map e (Measure.map right (Measure.map e nu)) := by
+      rw [Measure.map_map hRight e.measurable,
+        Measure.map_map e.measurable (hRight.comp e.measurable), hComp]
+    _ = nu := by rw [hT, hR, hT]
+
+/-- Singular matrices have zero determinant-weighted measure. -/
+theorem heckeLocalDeterminantWeightedMeasure_singular (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I] :
+    heckeLocalDeterminantWeightedMeasure p I
+      {X : I -> I -> p.adicCompletion K | (Matrix.of X).det = 0} = 0 := by
+  let L := p.adicCompletion K
+  let S := {X : I -> I -> L | (Matrix.of X).det = 0}
+  let mu := Measure.pi (fun _ : I => Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p))
+  let : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  have hMatrix : Continuous (fun X : I -> I -> L => Matrix.of X) :=
+    continuous_matrixOf.mpr continuous_id
+  have hC : Continuous (fun X : I -> I -> L => (Matrix.of X).det) := hMatrix.matrix_det
+  have hS : MeasurableSet S := (isClosed_eq hC continuous_const).measurableSet
+  change (mu.withDensity (heckeLocalMatrixDeterminantWeight p)) S = 0
+  rw [withDensity_apply _ hS]
+  have hZero : Filter.EventuallyEq (ae (mu.restrict S))
+      (heckeLocalMatrixDeterminantWeight p) (fun _ : I -> I -> L => (0 : ENNReal)) := by
+    filter_upwards [ae_restrict_mem hS] with X hX
+    change (Matrix.of X).det = 0 at hX
+    have hDim : Not (Fintype.card I = 0) := by
+      intro h
+      let : IsEmpty I := Fintype.card_eq_zero_iff.mp h
+      rw [Matrix.det_isEmpty] at hX
+      exact one_ne_zero hX
+    change ((Real.toNNReal (Inv.inv (norm (Matrix.of X).det)) ^ Fintype.card I : NNReal) :
+      ENNReal) = 0
+    rw [hX, norm_zero, inv_zero, Real.toNNReal_zero, zero_pow hDim, ENNReal.coe_zero]
+  rw [lintegral_congr_ae hZero, lintegral_zero]
+
 /-- On measurable sets of unit determinant norm, the determinant-weighted
 measure is the normalized product additive measure. -/
 theorem heckeLocalDeterminantWeightedMeasure_apply_of_detNorm_one (p : Place)
