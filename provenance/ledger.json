@@ -2541,6 +2541,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/TriangularContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Cauchy primitives, exponential integration of a logarithmic derivative, and bounds for Mellin transforms of the triangular remainder.",
+      "formalization_note": "A uniform square-root bound constructs a holomorphic nonvanishing continuation on the right half-plane without assuming prior continuation of the starting function.",
+      "content_basis": "Reviewed the compatible normalized primitives on nested balls, the residue subtraction in the Mellin identity, and the absolute-convergence hypotheses for the initial function.",
+      "dependency_status": "Mathlib complex analysis and Mellin transforms; the triangular remainder and its Mellin identity.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/TriangularMellin.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The Mellin kernel for the triangularly smoothed prime-power sum.",
