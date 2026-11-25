@@ -3,6 +3,7 @@ import Robin1984.GRH.DedekindMultiplicity
 import Robin1984.GRH.DirichletMultiplicity
 import Robin1984.GRH.DirichletMultiplicityArithmetic
 import Robin1984.GRH.GodementJacquetAdelicMatrixBounds
+import Robin1984.GRH.GodementJacquetAdelicProductTest
 import Robin1984.GRH.GodementJacquetCanonicalPrimePower
 import Robin1984.GRH.GodementJacquetCartanDoubleCosets
 import Robin1984.GRH.GodementJacquetCartanHaarVolume

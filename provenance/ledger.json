@@ -1695,6 +1695,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetAdelicProductTest.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The restricted product topology of finite adeles and the finite coset decomposition of compactly supported locally constant tests.",
+      "formalization_note": "Builds the finite adelic restricted product test from finitely many local factors and expands its product with a joint archimedean Schwartz test in principal matrix rectangles.",
+      "content_basis": "Uses a clopen subgroup for the outside integrality conditions, compact local support bounds, and the existing principal rectangle expansion.",
+      "dependency_status": "Uses Mathlib locally constant functions and the project finite adelic rectangle and matrix Poisson constructions.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetFiniteAdelicTestRectangles.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The compact-open subgroup topology of finite adeles and finite coset decompositions of compactly supported locally constant functions.",
