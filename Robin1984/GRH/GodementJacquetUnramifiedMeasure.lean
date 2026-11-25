@@ -396,6 +396,69 @@ theorem map_heckeLocalAdditiveMeasure_mulVec_det
   exact map_localRing_matrix_mulVec_det mu (heckeLocalInverseNorm p) hadd hmul
     (map_heckeLocalAdditiveMeasure_mul_unit p) M hM
 
+private theorem heckeMatrixProduct_smul_const {J E : Type*} [Fintype J] [MeasurableSpace E]
+    (mu : Measure E) [SigmaFinite mu] (c : NNReal) :
+    Measure.pi (fun _ : J => HSMul.hSMul c mu) =
+      HSMul.hSMul (c ^ Fintype.card J) (Measure.pi (fun _ : J => mu)) := by
+  apply Measure.pi_eq
+  intro s hs
+  rw [Measure.smul_apply, Measure.pi_pi]
+  simp only [Measure.smul_apply]
+  change ((c ^ Fintype.card J : NNReal) : ENNReal) *
+      (Finset.univ.prod fun j => mu (s j)) =
+    Finset.univ.prod (fun j => (c : ENNReal) * mu (s j))
+  rw [Finset.prod_mul_distrib, Finset.prod_const, Finset.card_univ, ENNReal.coe_pow]
+
+/-- Right multiplication by an invertible matrix scales the product
+additive measure on its row coordinates by one inverse determinant norm
+per row. -/
+theorem map_heckeLocalAdditiveMeasure_matrix_mul_right
+    (p : Place) [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I]
+    (M : Matrix I I (p.adicCompletion K)) (hM : IsUnit M) :
+    @Measure.map (I -> I -> p.adicCompletion K) (I -> I -> p.adicCompletion K) _ _
+      (fun X => @Mul.mul (Matrix I I (p.adicCompletion K)) inferInstance (Matrix.of X) M)
+      (Measure.pi (fun _ : I => Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p))) =
+    HSMul.hSMul (heckeLocalInverseNorm p M.det ^ Fintype.card I)
+      (Measure.pi (fun _ : I => Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p))) := by
+  let L := p.adicCompletion K
+  let mu := heckeLocalAdditiveMeasure p
+  let nu := Measure.pi (fun _ : I => mu)
+  let : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  let : SigmaFinite mu := sigmaFinite_heckeLocalAdditiveMeasure p
+  have hMT : IsUnit M.transpose := by
+    apply (Matrix.isUnit_iff_isUnit_det M.transpose).mpr
+    rw [Matrix.det_transpose]
+    exact (Matrix.isUnit_iff_isUnit_det M).mp hM
+  have hscale : Measure.map M.transpose.mulVec nu =
+      HSMul.hSMul (heckeLocalInverseNorm p M.det) nu := by
+    simpa only [Matrix.det_transpose] using map_heckeLocalAdditiveMeasure_mulVec_det p M.transpose hMT
+  have hmeas : Measurable M.transpose.mulVec := by
+    refine measurable_pi_lambda _ (fun i => ?_)
+    change Measurable (fun y : I -> L => Finset.univ.sum (fun j => M.transpose i j * y j))
+    have hcont : Continuous (fun y : I -> L => Finset.univ.sum (fun j => M.transpose i j * y j)) :=
+      continuous_finsetSum _ (fun j _ => continuous_const.mul (continuous_apply j))
+    exact hcont.measurable
+  have hmul : (fun X : I -> I -> L => @Mul.mul (Matrix I I L) inferInstance (Matrix.of X) M) =
+      (fun X : I -> I -> L => fun i => M.transpose.mulVec (X i)) := by
+    funext X i j
+    change ((Matrix.of X) * M) i j = M.transpose.mulVec (X i) j
+    rw [Matrix.mul_apply]
+    unfold Matrix.mulVec dotProduct
+    apply Finset.sum_congr rfl
+    intro k _
+    change X i k * M k j = M k j * X i k
+    exact mul_comm _ _
+  let : SigmaFinite (Measure.map M.transpose.mulVec nu) := by
+    rw [hscale]
+    infer_instance
+  rw [hmul]
+  change Measure.map (fun X : I -> I -> L => fun i => M.transpose.mulVec (X i))
+      (Measure.pi (fun _ : I => nu)) = _
+  rw [Measure.pi_map_pi (fun _ => hmeas.aemeasurable)]
+  simp only [hscale]
+  exact heckeMatrixProduct_smul_const nu (heckeLocalInverseNorm p M.det)
+
 /-- The normalized standard local measure gives one inverse norm for
 each scaled entry strictly above the diagonal of a unitriangular matrix. -/
 theorem measure_heckeLocalUnitriangular_scaledIntegral
