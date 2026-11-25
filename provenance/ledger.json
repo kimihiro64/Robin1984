@@ -1704,6 +1704,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetFiniteAdelicTensorTests.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement-Jacquet restricted tensor tests, idelic absolute values, and the finite-place spherical integral.",
+      "formalization_note": "Identifies the actual compact finite adelic test and restricted coefficient in each canonical finite tensor integral.",
+      "content_basis": "Factors the finite determinant weight, matches local matrix tests through Matrix.vec, and uses the integral subgroup normalization of the spherical coefficient.",
+      "dependency_status": "Uses the project compact finite product tests and restricted tensor integrands, including the normalized unramified spherical function.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetFiniteAdelicFixedTensors.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Finite multilinearity of restricted products and the normalized finite adelic matrix-unit charts.",
