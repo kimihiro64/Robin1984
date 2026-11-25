@@ -1677,6 +1677,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetFiniteAdelicCanonicalFactors.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the restricted product factorization of finite adelic zeta integrals.",
+      "formalization_note": "Chooses a common half-plane for the finite ramified set and inserts the shifted inverse-denominator witnesses into the spherical restricted product.",
+      "content_basis": "Proves that the resulting finite adelic function is integrable and that its Haar integral is the product of the spherical and ramified Euler factors.",
+      "dependency_status": "Uses the canonical local zeta integral witnesses and the finite adelic spherical integral with finitely many replacement factors.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetFiniteMatrixDenominator.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Finite idele norms and adjugate matrices in the Godement--Jacquet construction.",
