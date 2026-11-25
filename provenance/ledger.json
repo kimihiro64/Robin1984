@@ -1929,6 +1929,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetFiniteThetaContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and linearity of absolutely integrable theta sums.",
+      "formalization_note": "Transfers the invertible theta reflection and Mellin continuation from Schwartz rectangles to finite sums of rectangles and their actual self-dual Fourier transforms.",
+      "content_basis": "Interchanges finite sums with the rational matrix series and quotient integrals, and sums the positive-time exponential decay estimates.",
+      "dependency_status": "Uses the existing matrix Fourier, theta reflection, and logarithmic Mellin lemmas with termwise cancellation and integrability hypotheses.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetThetaAnalyticContinuation.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Mellin transforms of exponentially decaying theta integrals.",

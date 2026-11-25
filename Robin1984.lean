@@ -20,6 +20,7 @@ import Robin1984.GRH.GodementJacquetFiniteMatrixDenominator
 import Robin1984.GRH.GodementJacquetFiniteMatrixVolume
 import Robin1984.GRH.GodementJacquetFiniteRectangleDilation
 import Robin1984.GRH.GodementJacquetFiniteRectangleFourier
+import Robin1984.GRH.GodementJacquetFiniteThetaContinuation
 import Robin1984.GRH.GodementJacquetFourier
 import Robin1984.GRH.GodementJacquetFullThetaGrowth
 import Robin1984.GRH.GodementJacquetFundamentalDomain
