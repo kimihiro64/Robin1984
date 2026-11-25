@@ -459,9 +459,192 @@ private theorem coordinateRecurrence_mul_powers
       _ = _ := by rw [<- pow_add, hPower]
   rw [Finset.sum_congr rfl hTerm, <- Finset.mul_sum, hRec i t, mul_zero]
 
-/-- A coordinatewise monic recurrence gives a rational cone series after
-multiplying each coordinate by its own geometric weight. -/
-theorem weightedCone_tsum_polynomial_mul_powers
+/-- A single exponential majorant controls a coefficient array that satisfies a monic recurrence in each coordinate. -/
+private theorem coordinateRecurrence_exponential_bound
+    (n : Nat) (d : Fin n -> Nat) (c : Fin n -> Nat -> Complex)
+    (f : (Fin n -> Nat) -> Complex) (M : Real) (hM : 1 <= M)
+    (hLead : forall i, c i (d i) = 1)
+    (hCoeff : forall i, (Finset.range (d i)).sum (fun j => norm (c i j)) <= M)
+    (hRec : forall (i : Fin n) (t : Fin n -> Nat),
+      (Finset.range (d i + 1)).sum (fun j => c i j * f (Function.update t i (t i + j))) = 0) :
+    exists C : Real, And (0 <= C)
+      (forall e : Fin n -> Nat, norm (f e) <= C * M ^ Finset.univ.sum e) := by
+  classical
+  let B := {e : Fin n -> Nat // forall i, e i < d i}
+  let inj (e : B) (i : Fin n) : Fin (d i) := Fin.mk (e.val i) (e.property i)
+  have hInj : Function.Injective inj := by
+    intro a b h
+    apply Subtype.ext
+    funext i
+    exact congrArg Fin.val (congrFun h i)
+  let _ : Finite B := Finite.of_injective inj hInj
+  let _ : Fintype B := Fintype.ofFinite B
+  let C := Finset.univ.sum (fun e : B => norm (f e.val))
+  have hC : 0 <= C := Finset.sum_nonneg (fun _ _ => norm_nonneg _)
+  have hM0 : 0 <= M := zero_le_one.trans hM
+  have hPow : Monotone (fun k : Nat => M ^ k) := by
+    apply monotone_nat_of_le_succ
+    intro k
+    rw [pow_succ]
+    calc
+      M ^ k = M ^ k * 1 := (mul_one _).symm
+      _ <= M ^ k * M := mul_le_mul_of_nonneg_left hM (pow_nonneg hM0 _)
+  let total (e : Fin n -> Nat) := Finset.univ.sum e
+  have hBound : forall N : Nat, forall e : Fin n -> Nat, total e = N -> norm (f e) <= C * M ^ N := by
+    intro N
+    induction N using Nat.strong_induction_on with
+    | h N ih =>
+      intro e hN
+      by_cases he : forall i, e i < d i
+      . have hBase := Finset.single_le_sum (f := fun a : B => norm (f a.val))
+          (fun a _ => norm_nonneg _) (Finset.mem_univ (Subtype.mk e he : B))
+        exact hBase.trans (by
+          calc
+            C = C * M ^ 0 := by rw [pow_zero, mul_one]
+            _ <= C * M ^ N := mul_le_mul_of_nonneg_left (hPow (Nat.zero_le N)) hC)
+      . have hex : exists i, d i <= e i := by
+          by_contra hn
+          apply he
+          intro i
+          exact lt_of_not_ge (fun h => hn (Exists.intro i h))
+        choose i hi using hex
+        let t := Function.update e i (e i - d i)
+        let r (j : Nat) := Function.update e i (e i - d i + j)
+        have hUpd (j : Nat) : Function.update t i (t i + j) = r j := by
+          funext k
+          by_cases hk : k = i
+          . subst k
+            simp only [t, r, Function.update_self]
+          . simp only [t, r, Function.update_of_ne hk]
+        have hTop : r (d i) = e := by
+          funext k
+          by_cases hk : k = i
+          . subst k
+            simp only [r, Function.update_self, Nat.sub_add_cancel hi]
+          . simp only [r, Function.update_of_ne hk]
+        have hRel := hRec i t
+        simp only [hUpd] at hRel
+        rw [Finset.sum_range_succ, hLead i, one_mul, hTop] at hRel
+        by_cases hd : d i = 0
+        . rw [hd, Finset.range_zero, Finset.sum_empty, zero_add] at hRel
+          rw [hRel, norm_zero]
+          exact mul_nonneg hC (pow_nonneg hM0 _)
+        . have hZero : f e = -((Finset.range (d i)).sum (fun j => c i j * f (r j))) :=
+            eq_neg_of_add_eq_zero_left ((add_comm _ _).trans hRel)
+          have hNpos : 0 < N := by
+            have hE : e i <= total e :=
+              Finset.single_le_sum (f := e) (fun j _ => Nat.zero_le _) (Finset.mem_univ i)
+            exact (Nat.pos_of_ne_zero hd).trans_le (hi.trans (hE.trans_eq hN))
+          have hR (j : Nat) (hj : Membership.mem (Finset.range (d i)) j) :
+              total (r j) < N := by
+            have hh : e i - d i + j < e i :=
+              (Nat.add_lt_add_left (Finset.mem_range.mp hj) _).trans_eq (Nat.sub_add_cancel hi)
+            have hSplit : total (r j) =
+                (Finset.univ.erase i).sum e + (e i - d i + j) := by
+              change Finset.univ.sum (r j) = _
+              rw [<- Finset.sum_erase_add Finset.univ (r j) (Finset.mem_univ i)]
+              simp only [r, Function.update_self]
+              congr 1
+              exact Finset.sum_congr rfl (fun k hk => Function.update_of_ne (Finset.ne_of_mem_erase hk) _ _)
+            rw [hSplit, <- hN]
+            change (Finset.univ.erase i).sum e + (e i - d i + j) < Finset.univ.sum e
+            rw [<- Finset.sum_erase_add Finset.univ e (Finset.mem_univ i)]
+            exact Nat.add_lt_add_left hh _
+          have hAll (j : Nat) (hj : Membership.mem (Finset.range (d i)) j) :
+              norm (f (r j)) <= C * M ^ (N - 1) := by
+            have hh := ih (total (r j)) (hR j hj) (r j) rfl
+            have hjlt := hR j hj
+            have hj' : total (r j) <= N - 1 := by omega
+            exact hh.trans (mul_le_mul_of_nonneg_left (hPow hj') hC)
+          calc
+            norm (f e) <= (Finset.range (d i)).sum (fun j => norm (c i j) * norm (f (r j))) := by
+              rw [hZero, norm_neg]
+              simpa only [norm_mul] using norm_sum_le (Finset.range (d i)) (fun j => c i j * f (r j))
+            _ <= (Finset.range (d i)).sum (fun j => norm (c i j) * (C * M ^ (N - 1))) :=
+              Finset.sum_le_sum (fun j hj => mul_le_mul_of_nonneg_left (hAll j hj) (norm_nonneg _))
+            _ <= M * (C * M ^ (N - 1)) := by
+              rw [<- Finset.sum_mul]
+              exact mul_le_mul_of_nonneg_right (hCoeff i) (mul_nonneg hC (pow_nonneg hM0 _))
+            _ = C * M ^ N := by
+              calc
+                _ = C * (M ^ (N - 1) * M) := by ac_rfl
+                _ = _ := by rw [<- pow_succ, Nat.sub_add_cancel hNpos]
+  exact Exists.intro C (And.intro hC (fun e => hBound (total e) e rfl))
+
+private theorem summable_geometric_gap_cone (n : Nat) (q : Real) (hq0 : 0 <= q) (hq1 : q < 1) :
+    Summable (fun t : Fin n -> Nat => q ^ Finset.univ.sum t) := by
+  induction n with
+  | zero =>
+    let _ : Unique (Fin 0 -> Nat) :=
+      { default := fun i => Fin.elim0 i, uniq := fun _ => funext (fun i => Fin.elim0 i) }
+    exact Summable.of_finite
+  | succ n ih =>
+    let T (p : Prod (Fin n -> Nat) Nat) := q ^ Finset.univ.sum p.1 * q ^ p.2
+    let ix : Equiv (Prod (Fin n -> Nat) Nat) (Fin (n + 1) -> Nat) :=
+      (Equiv.prodComm (Fin n -> Nat) Nat).trans (Fin.consEquiv (fun _ => Nat))
+    have hTerm (p : Prod (Fin n -> Nat) Nat) :
+        q ^ Finset.univ.sum (ix p) = T p := by
+      change q ^ Finset.univ.sum (Fin.cons p.2 p.1 : Fin (n + 1) -> Nat) =
+        q ^ Finset.univ.sum p.1 * q ^ p.2
+      rw [Fin.sum_univ_succ, Fin.cons_zero, pow_add, mul_comm]
+      rfl
+    have hGeom : Summable (fun m : Nat => q ^ m) := summable_geometric_of_lt_one hq0 hq1
+    have hNonneg (p : Prod (Fin n -> Nat) Nat) : 0 <= T p :=
+      mul_nonneg (pow_nonneg hq0 _) (pow_nonneg hq0 _)
+    have hProd : Summable T := by
+      apply (summable_prod_of_nonneg hNonneg).mpr
+      constructor
+      . intro t
+        exact hGeom.mul_left (q ^ Finset.univ.sum t)
+      . have hRow (t : Fin n -> Nat) : tsum (fun m : Nat => T (t, m)) =
+            q ^ Finset.univ.sum t * tsum (fun m : Nat => q ^ m) := by
+          change tsum (fun m : Nat => q ^ Finset.univ.sum t * q ^ m) = _
+          exact hGeom.tsum_mul_left (q ^ Finset.univ.sum t)
+        simpa only [hRow] using ih.mul_right (tsum (fun m : Nat => q ^ m))
+    exact ix.summable_iff.mp (hProd.congr (fun p => (hTerm p).symm))
+
+private theorem summable_weightedCone_of_coordinateRecurrence
+    {n : Nat} (w d : Fin n -> Nat) (c : Fin n -> Nat -> Complex)
+    (f : (Fin n -> Nat) -> Complex) (M : Real) (hM : 1 <= M)
+    (hw : forall i, 1 <= w i) (hLead : forall i, c i (d i) = 1)
+    (hCoeff : forall i, (Finset.range (d i)).sum (fun j => norm (c i j)) <= M)
+    (hRec : forall (i : Fin n) (t : Fin n -> Nat),
+      (Finset.range (d i + 1)).sum (fun j =>
+        c i j * f (Function.update t i (t i + j))) = 0)
+    {z : Complex} (hz : M * norm z < 1) :
+    Summable (fun t => f t * z ^ (Finset.univ.sum (fun i => w i * t i))) := by
+  obtain hc := coordinateRecurrence_exponential_bound n d c f M hM hLead hCoeff hRec
+  choose C hC using hc
+  have hM0 : 0 <= M := zero_le_one.trans hM
+  have hZ : norm z <= 1 := by
+    have h : 1 * norm z <= M * norm z := mul_le_mul_of_nonneg_right hM (norm_nonneg z)
+    rw [one_mul] at h
+    exact h.trans hz.le
+  have hPower : Antitone (fun k : Nat => norm z ^ k) := by
+    apply antitone_nat_of_succ_le
+    intro k
+    rw [pow_succ]
+    calc
+      norm z ^ k * norm z <= norm z ^ k * 1 :=
+        mul_le_mul_of_nonneg_left hZ (pow_nonneg (norm_nonneg z) k)
+      _ = norm z ^ k := mul_one _
+  apply Summable.of_norm_bounded
+    ((summable_geometric_gap_cone n (M * norm z)
+      (mul_nonneg hM0 (norm_nonneg _)) hz).mul_left C)
+  intro t
+  have hE : Finset.univ.sum t <= (Finset.univ.sum (fun i => w i * t i)) := by
+    apply Finset.sum_le_sum
+    intro i _
+    simpa only [one_mul] using Nat.mul_le_mul_right (t i) (hw i)
+  calc
+    norm (f t * z ^ (Finset.univ.sum (fun i => w i * t i))) =
+        norm (f t) * norm z ^ (Finset.univ.sum (fun i => w i * t i)) := by rw [norm_mul, norm_pow]
+    _ <= (C * M ^ Finset.univ.sum t) * norm z ^ Finset.univ.sum t :=
+      mul_le_mul (hC.2 t) (hPower hE)
+        (pow_nonneg (norm_nonneg _) _) (mul_nonneg hC.1 (pow_nonneg hM0 _))
+    _ = C * (M * norm z) ^ Finset.univ.sum t := by rw [mul_pow, mul_assoc]
+
+private theorem weightedCone_tsum_polynomial_mul_powers_near_zero
     (n : Nat) (w d : Fin n -> Nat) (c : Fin n -> Nat -> Complex)
     (alpha : Fin n -> Complex) (f : (Fin n -> Nat) -> Complex)
     (hW : forall i, 0 < w i) (hLead : forall i, c i (d i) = 1)
@@ -471,12 +654,15 @@ theorem weightedCone_tsum_polynomial_mul_powers
     let denominator : Polynomial Complex := Finset.univ.prod (fun i =>
       (Finset.range (d i + 1)).sum (fun j =>
         Polynomial.C (c i j * alpha i ^ (d i - j)) * Polynomial.X ^ (w i * (d i - j))))
-    exists numerator : Polynomial Complex,
-      And (denominator.eval 0 = 1)
-        (forall z : Complex,
+    exists M : Real, And (1 <= M)
+      (exists numerator : Polynomial Complex,
+        And (denominator.eval 0 = 1)
+          (And (forall z : Complex, M * norm z < 1 ->
+            Summable (fun t : Fin n -> Nat => F t * z ^ Finset.univ.sum (fun i => w i * t i)))
+            (forall z : Complex,
           Summable (fun t => F t * z ^ Finset.univ.sum (fun i => w i * t i)) ->
           denominator.eval z * tsum (fun t => F t * z ^ Finset.univ.sum (fun i => w i * t i)) =
-            numerator.eval z) := by
+            numerator.eval z))) := by
   intro F denominator
   let C (i : Fin n) (j : Nat) := c i j * alpha i ^ (d i - j)
   have hC (i : Fin n) : C i (d i) = 1 := by
@@ -497,13 +683,46 @@ theorem weightedCone_tsum_polynomial_mul_powers
     next =>
       intro h
       exact False.elim (h (Finset.mem_range.mpr (Nat.lt_succ_self (d i))))
-  refine Exists.intro (weightedConeNumerator n w d C F) (And.intro hDen ?_)
-  exact weightedCone_tsum_polynomial n w d C F hW
-    (coordinateRecurrence_mul_powers n d c alpha f hRec)
+  let B (i : Fin n) := (Finset.range (d i)).sum (fun j => norm (C i j))
+  let M := 1 + Finset.univ.sum B
+  have hB (i : Fin n) : 0 <= B i := Finset.sum_nonneg (fun _ _ => norm_nonneg _)
+  have hM : 1 <= M := le_add_of_nonneg_right (Finset.sum_nonneg (fun i _ => hB i))
+  have hCoeff (i : Fin n) : B i <= M :=
+    (Finset.single_le_sum (fun k _ => hB k) (Finset.mem_univ i)).trans
+      (le_add_of_nonneg_left zero_le_one)
+  have hScaled := coordinateRecurrence_mul_powers n d c alpha f hRec
+  refine Exists.intro M (And.intro hM (Exists.intro (weightedConeNumerator n w d C F)
+    (And.intro hDen (And.intro ?_ ?_))))
+  . intro z hz
+    exact summable_weightedCone_of_coordinateRecurrence w d C F M hM hW hC hCoeff hScaled hz
+  . exact weightedCone_tsum_polynomial n w d C F hW hScaled
 
-/-- The ordered diagonal cone series with a geometric multiplier in each
-coordinate, on the principal congruence fixed space. -/
-theorem valuationPrincipalCongruence_diagonalCone_series_mul_powers
+/-- A coordinatewise monic recurrence gives a rational cone series after
+multiplying each coordinate by its own geometric weight. -/
+theorem weightedCone_tsum_polynomial_mul_powers
+    (n : Nat) (w d : Fin n -> Nat) (c : Fin n -> Nat -> Complex)
+    (alpha : Fin n -> Complex) (f : (Fin n -> Nat) -> Complex)
+    (hW : forall i, 0 < w i) (hLead : forall i, c i (d i) = 1)
+    (hRec : forall (i : Fin n) (t : Fin n -> Nat),
+      (Finset.range (d i + 1)).sum (fun j => c i j * f (Function.update t i (t i + j))) = 0) :
+    let F (t : Fin n -> Nat) := f t * Finset.univ.prod (fun i => alpha i ^ t i)
+    let denominator : Polynomial Complex := Finset.univ.prod (fun i =>
+      (Finset.range (d i + 1)).sum (fun j =>
+        Polynomial.C (c i j * alpha i ^ (d i - j)) * Polynomial.X ^ (w i * (d i - j))))
+    exists numerator : Polynomial Complex,
+      And (denominator.eval 0 = 1)
+        (forall z : Complex,
+          Summable (fun t => F t * z ^ Finset.univ.sum (fun i => w i * t i)) ->
+          denominator.eval z * tsum (fun t => F t * z ^ Finset.univ.sum (fun i => w i * t i)) =
+            numerator.eval z) := by
+  intro F denominator
+  obtain hs := weightedCone_tsum_polynomial_mul_powers_near_zero n w d c alpha f hW hLead hRec
+  choose M hM using hs
+  choose numerator hn using hM.2
+  exact Exists.intro numerator (And.intro hn.1 hn.2.2)
+
+/-- The weighted ordered-diagonal series converges absolutely near zero and agrees there with a rational function whose denominator has constant term one. -/
+theorem valuationPrincipalCongruence_diagonalCone_series_mul_powers_near_zero
     {F W V : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
     [AddCommGroup V] [Module Complex V]
     (vf : Valuation F W) (rank : Nat) (r : W) (hr : r < 1)
@@ -528,13 +747,16 @@ theorem valuationPrincipalCongruence_diagonalCone_series_mul_powers
         ell (rho ((valuationDiagonalSection F rank
           (b * Finset.univ.prod (fun i => a i ^ e i)).val).val) u)
       let F (e : Fin n -> Nat) := aseq e * Finset.univ.prod (fun i => alpha i ^ e i)
-      exists numerator : Polynomial Complex,
-        And (denominator.eval 0 = 1)
-          (forall z : Complex,
+      exists M : Real, And (1 <= M)
+        (exists numerator : Polynomial Complex,
+          And (denominator.eval 0 = 1)
+            (And (forall z : Complex, M * norm z < 1 ->
+              Summable (fun e : Fin n -> Nat => F e * z ^ Finset.univ.sum (fun i => w i * e i)))
+              (forall z : Complex,
             Summable (fun e : Fin n -> Nat => F e * z ^ Finset.univ.sum (fun i => w i * e i)) ->
             denominator.eval z *
               tsum (fun e : Fin n -> Nat => F e * z ^ Finset.univ.sum (fun i => w i * e i)) =
-              numerator.eval z) := by
+              numerator.eval z))) := by
   intro op d c denominator b ell hEll u hU aseq F
   have hDeg (i : Fin n) : (op (a i)).charpoly.natDegree = d :=
     LinearMap.charpoly_natDegree (op (a i))
@@ -574,7 +796,48 @@ theorem valuationPrincipalCongruence_diagonalCone_series_mul_powers
       rw [mul_assoc, <- hSplit]
       exact P.pairing_proj ell hEll _
     simpa only [hTerm] using h
-  exact weightedCone_tsum_polynomial_mul_powers n w (fun _ => d) c alpha aseq hW hLead hRec
+  exact weightedCone_tsum_polynomial_mul_powers_near_zero n w (fun _ => d) c alpha aseq hW hLead hRec
+
+/-- The ordered diagonal cone series with a geometric multiplier in each
+coordinate, on the principal congruence fixed space. -/
+theorem valuationPrincipalCongruence_diagonalCone_series_mul_powers
+    {F W V : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
+    [AddCommGroup V] [Module Complex V]
+    (vf : Valuation F W) (rank : Nat) (r : W) (hr : r < 1)
+    (rho : MonoidHom (Units (Matrix (Fin rank) (Fin rank) F)) (Module.End Complex V))
+    (P : HeckeLocalSubgroupAverage rho (valuationPrincipalCongruenceSubgroup vf rank r))
+    [FiniteDimensional Complex (LinearMap.range P.proj)]
+    (n : Nat) (a : Fin n -> valuationOrderedDiagonalSubmonoid vf rank)
+    (w : Fin n -> Nat) (hW : forall i, 0 < w i) (alpha : Fin n -> Complex) :
+    let op := P.orderedDiagonalOperators vf rank r hr rho
+    let d := Module.finrank Complex (LinearMap.range P.proj)
+    let c (i : Fin n) := (op (a i)).charpoly.coeff
+    let denominator : Polynomial Complex := Finset.univ.prod (fun i =>
+      (Finset.range (d + 1)).sum (fun j => Polynomial.C (c i j * alpha i ^ (d - j)) *
+        Polynomial.X ^ (w i * (d - j))))
+    forall (b : valuationOrderedDiagonalSubmonoid vf rank)
+      (ell : LinearMap (RingHom.id Complex) V Complex),
+      (forall (k : valuationPrincipalCongruenceSubgroup vf rank r) (u : V),
+        ell (rho k.val u) = ell u) ->
+      forall (u : V),
+      (forall k : valuationPrincipalCongruenceSubgroup vf rank r, rho k.val u = u) ->
+      let aseq (e : Fin n -> Nat) :=
+        ell (rho ((valuationDiagonalSection F rank
+          (b * Finset.univ.prod (fun i => a i ^ e i)).val).val) u)
+      let F (e : Fin n -> Nat) := aseq e * Finset.univ.prod (fun i => alpha i ^ e i)
+      exists numerator : Polynomial Complex,
+        And (denominator.eval 0 = 1)
+          (forall z : Complex,
+            Summable (fun e : Fin n -> Nat => F e * z ^ Finset.univ.sum (fun i => w i * e i)) ->
+            denominator.eval z *
+              tsum (fun e : Fin n -> Nat => F e * z ^ Finset.univ.sum (fun i => w i * e i)) =
+              numerator.eval z) := by
+  intro op d c denominator b ell hEll u hU aseq F
+  obtain hs := valuationPrincipalCongruence_diagonalCone_series_mul_powers_near_zero
+    vf rank r hr rho P n a w hW alpha b ell hEll u hU
+  choose M hM using hs
+  choose numerator hn using hM.2
+  exact Exists.intro numerator (And.intro hn.1 hn.2.2)
 
 /-- The weighted sum over any finite family of ordered diagonal directions
 has the product of their reversed, weight-dilated characteristic polynomials

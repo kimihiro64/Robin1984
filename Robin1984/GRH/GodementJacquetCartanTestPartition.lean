@@ -370,4 +370,73 @@ theorem masked_gap_weights
       (Finset.mem_univ i)]
     rw [if_pos hi.1, zero_pow hi.2, mul_zero]
 
+/-- Conjugation by an integral invertible matrix preserves the principal congruence subgroup. -/
+theorem principalCongruence_normal_in_integralMatrixSubgroup
+    {F W : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
+    (v : Valuation F W) (n : Nat) (t : W) :
+    let C := valuationIntegralMatrixSubgroup v n
+    let U := valuationPrincipalCongruenceSubgroup v n t
+    let H := U.comap C.subtype
+    forall k h : C, Membership.mem H h -> Membership.mem H (k * h * Inv.inv k) := by
+  intro C U H k h hh
+  have hKH : Membership.mem U h.val := hh
+  have hk (i j : Fin n) : v (k.val.val i j) <= 1 :=
+    ((mem_valuationIntegralMatrixSubgroup_iff v n k.val).mp k.property).1 i j
+  have hKi (i j : Fin n) : v ((Inv.inv k).val.val i j) <= 1 :=
+    ((mem_valuationIntegralMatrixSubgroup_iff v n (Inv.inv k).val).mp (Inv.inv k).property).1 i j
+  have hEq : k.val.val * (1 : Matrix (Fin n) (Fin n) F) * (Inv.inv k).val.val = 1 := by
+    rw [mul_one]
+    exact k.val.val_inv
+  change Membership.mem U (k.val * h.val * (Inv.inv k).val)
+  refine And.intro (k * h * Inv.inv k).property ?_
+  intro i j
+  have hBound := valuation_integral_matrix_multipliers_preserve_congruence v n t
+    k.val.val h.val.val 1 (Inv.inv k).val.val hk hKi hKH.2 i j
+  rw [hEq] at hBound
+  simpa only [Units.val_mul, Matrix.sub_apply] using hBound
+
+/-- The principal congruence subgroup contained in the integral group recovers its ambient image under the inclusion. -/
+theorem map_comap_principalCongruence_integralMatrixSubgroup
+    {F W : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
+    (v : Valuation F W) (n : Nat) (t : W) :
+    let C := valuationIntegralMatrixSubgroup v n
+    let U := valuationPrincipalCongruenceSubgroup v n t
+    (U.comap C.subtype).map C.subtype = U := by
+  intro C U
+  ext g
+  rw [Subgroup.mem_map]
+  constructor
+  . intro hg
+    choose h hh using hg
+    have hEq : h.val = g := hh.2
+    rw [<- hEq]
+    exact hh.1
+  . intro hg
+    exact Exists.intro (Subtype.mk g hg.1) (And.intro hg rfl)
+
+/-- Multiplication by a principal congruence element preserves a test constant on congruence classes of integral matrices. -/
+theorem congruence_test_invariant_on_integralMatrices
+    {F W Y : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
+    (v : Valuation F W) (n : Nat) (t : W)
+    (f : (Fin n -> Fin n -> F) -> Y)
+    (hMod : forall X Y0 : Fin n -> Fin n -> F, (forall i j, v (X i j) <= 1) ->
+      (forall i j, v (Y0 i j - X i j) <= t) -> f Y0 = f X)
+    (g : Units (Matrix (Fin n) (Fin n) F)) (hG : forall i j, v (g.val i j) <= 1)
+    (h : valuationPrincipalCongruenceSubgroup v n t) :
+    And (f (fun i j => (h.val * g).val i j) = f (fun i j => g.val i j))
+      (f (fun i j => (g * h.val).val i j) = f (fun i j => g.val i j)) := by
+  let C := valuationIntegralMatrixSubgroup v n
+  have hOne (i j : Fin n) : v ((1 : Matrix (Fin n) (Fin n) F) i j) <= 1 :=
+    ((mem_valuationIntegralMatrixSubgroup_iff v n (1 : Units (Matrix (Fin n) (Fin n) F))).mp
+      C.one_mem).1 i j
+  refine And.intro (hMod _ _ hG ?_) (hMod _ _ hG ?_)
+  . intro i j
+    have hBound := valuation_integral_matrix_multipliers_preserve_congruence v n t
+      1 h.val.val 1 g.val hOne hG h.property.2 i j
+    simpa only [one_mul, Units.val_mul] using hBound
+  . intro i j
+    have hBound := valuation_integral_matrix_multipliers_preserve_congruence v n t
+      g.val h.val.val 1 1 hG hOne h.property.2 i j
+    simpa only [mul_one, Units.val_mul] using hBound
+
 end Robin1984.GRH
