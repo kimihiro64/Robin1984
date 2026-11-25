@@ -1776,6 +1776,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetMellinGrowth.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and absolute bounds for Mellin transforms on vertical strips.",
+      "formalization_note": "Derives a uniform vertical-strip bound from the two-sided exponential moments and uses it in the order-one proof for a paired standard completion.",
+      "content_basis": "The modulus of the kernel depends on the real part of the Mellin variable. The strip bound for a product follows from the two individual transforms.",
+      "dependency_status": "Uses the checked Mellin reflection and moment estimates and the Euler-product order-one theorem. The Mellin identification, right-half-plane Euler identity, gamma bounds and norm reflection are explicit hypotheses.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetProductLattice.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Poisson summation for full-rank Euclidean lattices and the matrix lattice in the Godement-Jacquet zeta integral.",
