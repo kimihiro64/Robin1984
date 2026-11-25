@@ -1384,6 +1384,90 @@ theorem exists_heckeLocalZetaTest_integral_one
   dsimp [k]
   field_simp [Complex.ofReal_ne_zero.mpr hRealPos.ne']
 
+/-- A left translate of a compact locally constant matrix test is another
+compact locally constant test. Translating the coefficient by the same matrix
+preserves absolute integrability and multiplies the zeta integral by the
+inverse determinant weight. The identity holds for every complex exponent. -/
+theorem exists_heckeLocalZetaTest_leftTranslate
+    (n : Nat) [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [MeasurableMul (Units (Matrix (Fin n) (Fin n) L))]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) L))) [mu.IsMulLeftInvariant]
+    (A : Units (Matrix (Fin n) (Fin n) L))
+    (Phi : LocallyConstant (Matrix (Fin n) (Fin n) L) Complex)
+    (hPhi : HasCompactSupport (fun X => Phi X))
+    (c : Units (Matrix (Fin n) (Fin n) L) -> Complex) :
+    Exists (fun Psi : LocallyConstant (Matrix (Fin n) (Fin n) L) Complex =>
+      And (HasCompactSupport (fun X => Psi X)) (forall z : Complex,
+        And (Iff
+          (Integrable (fun g => (norm g.val.det : Complex) ^ z * (Psi g.val * c (A * g))) mu)
+          (Integrable (fun g => (norm g.val.det : Complex) ^ z * (Phi g.val * c g)) mu))
+          (integral mu (fun g => (norm g.val.det : Complex) ^ z * (Psi g.val * c (A * g))) =
+            (norm A.val.det : Complex) ^ (-z) *
+              integral mu (fun g => (norm g.val.det : Complex) ^ z * (Phi g.val * c g))))) := by
+  let M := Matrix (Fin n) (Fin n) L
+  let G := Units M
+  let e : Homeomorph M M :=
+    { toFun := fun X => A.val * X
+      invFun := fun X => A.inv * X
+      left_inv := fun X => by
+        change A.inv * (A.val * X) = X
+        rw [<- mul_assoc, A.inv_val, one_mul]
+      right_inv := fun X => by
+        change A.val * (A.inv * X) = X
+        rw [<- mul_assoc, A.val_inv, one_mul]
+      continuous_toFun := continuous_const.matrix_mul continuous_id
+      continuous_invFun := continuous_const.matrix_mul continuous_id }
+  let Psi := LocallyConstant.comap (ContinuousMap.mk e e.continuous) Phi
+  have hCompact : IsCompact (Set.preimage e (tsupport (fun X : M => Phi X))) :=
+    e.isEmbedding.isInducing.isCompact_preimage' hPhi
+      (fun X _ => Set.mem_range.mpr (e.surjective X))
+  have hSupport : Set.Subset (Function.support (fun X : M => Psi X))
+      (Set.preimage e (tsupport (fun X : M => Phi X))) := by
+    intro X hX
+    exact subset_closure (show Membership.mem (Function.support (fun Y : M => Phi Y))
+      (e X) from hX)
+  have hPsi : HasCompactSupport (fun X => Psi X) :=
+    hCompact.of_isClosed_subset isClosed_closure
+      (closure_minimal hSupport (isClosed_closure.preimage e.continuous))
+  refine Exists.intro Psi (And.intro hPsi ?_)
+  intro z
+  let d : Complex := norm A.val.det
+  let f (g : G) := (norm g.val.det : Complex) ^ z * (Phi g.val * c g)
+  have hDet : Not (A.val.det = 0) := (A.isUnit.map Matrix.detMonoidHom).ne_zero
+  have hD : Not (d ^ z = 0) :=
+    Complex.cpow_ne_zero_iff.mpr (Or.inl (Complex.ofReal_ne_zero.mpr (norm_ne_zero_iff.mpr hDet)))
+  have hPow (g : G) : (norm ((A * g).val.det) : Complex) ^ z =
+      d ^ z * (norm g.val.det : Complex) ^ z := by
+    rw [show (A * g).val.det = A.val.det * g.val.det from Matrix.det_mul _ _,
+      norm_mul, Complex.ofReal_mul,
+      Complex.mul_cpow_ofReal_nonneg (norm_nonneg _) (norm_nonneg _) z]
+  have hEq (g : G) : (norm g.val.det : Complex) ^ z * (Psi g.val * c (A * g)) =
+      d ^ (-z) * f (A * g) := by
+    change (norm g.val.det : Complex) ^ z * (Phi (A * g).val * c (A * g)) =
+      d ^ (-z) * ((norm (A * g).val.det : Complex) ^ z * (Phi (A * g).val * c (A * g)))
+    rw [Complex.cpow_neg, hPow]
+    field_simp [hD]
+  rw [funext hEq]
+  refine And.intro ?_ ?_
+  next =>
+    refine Iff.intro ?_ (fun h => (h.comp_mul_left A).const_mul _)
+    intro hf
+    have hNeg : Not (d ^ (-z) = 0) := by
+      rw [Complex.cpow_neg]
+      exact inv_ne_zero hD
+    have hRestore : (fun g : G => Inv.inv (d ^ (-z)) * (d ^ (-z) * f (A * (Inv.inv A * g)))) =
+        f := by
+      funext g
+      have hg : A * (Inv.inv A * g) = g := by
+        rw [<- mul_assoc, show A * Inv.inv A = (1 : G) from by simp, one_mul]
+      rw [hg]
+      field_simp [hNeg]
+    change Integrable f mu
+    rw [<- hRestore]
+    exact (hf.comp_mul_left (Inv.inv A)).const_mul _
+  next =>
+    rw [integral_const_mul, integral_mul_left_eq_self f A]
+
 end LocalUnitZetaTest
 
 section FiniteAdelicEulerProduct
