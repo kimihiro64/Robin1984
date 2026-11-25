@@ -194,13 +194,13 @@ Z_{\Phi,c,f}(s)=\int_{\mathbb R} e^{t(s+(n-1)/2)}
 \int_{D\times D} c(A)f(B)
   \sum_{P\in\mathrm{GL}_n(K)}\Phi(A^{-1}z_tPB)\,d\mu(A)d\mu(B)\,dt.
 $$
-The theta kernel's absolute integrability follows from the original
-zeta kernel's absolute convergence by Tonelli and the triangle
-inequality. The higher-rank application still requires the reduction
-cover and cusp bounds for actual automorphic data, absolute convergence
-on a right half-plane, and identification with the standard Euler
-product.
+Right translation on the norm-one quotient bounds the inner absolute
+integral by $\|c\|_{L^2(D)}^2+\|f\|_{L^2(D)}^2$, uniformly in $g$.
+Thus it suffices that the determinant-weighted matrix test be integrable
+over the adelic group. Tonelli then gives the absolute convergence used
+in the Mellin identity.
 [Absolute Mellin identity](Robin1984/GRH/GodementJacquetMellinAbsolute.lean)
+[Square-integrability proof](Robin1984/GRH/GodementJacquetMellinFromSquareIntegrability.lean)
 
 For the local unramified calculation, let $F$ be a nonarchimedean local
 field with ring of integers $\mathcal O$, and write $G=\mathrm{GL}_n(F)$,
@@ -213,11 +213,32 @@ $$
 \int_G f(g)\,dg=\int_{A\times U} f(au)\,d^\times a\,du.
 $$
 Here $K$, $A\cap K$, and $U\cap K$ have mass one in their respective
-measures. The spherical integrand must still be evaluated in these
-coordinates to identify its Euler factor.
-[Matrix factorization](Robin1984/GRH/ValuationIwasawa.lean)
-[Normalized Haar measures](Robin1984/GRH/ValuationIwasawaSubgroups.lean)
+measures. With the spherical inducing characters $\chi_1,\ldots,\chi_n$,
+residue cardinality $q$, and a uniformizer $\varpi$, the normalized
+unramified zeta integral is
+$$
+\prod_{i=1}^{n}\bigl(1-\chi_i(\varpi)q^{-s}\bigr)^{-1}
+$$
+on a right half-plane under the spherical coefficient and absolute
+convergence hypotheses.
 [Product integral](Robin1984/GRH/ValuationIwasawaCoordinates.lean)
+[Spherical evaluation](Robin1984/GRH/GodementJacquetUnramifiedMeasure.lean)
+
+Given the inverse-denominator test combinations at the ramified places,
+the finite-place proofs assemble the local factors into a fixed finite
+weighted sum of tensor zeta integrals. If the global coefficients
+factor, the global integrals have one common archimedean integral
+$Z_\infty(s)$ and one positive Haar constant $r$.
+$$
+\sum_j w_j Z_j(s)=r\,Z_\infty(s)\prod_{\mathfrak p}L_{\mathfrak p}(s).
+$$
+When the theta Mellin transforms for the $Z_j$ are entire, their weighted
+sum divided by $r$ continues this product. The higher-rank specialization
+still needs the weighted cusp estimates and the archimedean local factor
+identification for the chosen automorphic data.
+[Finite tensor integrals](Robin1984/GRH/GodementJacquetFiniteAdelicCanonicalTensors.lean)
+[Global zeta product](Robin1984/GRH/GodementJacquetGlobalZetaProduct.lean)
+[Entire continuation](Robin1984/GRH/GodementJacquetEulerMellinContinuation.lean)
 [Generalized criteria](docs/GRH.md)
 
 ## Critical-line zeros and multiplicity

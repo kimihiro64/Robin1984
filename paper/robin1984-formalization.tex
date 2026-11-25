@@ -3187,6 +3187,24 @@ before the complex-valued integral is rearranged. These steps are
 verified in \path{GodementJacquetMellinAbsolute.lean} for measurable
 test data and pointwise summable theta series.
 
+\path{GodementJacquetMellinFromSquareIntegrability.lean} obtains the
+original absolute convergence from a single weighted test integral.
+For fixed \(g\), write \(g=z_th\) with \(h\) in the determinant-norm-one
+group. Central invariance reduces \(f(Ag)\) to \(f(Ah)\).
+For a bi-invariant Haar measure \(\mu\), right translation by \(h\)
+preserves the quotient integral of the rational-left-invariant function
+\(\lvert f\rvert^2\). Consequently
+\[
+ \int_D |f(Ag)c(A)|\,d\mu(A)
+ \ \le\ \|f\|_{L^2(D,\mu)}^2+\|c\|_{L^2(D,\mu)}^2
+ \qquad (g\in\mathrm{GL}_n(\mathbb A_K)).
+\]
+Here we used \(ab\le a^2+b^2\) for \(a,b\ge0\).
+Tonelli gives absolute convergence of the original product kernel if
+\(\Phi(g)|\det g|_{\mathbb A_K}^{\lambda}\) is integrable on the
+adelic group. This separates the convergence condition on the matrix
+test from the square-integrability conditions on the quotient vectors.
+
 \paragraph{Local Iwasawa integration.}
 Let \(F\) be a second-countable nonarchimedean local field with compact
 open valuation ring \(\mathcal O\). Write \(G=\mathrm{GL}_n(F)\),
@@ -3238,15 +3256,56 @@ in \path{ValuationIwasawa.lean}, \path{LocalIwasawaMeasure.lean},
 \path{ValuationIwasawaSubgroups.lean}, and
 \path{ValuationIwasawaCoordinates.lean}.
 
+\paragraph{Local factors and the completed Euler product.}
+For unramified characters \(\chi_i\) of \(F^\times\) and a uniformizer
+\(\varpi\), the spherical integral with the integral matrix indicator
+and the determinant weight \(s+(n-1)/2\) is
+\[
+ L_{\mathfrak p}(s)=
+ \prod_{i=1}^n\bigl(1-\chi_i(\varpi)q^{-s}\bigr)^{-1},
+ \qquad q=\#(\mathcal O/\varpi\mathcal O).
+\]
+The formal identity and integrability are proved under the boundedness
+assumption on the spherical coefficient and the geometric convergence
+conditions in \path{GodementJacquetUnramifiedMeasure.lean}.
+The formal finite tensor theorem assumes at each ramified place a
+fixed finite linear combination of translated tests whose zeta
+integrals realize the reciprocal of the canonical denominator.
+\path{GodementJacquetFiniteAdelicCanonicalTensors.lean} assembles these
+combinations and the unramified factors into a finite weighted family
+of tensor integrals with coefficients \(w_j\).
+
+Pair the finite tests with a common archimedean Schwartz test.
+When the global matrix coefficients split as the common archimedean
+coefficient times the corresponding finite coefficients, the
+determinant norm factors and Fubini gives, on the common half-plane,
+\[
+ \sum_j w_j Z_j(s) =
+ r\,Z_\infty(s)\prod_{\mathfrak p}L_{\mathfrak p}(s).
+\]
+Here \(r>0\) is a single ratio of Haar measures, independent of \(s\)
+and \(j\). The local integrability and coefficient factorization are
+hypotheses of \path{GodementJacquetGlobalZetaProduct.lean}.
+\path{GodementJacquetEulerMellinContinuation.lean} substitutes the
+termwise theta Mellin identities and divides by \(r\). If the theta
+Mellin transforms are entire, this gives an entire continuation of
+the right-hand Euler expression with \(r\) removed. To identify it with
+the completed standard \(L\)-function one also needs a test with
+\(Z_\infty(s)=\prod_{v\mid\infty}L(s,\pi_v)\) in the chosen normalization.
+Humphries gives such archimedean test vectors in
+\cite[Theorem~4.23 and Proposition~5.9]{Humphries2024}. Their evaluation
+for the actual higher-rank representations is a separate input here.
+
 On the closed strip $-2\le\Re s\le3$, the two exponential moments
 bound each Mellin transform uniformly in the imaginary direction.
 Together with its Euler identification and Gamma estimates on the
 right and norm reflection on the left, this gives order at most
 one for each pole-free completion in
 \path{GodementJacquetMellinGrowth.lean}. The higher-rank instantiation
-still needs reduction covers and weighted bounds for actual cuspidal
-data, right-half-plane absolute convergence of the original kernel,
-and evaluation and assembly of the standard local factors.
+still needs the reduction covers and weighted bounds for actual
+cuspidal data, integrability of the determinant-weighted tests, and
+the remaining identifications of the local factors and global
+matrix coefficients.
 \cite{GodementJacquet1972}
 
 The three classical equivalence declarations have the
@@ -4374,6 +4433,11 @@ D. Goldfeld and H. Jacquet, \emph{Automorphic representations and
 (eds.), \emph{The Genesis of the Langlands Program},
 Cambridge University Press, 2021, pp.~215--274.
 \url{https://doi.org/10.1017/9781108591218.019}.
+
+\bibitem{Humphries2024}
+P. Humphries, \emph{Archimedean newform theory for \(\mathrm{GL}_n\)},
+J. Inst. Math. Jussieu, published online 2024.
+\href{https://doi.org/10.1017/S1474748024000227}{doi:10.1017/S1474748024000227}.
 
 \bibitem{JacquetShalika1981}
 H. Jacquet and J. A. Shalika, \emph{On Euler products and the
