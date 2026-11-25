@@ -147,7 +147,8 @@ def heckeLocalFixedSubmodule
     change rho k.val (HSMul.hSMul c x) = HSMul.hSMul c x
     rw [map_smul, hx k]
 
-private theorem range_average_eq_fixedSubmodule
+/-- Averaging over a subgroup has exactly the subgroup-fixed vectors as its range. -/
+theorem range_average_eq_fixedSubmodule
     {G V : Type*} [Group G] [AddCommGroup V] [Module Complex V]
     (rho : MonoidHom G (Module.End Complex V)) (H : Subgroup G)
     (P : HeckeLocalSubgroupAverage rho H) :

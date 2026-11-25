@@ -22,7 +22,7 @@ finite linear combinations and therefore by the vector and dual orbit spans.
 
 set_option autoImplicit false
 
-open IsDedekindDomain MeasureTheory NumberField Topology
+open Filter IsDedekindDomain MeasureTheory NumberField Topology
 
 namespace Robin1984.GRH
 
@@ -510,4 +510,305 @@ theorem heckeLocal_matrixCoefficients_commonReducedDenominator_of_orbitSpans
   exact hasHeckeLocalZetaDenominator_of_mem_translateSpan p n mu pi hPi D hNorm
     (fun g : G => ell0 (rho g u0)) (fun g : G => ell (rho g u)) hSeed
     (matrixCoefficient_mem_twoSidedTranslateSpan rho ell0 ell u0 u hEll hU)
+section
+
+variable {G V : Type*} [Group G]
+variable [AddCommGroup V] [Module Complex V]
+
+local notation "DualV" => LinearMap (RingHom.id Complex) V Complex
+
+private theorem dualOrbitSpan_separates
+    (rho : MonoidHom G (Module.End Complex V))
+    (ell0 : DualV) (u0 : V) (hOne : ell0 u0 = 1)
+    (hIrred : forall x : V, Not (x = 0) ->
+      Submodule.span Complex (Set.range (fun g : G => rho g x)) = Top.top) :
+    let W := Submodule.span Complex (Set.range (fun a : G => ell0.comp (rho a)))
+    forall x : V, (forall w : W, w.val x = 0) -> x = 0 := by
+  intro W x hAnn
+  by_contra! hx
+  have hLe : Submodule.span Complex (Set.range (fun g : G => rho g x)) <=
+      LinearMap.ker ell0 := by
+    apply Submodule.span_le.mpr
+    intro y hy
+    choose g hg using hy
+    have hOrbit : Membership.mem W (ell0.comp (rho g)) :=
+      Submodule.subset_span (Exists.intro g rfl)
+    rw [<- hg]
+    exact hAnn (Subtype.mk _ hOrbit)
+  have hu : Membership.mem (Submodule.span Complex (Set.range (fun g : G => rho g x))) u0 := by
+    rw [hIrred x hx]
+    exact Submodule.mem_top
+  have hh : ell0 u0 = 0 := hLe hu
+  exact one_ne_zero (hOne.symm.trans hh)
+
+variable [TopologicalSpace G] [IsTopologicalGroup G]
+
+private theorem exists_dualOrbitAverage_pairing
+    (rho : MonoidHom G (Module.End Complex V)) (ell0 : DualV)
+    (hSeed : Membership.mem (heckeLocalSmoothDual rho) ell0)
+    (K : Subgroup G) (hK : IsCompact (K : Set G))
+    (P : HeckeLocalSubgroupAverage rho K) :
+    let W := Submodule.span Complex (Set.range (fun a : G => ell0.comp (rho a)))
+    exists T : Module.End Complex W, forall (w : W) (v : V),
+      (T w).val v = w.val (P.proj v) := by
+  intro W
+  have hWSmooth : W <= heckeLocalSmoothDual rho := by
+    apply Submodule.span_le.mpr
+    intro w hw
+    choose a ha using hw
+    rw [<- ha]
+    exact heckeLocalSmoothDual_comp_mem rho a ell0 hSeed
+  let D (a : G) : Module.End Complex DualV :=
+    { toFun := fun ell => ell.comp (rho (Inv.inv a))
+      map_add' := fun _ _ => rfl
+      map_smul' := fun _ _ => rfl }
+  have hStable (a : G) : W <= Submodule.comap (D a) W := by
+    apply Submodule.span_le.mpr
+    intro ell hell
+    choose b hb using hell
+    rw [<- hb]
+    change Membership.mem W ((ell0.comp (rho b)).comp (rho (Inv.inv a)))
+    apply Submodule.subset_span
+    refine Exists.intro (b * Inv.inv a) ?_
+    ext v
+    change ell0 (rho (b * Inv.inv a) v) = ell0 (rho b (rho (Inv.inv a) v))
+    rw [map_mul, Module.End.mul_apply]
+  let A (a : G) : Module.End Complex W :=
+    { toFun := fun ell => Subtype.mk (D a ell.val) (hStable a ell.property)
+      map_add' := fun ell eta => by
+        apply Subtype.ext
+        exact (D a).map_add ell.val eta.val
+      map_smul' := fun k ell => by
+        apply Subtype.ext
+        exact (D a).map_smul k ell.val }
+  let r : MonoidHom G (Module.End Complex W) :=
+    { toFun := A
+      map_one' := by
+        ext ell v
+        change ell.val (rho (Inv.inv (1 : G)) v) = ell.val v
+        rw [inv_one, map_one, Module.End.one_apply]
+      map_mul' := fun a b => by
+        ext ell v
+        change ell.val (rho (Inv.inv (a * b)) v) =
+          ell.val (rho (Inv.inv b) (rho (Inv.inv a) v))
+        rw [mul_inv_rev, map_mul, Module.End.mul_apply] }
+  have hSmooth (ell : W) : Filter.Eventually (fun g : G => r g ell = ell) (nhds 1) := by
+    have hb : Filter.Eventually (fun g : G => ell.val.comp (rho g) = ell.val) (nhds 1) :=
+      hWSmooth ell.property
+    have hc : Filter.Tendsto (fun g : G => Inv.inv g) (nhds (1 : G)) (nhds 1) := by
+      simpa only [inv_one] using (continuous_inv.tendsto (1 : G))
+    refine (hc.eventually hb).mono ?_
+    intro g hg
+    exact Subtype.ext hg
+  let Q := HeckeLocalSubgroupAverage.ofCompactSmooth r K hK hSmooth
+  refine Exists.intro Q.proj ?_
+  intro w v
+  have hInv (k : K) (x : V) : (Q.proj w).val (rho k.val x) = (Q.proj w).val x := by
+    have h := congrArg (fun q : W => q.val x) (Q.fixed (Inv.inv k) w)
+    change (Q.proj w).val (rho (Inv.inv (Inv.inv k.val)) x) = (Q.proj w).val x at h
+    simpa only [inv_inv] using h
+  let e : LinearMap (RingHom.id Complex) W Complex :=
+    { toFun := fun q => q.val (P.proj v)
+      map_add' := fun _ _ => rfl
+      map_smul' := fun _ _ => rfl }
+  have hEval (k : K) (q : W) : e (r k.val q) = e q := by
+    change q.val (rho (Inv.inv k.val) (P.proj v)) = q.val (P.proj v)
+    exact congrArg q.val (P.fixed (Inv.inv k) v)
+  calc
+    (Q.proj w).val v = (Q.proj w).val (P.proj v) :=
+      (P.pairing_proj (Q.proj w).val hInv v).symm
+    _ = w.val (P.proj v) := Q.pairing_proj e hEval w
+
+
+private theorem surjective_of_separating_finiteDimensional
+    {X W : Type*} [AddCommGroup X] [Module Complex X] [FiniteDimensional Complex X]
+    [AddCommGroup W] [Module Complex W]
+    (f : LinearMap (RingHom.id Complex) W (Module.Dual Complex X))
+    (hSep : forall x : X, (forall w : W, f w x = 0) -> x = 0) :
+    Function.Surjective f := by
+  apply LinearMap.dualMap_injective_iff.mp
+  apply LinearMap.ker_eq_bot.mp
+  refine le_antisymm ?_ bot_le
+  intro phi hPhi
+  change f.dualMap phi = 0 at hPhi
+  change phi = 0
+  let e := Module.evalEquiv Complex X
+  choose x hx using e.surjective phi
+  have hx0 : x = 0 := by
+    apply hSep
+    intro w
+    have hv : phi (f w) = 0 := DFunLike.congr_fun hPhi w
+    rw [<- hx] at hv
+    exact hv
+  rw [<- hx, hx0, e.map_zero]
+
+private theorem mem_dualOrbitSpan_of_invariant
+    (rho : MonoidHom G (Module.End Complex V))
+    (ell0 d : DualV) (u0 : V) (hOne : ell0 u0 = 1)
+    (hSeed : Membership.mem (heckeLocalSmoothDual rho) ell0)
+    (hIrred : forall x : V, Not (x = 0) ->
+      Submodule.span Complex (Set.range (fun g : G => rho g x)) = Top.top)
+    (K : Subgroup G) (hK : IsCompact (K : Set G))
+    (P : HeckeLocalSubgroupAverage rho K)
+    [FiniteDimensional Complex (LinearMap.range P.proj)]
+    (hD : forall (k : K) (v : V), d (rho k.val v) = d v) :
+    Membership.mem (Submodule.span Complex (Set.range (fun a : G => ell0.comp (rho a)))) d := by
+  let W := Submodule.span Complex (Set.range (fun a : G => ell0.comp (rho a)))
+  let X := LinearMap.range P.proj
+  let R : LinearMap (RingHom.id Complex) W (Module.Dual Complex X) :=
+    { toFun := fun w => w.val.domRestrict X
+      map_add' := fun _ _ => rfl
+      map_smul' := fun _ _ => rfl }
+  have hSep (x : X) (hx : forall w : W, R w x = 0) : x = 0 := by
+    apply Subtype.ext
+    change x.val = 0
+    apply dualOrbitSpan_separates rho ell0 u0 hOne hIrred x.val
+    exact hx
+  have hR := surjective_of_separating_finiteDimensional R hSep
+  choose w hw using hR (d.domRestrict X)
+  choose T hT using exists_dualOrbitAverage_pairing rho ell0 hSeed K hK P
+  have hEq : (T w).val = d := by
+    ext v
+    let xv : X := Subtype.mk (P.proj v) (LinearMap.mem_range.mpr (Exists.intro v rfl))
+    have hVal : w.val (P.proj v) = d (P.proj v) := DFunLike.congr_fun hw xv
+    calc
+      (T w).val v = w.val (P.proj v) := hT w v
+      _ = d (P.proj v) := hVal
+      _ = d v := P.pairing_proj d hD v
+  rw [<- hEq]
+  exact (T w).property
+end
+
+
+section FinitePlace
+
+variable {K V : Type*} [Field K] [NumberField K] [AddCommGroup V] [Module Complex V]
+variable (p : HeightOneSpectrum (RingOfIntegers K)) (n : Nat)
+variable (pi : Units (p.adicCompletion K))
+
+local notation "L" => p.adicCompletion K
+local notation "G" => Units (Matrix (Fin n) (Fin n) L)
+local notation "DualV" => LinearMap (RingHom.id Complex) V Complex
+local notation "v" => (Valued.v : Valuation L (WithZero (Multiplicative Int)))
+
+private theorem isCompact_finitePlacePrincipalCongruence (R : Nat) :
+    IsCompact (valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R) : Set G) := by
+  have hC : IsCompact (Valuation.integer v : Set L) :=
+    isCompact_iff_compactSpace.mpr (compactSpace_heckeLocalIntegers p)
+  have hPi : v (pi ^ R).val = v pi.val ^ R := Valuation.map_pow v _ _
+  rw [<- hPi]
+  exact isCompact_valuationPrincipalCongruenceSubgroup v n (pi ^ R) hC
+
+/-- The orbit span of a nonzero smooth dual functional contains the
+entire smooth dual for an irreducible admissible finite-place representation.
+A normalized value on one vector supplies the nonzero seed. -/
+theorem mem_dualOrbitSpan_of_smooth_admissible
+    (hp : norm pi.val < 1) (rho : MonoidHom G (Module.End Complex V))
+    (ell0 d : DualV) (u0 : V) (hOne : ell0 u0 = 1)
+    (hSeed : Membership.mem (heckeLocalSmoothDual rho) ell0)
+    (hD : Membership.mem (heckeLocalSmoothDual rho) d)
+    (hIrred : forall x : V, Not (x = 0) ->
+      Submodule.span Complex (Set.range (fun g : G => rho g x)) = Top.top)
+    (hSmooth : forall x : V, Filter.Eventually (fun g : G => rho g x = x) (nhds 1))
+    (hAdmissible : forall R : Nat, FiniteDimensional Complex (heckeLocalFixedSubmodule rho
+      (valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R)))) :
+    Membership.mem (Submodule.span Complex (Set.range (fun a : G => ell0.comp (rho a)))) d := by
+  let U : Set G := {g | d.comp (rho g) = d}
+  have hU : Membership.mem (nhds 1) U := hD
+  choose R hR using exists_principalCongruence_in_neighborhood p n 0 pi hp U hU
+  let H := valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R)
+  have hHC : IsCompact (H : Set G) := isCompact_finitePlacePrincipalCongruence p n pi R
+  let P := HeckeLocalSubgroupAverage.ofCompactSmooth rho H hHC hSmooth
+  let : FiniteDimensional Complex (LinearMap.range P.proj) := by
+    rw [range_average_eq_fixedSubmodule rho H P]
+    exact hAdmissible R
+  have hInv (k : H) (x : V) : d (rho k.val x) = d x :=
+    DFunLike.congr_fun (hR.2.2 k.property) x
+  exact mem_dualOrbitSpan_of_invariant rho ell0 d u0 hOne hSeed hIrred H hHC P hInv
+
+private theorem exists_localZeta_normalizingFunctional (u : V) (hu : Not (u = 0)) :
+    exists ell : DualV, ell u = 1 := by
+  let f : LinearMap (RingHom.id Complex) Complex V :=
+    { toFun := fun z => HSMul.hSMul z u
+      map_add' := fun a b => add_smul a b u
+      map_smul' := fun a b => mul_smul a b u }
+  have hInj : Function.Injective f := by
+    apply LinearMap.ker_eq_bot.mp
+    refine le_antisymm ?_ bot_le
+    intro z hz
+    change HSMul.hSMul z u = 0 at hz
+    change z = 0
+    exact (smul_eq_zero.mp hz).resolve_right hu
+  have hSurj := LinearMap.dualMap_surjective_iff.mpr hInj
+  choose ell hell using hSurj (LinearMap.id : Module.Dual Complex Complex)
+  have hEval : ell (HSMul.hSMul (1 : Complex) u) = 1 := DFunLike.congr_fun hell 1
+  rw [one_smul] at hEval
+  exact Exists.intro ell hEval
+
+/-- A smooth irreducible admissible finite-place representation has one
+normalized polynomial denominator for the local zeta integrals of all of its
+smooth matrix coefficients and compactly supported locally constant tests. -/
+theorem heckeLocal_smoothIrreducible_commonDenominator
+    [Nontrivial V]
+    [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    [MeasurableSpace L] [BorelSpace L] [MeasurableSpace G] [BorelSpace G]
+    (hPi : v pi.val = finiteUniformizerValue) (hLt : v pi.val < 1) (hp : norm pi.val < 1)
+    (mu : Measure G) [mu.IsHaarMeasure]
+    (rho : MonoidHom G (Module.End Complex V))
+    (hIrred : forall x : V, Not (x = 0) ->
+      Submodule.span Complex (Set.range (fun g : G => rho g x)) = Top.top)
+    (hSmooth : forall x : V, Filter.Eventually (fun g : G => rho g x = x) (nhds 1))
+    (hAdmissible : forall R : Nat, FiniteDimensional Complex (heckeLocalFixedSubmodule rho
+      (valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R))))
+    (hNorm : mu ((valuationIntegralMatrixSubgroup v n : Subgroup G) : Set G) = 1) :
+    let Z (s : Complex) := (norm pi.val : Complex) ^ s
+    exists D : Polynomial Complex, And (D.eval 0 = 1)
+      (forall (ell : DualV) (u : V),
+        Membership.mem (heckeLocalSmoothDual rho) ell ->
+        HasHeckeLocalZetaDenominator mu Z D (fun g : G => ell (rho g u))) := by
+  intro Z
+  choose u0 hu0 using exists_ne (0 : V)
+  let U : Set G := {g | rho g u0 = u0}
+  have hU : Membership.mem (nhds 1) U := hSmooth u0
+  choose R hR using exists_principalCongruence_in_neighborhood p n 0 pi hp U hU
+  let H := valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R)
+  have hHC : IsCompact (H : Set G) := isCompact_finitePlacePrincipalCongruence p n pi R
+  let P := HeckeLocalSubgroupAverage.ofCompactSmooth rho H hHC hSmooth
+  let : FiniteDimensional Complex (LinearMap.range P.proj) := by
+    rw [range_average_eq_fixedSubmodule rho H P]
+    exact hAdmissible R
+  choose d0 hd0 using exists_localZeta_normalizingFunctional u0 hu0
+  let ell0 := d0.comp P.proj
+  have hFixU (k : H) : rho k.val u0 = u0 := hR.2.2 k.property
+  have hFixEll (k : H) (x : V) : ell0 (rho k.val x) = ell0 x :=
+    congrArg (fun y : V => d0 y) (P.left_invariant k x)
+  have hOne : ell0 u0 = 1 := by
+    change d0 (P.proj u0) = 1
+    rw [P.proj_eq_of_fixed u0 hFixU, hd0]
+  have hHP : v (pi ^ R).val = v pi.val ^ R := Valuation.map_pow v _ _
+  have hHOpen : IsOpen (H : Set G) := by
+    change IsOpen (valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R) : Set G)
+    rw [<- hHP]
+    exact isOpen_valuationPrincipalCongruenceSubgroup v n (pi ^ R)
+      (Valued.isOpen_valuationSubring L)
+  have hSeed : Membership.mem (heckeLocalSmoothDual rho) ell0 := by
+    change Filter.Eventually (fun g : G => ell0.comp (rho g) = ell0) (nhds 1)
+    refine Filter.Eventually.mono (hHOpen.mem_nhds H.one_mem) ?_
+    intro g hg
+    ext x
+    exact hFixEll (Subtype.mk g hg) x
+  choose D hD using heckeLocal_matrixCoefficients_commonReducedDenominator_of_orbitSpans
+    p n R hR.1 pi hPi hLt hp mu rho P ell0 u0 hFixEll hFixU hNorm hOne
+  refine Exists.intro D (And.intro hD.1 ?_)
+  intro ell u hell
+  have hEll := mem_dualOrbitSpan_of_smooth_admissible p n pi hp rho ell0 ell u0
+    hOne hSeed hell hIrred hSmooth hAdmissible
+  have hVec : Membership.mem (Submodule.span Complex (Set.range (fun b : G => rho b u0))) u := by
+    rw [hIrred u0 hu0]
+    exact Submodule.mem_top
+  exact hD.2 ell u hEll hVec
+
+end FinitePlace
+
 end Robin1984.GRH
