@@ -223,11 +223,12 @@ part of the resulting test. Standard automorphic GRH by itself supplies
 no general tensor-product transfer for that factor.
 [Soundararajan and Thorner, with an appendix by Brumley](https://arxiv.org/abs/1804.03654)
 
-## A one-sided prime-power criterion for grand RH
+## A one-sided prime-power criterion for the standard automorphic family
 
-One can keep a one-sided inequality for standard automorphic
-$L$-functions without the local positivity assumption by testing a
-smoothed prime-power sum instead of optimizing over ideals.
+Grand RH says that the nontrivial zeros of every automorphic
+$L$-function lie on the critical line. For standard cuspidal
+$L$-functions, a smoothed prime-power sum gives a one-sided
+criterion for this critical-line condition without local positivity.
 For a normalized unitary cuspidal $L(s,\pi)$ over a number field $K$,
 use $Z=L(s,\pi)L(s,\tilde\pi)$. For a pure imaginary norm power, use
 $Z=\zeta_K$, since a vertical translation preserves the zero condition.
@@ -401,3 +402,23 @@ products. Over the cyclotomic fields the shared Dedekind zero condition
 gives Dirichlet GRH. The triangular sum also accepts signed coefficients,
 which allows the higher-rank standard automorphic specialization.
 [Lagarias, Li coefficients and automorphic zero criteria](https://www.numdam.org/articles/10.5802/aif.2311/)
+
+## Dedekind ERH and simple zeros
+
+For a number field $K$, assume Dedekind RH for $K$. Form
+$A_K(t)=e^{-t/2}R_{\zeta_K}(e^t)$ for $t\ge0$ and extend it by zero
+for $t<0$. For $a=1,2$, define
+$$
+k_a(v)=\left(\frac{v^2}{4a^2}-\frac{v}{a}+\frac34-\frac1{2a}\right)
+       \frac{e^{-v^2/(4a)}}{\sqrt{4\pi a}},
+\qquad H_a(t)=\int_{\mathbb R}k_a(v)A_K(t-v)\,dv.
+$$
+Then all nontrivial zeros of $\zeta_K$ are simple if and only if
+$$
+\limsup_{T\to\infty}\frac1T\int_0^T |H_1(t)|^2\,dt
+\le \limsup_{t\to\infty}\Re H_2(t).
+$$
+The proof uses the actual pole-cleared zeta function $(s-1)\zeta_K(s)$.
+Its analytic order at every zero in the open critical strip agrees with
+that of $\zeta_K$. The arithmetic input is defined by the prime-ideal
+powers of $K$.

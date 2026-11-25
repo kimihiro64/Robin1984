@@ -23,9 +23,10 @@ universe u
 
 namespace Robin1984.GRH
 
-/-- Grand RH: every nontrivial zero of every standard automorphic L-function
-has real part one half. The index ranges over all fields, ranks, and
-normalized unitary cuspidal representations when applied to grand RH. -/
+/-- Grand RH says that every nontrivial zero of every automorphic
+L-function has real part one half. The index enumerates the L-functions
+in the family. For the full hypothesis it ranges over all automorphic
+L-functions in the usual normalization. -/
 def GrandRH {index : Type u} (automorphicL : index -> Complex -> Complex) : Prop :=
   forall (pi : index) (s : Complex),
     0 < s.re -> s.re < 1 -> automorphicL pi s = 0 -> s.re = 1 / 2
@@ -184,7 +185,10 @@ theorem grandRobinFamilyCriterion {index coefficients zeros : Type u}
   exact hTransfer.trans (forall_congr' (fun pi =>
     grandRobinRH_iff_grandRobinBound (realizes pi).admissible))
 
-/-- The completed zero condition for every member of a dual-closed family. -/
+/-- The completed formulation of Grand RH: every automorphic L-function
+has all of its nontrivial zeros on the critical line. The full hypothesis
+uses an index ranging over every automorphic L-function. Here the completed
+functions represent the nontrivial zeros after normalization and pole removal. -/
 def CompletedFamilyRH {Representation : Type*}
     (completedL : Representation -> Complex -> Complex) : Prop :=
   forall pi s, completedL pi s = 0 -> s.re = (1 : Real) / 2

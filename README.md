@@ -86,11 +86,12 @@ All logarithms are natural. The cutoff can depend on $K$.
 
 ### Grand RH and the triangular prime-power inequality
 
-Grand RH is the assertion that every nontrivial zero of every standard
-automorphic $L(s,\pi)$ has real part $1/2$. Here $\pi$ ranges over unitary
+Grand RH is the assertion that every nontrivial zero of every
+automorphic $L$-function has real part $1/2$. The equivalence below
+concerns its restriction to the standard $L(s,\pi)$ of unitary
 cuspidal representations of $\mathrm{GL}_n(\mathbb A_K)$ for all $n\ge1$
-and all number fields $K$. The nontrivial zeros are the zeros of the
-pole-cleared completed standard function.
+and all number fields $K$. In this family the nontrivial zeros are the
+zeros of the pole-cleared completed functions.
 
 For each $K$, include the test $Z=\zeta_K$. For every $\pi$ other than a
 pure norm character $|\cdot|_{\mathbb A_K}^{it}$ of $\mathrm{GL}_1$,
@@ -119,8 +120,8 @@ b_{\mathfrak p,j}(Z)=2\log q\,
 ```
 
 Let $m_Z$ be the pole order of $Z$ at $1$, equal to $1$ for the
-Dedekind test and $0$ for a paired test. Grand RH is equivalent to
-the following bound for every test $Z$.
+Dedekind test and $0$ for a paired test. The critical-line condition for
+this standard family is equivalent to the following bound for every test $Z$.
 
 ```math
 R_Z(x)
@@ -298,7 +299,7 @@ for the limit superior defined above.
 | --- | --- |
 | RH | All nontrivial zeros of $\zeta$ are simple iff $\mathcal E\le\mathcal S$ for $\zeta$. |
 | Dirichlet GRH | Each Dirichlet $L$-function has simple nontrivial zeros iff $\mathcal E\le\mathcal S$ for each individual character. |
-| Dedekind ERH | For the specified holomorphic factorization $\zeta_K=U_K\prod_jL_{K,j}^{e_{K,j}}$, the order at each zero is exactly $\sum_{j:L_{K,j}(w)=0}e_{K,j}$ iff $\sum_j e_{K,j}\mathcal E_j\le\sum_j e_{K,j}\mathcal S_j$ for each field in the test. |
+| Dedekind ERH | All nontrivial zeros of $\zeta_K$ are simple iff $\mathcal E\le\mathcal S$ for the prime-ideal powers of $K$. This applies to every number field. |
 | Grand RH | Every individual standard completion has simple zeros outside its prescribed exceptions and the stated exact orders at specified exceptions iff $\mathcal E+\mathcal P\le\mathcal S$ for each individual representation. The term $\mathcal P$ is the sum of squared errors in the prescribed orders, weighted by the Gaussian coefficients. |
 
 The [research paper](paper/robin1984-formalization.tex) gives the proofs.
@@ -312,12 +313,17 @@ following multiplicity equivalences.
 | Dedekind ERH | `dedekindERH_iff_globalPrimePowerMultiplicityInequality` |
 | Grand RH for a supplied standard family | `grandRH_iff_globalPrimePowerMultiplicityInequality` |
 
-The Dedekind proof takes the positive holomorphic factorization and the
-analytic data of its factors as inputs. The Grand RH proof takes the
-individual standard Euler coefficients and Gamma completions through
-`HasStandardMultiplicityAnalytics`. The paper supplies the standard
-automorphic inputs from the cited theorems. Instantiating those inputs in
-Lean over the full automorphic family remains in progress.
+The Dedekind test uses $A_K(t)=e^{-t/2}R_{\zeta_K}(e^t)$ for $t\ge0$
+and $A_K(t)=0$ for $t<0$, with the prime-ideal remainder defined above.
+For a positive holomorphic factorization $\zeta_K=U_K\prod_j L_{K,j}^{e_{K,j}}$,
+the factorwise criterion equates the forced orders
+$\operatorname{ord}_w\zeta_K=\sum_{j:L_{K,j}(w)=0}e_{K,j}$
+with $\sum_j e_{K,j}\mathcal E_j\le\sum_j e_{K,j}\mathcal S_j$.
+
+The Grand RH proof takes the individual standard Euler coefficients and
+Gamma completions through `HasStandardMultiplicityAnalytics`.
+The paper supplies the inputs for the standard family from the cited
+theorems. The Lean instantiation for higher ranks remains in progress.
 
 ## Mathematical organization
 

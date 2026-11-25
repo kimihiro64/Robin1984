@@ -1,7 +1,6 @@
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Robin1984.Equivalence.Theorem
 import Robin1984.GRH.CyclotomicFactorization
-import Robin1984.GRH.DedekindMultiplicity
 import Robin1984.GRH.DedekindTriangular
 import Robin1984.GRH.DirichletMultiplicity
 import Robin1984.GRH.RiemannMultiplicity
@@ -85,14 +84,16 @@ theorem dedekindERH_iff_correctedIdealRobin :
 
 /-! ## Grand RH -/
 
-/-- For a supplied standard family, every zero of each pole-cleared completed
-L-function lies on the critical line exactly when every paired prime-power
-remainder has a square-root upper bound. -/
+/-- **Grand RH and triangular prime powers.** For any family with the
+stated analytic data, all of its nontrivial zeros lie on the critical line
+exactly when each member's triangular prime-power remainder has an eventual
+square-root upper bound. The full Grand RH equivalence requires the data
+for every automorphic L-function. -/
 theorem grandRH_iff_triangularPrimePowerBound {index : Type u} {powers : index -> Type u}
     [forall pi, Countable (powers pi)]
     (family : StandardAutomorphicFamilyData index powers)
     (analytics : HasStandardAutomorphicAnalytics family) :
-    (forall (pi : index) (s : Complex), family.completedL pi s = 0 -> s.re = 1 / 2) <->
+    CompletedFamilyRH family.completedL <->
       (forall pi, StandardFamilyTriangularBound family pi) := by
   let data (pi : index) : GrandRobinEulerData (powers pi) :=
     { normPower := fun i => family.primePowerNorm pi i
@@ -219,48 +220,45 @@ end
 
 section
 
-open MeasureTheory
+open IsDedekindDomain MeasureTheory NumberField
 open scoped Classical
 
-universe v w
-
-/-- The signed prime-power signal of a factor in the specified product. -/
-noncomputable def dedekindFactorPrimePowerSignal {index : Type v} {powers : index -> Type w}
-    (f : DedekindMultiplicityFactorization index powers) (j : index) (t : Real) : Complex :=
+/-- The signed triangular signal on the logarithmic scale. The sum ranges
+over powers of nonzero prime ideals of the given field. -/
+noncomputable def dedekindPrimeIdealMultiplicitySignal
+    (K : Type u) [Field K] [NumberField K] (t : Real) : Complex :=
   if t < 0 then 0 else
     let x := Real.exp t
     (Real.exp (-t / (Nat.cast 2 : Real)) : Complex) *
-      (((f.poleOrder j / (Nat.cast 2 : Real) : Real) : Complex) * (x : Complex) -
-        tsum (fun n : powers j => (Set.Ioi (f.primePowerNorm j n)).indicator
-          (fun y : Real => f.coefficient j n *
-            (1 - (f.primePowerNorm j n : Complex) / (y : Complex))) x))
+      (((1 / (Nat.cast 2 : Real) : Real) : Complex) * (x : Complex) -
+        tsum (fun pn : Prod (HeightOneSpectrum (RingOfIntegers K)) Nat =>
+          let q := Ideal.absNorm pn.1.asIdeal
+          let a : Real := (q ^ (pn.2 + 1) : Nat)
+          (Set.Ioi a).indicator
+            (fun y : Real => (Real.log (q : Real) : Complex) *
+              (1 - (a : Complex) / (y : Complex))) x))
 
-/-- The weighted global prime-power inequality for the supplied factorization. -/
-def DedekindPrimePowerMultiplicityInequality {index : Type v} {powers : index -> Type w}
-    (f : DedekindMultiplicityFactorization index powers) : Prop :=
-  f.factors.sum (fun j => (f.exponent j : Real) * Filter.limsup (fun T : Real =>
+/-- One global inequality between the squared mean at Gaussian width one
+and the upper limit at width two, using the actual prime-ideal powers. -/
+def DedekindPrimePowerMultiplicityInequality
+    (K : Type u) [Field K] [NumberField K] : Prop :=
+  Filter.limsup (fun T : Real =>
     (Inv.inv (T : Complex) * intervalIntegral
-      (fun t => ((norm (primePowerGaussianSmoothing (dedekindFactorPrimePowerSignal f j) 1 t) ^ 2 : Real) :
-         Complex))
-      0 T MeasureTheory.volume).re) Filter.atTop) <=
-    f.factors.sum (fun j => (f.exponent j : Real) * Filter.limsup (fun t : Real =>
-      (primePowerGaussianSmoothing (dedekindFactorPrimePowerSignal f j) (Nat.cast 2 : Real) t).re) Filter.atTop)
+      (fun t => ((norm (primePowerGaussianSmoothing
+        (dedekindPrimeIdealMultiplicitySignal K) 1 t) ^ 2 : Real) : Complex))
+      0 T volume).re) Filter.atTop <=
+    Filter.limsup (fun t : Real =>
+      (primePowerGaussianSmoothing (dedekindPrimeIdealMultiplicitySignal K)
+        (Nat.cast 2 : Real) t).re) Filter.atTop
 
-/-- **Dedekind ERH and forced zero orders.** Under Dedekind ERH, the
-critical-strip zeros of a Dedekind zeta function have exactly the orders
-forced by the given positive holomorphic factorization if and only if
-the weighted global prime-power inequality holds. -/
+/-- **Dedekind ERH and simple zeros.** For every number field, assume
+Dedekind RH for that field. All its nontrivial Dedekind zeta zeros are
+simple if and only if its global prime-ideal multiplicity inequality holds. -/
 theorem dedekindERH_iff_globalPrimePowerMultiplicityInequality
-    (hERH : forall (K : Type u) [Field K] [NumberField K], DedekindRH K)
-    (K : Type u) [Field K] [NumberField K]
-    {index : Type v} {powers : index -> Type w} [forall j, Countable (powers j)]
-    (f : DedekindMultiplicityFactorization index powers)
-    (h : HasDedekindMultiplicityFactorization K f) :
-    DedekindOrderForcedByFactors f <-> DedekindPrimePowerMultiplicityInequality f := by
-  have hDef : DedekindPrimePowerMultiplicityInequality f =
-      DedekindGlobalMultiplicityInequality f := rfl
-  rw [hDef]
-  exact dedekindERH_iff_globalMultiplicityInequality hERH K f h
+    (K : Type u) [Field K] [NumberField K] (hERH : DedekindRH K) :
+    DedekindPrimeIdealSimpleZeros K <-> DedekindPrimePowerMultiplicityInequality K := by
+  change DedekindPrimeIdealSimpleZeros K <-> DedekindPrimeIdealMultiplicityInequality K
+  exact dedekindERH_iff_primeIdealMultiplicityInequality K hERH
 
 end
 
@@ -287,17 +285,17 @@ def GrandPrimePowerMultiplicityInequality (A : Real -> Complex)
       (order delta : Complex) * (Real.exp (-(delta ^ 2)) : Complex)) ^ 2) <=
     Filter.limsup (fun t => (removeMultiplicityFrequencies E H2 t).re) Filter.atTop
 
-/-- **Grand RH and prescribed zero orders.** Suppose all zeros of every
-completed L-function in the supplied standard automorphic family lie on
-the critical line. They are simple outside the chosen finite sets and have
-the designated exact orders if and only if every member satisfies the
+/-- **Grand RH and prescribed zero orders.** For an automorphic family
+with the stated analytic data and all of its nontrivial zeros on the
+critical line, the zeros are simple outside the chosen finite sets and
+have the designated exact orders exactly when each member satisfies the
 global prime-power inequality with those exceptions. -/
 theorem grandRH_iff_globalPrimePowerMultiplicityInequality
     {index : Type u} {powers : index -> Type v} [forall pi, Countable (powers pi)]
     (family : StandardMultiplicityFamilyData index powers)
     (analytics : HasStandardMultiplicityAnalytics family)
     (E J : index -> Finset Real) (order : index -> Real -> Nat)
-    (hRH : forall pi s, family.completedL pi s = 0 -> s.re = 1 / 2) :
+    (hRH : CompletedFamilyRH family.completedL) :
     (forall pi, HasPrescribedZeroOrders (family.completedL pi) (E pi) (J pi) (order pi)) <->
     (forall pi, GrandPrimePowerMultiplicityInequality (standardMultiplicityLogSignal family pi)
       (E pi) (J pi) (order pi)) := by

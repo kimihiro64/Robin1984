@@ -1,5 +1,7 @@
+import Robin1984.GRH.AutomorphicCompletion
 import Robin1984.GRH.DedekindRobinReverse
 import Robin1984.GRH.DedekindRobinSpectralForward
+import Robin1984.GRH.MultiplicityArithmetic
 
 /-!
 ## Provenance
@@ -17,6 +19,7 @@ The smoothed sum uses the actual prime-ideal powers of a number field.
 The Dedekind primitive-tail estimate gives the upper bound, and the
 Landau criterion gives the converse. The two Robin criteria therefore
 test the same fieldwise zero condition.
+The same prime-ideal data give a multiplicity criterion under Dedekind RH.
 -/
 
 set_option autoImplicit false
@@ -400,5 +403,136 @@ theorem dedekindTriangularRobin_iff_correctedIdealRobin :
     DedekindTriangularRobin K <-> CorrectedIdealRobin K :=
   (dedekindRH_iff_dedekindTriangularRobin K).symm.trans
     (Iff.intro (correctedIdealRobin_of_dedekindRH K) (dedekindRH_of_correctedIdealRobin K))
+
+section
+
+open Complex.Hadamard NumberField.InfinitePlace
+
+/-- The ordinary Dedekind zeta function with its pole removed is entire of
+order at most one. -/
+theorem entirePoleFreeDedekindZeta_entireOfOrderAtMost_one
+    (K : Type*) [Field K] [NumberField K] :
+    EntireOfOrderAtMost 1 (entirePoleFreeDedekindZeta K) := by
+  let conductor : Real := (|NumberField.discr K| : Int)
+  have hc : 0 < conductor := by
+    dsimp [conductor]
+    exact_mod_cast abs_pos.mpr (NumberField.discr_ne_zero K)
+  let mu : Fin (nrRealPlaces K) -> Complex := fun _ => 0
+  let nu : Fin (nrComplexPlaces K) -> Complex := fun _ => 0
+  have hmu (i : Fin (nrRealPlaces K)) : -(1 : Real) / 2 < (mu i).re := by
+    simp [mu]
+    norm_num
+  have hnu (i : Fin (nrComplexPlaces K)) : -(1 : Real) / 2 < (nu i).re := by
+    simp [nu]
+    norm_num
+  apply entireOrderOne_of_standardCompletion hc 1 mu nu hmu hnu
+    (fun s => (analyticAt_entirePoleFreeDedekindZeta K s).differentiableAt)
+    (completedDedekindPoleCleared_entireOfOrderAtMost_one K)
+  intro s hs
+  rw [completedDedekindPoleCleared_eq_archimedean K (by linarith only [hs])]
+  simp only [standardCompletionFactor, pow_one, mu, nu, add_zero,
+    Finset.prod_const, Finset.card_univ, Fintype.card_fin, conductor,
+    Complex.ofReal_intCast, ZInfty, mul_assoc]
+
+/-- The logarithmic signal constructed from the actual prime-ideal powers. -/
+noncomputable def dedekindPrimeIdealMultiplicityLogInput (t : Real) : Complex :=
+  triangularLogSignal (complexTriangularRemainder (dedekindTriangularNorm K)
+    (fun pn => (dedekindTriangularCoefficient K pn : Complex)) 1) t
+
+/-- One Gaussian inequality for the prime-ideal powers of the field. -/
+def DedekindPrimeIdealMultiplicityInequality : Prop :=
+  GaussianMultiplicityInequality (dedekindPrimeIdealMultiplicityLogInput K)
+
+/-- Every zero in the open critical strip of the Dedekind zeta continuation
+of this field has analytic order exactly one. -/
+def DedekindPrimeIdealSimpleZeros : Prop :=
+  forall zeta : Complex -> Complex, IsDedekindZetaContinuation K zeta ->
+    forall s : Complex, 0 < s.re -> s.re < 1 -> zeta s = 0 ->
+      analyticOrderNatAt zeta s = 1
+
+private theorem dedekindPoleClear_zero_and_order
+    {zeta : Complex -> Complex} (hZeta : IsDedekindZetaContinuation K zeta)
+    (s : Complex) (hs : Not (s = 1)) :
+    And (zeta s = 0 <-> entirePoleFreeDedekindZeta K s = 0)
+      (analyticOrderNatAt zeta s = analyticOrderNatAt (entirePoleFreeDedekindZeta K) s) := by
+  have hOpen : IsOpen {z : Complex | Not (z = 1)} := isOpen_ne
+  have hDomain : Membership.mem {z : Complex | Not (z = 1)} s := hs
+  have hNearZeta : Filter.EventuallyEq (nhds s) (dedekindZetaContinuation K) zeta := by
+    filter_upwards [hOpen.mem_nhds hDomain] with z hz
+    exact eqOn_of_dedekindZetaContinuations (isDedekindZetaContinuation_actual K) hZeta hz
+  have hNearClear : Filter.EventuallyEq (nhds s) (entirePoleFreeDedekindZeta K)
+      ((fun z : Complex => z - 1) * dedekindZetaContinuation K) := by
+    filter_upwards [hOpen.mem_nhds hDomain] with z hz
+    change entirePoleFreeDedekindZeta K z = (z - 1) *
+      (entirePoleFreeDedekindZeta K z / (z - 1))
+    field_simp [sub_ne_zero.mpr hz]
+  have hAnalytic : AnalyticAt Complex (fun z : Complex => z - 1) s :=
+    analyticAt_id.sub analyticAt_const
+  have hOrder : analyticOrderAt (entirePoleFreeDedekindZeta K) s = analyticOrderAt zeta s := by
+    rw [analyticOrderAt_congr hNearClear,
+      analyticOrderAt_mul hAnalytic (analyticAt_dedekindZetaContinuation K hs),
+      hAnalytic.analyticOrderAt_eq_zero.mpr (sub_ne_zero.mpr hs), zero_add,
+      analyticOrderAt_congr hNearZeta]
+  refine And.intro ?_ (congrArg ENat.toNat hOrder.symm)
+  rw [<- hNearZeta.eq_of_nhds, dedekindZetaContinuation, div_eq_zero_iff]
+  exact or_iff_left (sub_ne_zero.mpr hs)
+
+/-- Under Dedekind RH for a number field, its zeta zeros in the open
+critical strip are all simple exactly when its global prime-ideal
+multiplicity inequality holds. -/
+theorem dedekindERH_iff_primeIdealMultiplicityInequality
+    (hERH : DedekindRH K) :
+    DedekindPrimeIdealSimpleZeros K <-> DedekindPrimeIdealMultiplicityInequality K := by
+  let F := entirePoleFreeDedekindZeta K
+  let _ : Countable PP := countable_dedekindTriangularIndex K
+  let b : PP -> Complex := fun pn => (dedekindTriangularCoefficient K pn : Complex)
+  have hOrder := entirePoleFreeDedekindZeta_entireOfOrderAtMost_one K
+  have hAtOne : Not (F 1 = 0) :=
+    entirePoleFreeDedekindZeta_ne_zero_of_one_le_re K (by norm_num)
+  have hRight (s : Complex) (hz : F s = 0) : s.re <= 1 / 2 := by
+    by_contra! hHalf
+    have hs1 : s.re < 1 :=
+      lt_of_not_ge (fun hs => entirePoleFreeDedekindZeta_ne_zero_of_one_le_re K hs hz)
+    apply (dedekindRH_iff_noZero_rightHalfStrip K).mp hERH s hHalf hs1
+    change F s / (s - 1) = 0
+    rw [hz, zero_div]
+  have hSum (r : Real) (hr : 1 < r) :
+      Summable (fun pn => norm (b pn) * (dedekindTriangularNorm K pn) ^ (-r)) := by
+    simpa only [b, Complex.norm_real] using summable_dedekindTriangularCoefficient K r hr
+  have hComparison := (complexArithmeticMultiplicityComparison (dedekindTriangularNorm K)
+    b 1 F (one_le_dedekindTriangularNorm K) (finite_dedekindTriangularNorm_lt K)
+    hSum hOrder (Exists.intro 1 hAtOne) hRight (logDeriv_dedekindTriangular K)).2
+  change DedekindPrimeIdealMultiplicityInequality K <-> _ at hComparison
+  rw [hComparison]
+  constructor
+  case mp =>
+    intro h s hs hz
+    have h0 : 0 < s.re := by rw [hs]; norm_num
+    have h1 : s.re < 1 := by rw [hs]; norm_num
+    have hsOne : Not (s = 1) := fun he => by simp [he] at h1
+    have hTransport := dedekindPoleClear_zero_and_order K (isDedekindZetaContinuation_actual K) s hsOne
+    have hsActual := h _ (isDedekindZetaContinuation_actual K) s h0 h1 (hTransport.1.mpr hz)
+    exact le_of_eq (hTransport.2.symm.trans hsActual)
+  case mpr =>
+    intro h zeta hZeta s h0 h1 hz
+    have hsOne : Not (s = 1) := fun he => by simp [he] at h1
+    have hTransport := dedekindPoleClear_zero_and_order K hZeta s hsOne
+    have hzF : F s = 0 := hTransport.1.mp hz
+    have hs := (dedekindRH_iff_zeros_of_continuation hZeta).mp hERH s h0 h1 hz
+    have hLe := h s hs hzF
+    have hFinite : Not (analyticOrderAt F s = Top.top) := by
+      intro hTop
+      have hEq := (AnalyticOnNhd.analyticOrderAt_eq_top_iff_eq_zero s
+        (fun w => hOrder.differentiable.analyticAt w)).mp hTop
+      exact hAtOne (congrFun hEq 1)
+    have hNe0 : Not (analyticOrderNatAt F s = 0) := by
+      intro hZero
+      have hCast : ((analyticOrderNatAt F s : Nat) : ENat) = analyticOrderAt F s :=
+        ENat.natCast_toNat hFinite
+      rw [hZero, Nat.cast_zero] at hCast
+      exact ((hOrder.differentiable.analyticAt s).analyticOrderAt_eq_zero.mp hCast.symm) hzF
+    exact hTransport.2.trans (le_antisymm hLe (Nat.one_le_iff_ne_zero.mpr hNe0))
+
+end
 
 end Robin1984.GRH
