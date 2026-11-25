@@ -21,6 +21,7 @@ import Robin1984.GRH.GodementJacquetFundamentalDomain
 import Robin1984.GRH.GodementJacquetHaarNormalization
 import Robin1984.GRH.GodementJacquetHaarUnimodularity
 import Robin1984.GRH.GodementJacquetHaarVolume
+import Robin1984.GRH.GodementJacquetLocalZetaRationality
 import Robin1984.GRH.GodementJacquetMatrixMeasure
 import Robin1984.GRH.GodementJacquetMatrixPoisson
 import Robin1984.GRH.GodementJacquetMellinAbsolute

@@ -1767,6 +1767,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetLocalZetaRationality.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement-Jacquet local zeta integrals, compact support, and smooth admissible representations.",
+      "formalization_note": "Uses scalar dilation and a common congruence depth to deduce right-half-plane convergence and rationality for compactly supported locally constant matrix tests.",
+      "content_basis": "Proves the principal congruence neighborhood basis, a compact support cutoff, the scalar change of variables, and the right-half-plane identity.",
+      "dependency_status": "Uses finite-place Cartan integral rationality and normalized Haar measure on the local general linear group.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetMatrixMeasure.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the determinant change of variables for additive Haar measure on adelic matrices.",
