@@ -93,16 +93,16 @@ theorem heckeLocalIntegralUnits_iff (x : G1) :
 variable [MeasurableSpace (Units (p.adicCompletion K))]
 variable [BorelSpace (Units (p.adicCompletion K))]
 
-/-- An arbitrary unramified local multiplicative weight integrates to
-its Euler factor on the integral cone with normalized Haar measure. -/
-theorem integral_unramifiedLocalWeightedCharacter
+/-- On the integral multiplicative cone, an unramified weighted character
+is absolutely integrable as soon as its uniformizer value has norm below one. -/
+theorem integrableAndIntegral_unramifiedLocalWeightedCharacter
     (a : G1) (ha : Valued.v a.val = finiteUniformizerValue)
     (chi : MonoidHom G1 Complex)
     (hChi : forall x : G1, Membership.mem (heckeLocalUnitShell p) x -> chi x = 1)
     (s : Complex) (hNorm : norm (unramifiedLocalWeightedCharacter chi s a) < 1) :
-    integral (heckeLocalHaar p) ((heckeLocalIntegralUnits p).indicator
-      (unramifiedLocalWeightedCharacter chi s)) =
-      Inv.inv (1 - unramifiedLocalWeightedCharacter chi s a) := by
+    let f := (heckeLocalIntegralUnits p).indicator (unramifiedLocalWeightedCharacter chi s)
+    And (Integrable f (heckeLocalHaar p))
+      (integral (heckeLocalHaar p) f = Inv.inv (1 - unramifiedLocalWeightedCharacter chi s a)) := by
   let _ : MeasurableMul G1 :=
     { measurable_const_mul := fun x => (continuous_const_mul x).measurable
       measurable_mul_const := fun x => (continuous_mul_const x).measurable }
@@ -112,11 +112,24 @@ theorem integral_unramifiedLocalWeightedCharacter
     apply unramifiedLocalWeightedCharacter_eq_one chi s x _ (hChi x hx)
     rw [FinitePlace.norm_def, hv]
     simp
+  dsimp only
   rw [<- heckeLocalUniformizerShells_eq_integralUnits p a ha]
-  exact integral_unramified_uniformizerShells (heckeLocalHaar p)
+  exact integrableAndIntegral_unramified_uniformizerShells (heckeLocalHaar p)
     (heckeLocalUnitShell p) (isOpen_heckeLocalUnitShell p).measurableSet
     (heckeLocalHaar_unitShell p) a (unramifiedLocalWeightedCharacter chi s)
     hUnit (heckeLocalUniformizerShells_pairwiseDisjoint p a ha) hNorm
+
+/-- An arbitrary unramified local multiplicative weight integrates to
+its Euler factor on the integral cone with normalized Haar measure. -/
+theorem integral_unramifiedLocalWeightedCharacter
+    (a : G1) (ha : Valued.v a.val = finiteUniformizerValue)
+    (chi : MonoidHom G1 Complex)
+    (hChi : forall x : G1, Membership.mem (heckeLocalUnitShell p) x -> chi x = 1)
+    (s : Complex) (hNorm : norm (unramifiedLocalWeightedCharacter chi s a) < 1) :
+    integral (heckeLocalHaar p) ((heckeLocalIntegralUnits p).indicator
+      (unramifiedLocalWeightedCharacter chi s)) =
+      Inv.inv (1 - unramifiedLocalWeightedCharacter chi s a) :=
+  (integrableAndIntegral_unramifiedLocalWeightedCharacter p a ha chi hChi s hNorm).2
 
 end ScalarShell
 

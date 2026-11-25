@@ -727,66 +727,67 @@ section TateFactors
 
 open MeasureTheory MeasureTheory.Measure
 
-/-- The integral of a geometric series supported on measurable shells of
-unit measure is its usual Euler factor. -/
-private theorem integral_geometric_shells {X : Type*} [MeasurableSpace X]
-    (M : Measure X) (shell : Nat -> Set X)
-    (hMeas : forall n, MeasurableSet (shell n))
-    (hMass : forall n, M (shell n) = 1) {z : Complex} (hz : norm z < 1) :
-    integral M (fun x => tsum (fun n => Set.indicator (shell n) (fun _ => z ^ n) x)) =
-      Inv.inv (1 - z) := by
-  let F (n : Nat) := Set.indicator (shell n) (fun _ : X => z ^ n)
-  have hInt (n : Nat) : Integrable (F n) M :=
-    (integrable_indicator_iff (hMeas n)).mpr (integrableOn_const (C := z ^ n) (by simp [hMass n]))
-  have hReal (n : Nat) : M.real (shell n) = 1 := by
-    simp only [Measure.real, hMass n, ENNReal.toReal_one]
-  have hTerm (n : Nat) : integral M (F n) = z ^ n := by
-    rw [integral_indicator_const (z ^ n) (hMeas n), hReal n, one_smul]
-  have hNormTerm (n : Nat) : integral M (fun x => norm (F n x)) = norm z ^ n := by
-    have hEq (x : X) : norm (F n x) = Set.indicator (shell n) (fun _ : X => norm z ^ n) x := by
-      classical
-      by_cases hx : Membership.mem (shell n) x
-      case pos => simp [F, hx, norm_pow]
-      case neg => simp [F, hx]
-    simp only [hEq, integral_indicator_const _ (hMeas n), hReal n, one_smul]
-  have hSum : Summable (fun n => integral M (fun x => norm (F n x))) := by
-    simpa only [hNormTerm] using summable_geometric_of_lt_one (norm_nonneg z) hz
-  change integral M (fun x => tsum (fun n => F n x)) = _
-  rw [<- integral_tsum_of_summable_integral_norm hInt hSum]
-  simp only [hTerm]
-  exact tsum_geometric_of_norm_lt_one hz
-
-/-- When the shells are disjoint and the integrand has a constant geometric
-value on each shell, its integral over their union is the local Euler factor. -/
-private theorem integral_on_geometric_shells {X : Type*} [MeasurableSpace X]
+/-- A disjoint geometric decomposition proves both integrability and the
+Euler factor for a shell-constant weight. -/
+private theorem integrableAndIntegral_on_geometric_shells {X : Type*} [MeasurableSpace X]
     (M : Measure X) (shell : Nat -> Set X) (weight : X -> Complex)
     (hMeas : forall n, MeasurableSet (shell n))
     (hMass : forall n, M (shell n) = 1)
     (hDisjoint : Pairwise (fun n m => Disjoint (shell n) (shell m)))
     {z : Complex} (hz : norm z < 1)
     (hWeight : forall n x, Membership.mem (shell n) x -> weight x = z ^ n) :
-    integral M (Set.indicator (iUnion shell) weight) = Inv.inv (1 - z) := by
-  classical
-  have hEq (x : X) : Set.indicator (iUnion shell) weight x =
-      tsum (fun n => Set.indicator (shell n) (fun _ => z ^ n) x) := by
-    by_cases hx : Membership.mem (iUnion shell) x
-    case pos =>
-      choose n hn using Set.mem_iUnion.mp hx
-      have hSingle (j : Nat) (hj : Not (j = n)) :
-          Set.indicator (shell j) (fun _ => z ^ j) x = 0 := by
-        have hjx : Not (Membership.mem (shell j) x) :=
-          fun hjx => (Set.disjoint_left.mp (hDisjoint hj)) hjx hn
-        exact Set.indicator_of_notMem hjx _
-      have hTsum : tsum (fun j => Set.indicator (shell j) (fun _ => z ^ j) x) =
-          Set.indicator (shell n) (fun _ => z ^ n) x := tsum_eq_single n hSingle
-      rw [Set.indicator_of_mem hx, hWeight n x hn, hTsum, Set.indicator_of_mem hn]
-    case neg =>
-      rw [Set.indicator_of_notMem hx]
-      have hZero (n : Nat) : Set.indicator (shell n) (fun _ => z ^ n) x = 0 :=
-        Set.indicator_of_notMem (fun hn => hx (Set.mem_iUnion.mpr (Exists.intro n hn))) _
-      simp only [hZero, tsum_zero]
-  rw [funext hEq]
-  exact integral_geometric_shells M shell hMeas hMass hz
+    And (Integrable (Set.indicator (iUnion shell) weight) M)
+      (integral M (Set.indicator (iUnion shell) weight) = Inv.inv (1 - z)) := by
+  have hOn (n : Nat) : IntegrableOn weight (shell n) M := by
+    have hConst : IntegrableOn (fun _ : X => z ^ n) (shell n) M :=
+      integrableOn_const (C := z ^ n) (by simp [hMass n])
+    exact (integrableOn_congr_fun (hWeight n) (hMeas n)).mpr hConst
+  have hReal (n : Nat) : M.real (shell n) = 1 := by
+    simp only [Measure.real, hMass n, ENNReal.toReal_one]
+  have hNorm (n : Nat) :
+      integral (M.restrict (shell n)) (fun x => norm (weight x)) = norm z ^ n := by
+    rw [setIntegral_congr_fun (hMeas n) (fun x hx => congrArg norm (hWeight n x hx)),
+      setIntegral_const, hReal n, one_smul, norm_pow]
+  have hSum : Summable (fun n =>
+      integral (M.restrict (shell n)) (fun x => norm (weight x))) := by
+    simpa only [hNorm] using summable_geometric_of_lt_one (norm_nonneg z) hz
+  have hUnion := integrableOn_iUnion_of_summable_integral_norm hOn hSum
+  have hMeasUnion := MeasurableSet.iUnion hMeas
+  refine And.intro ((integrable_indicator_iff hMeasUnion).mpr hUnion) ?_
+  rw [integral_indicator hMeasUnion, integral_iUnion hMeas hDisjoint hUnion]
+  have hTerm (n : Nat) : integral (M.restrict (shell n)) weight = z ^ n := by
+    rw [setIntegral_congr_fun (hMeas n) (hWeight n), setIntegral_const, hReal n, one_smul]
+  simp only [hTerm]
+  exact tsum_geometric_of_norm_lt_one hz
+
+/-- A normalized unramified local weight is integrable on the union of
+the uniformizer shells, and its integral is the corresponding Euler factor. -/
+theorem integrableAndIntegral_unramified_uniformizerShells
+    {G : Type*} [Group G] [MeasurableSpace G] [MeasurableMul G]
+    (M : Measure G) [Measure.IsMulLeftInvariant M] (unitShell : Set G)
+    (hMeas : MeasurableSet unitShell) (hMass : M unitShell = 1)
+    (uniformizer : G) (weight : MonoidHom G Complex)
+    (hUnit : forall x, Membership.mem unitShell x -> weight x = 1)
+    (hDisjoint : Pairwise (fun n m : Nat => Disjoint
+      (Set.preimage (fun x : G => Inv.inv (uniformizer ^ n) * x) unitShell)
+      (Set.preimage (fun x : G => Inv.inv (uniformizer ^ m) * x) unitShell)))
+    (hNorm : norm (weight uniformizer) < 1) :
+    let f := Set.indicator
+      (iUnion (fun n : Nat => Set.preimage (fun x : G => Inv.inv (uniformizer ^ n) * x) unitShell))
+      weight
+    And (Integrable f M) (integral M f = Inv.inv (1 - weight uniformizer)) := by
+  let shell (n : Nat) := Set.preimage (fun g : G => Inv.inv (uniformizer ^ n) * g) unitShell
+  have hPres (n : Nat) := measurePreserving_mul_left M (Inv.inv (uniformizer ^ n))
+  have hMeasShell (n : Nat) : MeasurableSet (shell n) := (hPres n).measurable hMeas
+  have hMassShell (n : Nat) : M (shell n) = 1 :=
+    ((hPres n).measure_preimage hMeas.nullMeasurableSet).trans hMass
+  refine integrableAndIntegral_on_geometric_shells M shell weight hMeasShell hMassShell hDisjoint hNorm ?_
+  intro n x hx
+  have hx' : x = uniformizer ^ n * (Inv.inv (uniformizer ^ n) * x) := by
+    rw [<- mul_assoc, mul_inv_cancel, one_mul]
+  calc
+    _ = weight (uniformizer ^ n * (Inv.inv (uniformizer ^ n) * x)) := congrArg weight hx'
+    _ = _ := by rw [map_mul, hUnit _ hx, map_pow, mul_one]
 
 /-- A multiplicative local weight trivial on the unit shell integrates to
 its Euler factor over the union of the uniformizer shells. -/
@@ -802,19 +803,9 @@ theorem integral_unramified_uniformizerShells
     (hNorm : norm (weight uniformizer) < 1) :
     integral M (Set.indicator
       (iUnion (fun n : Nat => Set.preimage (fun x : G => Inv.inv (uniformizer ^ n) * x) unitShell))
-      weight) = Inv.inv (1 - weight uniformizer) := by
-  let shell (n : Nat) := Set.preimage (fun g : G => Inv.inv (uniformizer ^ n) * g) unitShell
-  have hPres (n : Nat) := measurePreserving_mul_left M (Inv.inv (uniformizer ^ n))
-  have hMeasShell (n : Nat) : MeasurableSet (shell n) := (hPres n).measurable hMeas
-  have hMassShell (n : Nat) : M (shell n) = 1 :=
-    ((hPres n).measure_preimage hMeas.nullMeasurableSet).trans hMass
-  refine integral_on_geometric_shells M shell weight hMeasShell hMassShell hDisjoint hNorm ?_
-  intro n x hx
-  have hx' : x = uniformizer ^ n * (Inv.inv (uniformizer ^ n) * x) := by
-    rw [<- mul_assoc, mul_inv_cancel, one_mul]
-  calc
-    _ = weight (uniformizer ^ n * (Inv.inv (uniformizer ^ n) * x)) := congrArg weight hx'
-    _ = _ := by rw [map_mul, hUnit _ hx, map_pow, mul_one]
+      weight) = Inv.inv (1 - weight uniformizer) :=
+  (integrableAndIntegral_unramified_uniformizerShells M unitShell hMeas hMass uniformizer
+    weight hUnit hDisjoint hNorm).2
 
 section FinitePlace
 
