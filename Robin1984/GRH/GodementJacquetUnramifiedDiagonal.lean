@@ -720,4 +720,269 @@ theorem integrableAndIntegral_heckeUnramifiedSphericalCoefficient_primeNorm
 
 end ActualHaar
 
+section AbsoluteEulerMajorant
+
+section
+
+variable (L : Type*) [NormedField L]
+
+private def localAbsoluteMajorantCharacter (n : Nat) (i : Fin n) :
+    MonoidHom (Units L) Complex where
+  toFun x := (norm x.val ^ ((i.val : Real) - ((n : Real) - 1) / 2) : Real)
+  map_one' := by simp
+  map_mul' x y := by
+    change ((norm (x.val * y.val) ^
+        ((i.val : Real) - ((n : Real) - 1) / 2) : Real) : Complex) = _
+    rw [norm_mul, Real.mul_rpow (norm_nonneg _) (norm_nonneg _), Complex.ofReal_mul]
+
+private theorem localAbsoluteMajorant_normalizedInducingCharacter (n : Nat)
+    (b : valuationUpperTriangularSubgroup L n) :
+    valuationNormalizedInducingCharacter L n
+      (productDiagonalCharacter n (localAbsoluteMajorantCharacter L n)) b = 1 := by
+  let a := valuationTriangularDiagonalHom L n b
+  let e := fun i : Fin n => ((n : Real) - 1) / 2 - (i.val : Real)
+  have hPositive (i : Fin n) : 0 < norm (a.val i) := by
+    exact norm_pos_iff.mpr (MulEquiv.piUnits a i).ne_zero
+  have hProduct : (Finset.univ.prod (fun i : Fin n => norm (a.val i) ^ e i)) *
+      (Finset.univ.prod (fun i : Fin n =>
+        norm (a.val i) ^ ((i.val : Real) - ((n : Real) - 1) / 2))) = 1 := by
+    rw [<- Finset.prod_mul_distrib]
+    calc
+      _ = Finset.univ.prod (fun _ : Fin n => (1 : Real)) := by
+        apply Finset.prod_congr rfl
+        intro i hi
+        rw [<- Real.rpow_add (hPositive i)]
+        have hCancel : e i + ((i.val : Real) - ((n : Real) - 1) / 2) = 0 := by
+          dsimp [e]
+          ring
+        rw [hCancel, Real.rpow_zero]
+      _ = 1 := Finset.prod_const_one
+  change ((Finset.univ.prod (fun i : Fin n => norm (a.val i) ^ e i) : Real) : Complex) *
+    (Finset.univ.prod (fun i : Fin n =>
+      ((norm (a.val i) ^ ((i.val : Real) - ((n : Real) - 1) / 2) : Real) : Complex))) = 1
+  rw [<- Complex.ofReal_prod, <- Complex.ofReal_mul, hProduct, Complex.ofReal_one]
+
+end
+
+variable {K : Type*} [Field K] [NumberField K]
+
+/-- The integral of the positive determinant weight at an unramified prime. -/
+def unramifiedLocalAbsoluteEulerFactor (p : HeightOneSpectrum (RingOfIntegers K))
+    (n : Nat) (sigma : Real) : Real :=
+  Finset.univ.prod (fun i : Fin n =>
+    Inv.inv (1 - (dedekindPrimeNorm K p : Real) ^
+      (((n : Real) - 1) / 2 - (i.val : Real) - sigma)))
+
+/-- Every finite product of the local bounds is at most a fixed product of
+Dedekind zeta values in their absolutely convergent half-plane. -/
+theorem prod_unramifiedLocalAbsoluteEulerFactor_le
+    (n : Nat) (sigma : Real) (hSigma : ((n : Real) + 1) / 2 < sigma)
+    (S : Finset (HeightOneSpectrum (RingOfIntegers K))) :
+    S.prod (fun p => unramifiedLocalAbsoluteEulerFactor p n sigma) <=
+      Finset.univ.prod (fun i : Fin n =>
+        (dedekindZeta K ((sigma - (((n : Real) - 1) / 2 - (i.val : Real)) : Real) :
+          Complex)).re) := by
+  let P := HeightOneSpectrum (RingOfIntegers K)
+  let t : Fin n -> Real := fun i => sigma - (((n : Real) - 1) / 2 - (i.val : Real))
+  let F : Fin n -> P -> Real := fun i p =>
+    Inv.inv (1 - (dedekindPrimeNorm K p : Real) ^ (-t i))
+  have ht (i : Fin n) : 1 < t i := by
+    have hi : (0 : Real) <= (i.val : Real) := Nat.cast_nonneg _
+    dsimp [t]
+    linarith
+  have hp (p : P) : (1 : Real) < (dedekindPrimeNorm K p : Real) := by
+    exact_mod_cast one_lt_dedekindPrimeNorm K p
+  have hF (i : Fin n) (p : P) : 1 <= F i p := by
+    have h0 : 0 <= (dedekindPrimeNorm K p : Real) ^ (-t i) :=
+      Real.rpow_nonneg ((zero_lt_one.trans (hp p)).le) _
+    have h1 : (dedekindPrimeNorm K p : Real) ^ (-t i) < 1 :=
+      Real.rpow_lt_one_of_one_lt_of_neg (hp p) (neg_lt_zero.mpr (zero_lt_one.trans (ht i)))
+    change 1 <= Inv.inv (1 - (dedekindPrimeNorm K p : Real) ^ (-t i))
+    have hInv : (1 : Real) / 1 <= 1 / (1 - (dedekindPrimeNorm K p : Real) ^ (-t i)) :=
+      div_le_div_of_nonneg_left zero_le_one (sub_pos.mpr h1) (sub_le_self _ h0)
+    simpa only [div_one, one_div] using hInv
+  have hCast (i : Fin n) (p : P) : (F i p : Complex) =
+      Inv.inv (1 - (dedekindPrimeNorm K p : Complex) ^ (-(t i : Complex))) := by
+    dsimp only [F]
+    rw [Complex.ofReal_inv, Complex.ofReal_sub, Complex.ofReal_one,
+      Complex.ofReal_cpow ((zero_lt_one.trans (hp p)).le), Complex.ofReal_natCast,
+      Complex.ofReal_neg]
+  have hP (i : Fin n) : HasProd (F i) (dedekindZeta K (t i : Complex)).re := by
+    have hZ := hasProd_dedekindZeta_eulerFactors K
+      (s := (t i : Complex)) (by simpa only [Complex.ofReal_re] using ht i)
+    have hZ' : HasProd (fun p : P => (F i p : Complex)) (dedekindZeta K (t i : Complex)) := by
+      simpa only [hCast] using hZ
+    have hR := Complex.continuous_re.continuousAt.tendsto.comp hZ'
+    simpa only [HasProd, Function.comp_def, <- Complex.ofReal_prod, Complex.ofReal_re] using hR
+  have hAll (i : Fin n) : S.prod (F i) <= (dedekindZeta K (t i : Complex)).re := by
+    have hT : Filter.Tendsto (fun A : Finset P => A.prod (F i)) Filter.atTop
+        (nhds (dedekindZeta K (t i : Complex)).re) := hP i
+    apply ge_of_tendsto hT
+    filter_upwards [Filter.eventually_ge_atTop S] with A hSA
+    exact Finset.prod_le_prod_of_subset_of_one_le hSA
+      (fun p _ => zero_le_one.trans (hF i p)) (fun p _ _ => hF i p)
+  have hLocal (p : P) :
+      unramifiedLocalAbsoluteEulerFactor p n sigma = Finset.univ.prod (fun i : Fin n => F i p) := by
+    unfold unramifiedLocalAbsoluteEulerFactor
+    apply Finset.prod_congr rfl
+    intro i hi
+    have hE : ((n : Real) - 1) / 2 - (i.val : Real) - sigma = -t i := by
+      dsimp [t]
+      ring
+    rw [hE]
+  simp only [hLocal, Finset.prod_comm (s := S)]
+  exact Finset.prod_le_prod (fun i _ =>
+    Finset.prod_nonneg (fun p _ => zero_le_one.trans (hF i p))) (fun i _ => hAll i)
+
+variable (p : HeightOneSpectrum (RingOfIntegers K))
+local notation "L" => p.adicCompletion K
+local notation "GU" => Units L
+local notation "v" => (Valued.v : Valuation L (WithZero (Multiplicative Int)))
+
+private theorem norm_heckeUnramifiedLocalMatrixWeight (n : Nat) (s : Complex)
+    (g : Units (Matrix (Fin n) (Fin n) L)) :
+    (norm (heckeUnramifiedLocalMatrixWeight p n s g) : Complex) =
+      heckeUnramifiedLocalMatrixWeight p n (s.re : Complex) g := by
+  let S : Set (Units (Matrix (Fin n) (Fin n) L)) :=
+    {x | forall i j : Fin n, Membership.mem (v).integer (x.val i j)}
+  unfold heckeUnramifiedLocalMatrixWeight
+  by_cases hg : Membership.mem S g
+  next =>
+    have hDet : IsUnit g.val.det := g.isUnit.map Matrix.detMonoidHom
+    have hPos : 0 < norm g.val.det := norm_pos_iff.mpr hDet.ne_zero
+    rw [Set.indicator_of_mem hg, Set.indicator_of_mem hg,
+      Complex.norm_cpow_eq_rpow_re_of_pos hPos, Complex.add_re, Complex.ofReal_re,
+      <- Complex.ofReal_add, <- Complex.ofReal_cpow hPos.le]
+  next =>
+    rw [Set.indicator_of_notMem hg, Set.indicator_of_notMem hg, norm_zero, Complex.ofReal_zero]
+
+variable [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+variable [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+variable [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+variable [MeasurableSpace (Units (p.adicCompletion K))]
+variable [BorelSpace (Units (p.adicCompletion K))]
+
+/-- The positive determinant weight on integral matrices is absolutely
+integrable. Its integral is the local Euler factor of the trivial spherical
+coefficient, expressed with the normalized prime norm. -/
+theorem integrableAndIntegral_heckeUnramifiedLocalMatrixWeight
+    [SigmaFinite (heckeLocalHaar p)]
+    (n : Nat) (u0 : GU) (hu0 : Valued.v u0.val = finiteUniformizerValue)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) L))]
+    (muG : Measure (Units (Matrix (Fin n) (Fin n) L))) [muG.IsMulLeftInvariant] [SFinite muG]
+    (hMass : muG (valuationIntegralMatrixSubgroup v n :
+      Set (Units (Matrix (Fin n) (Fin n) L))) = 1)
+    (sigma : Real) (hsigma : ((n : Real) + 1) / 2 < sigma) :
+    let w := heckeUnramifiedLocalMatrixWeight p n (sigma : Complex)
+    And (Integrable w muG) (integral muG w = Finset.univ.prod
+      (fun i : Fin n =>
+        Inv.inv (1 - (((dedekindPrimeNorm K p : Real) ^
+          (((n : Real) - 1) / 2 - (i.val : Real) - sigma) : Real) : Complex)))) := by
+  let C := valuationIntegralMatrixSubgroup v n
+  let _ : MeasurableSpace C := borel C
+  let _ : BorelSpace C := BorelSpace.mk rfl
+  let nu := Measure.dirac (1 : C)
+  let _ : IsProbabilityMeasure nu := inferInstance
+  let chi := localAbsoluteMajorantCharacter L n
+  let q : Real := dedekindPrimeNorm K p
+  let e : Fin n -> Real := fun i => ((n : Real) - 1) / 2 - (i.val : Real)
+  have hq : 1 < q := by
+    dsimp [q]
+    exact_mod_cast one_lt_dedekindPrimeNorm K p
+  have hq0 : 0 < q := zero_lt_one.trans hq
+  have hUnit (i : Fin n) (x : GU) (hx : Membership.mem (heckeLocalUnitShell p) x) :
+      chi i x = 1 := by
+    have hv : Valued.v x.val = 1 := hx
+    change ((norm x.val ^ ((i.val : Real) - ((n : Real) - 1) / 2) : Real) : Complex) = 1
+    have hNorm : norm x.val = 1 := by
+      rw [FinitePlace.norm_def, hv]
+      simp
+    simp [hNorm]
+  have hParam (i : Fin n) :
+      chi i u0 * (dedekindPrimeNorm K p : Complex) ^ (-(sigma : Complex)) =
+        ((q ^ (e i - sigma) : Real) : Complex) := by
+    have hCast : (dedekindPrimeNorm K p : Complex) = (q : Complex) :=
+      (Complex.ofReal_natCast (dedekindPrimeNorm K p)).symm
+    have hInv : norm u0.val = Inv.inv q :=
+      norm_eq_inv_of_valuation_finiteUniformizer p u0.val hu0
+    have hExp : -((i.val : Real) - ((n : Real) - 1) / 2) = e i := by
+      dsimp [e]
+      ring
+    change ((norm u0.val ^ ((i.val : Real) - ((n : Real) - 1) / 2) : Real) : Complex) * _ = _
+    rw [hInv, <- Real.rpow_neg_eq_inv_rpow, hExp, hCast, <- Complex.ofReal_neg,
+      <- Complex.ofReal_cpow hq0.le, <- Complex.ofReal_mul, <- Real.rpow_add hq0]
+    rfl
+  have hNorm (i : Fin n) :
+      norm (chi i u0 * (dedekindPrimeNorm K p : Complex) ^ (-(sigma : Complex))) < 1 := by
+    have hExp : e i - sigma < 0 := by
+      have hi : (0 : Real) <= (i.val : Real) := Nat.cast_nonneg _
+      dsimp [e]
+      linarith
+    rw [hParam i, Complex.norm_real, Real.norm_of_nonneg (Real.rpow_nonneg hq0.le _)]
+    exact Real.rpow_lt_one_of_one_lt_of_neg hq hExp
+  have hCoeff (g : Units (Matrix (Fin n) (Fin n) L)) :
+      heckeUnramifiedSphericalCoefficient p n nu (productDiagonalCharacter n chi) g = 1 := by
+    have hOne (k : C) :
+        valuationSphericalSection v n
+          (valuationNormalizedInducingCharacter L n (productDiagonalCharacter n chi))
+          (k.val * g) = 1 := by
+      unfold valuationSphericalSection
+      exact localAbsoluteMajorant_normalizedInducingCharacter L n _
+    unfold heckeUnramifiedSphericalCoefficient
+    simp [hOne]
+  have hInt := integrableAndIntegral_heckeUnramifiedSphericalCoefficient_primeNorm
+    p n u0 hu0 muG hMass nu chi hUnit (sigma : Complex) hNorm
+  dsimp only at hInt
+  simpa only [hCoeff, mul_one, hParam] using hInt
+
+/-- In the half-plane where the product of local majorants converges, a
+spherical coefficient bounded by one gives an absolutely integrable local
+zeta integrand. The same Euler factor bounds its integral of the norm. -/
+theorem integrableAndAbsoluteIntegral_le_unramifiedLocalWeight
+    [SigmaFinite (heckeLocalHaar p)]
+    (n : Nat) (u0 : GU) (hu0 : Valued.v u0.val = finiteUniformizerValue)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) L))]
+    (muG : Measure (Units (Matrix (Fin n) (Fin n) L))) [muG.IsMulLeftInvariant] [SFinite muG]
+    (hMass : muG (valuationIntegralMatrixSubgroup v n :
+      Set (Units (Matrix (Fin n) (Fin n) L))) = 1)
+    (s : Complex) (hs : ((n : Real) + 1) / 2 < s.re)
+    (c : Units (Matrix (Fin n) (Fin n) L) -> Complex)
+    (hc : Filter.Eventually (fun g => norm (c g) <= 1) (ae muG))
+    (hMeas : AEStronglyMeasurable (fun g => heckeUnramifiedLocalMatrixWeight p n s g * c g) muG) :
+    let f := fun g => heckeUnramifiedLocalMatrixWeight p n s g * c g
+    And (Integrable f muG) (integral muG (fun g => norm (f g)) <=
+      unramifiedLocalAbsoluteEulerFactor p n s.re) := by
+  let f := fun g => heckeUnramifiedLocalMatrixWeight p n s g * c g
+  let W := heckeUnramifiedLocalMatrixWeight p n (s.re : Complex)
+  let A := fun i : Fin n => (dedekindPrimeNorm K p : Real) ^
+    (((n : Real) - 1) / 2 - (i.val : Real) - s.re)
+  have hI := integrableAndIntegral_heckeUnramifiedLocalMatrixWeight p n u0 hu0 muG hMass s.re hs
+  have hW : Integrable W muG := hI.1
+  have hWnorm (g : Units (Matrix (Fin n) (Fin n) L)) :
+      (norm (W g) : Complex) = W g := by
+    simpa only [W, Complex.ofReal_re] using
+      norm_heckeUnramifiedLocalMatrixWeight p n (s.re : Complex) g
+  have hDom : Filter.Eventually (fun g => norm (f g) <= norm (W g)) (ae muG) := by
+    filter_upwards [hc] with g hg
+    have hEq : norm (heckeUnramifiedLocalMatrixWeight p n s g) = norm (W g) :=
+      Complex.ofReal_injective
+        ((norm_heckeUnramifiedLocalMatrixWeight p n s g).trans (hWnorm g).symm)
+    dsimp [f]
+    rw [norm_mul, hEq]
+    exact mul_le_of_le_one_right (norm_nonneg _) hg
+  have hF : Integrable f muG := hW.norm.mono' hMeas hDom
+  have hDomInt : integral muG (fun g => norm (f g)) <= integral muG (fun g => norm (W g)) :=
+    integral_mono_ae hF.norm hW.norm hDom
+  have hPosInt : integral muG (fun g => norm (W g)) =
+      Finset.univ.prod (fun i : Fin n => Inv.inv (1 - A i)) := by
+    apply Complex.ofReal_injective
+    rw [<- integral_complex_ofReal, show (fun g => (norm (W g) : Complex)) = W from funext hWnorm,
+      Complex.ofReal_prod]
+    simpa only [Complex.ofReal_inv, Complex.ofReal_sub, Complex.ofReal_one] using hI.2
+  exact And.intro hF (hDomInt.trans_eq hPosInt)
+
+end AbsoluteEulerMajorant
+
 end Robin1984.GRH
