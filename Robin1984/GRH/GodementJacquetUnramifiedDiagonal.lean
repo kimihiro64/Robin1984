@@ -676,6 +676,48 @@ theorem integrableAndIntegral_heckeUnramifiedSphericalCoefficient_haar
   rw [hAvg] at hAvgInt hI
   exact And.intro hAvgInt (hI.trans hZ.2)
 
+private theorem weightedCharacter_uniformizer_primeNorm
+    (chi : MonoidHom GU Complex) (s : Complex) (u0 : GU)
+    (hu0 : Valued.v u0.val = finiteUniformizerValue) :
+    unramifiedLocalWeightedCharacter chi s u0 =
+      chi u0 * (dedekindPrimeNorm K p : Complex) ^ (-s) := by
+  have hNorm := norm_eq_inv_of_valuation_finiteUniformizer p u0.val hu0
+  have hArg : Not (((dedekindPrimeNorm K p : Real) : Complex).arg = Real.pi) := by
+    rw [Complex.arg_ofReal_of_nonneg (Nat.cast_nonneg _)]
+    exact (ne_of_gt Real.pi_pos).symm
+  change (norm u0.val : Complex) ^ s * chi u0 = _
+  rw [hNorm, Complex.ofReal_inv, Complex.inv_cpow _ _ hArg,
+    <- Complex.cpow_neg, Complex.ofReal_natCast, mul_comm]
+
+/-- The spherical coefficient integral gives the unramified Euler factor
+with the normalized prime norm and the diagonal characters evaluated at a
+uniformizer. The same hypotheses give absolute convergence. -/
+theorem integrableAndIntegral_heckeUnramifiedSphericalCoefficient_primeNorm
+    [SigmaFinite (heckeLocalHaar p)]
+    (n : Nat) (u0 : GU) (hu0 : Valued.v u0.val = finiteUniformizerValue)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [MeasurableSpace (valuationIntegralMatrixSubgroup v n)]
+    [BorelSpace (valuationIntegralMatrixSubgroup v n)]
+    (muG : Measure (Units (Matrix (Fin n) (Fin n) L))) [muG.IsMulLeftInvariant] [SFinite muG]
+    (hMass : muG (valuationIntegralMatrixSubgroup v n : Set (Units (Matrix (Fin n) (Fin n) L))) = 1)
+    (nu : Measure (valuationIntegralMatrixSubgroup v n)) [IsProbabilityMeasure nu]
+    (chi : Fin n -> MonoidHom GU Complex)
+    (hUnit : forall i x, Membership.mem (heckeLocalUnitShell p) x -> chi i x = 1)
+    (s : Complex)
+    (hNorm : forall i, norm (chi i u0 * (dedekindPrimeNorm K p : Complex) ^ (-s)) < 1) :
+    let c := heckeUnramifiedSphericalCoefficient p n nu (productDiagonalCharacter n chi)
+    let f := fun g => heckeUnramifiedLocalMatrixWeight p n s g * c g
+    And (Integrable f muG) (integral muG f = Finset.univ.prod
+      (fun i : Fin n => Inv.inv (1 - chi i u0 * (dedekindPrimeNorm K p : Complex) ^ (-s)))) := by
+  have hWeighted : forall i, norm (unramifiedLocalWeightedCharacter (chi i) s u0) < 1 := by
+    intro i
+    rw [weightedCharacter_uniformizer_primeNorm p (chi i) s u0 hu0]
+    exact hNorm i
+  simpa only [weightedCharacter_uniformizer_primeNorm p _ s u0 hu0] using
+    integrableAndIntegral_heckeUnramifiedSphericalCoefficient_haar p n u0 hu0
+      muG hMass nu chi hUnit s hWeighted
+
 end ActualHaar
 
 end Robin1984.GRH

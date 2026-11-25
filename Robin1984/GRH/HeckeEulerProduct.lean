@@ -1609,7 +1609,8 @@ theorem heckeNormCharacter_unramified
   change Circle.exp (t * Real.log (heckeIdelicNorm (localIdeleHom K p a))) = 1
   rw [heckeIdelicNorm_localIdeleHom, hNorm, Real.log_one, mul_zero, Circle.exp_zero]
 
-private theorem norm_eq_inv_of_valuation_finiteUniformizer
+/-- The normalized norm of a finite-place uniformizer is the inverse prime norm. -/
+theorem norm_eq_inv_of_valuation_finiteUniformizer
     (p : HeightOneSpectrum (RingOfIntegers K)) (x : p.adicCompletion K)
     (hx : Valued.v x = finiteUniformizerValue) :
     norm x = Inv.inv (dedekindPrimeNorm K p : Real) := by
