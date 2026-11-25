@@ -2398,6 +2398,302 @@ theorem exists_heckeLocalZetaTest_rankOneLaurentNumerator
 
 end LocalUnitZetaTest
 
+section LocalSchurReduction
+
+open Topology
+
+section LocalSchurComplement
+
+variable {F : Type*} [Field F] {r k : Nat}
+
+local notation "BlockMatrix" => Matrix (Sum (Fin r) (Fin k)) (Sum (Fin r) (Fin k)) F
+local notation "BlockGroup" => Units BlockMatrix
+
+private def schurLowerUnit (E : Matrix (Fin k) (Fin r) F) : BlockGroup where
+  val := Matrix.fromBlocks 1 0 E 1
+  inv := Matrix.fromBlocks 1 0 (-E) 1
+  val_inv := by
+    rw [Matrix.fromBlocks_multiply]
+    simp [Matrix.fromBlocks_one]
+  inv_val := by
+    rw [Matrix.fromBlocks_multiply]
+    simp [Matrix.fromBlocks_one]
+
+private def schurUpperUnit (H : Matrix (Fin r) (Fin k) F) : BlockGroup where
+  val := Matrix.fromBlocks 1 H 0 1
+  inv := Matrix.fromBlocks 1 (-H) 0 1
+  val_inv := by
+    rw [Matrix.fromBlocks_multiply]
+    simp [Matrix.fromBlocks_one]
+  inv_val := by
+    rw [Matrix.fromBlocks_multiply]
+    simp [Matrix.fromBlocks_one]
+
+private theorem exists_godementJacquetLocalSchurBlock
+    (A : Units (Matrix (Fin r) (Fin r) F))
+    (B : Matrix (Fin r) (Fin k) F)
+    (C : Matrix (Fin k) (Fin r) F)
+    (D : Matrix (Fin k) (Fin k) F)
+    (Q : BlockGroup)
+    (hQ : Q.val = Matrix.fromBlocks A.val B C D) :
+    Exists (fun W : BlockGroup =>
+      And (W.val = Matrix.fromBlocks A.val 0 0 (D - C * A.inv * B))
+        (And (Q.val.det = A.val.det * (D - C * A.inv * B).det)
+          (Q = schurLowerUnit (C * A.inv) * W * schurUpperUnit (A.inv * B)))) := by
+  let E := C * A.inv
+  let H := A.inv * B
+  let T := Matrix.fromBlocks A.val 0 0 (D - E * B)
+  let U := schurLowerUnit E
+  let R := schurUpperUnit H
+  let W := Inv.inv U * Q * Inv.inv R
+  have hE : E * A.val = C := by
+    change C * A.inv * A.val = C
+    rw [Matrix.mul_assoc, A.inv_val, Matrix.mul_one]
+  have hH : A.val * H = B := by
+    change A.val * (A.inv * B) = B
+    rw [<- Matrix.mul_assoc, A.val_inv, Matrix.one_mul]
+  have hEH : C * H = E * B := (Matrix.mul_assoc _ _ _).symm
+  have hBlock : U.val * T * R.val = Q.val := by
+    rw [hQ]
+    change Matrix.fromBlocks (1 : Matrix (Fin r) (Fin r) F) 0 E 1 *
+      Matrix.fromBlocks A.val 0 0 (D - E * B) *
+      Matrix.fromBlocks 1 H 0 1 = Matrix.fromBlocks A.val B C D
+    simp only [Matrix.fromBlocks_multiply, Matrix.one_mul, Matrix.mul_one, Matrix.mul_zero,
+      Matrix.zero_mul, add_zero, zero_add, hE, hH, hEH, add_sub_cancel]
+  have hW : W.val = T := by
+    change U.inv * Q.val * R.inv = T
+    rw [<- hBlock]
+    calc
+      _ = (U.inv * (U.val * T)) * (R.val * R.inv) := by
+        rw [<- mul_assoc U.inv (U.val * T) R.val, mul_assoc (U.inv * (U.val * T)) R.val R.inv]
+      _ = T := by
+        rw [<- Matrix.mul_assoc U.inv U.val T, U.inv_val, R.val_inv, Matrix.one_mul, Matrix.mul_one]
+  have hFactor : Q = U * W * R := by
+    change Q = U * (Inv.inv U * Q * Inv.inv R) * R
+    simp [mul_assoc]
+  have hDet : Q.val.det = A.val.det * (D - E * B).det := by
+    rw [hFactor]
+    change (U.val * W.val * R.val).det = _
+    rw [Matrix.det_mul, Matrix.det_mul, hW]
+    change ((Matrix.fromBlocks (1 : Matrix (Fin r) (Fin r) F) 0 E 1).det *
+      T.det) * (Matrix.fromBlocks (1 : Matrix (Fin r) (Fin r) F) H 0 1).det = _
+    simp [T]
+  exact Exists.intro W (And.intro hW (And.intro hDet hFactor))
+
+private def schurLeadingUnit (A : Units (Matrix (Fin r) (Fin r) F)) : BlockGroup where
+  val := Matrix.fromBlocks A.val 0 0 1
+  inv := Matrix.fromBlocks A.inv 0 0 1
+  val_inv := by
+    rw [Matrix.fromBlocks_multiply]
+    simp [Matrix.fromBlocks_one]
+  inv_val := by
+    rw [Matrix.fromBlocks_multiply]
+    simp [Matrix.fromBlocks_one]
+
+end LocalSchurComplement
+
+section LocalSchurCoefficient
+
+variable {F : Type*} [NormedField F] {r k : Nat}
+
+local notation "CrossBlocks" =>
+  Prod (Matrix (Fin r) (Fin k) F) (Matrix (Fin k) (Fin r) F)
+
+local notation "BlockGroup" =>
+  Units (Matrix (Sum (Fin r) (Fin k)) (Sum (Fin r) (Fin k)) F)
+
+local notation "SchurInput" =>
+  Prod (Units (Matrix (Fin r) (Fin r) F)) CrossBlocks
+
+/-- On a joint neighborhood of an invertible leading block and zero
+off-diagonal blocks, the smooth dual vector and smooth vector absorb
+the lower and upper unipotent factors. The weighted coefficient is then
+the block-diagonal coefficient weighted by the leading determinant and
+the determinant of the Schur complement. -/
+theorem eventually_godementJacquetWeightedCoefficient_eq_schur
+    (A0 : Units (Matrix (Fin r) (Fin r) F))
+    (V : Type*) [AddCommGroup V] [Module Complex V]
+    (rho : MonoidHom BlockGroup (Module.End Complex V))
+    (ell : LinearMap (RingHom.id Complex) V Complex) (vec : V)
+    (hEll : Filter.Eventually (fun g : BlockGroup => ell.comp (rho g) = ell) (nhds 1))
+    (hVec : Filter.Eventually (fun g : BlockGroup => rho g vec = vec) (nhds 1)) :
+    Filter.Eventually (fun I : SchurInput =>
+      let A := I.1
+      let BC := I.2
+      forall (D : Matrix (Fin k) (Fin k) F) (Q : BlockGroup),
+        Q.val = Matrix.fromBlocks A.val BC.1 BC.2 D ->
+          Exists (fun W : BlockGroup =>
+            And (W.val = Matrix.fromBlocks A.val 0 0 (D - BC.2 * A.inv * BC.1))
+              (forall z : Complex,
+                (norm Q.val.det : Complex) ^ z * ell (rho Q vec) =
+                  (norm A.val.det : Complex) ^ z *
+                    ((norm (D - BC.2 * A.inv * BC.1).det : Complex) ^ z *
+                      ell (rho W vec))))) (nhds (Prod.mk A0 (0 : CrossBlocks))) := by
+  let lower (I : SchurInput) := schurLowerUnit (I.2.2 * I.1.inv)
+  let upper (I : SchurInput) := schurUpperUnit (I.1.inv * I.2.1)
+  have hAinv : Continuous (fun I : SchurInput => I.1.inv) :=
+    Units.continuous_val.comp (continuous_inv.comp continuous_fst)
+  have hL : Continuous lower := by
+    apply Units.continuous_iff.mpr
+    change And (Continuous (fun I : SchurInput =>
+      Matrix.fromBlocks (1 : Matrix (Fin r) (Fin r) F) 0 (I.2.2 * I.1.inv) 1))
+      (Continuous (fun I : SchurInput =>
+        Matrix.fromBlocks (1 : Matrix (Fin r) (Fin r) F) 0 (-(I.2.2 * I.1.inv)) 1))
+    have hC : Continuous (fun I : SchurInput => I.2.2 * I.1.inv) :=
+      (continuous_snd.comp continuous_snd).matrix_mul hAinv
+    exact And.intro
+      (continuous_const.matrix_fromBlocks continuous_const hC continuous_const)
+      (continuous_const.matrix_fromBlocks continuous_const hC.neg continuous_const)
+  have hU : Continuous upper := by
+    apply Units.continuous_iff.mpr
+    change And (Continuous (fun I : SchurInput =>
+      Matrix.fromBlocks (1 : Matrix (Fin r) (Fin r) F) (I.1.inv * I.2.1) 0 1))
+      (Continuous (fun I : SchurInput =>
+        Matrix.fromBlocks (1 : Matrix (Fin r) (Fin r) F) (-(I.1.inv * I.2.1)) 0 1))
+    have hB : Continuous (fun I : SchurInput => I.1.inv * I.2.1) :=
+      hAinv.matrix_mul (continuous_fst.comp continuous_snd)
+    exact And.intro
+      (continuous_const.matrix_fromBlocks hB continuous_const continuous_const)
+      (continuous_const.matrix_fromBlocks hB.neg continuous_const continuous_const)
+  have hLZero : lower (Prod.mk A0 0) = 1 := by
+    apply Units.ext
+    change Matrix.fromBlocks (1 : Matrix (Fin r) (Fin r) F) 0 (0 * A0.inv) 1 = 1
+    rw [Matrix.zero_mul, Matrix.fromBlocks_one]
+  have hUZero : upper (Prod.mk A0 0) = 1 := by
+    apply Units.ext
+    change Matrix.fromBlocks (1 : Matrix (Fin r) (Fin r) F) (A0.inv * 0) 0 1 = 1
+    rw [Matrix.mul_zero, Matrix.fromBlocks_one]
+  have hLT : Filter.Tendsto lower (nhds (Prod.mk A0 (0 : CrossBlocks))) (nhds (1 : BlockGroup)) := by
+    simpa only [hLZero] using hL.tendsto (Prod.mk A0 (0 : CrossBlocks))
+  have hUT : Filter.Tendsto upper (nhds (Prod.mk A0 (0 : CrossBlocks))) (nhds (1 : BlockGroup)) := by
+    simpa only [hUZero] using hU.tendsto (Prod.mk A0 (0 : CrossBlocks))
+  refine ((hLT.eventually hEll).and (hUT.eventually hVec)).mono ?_
+  intro I hBC A BC D Q hQ
+  choose W hW using exists_godementJacquetLocalSchurBlock A BC.1 BC.2 D Q hQ
+  have hFact : Q = lower I * W * upper I := hW.2.2
+  have hCoeff : ell (rho Q vec) = ell (rho W vec) := by
+    rw [hFact, map_mul, map_mul]
+    change ell (rho (lower I) (rho W (rho (upper I) vec))) = ell (rho W vec)
+    have hRight : rho (upper I) vec = vec := hBC.2
+    have hLeft : ell (rho (lower I) (rho W vec)) = ell (rho W vec) :=
+      DFunLike.congr_fun hBC.1 (rho W vec)
+    rw [hRight, hLeft]
+  refine Exists.intro W (And.intro hW.1 ?_)
+  intro z
+  rw [hW.2.1, norm_mul, Complex.ofReal_mul,
+    Complex.mul_cpow_ofReal_nonneg (norm_nonneg _) (norm_nonneg _) z, hCoeff, mul_assoc]
+
+end LocalSchurCoefficient
+
+section FinitePlaceSchurCoefficient
+
+open IsDedekindDomain NumberField
+
+variable {K : Type*} [Field K] [NumberField K]
+variable (p : HeightOneSpectrum (RingOfIntegers K)) {r k : Nat}
+
+local notation "L" => p.adicCompletion K
+local notation "v" => (Valued.v : Valuation L (WithZero (Multiplicative Int)))
+local notation "LeadingGroup" => Units (Matrix (Fin r) (Fin r) L)
+local notation "TrailingGroup" => Units (Matrix (Fin k) (Fin k) L)
+local notation "BlockGroup" =>
+  Units (Matrix (Sum (Fin r) (Fin k)) (Sum (Fin r) (Fin k)) L)
+local notation "CrossBlocks" =>
+  Prod (Matrix (Fin r) (Fin k) L) (Matrix (Fin k) (Fin r) L)
+local notation "SchurInput" => Prod LeadingGroup CrossBlocks
+
+/-- Near a rank projection at a finite place, the leading block has unit
+determinant norm and acts trivially on the smooth dual vector. For any
+invertible matrix in such a block chart, its weighted coefficient equals
+the one obtained from the embedded trailing Schur complement. -/
+theorem eventually_heckeLocalZetaWeightedCoefficient_eq_trailingSchur
+    (V : Type*) [AddCommGroup V] [Module Complex V]
+    (rho : MonoidHom BlockGroup (Module.End Complex V))
+    (ell : LinearMap (RingHom.id Complex) V Complex) (vec : V)
+    (hEll : Filter.Eventually (fun g : BlockGroup => ell.comp (rho g) = ell) (nhds 1))
+    (hVec : Filter.Eventually (fun g : BlockGroup => rho g vec = vec) (nhds 1)) :
+    Filter.Eventually (fun I : SchurInput =>
+      let A := I.1
+      let BC := I.2
+      forall (D : Matrix (Fin k) (Fin k) L) (Q : BlockGroup),
+        Q.val = Matrix.fromBlocks A.val BC.1 BC.2 D ->
+          Exists (fun S : TrailingGroup => And (S.val = D - BC.2 * A.inv * BC.1)
+            (Exists (fun Y : BlockGroup =>
+              And (Y.val = Matrix.fromBlocks 1 0 0 S.val)
+                (forall z : Complex,
+                  (norm Q.val.det : Complex) ^ z * ell (rho Q vec) =
+                    (norm S.val.det : Complex) ^ z * ell (rho Y vec)))))) (nhds (Prod.mk (1 : LeadingGroup) (0 : CrossBlocks))) := by
+  let I0 : SchurInput := Prod.mk 1 0
+  let lift (I : SchurInput) : BlockGroup := schurLeadingUnit I.1
+  have hLift : Continuous lift := by
+    apply Units.continuous_iff.mpr
+    change And (Continuous (fun I : SchurInput => Matrix.fromBlocks I.1.val 0 0
+      (1 : Matrix (Fin k) (Fin k) L))) (Continuous (fun I : SchurInput =>
+        Matrix.fromBlocks I.1.inv 0 0 (1 : Matrix (Fin k) (Fin k) L)))
+    have hA : Continuous (fun I : SchurInput => I.1.val) :=
+      Units.continuous_val.comp continuous_fst
+    have hAInv : Continuous (fun I : SchurInput => I.1.inv) :=
+      Units.continuous_val.comp (continuous_inv.comp continuous_fst)
+    exact And.intro (hA.matrix_fromBlocks continuous_const continuous_const continuous_const)
+      (hAInv.matrix_fromBlocks continuous_const continuous_const continuous_const)
+  have hLiftOne : lift I0 = 1 := by
+    apply Units.ext
+    exact Matrix.fromBlocks_one
+  have hLiftT : Filter.Tendsto lift (nhds (Prod.mk (1 : LeadingGroup) (0 : CrossBlocks))) (nhds (1 : BlockGroup)) := by
+    simpa only [hLiftOne] using hLift.tendsto I0
+  have hLocal := eventually_godementJacquetWeightedCoefficient_eq_schur
+    (1 : LeadingGroup) V rho ell vec hEll hVec
+  have hD : Continuous (fun I : SchurInput => I.1.val.det) :=
+    (Units.continuous_val.comp continuous_fst).matrix_det
+  have hDOne : (Prod.mk (1 : LeadingGroup) (0 : CrossBlocks)).1.val.det = (1 : L) := Matrix.det_one
+  have hDT : Filter.Tendsto (fun I : SchurInput => I.1.val.det)
+      (nhds (Prod.mk (1 : LeadingGroup) (0 : CrossBlocks))) (nhds (1 : L)) := by
+    simpa only [hDOne] using hD.tendsto (Prod.mk (1 : LeadingGroup) (0 : CrossBlocks))
+  have hValOne : Not (v (1 : L) = 0) := by
+    rw [map_one]
+    exact one_ne_zero
+  have hNorm : Filter.Eventually (fun I : SchurInput => norm I.1.val.det = 1)
+      (nhds (Prod.mk (1 : LeadingGroup) (0 : CrossBlocks))) := by
+    refine (hDT.eventually (Valued.locally_const hValOne)).mono ?_
+    intro I hI
+    calc
+      _ = norm (1 : L) := by rw [FinitePlace.norm_def, FinitePlace.norm_def, hI]
+      _ = 1 := norm_one
+  refine ((hLocal.and (hLiftT.eventually hEll)).and hNorm).mono ?_
+  intro I hI A BC D Q hQ
+  choose W hW using hI.1.1 D Q hQ
+  let T := D - BC.2 * A.inv * BC.1
+  have hT : Not (T.det = 0) := by
+    intro h0
+    apply (W.isUnit.map Matrix.detMonoidHom).ne_zero
+    change W.val.det = 0
+    rw [hW.1]
+    change (Matrix.fromBlocks A.val 0 0 T).det = 0
+    simp [h0]
+  let S : TrailingGroup := Matrix.GeneralLinearGroup.mkOfDetNeZero T hT
+  let Y : BlockGroup := Inv.inv (lift I) * W
+  have hY : Y.val = Matrix.fromBlocks 1 0 0 S.val := by
+    change (Matrix.fromBlocks A.inv 0 0 (1 : Matrix (Fin k) (Fin k) L)) * W.val = _
+    rw [hW.1, Matrix.fromBlocks_multiply]
+    change Matrix.fromBlocks (A.inv * A.val + 0 * 0) (A.inv * 0 + 0 * T)
+      (0 * A.val + 1 * 0) (0 * 0 + 1 * T) = Matrix.fromBlocks 1 0 0 T
+    simp
+  have hFactor : W = lift I * Y := by simp [Y]
+  have hCoeff : ell (rho W vec) = ell (rho Y vec) := by
+    rw [hFactor, map_mul]
+    change ell (rho (lift I) (rho Y vec)) = ell (rho Y vec)
+    exact DFunLike.congr_fun hI.1.2 (rho Y vec)
+  refine Exists.intro S (And.intro rfl (Exists.intro Y (And.intro hY ?_)))
+  intro z
+  have h := hW.2 z
+  rw [show norm A.val.det = 1 from hI.2, Complex.ofReal_one, Complex.one_cpow, one_mul,
+    hCoeff] at h
+  exact h
+
+end FinitePlaceSchurCoefficient
+
+end LocalSchurReduction
+
 section FiniteAdelicEulerProduct
 
 open MeasureTheory MeasureTheory.Measure
