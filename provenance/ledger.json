@@ -1785,6 +1785,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetLocalZetaFixedCombination.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement-Jacquet local zeta integrals and the determinant change of variables under matrix translation.",
+      "formalization_note": "Replaces exponent-dependent polynomial weights by constant coefficients on a finite family of translated compact tests.",
+      "content_basis": "Uses finite support of polynomials, the local uniformizer norm, and the Laurent translation identity for zeta integrals.",
+      "dependency_status": "Uses the canonical local reciprocal combination and the negative-integer determinant translations.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetLocalZetaRationality.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement-Jacquet local zeta integrals, compact support, and smooth admissible representations.",
@@ -2691,6 +2700,15 @@
       "formalization_note": "Identifies ordered exponents with uniformizer prefix directions and proves the corresponding rational matrix-coefficient series with the complex determinant weight.",
       "content_basis": "Recovers the gap vector from an ordered exponent family, evaluates prefix uniformizer products and their determinants, and converts the cone generating series to the complex determinant weight.",
       "dependency_status": "Uses the weighted ordered diagonal cone theorem. The matrix-coefficient sum is assumed summable at the evaluation point.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetCanonicalPrimePower.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The logarithmic derivative of a local Euler factor and the geometric series for its reciprocal linear factors.",
+      "formalization_note": "Recovers the multiplicity-preserving prime-power coefficients of a normalized local denominator and obtains a common right half-plane for the finite collection of roots.",
+      "content_basis": "Uses polynomial splitting over the complex numbers, derivatives of finite products, and the geometric series to derive the local prime-power identity.",
+      "dependency_status": "Uses the canonical local factor normalization and the uniformizer norm formula.",
       "reviewed": true
     },
     {
