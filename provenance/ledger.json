@@ -2649,6 +2649,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/ValuationPrincipalCongruence.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Principal congruence subgroups of the general linear group over a local field.",
+      "formalization_note": "Constructs compact open principal congruence subgroups and proves diagonal contraction on supported entries.",
+      "content_basis": "Checks the subgroup laws using integral entries of the matrix and its inverse, obtains the compact open topology by finite coordinate intersections, and verifies diagonal contraction and the scalar Schur pivot bound.",
+      "dependency_status": "Uses the integral-subgroup topology and the existing diagonal section. Triangular factorization in all ranks and its use in the local zeta recurrence require further proofs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/ValuationUnitriangularMeasure.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Unipotent Haar integration in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
