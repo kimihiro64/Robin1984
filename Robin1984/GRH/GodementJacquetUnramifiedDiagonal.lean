@@ -1823,6 +1823,23 @@ theorem norm_det_eq_primeNorm_zpow (n : Nat) (g : Units (Matrix (Fin n) (Fin n) 
   change (((Ideal.absNorm p.asIdeal : NNReal) ^ heckeLocalDetValueIndex p n g : NNReal) : Real) = _
   simp [dedekindPrimeNorm]
 
+private theorem norm_det_cpow_eq_primeNorm_zpow (n : Nat)
+    (g : Units (Matrix (Fin n) (Fin n) L)) (z : Complex) :
+    (norm g.val.det : Complex) ^ z =
+      ((dedekindPrimeNorm K p : Complex) ^ z) ^ heckeLocalDetValueIndex p n g := by
+  let w := heckeLocalDetValueIndex p n g
+  have hArg : ((dedekindPrimeNorm K p : Real) : Complex).arg = 0 :=
+    Complex.arg_ofReal_of_nonneg (Nat.cast_nonneg _)
+  have ha : -Real.pi < (w : Real) * ((dedekindPrimeNorm K p : Real) : Complex).arg := by
+    rw [hArg, mul_zero]
+    exact neg_lt_zero.mpr Real.pi_pos
+  have hb : (w : Real) * ((dedekindPrimeNorm K p : Real) : Complex).arg <= Real.pi := by
+    rw [hArg, mul_zero]
+    exact Real.pi_pos.le
+  rw [norm_det_eq_primeNorm_zpow p n g, Complex.ofReal_zpow]
+  change ((((dedekindPrimeNorm K p : Real) : Complex) ^ w) ^ z) = _
+  rw [<- Complex.cpow_int_mul' ha hb, Complex.cpow_int_mul, Complex.ofReal_natCast]
+
 /-- An integrable coefficient compactly supported in the matrix group meets
 finitely many determinant shells. Its weighted integrals are the Laurent
 polynomial whose coefficients are the integrals on those shells. -/
@@ -1855,19 +1872,8 @@ theorem integrableAndIntegral_heckeLocalZetaTest_finiteDetShells
   refine Exists.intro S ?_
   intro z F
   let a (k : Int) : Complex := ((dedekindPrimeNorm K p : Complex) ^ z) ^ k
-  have hPow (g : G) : (norm g.val.det : Complex) ^ z = a (w g) := by
-    have hArg : ((dedekindPrimeNorm K p : Real) : Complex).arg = 0 :=
-      Complex.arg_ofReal_of_nonneg (Nat.cast_nonneg _)
-    have ha : -Real.pi < (w g : Real) * ((dedekindPrimeNorm K p : Real) : Complex).arg := by
-      rw [hArg, mul_zero]
-      exact neg_lt_zero.mpr Real.pi_pos
-    have hb : (w g : Real) * ((dedekindPrimeNorm K p : Real) : Complex).arg <= Real.pi := by
-      rw [hArg, mul_zero]
-      exact Real.pi_pos.le
-    change (norm g.val.det : Complex) ^ z = _
-    rw [norm_det_eq_primeNorm_zpow p n g, Complex.ofReal_zpow]
-    change ((((dedekindPrimeNorm K p : Real) : Complex) ^ w g) ^ z) = _
-    rw [<- Complex.cpow_int_mul' ha hb, Complex.cpow_int_mul, Complex.ofReal_natCast]
+  have hPow (g : G) : (norm g.val.det : Complex) ^ z = a (w g) :=
+    norm_det_cpow_eq_primeNorm_zpow p n g z
   have hDecompose : F = fun g : G => S.sum (fun k => a k * Set.indicator (D k) f g) := by
     funext g
     change (norm g.val.det : Complex) ^ z * f g = _
@@ -1937,6 +1943,252 @@ theorem integrableAndIntegral_heckeLocalZetaTest_awayFromSingular
   have hFCont : Continuous f := (Phi.continuous.comp hCont).mul hc
   exact integrableAndIntegral_heckeLocalZetaTest_finiteDetShells p n mu f hFComp
     (hFCont.integrable_of_hasCompactSupport hFComp)
+
+/-- An absolutely convergent local zeta integral is the absolutely summable
+series of its determinant-shell integrals. The unweighted coefficient is
+integrable on each shell, independently of the weight at the chosen
+complex exponent. -/
+theorem hasSum_heckeLocalZetaTest_detShells
+    (n : Nat) [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) L))]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) L)))
+    (f : Units (Matrix (Fin n) (Fin n) L) -> Complex)
+    (z : Complex)
+    (hF : Integrable (fun g => (norm g.val.det : Complex) ^ z * f g) mu) :
+    let F := fun g : Units (Matrix (Fin n) (Fin n) L) => (norm g.val.det : Complex) ^ z * f g
+    let D := fun k : Int => {g : Units (Matrix (Fin n) (Fin n) L) | heckeLocalDetValueIndex p n g = k}
+    let b := fun k : Int =>
+      ((dedekindPrimeNorm K p : Complex) ^ z) ^ k * integral (mu.restrict (D k)) f
+    And (forall k : Int, Integrable f (mu.restrict (D k)))
+      (And (Summable (fun k => norm (b k))) (HasSum b (integral mu F))) := by
+  intro F D b
+  let G := Units (Matrix (Fin n) (Fin n) L)
+  let a (k : Int) : Complex := ((dedekindPrimeNorm K p : Complex) ^ z) ^ k
+  let w : G -> Int := heckeLocalDetValueIndex p n
+  have hw : Continuous w := (isLocallyConstant_heckeLocalDetValueIndex p n).continuous
+  have hMeas (k : Int) : MeasurableSet (D k) := measurableSet_eq_fun hw.measurable measurable_const
+  have hDisjoint : Pairwise (fun j k => Disjoint (D j) (D k)) := by
+    intro j k hjk
+    exact Set.disjoint_left.mpr (fun (g : G) hj hk => hjk ((show w g = j from hj).symm.trans hk))
+  have hUnion : Set.iUnion D = Set.univ := by
+    apply Set.eq_univ_of_forall
+    intro g
+    exact Set.mem_iUnion.mpr (Exists.intro (w g) rfl)
+  have hEq (k : Int) : Filter.EventuallyEq (ae (mu.restrict (D k))) F (fun g => a k * f g) := by
+    refine (ae_restrict_mem (hMeas k)).mono ?_
+    intro g hg
+    change w g = k at hg
+    change (norm g.val.det : Complex) ^ z * f g = a k * f g
+    rw [norm_det_cpow_eq_primeNorm_zpow p n g z]
+    change a (w g) * f g = a k * f g
+    rw [hg]
+  have hI (k : Int) : integral (mu.restrict (D k)) F = b k := by
+    rw [integral_congr_ae (hEq k), integral_const_mul]
+  have hq : Not ((dedekindPrimeNorm K p : Complex) = 0) :=
+    Nat.cast_ne_zero.mpr (ne_of_gt (Nat.zero_lt_one.trans (one_lt_dedekindPrimeNorm K p)))
+  have hBase : Not ((dedekindPrimeNorm K p : Complex) ^ z = 0) :=
+    Complex.cpow_ne_zero_iff.mpr (Or.inl hq)
+  have hLocal (k : Int) : Integrable f (mu.restrict (D k)) := by
+    have hn : Not (a k = 0) := zpow_ne_zero k hBase
+    have hInv : Filter.EventuallyEq (ae (mu.restrict (D k)))
+        (fun g => Inv.inv (a k) * F g) f := by
+      refine (hEq k).mono ?_
+      intro g hg
+      change Inv.inv (a k) * F g = f g
+      change F g = a k * f g at hg
+      rw [hg]
+      field_simp [hn]
+    exact (((show Integrable F mu from hF).mono_measure Measure.restrict_le_self).const_mul _).congr hInv
+  refine And.intro hLocal ?_
+  have hFUnion : IntegrableOn F (Set.iUnion D) mu := by
+    rw [hUnion]
+    exact (show Integrable F mu from hF).integrableOn
+  have hNUnion : IntegrableOn (fun g => norm (F g)) (Set.iUnion D) mu := by
+    rw [hUnion]
+    exact (show Integrable F mu from hF).norm.integrableOn
+  have hSum := hasSum_integral_iUnion hMeas hDisjoint hFUnion
+  have hNormSum := hasSum_integral_iUnion hMeas hDisjoint hNUnion
+  have hAbs : Summable (fun k => norm (integral (mu.restrict (D k)) F)) :=
+    Summable.of_nonneg_of_le (fun _ => norm_nonneg _) (fun _ => norm_integral_le_integral_norm _)
+      hNormSum.summable
+  refine And.intro ?_ ?_
+  next => simpa only [hI] using hAbs
+  next => simpa only [hI, hUnion, Measure.restrict_univ] using hSum
+
+/-- For a compactly supported matrix test, the unweighted shell coefficients
+vanish above one finite determinant valuation index. Thus the infinite
+tail of the shell series runs toward determinant zero. -/
+theorem exists_heckeLocalZetaTest_detShellsSupportBound
+    (n : Nat) [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) L))]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) L)))
+    (Phi : LocallyConstant (Matrix (Fin n) (Fin n) L) Complex)
+    (hPhi : HasCompactSupport (fun X => Phi X))
+    (c : Units (Matrix (Fin n) (Fin n) L) -> Complex) :
+    Exists (fun N : Nat => forall k : Int, (N : Int) < k ->
+      integral (mu.restrict {g | heckeLocalDetValueIndex p n g = k})
+        (fun g => Phi g.val * c g) = 0) := by
+  let M := Matrix (Fin n) (Fin n) L
+  let G := Units M
+  let w : G -> Int := heckeLocalDetValueIndex p n
+  let q : Real := dedekindPrimeNorm K p
+  have hQ : 1 < q := by
+    change (1 : Real) < (dedekindPrimeNorm K p : Real)
+    exact_mod_cast one_lt_dedekindPrimeNorm K p
+  have hDet : Continuous (fun X : M => X.det) := continuous_id.matrix_det
+  choose C hC using hPhi.exists_bound_of_continuousOn hDet.continuousOn
+  have hPowers : Filter.Tendsto (fun m : Nat => q ^ m) Filter.atTop Filter.atTop :=
+    tendsto_pow_atTop_atTop_of_one_lt hQ
+  have hEventually : Filter.Eventually (fun m : Nat => C < q ^ m) Filter.atTop :=
+    hPowers.eventually (Filter.eventually_gt_atTop C)
+  choose N hN using Filter.eventually_atTop.mp hEventually
+  have hw : Continuous w := (isLocallyConstant_heckeLocalDetValueIndex p n).continuous
+  refine Exists.intro N ?_
+  intro k hk
+  let D : Set G := {g | w g = k}
+  have hMeas : MeasurableSet D := measurableSet_eq_fun hw.measurable measurable_const
+  have heq : Filter.EventuallyEq (ae (mu.restrict D)) (fun g : G => Phi g.val * c g)
+      (fun _ => 0) := by
+    refine (ae_restrict_mem hMeas).mono ?_
+    intro g hg
+    change w g = k at hg
+    have hIndex : (N : Int) < w g := by rw [hg]; exact hk
+    have hNonneg : 0 <= w g := le_trans (Int.natCast_nonneg N) hIndex.le
+    have hNInt : (N : Int) <= (Int.toNat (w g) : Int) := by
+      rw [Int.toNat_of_nonneg hNonneg]
+      exact hIndex.le
+    have hNN : N <= Int.toNat (w g) := by exact_mod_cast hNInt
+    have hLarge : C < q ^ Int.toNat (w g) := hN _ hNN
+    have hNorm : norm g.val.det = q ^ Int.toNat (w g) := calc
+      _ = q ^ w g := norm_det_eq_primeNorm_zpow p n g
+      _ = q ^ (Int.toNat (w g) : Int) :=
+        congrArg (fun m : Int => q ^ m) (Int.toNat_of_nonneg hNonneg).symm
+      _ = q ^ Int.toNat (w g) := zpow_natCast q _
+    have hZero : Phi g.val = 0 := by
+      by_contra h
+      have hSmall := hC g.val (subset_closure
+        (show Membership.mem (Function.support (fun X => Phi X)) g.val from h))
+      rw [hNorm] at hSmall
+      exact (not_lt_of_ge hSmall) hLarge
+    change Phi g.val * c g = 0
+    rw [hZero, zero_mul]
+  change integral (mu.restrict D) (fun g : G => Phi g.val * c g) = 0
+  rw [integral_congr_ae heq]
+  simp
+
+/-- Removing the matrices with determinant norm below a positive cutoff
+leaves a finite Laurent polynomial. The remaining test is exactly the
+original test restricted to that strict sublevel set. Wherever the
+original integral converges absolutely, the two contributions add to it. -/
+theorem exists_heckeLocalZetaTest_singularTail
+    (n : Nat) [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) L))]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) L))) [IsFiniteMeasureOnCompacts mu]
+    (Phi : LocallyConstant (Matrix (Fin n) (Fin n) L) Complex)
+    (hPhi : HasCompactSupport (fun X => Phi X))
+    (c : Units (Matrix (Fin n) (Fin n) L) -> Complex) (hc : Continuous c)
+    (r : Real) (hr : 0 < r) :
+    Exists (fun near : LocallyConstant (Matrix (Fin n) (Fin n) L) Complex =>
+      Exists (fun S : Finset Int => Exists (fun a : Int -> Complex =>
+        And (HasCompactSupport (fun X => near X))
+          (And (forall X, near X = Set.indicator {Y | norm Y.det < r} (fun Y => Phi Y) X)
+            (forall z : Complex,
+              let F := fun g : Units (Matrix (Fin n) (Fin n) L) =>
+                (norm g.val.det : Complex) ^ z * (Phi g.val * c g)
+              let T := fun g : Units (Matrix (Fin n) (Fin n) L) =>
+                (norm g.val.det : Complex) ^ z * (near g.val * c g)
+              Integrable F mu -> And (Integrable T mu)
+                (integral mu F = S.sum (fun k =>
+                  a k * ((dedekindPrimeNorm K p : Complex) ^ z) ^ k) + integral mu T)))))) := by
+  classical
+  let M := Matrix (Fin n) (Fin n) L
+  let G := Units M
+  let D : Set M := {X | r <= norm X.det}
+  have hDet : Continuous (fun X : M => X.det) := continuous_id.matrix_det
+  have hClosed : IsClosed D := isClosed_le continuous_const hDet.norm
+  have hOpen : IsOpen D := by
+    apply isOpen_iff_mem_nhds.mpr
+    intro X hX
+    change r <= norm X.det at hX
+    have hNe : Not (X.det = 0) := by
+      intro h
+      rw [h, norm_zero] at hX
+      exact (not_le_of_gt hr) hX
+    have hValNe : Not (v X.det = 0) := (Valuation.ne_zero_iff v).mpr hNe
+    change Filter.Eventually (fun Y : M => r <= norm Y.det) (nhds X)
+    refine (hDet.continuousAt.eventually (Valued.locally_const hValNe)).mono ?_
+    intro Y hY
+    have hNorm : norm Y.det = norm X.det := by
+      rw [FinitePlace.norm_def, FinitePlace.norm_def, hY]
+    rw [hNorm]
+    exact hX
+  let hD : IsClopen D := And.intro hClosed hOpen
+  let high := Phi.indicator hD
+  let near := Phi.indicator hD.compl
+  have hCutSupport (U : Set M) (hU : IsClopen U) :
+      Set.Subset (tsupport (fun X => Phi.indicator hU X))
+        (Set.inter U (tsupport (fun X => Phi X))) := by
+    apply closure_minimal ?_ (hU.isClosed.inter isClosed_closure)
+    intro X hX
+    change Not (Set.indicator U (fun X => Phi X) X = 0) at hX
+    by_cases h : Membership.mem U X
+    next =>
+      rw [Set.indicator_of_mem h] at hX
+      exact And.intro h (subset_closure hX)
+    next =>
+      rw [Set.indicator_of_notMem h] at hX
+      exact (hX rfl).elim
+  have hHigh : HasCompactSupport (fun X => high X) :=
+    hPhi.of_isClosed_subset isClosed_closure (fun X h => (hCutSupport D hD h).2)
+  have hNear : HasCompactSupport (fun X => near X) :=
+    hPhi.of_isClosed_subset isClosed_closure (fun X h => (hCutSupport (Set.compl D) hD.compl h).2)
+  have hAway (X : M) (hX : Membership.mem (tsupport (fun X => high X)) X) :
+      Not (X.det = 0) := by
+    have hNorm : r <= norm X.det := (hCutSupport D hD hX).1
+    intro h
+    rw [h, norm_zero] at hNorm
+    exact (not_le_of_gt hr) hNorm
+  choose S hS using integrableAndIntegral_heckeLocalZetaTest_awayFromSingular
+    p n mu high hHigh hAway c hc
+  let a (k : Int) := integral mu
+    (Set.indicator {g : G | heckeLocalDetValueIndex p n g = k} (fun g => high g.val * c g))
+  refine Exists.intro near (Exists.intro S (Exists.intro a (And.intro hNear ?_)))
+  have hNearEq (X : M) :
+      near X = Set.indicator {Y : M | norm Y.det < r} (fun Y => Phi Y) X := by
+    change Set.indicator (Set.compl D) (fun Y => Phi Y) X = _
+    rw [show Set.compl D = {Y : M | norm Y.det < r} from Set.ext (fun Y => show Not (r <= norm Y.det) <-> norm Y.det < r from not_le)]
+  refine And.intro hNearEq ?_
+  intro z F T hF
+  let H (g : G) := (norm g.val.det : Complex) ^ z * (high g.val * c g)
+  have hSplit (X : M) : Phi X = high X + near X := by
+    change Phi X = Set.indicator D (fun Y => Phi Y) X +
+      Set.indicator (Set.compl D) (fun Y => Phi Y) X
+    by_cases h : Membership.mem D X
+    next =>
+      have hn : Not (Membership.mem (Set.compl D) X) := fun hu => hu h
+      rw [Set.indicator_of_mem h, Set.indicator_of_notMem hn, add_zero]
+    next =>
+      rw [Set.indicator_of_notMem h,
+        Set.indicator_of_mem (show Membership.mem (Set.compl D) X from h), zero_add]
+  have hParts : F = fun g : G => H g + T g := by
+    funext g
+    change (norm g.val.det : Complex) ^ z * (Phi g.val * c g) =
+      (norm g.val.det : Complex) ^ z * (high g.val * c g) +
+        (norm g.val.det : Complex) ^ z * (near g.val * c g)
+    rw [hSplit g.val, add_mul, mul_add]
+  have hH : Integrable H mu := (hS z).1
+  have hT : Integrable T mu := by
+    have hSub : T = fun g : G => F g - H g := by
+      funext g
+      rw [congrFun hParts g]
+      abel
+    rw [hSub]
+    exact hF.sub hH
+  refine And.intro hT ?_
+  have hI : integral mu H =
+      S.sum (fun k => ((dedekindPrimeNorm K p : Complex) ^ z) ^ k * a k) := (hS z).2
+  rw [hParts, integral_add hH hT, hI]
+  simp only [mul_comm]
 
 end LocalUnitZetaTest
 
