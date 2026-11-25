@@ -1385,11 +1385,7 @@ theorem exists_heckeLocalZetaTest_integral_one
   dsimp [k]
   field_simp [Complex.ofReal_ne_zero.mpr hRealPos.ne']
 
-/-- A left translate of a compact locally constant matrix test is another
-compact locally constant test. Translating the coefficient by the same matrix
-preserves absolute integrability and multiplies the zeta integral by the
-inverse determinant weight. The identity holds for every complex exponent. -/
-theorem exists_heckeLocalZetaTest_leftTranslate
+private theorem exists_heckeLocalZetaTest_leftTranslate_exact
     (n : Nat) [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
     [MeasurableMul (Units (Matrix (Fin n) (Fin n) L))]
     (mu : Measure (Units (Matrix (Fin n) (Fin n) L))) [mu.IsMulLeftInvariant]
@@ -1398,13 +1394,14 @@ theorem exists_heckeLocalZetaTest_leftTranslate
     (hPhi : HasCompactSupport (fun X => Phi X))
     (c : Units (Matrix (Fin n) (Fin n) L) -> Complex) :
     Exists (fun Psi : LocallyConstant (Matrix (Fin n) (Fin n) L) Complex =>
-      And (HasCompactSupport (fun X => Psi X)) (forall z : Complex,
+      And (HasCompactSupport (fun X => Psi X)) (And (forall X, Psi X = Phi (A.val * X))
+        (forall z : Complex,
         And (Iff
           (Integrable (fun g => (norm g.val.det : Complex) ^ z * (Psi g.val * c (A * g))) mu)
           (Integrable (fun g => (norm g.val.det : Complex) ^ z * (Phi g.val * c g)) mu))
           (integral mu (fun g => (norm g.val.det : Complex) ^ z * (Psi g.val * c (A * g))) =
             (norm A.val.det : Complex) ^ (-z) *
-              integral mu (fun g => (norm g.val.det : Complex) ^ z * (Phi g.val * c g))))) := by
+              integral mu (fun g => (norm g.val.det : Complex) ^ z * (Phi g.val * c g)))))) := by
   let M := Matrix (Fin n) (Fin n) L
   let G := Units M
   let e : Homeomorph M M :=
@@ -1430,7 +1427,7 @@ theorem exists_heckeLocalZetaTest_leftTranslate
   have hPsi : HasCompactSupport (fun X => Psi X) :=
     hCompact.of_isClosed_subset isClosed_closure
       (closure_minimal hSupport (isClosed_closure.preimage e.continuous))
-  refine Exists.intro Psi (And.intro hPsi ?_)
+  refine Exists.intro Psi (And.intro hPsi (And.intro (fun X => rfl) ?_))
   intro z
   let d : Complex := norm A.val.det
   let f (g : G) := (norm g.val.det : Complex) ^ z * (Phi g.val * c g)
@@ -1468,6 +1465,29 @@ theorem exists_heckeLocalZetaTest_leftTranslate
     exact (hf.comp_mul_left (Inv.inv A)).const_mul _
   next =>
     rw [integral_const_mul, integral_mul_left_eq_self f A]
+
+/-- A left translate of a compact locally constant matrix test is another
+compact locally constant test. Translating the coefficient by the same matrix
+preserves absolute integrability and multiplies the zeta integral by the
+inverse determinant weight. The identity holds for every complex exponent. -/
+theorem exists_heckeLocalZetaTest_leftTranslate
+    (n : Nat) [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [MeasurableMul (Units (Matrix (Fin n) (Fin n) L))]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) L))) [mu.IsMulLeftInvariant]
+    (A : Units (Matrix (Fin n) (Fin n) L))
+    (Phi : LocallyConstant (Matrix (Fin n) (Fin n) L) Complex)
+    (hPhi : HasCompactSupport (fun X => Phi X))
+    (c : Units (Matrix (Fin n) (Fin n) L) -> Complex) :
+    Exists (fun Psi : LocallyConstant (Matrix (Fin n) (Fin n) L) Complex =>
+      And (HasCompactSupport (fun X => Psi X)) (forall z : Complex,
+        And (Iff
+          (Integrable (fun g => (norm g.val.det : Complex) ^ z * (Psi g.val * c (A * g))) mu)
+          (Integrable (fun g => (norm g.val.det : Complex) ^ z * (Phi g.val * c g)) mu))
+          (integral mu (fun g => (norm g.val.det : Complex) ^ z * (Psi g.val * c (A * g))) =
+            (norm A.val.det : Complex) ^ (-z) *
+              integral mu (fun g => (norm g.val.det : Complex) ^ z * (Phi g.val * c g))))) := by
+  choose Psi hPsi using exists_heckeLocalZetaTest_leftTranslate_exact p n mu A Phi hPhi c
+  exact Exists.intro Psi (And.intro hPsi.1 hPsi.2.2)
 
 /-- In positive rank, a matrix with uniformizer determinant translates a
 compact locally constant zeta test to one whose integral is multiplied by
@@ -2189,6 +2209,192 @@ theorem exists_heckeLocalZetaTest_singularTail
       S.sum (fun k => ((dedekindPrimeNorm K p : Complex) ^ z) ^ k * a k) := (hS z).2
   rw [hParts, integral_add hH hT, hI]
   simp only [mul_comm]
+
+/-- If left translation by a matrix acts on the coefficient by a nonzero
+scalar, subtracting the translated test removes the contribution near the
+zero matrix. The new integral is the original integral multiplied by the
+difference between one and the inverse scalar times the determinant weight. -/
+theorem exists_heckeLocalZetaTest_originCancellation
+    (n : Nat) [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [MeasurableMul (Units (Matrix (Fin n) (Fin n) L))]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) L))) [mu.IsMulLeftInvariant]
+    (A : Units (Matrix (Fin n) (Fin n) L))
+    (Phi : LocallyConstant (Matrix (Fin n) (Fin n) L) Complex)
+    (hPhi : HasCompactSupport (fun X => Phi X))
+    (c : Units (Matrix (Fin n) (Fin n) L) -> Complex)
+    (lambda : Complex) (hLambda : Not (lambda = 0))
+    (hc : forall g, c (A * g) = lambda * c g) :
+    Exists (fun Delta : LocallyConstant (Matrix (Fin n) (Fin n) L) Complex =>
+      And (HasCompactSupport (fun X => Delta X))
+        (And (forall X, Delta X = Phi X - Phi (A.val * X))
+          (And (Filter.EventuallyEq (nhds (0 : Matrix (Fin n) (Fin n) L)) Delta (fun _ => 0))
+          (forall z : Complex,
+            let F := fun g : Units (Matrix (Fin n) (Fin n) L) =>
+              (norm g.val.det : Complex) ^ z * (Phi g.val * c g)
+            let D := fun g : Units (Matrix (Fin n) (Fin n) L) =>
+              (norm g.val.det : Complex) ^ z * (Delta g.val * c g)
+            Integrable F mu -> And (Integrable D mu)
+              (integral mu D = (1 - Inv.inv lambda * (norm A.val.det : Complex) ^ (-z)) *
+                integral mu F))))) := by
+  let M := Matrix (Fin n) (Fin n) L
+  let G := Units M
+  choose Psi hPsi using exists_heckeLocalZetaTest_leftTranslate_exact p n mu A Phi hPhi c
+  let Delta := Phi - Psi
+  have hDelta : HasCompactSupport (fun X => Delta X) := hPhi.sub hPsi.1
+  have hZero : Psi (0 : M) = Phi 0 := by rw [hPsi.2.1, mul_zero]
+  have hNear : Filter.EventuallyEq (nhds (0 : M)) Delta (fun _ => 0) := by
+    refine ((Phi.2.eventually_eq 0).and (Psi.2.eventually_eq 0)).mono ?_
+    intro X hX
+    change Phi X - Psi X = 0
+    have hPhiX : Phi X = Phi 0 := hX.1
+    have hPsiX : Psi X = Psi 0 := hX.2
+    rw [hPhiX, hPsiX, hZero, sub_self]
+  have hDifference (X : M) : Delta X = Phi X - Phi (A.val * X) := by
+    change Phi X - Psi X = _
+    rw [hPsi.2.1]
+  refine Exists.intro Delta (And.intro hDelta (And.intro hDifference (And.intro hNear ?_)))
+  intro z F D hF
+  let T (g : G) := (norm g.val.det : Complex) ^ z * (Psi g.val * c (A * g))
+  let H (g : G) := (norm g.val.det : Complex) ^ z * (Psi g.val * c g)
+  have hTH (g : G) : T g = lambda * H g := by
+    dsimp [T, H]
+    rw [hc]
+    ring
+  have hHT : H = fun g : G => Inv.inv lambda * T g := by
+    funext g
+    rw [hTH]
+    field_simp [hLambda]
+  have hTI : Integrable T mu := ((hPsi.2.2 z).1).mpr hF
+  have hHI : Integrable H mu := by
+    rw [hHT]
+    exact hTI.const_mul _
+  have hDiff : D = fun g : G => F g - H g := by
+    funext g
+    change (norm g.val.det : Complex) ^ z * ((Phi g.val - Psi g.val) * c g) =
+      (norm g.val.det : Complex) ^ z * (Phi g.val * c g) -
+        (norm g.val.det : Complex) ^ z * (Psi g.val * c g)
+    ring
+  have hTV : integral mu T = (norm A.val.det : Complex) ^ (-z) * integral mu F :=
+    (hPsi.2.2 z).2
+  refine And.intro (by rw [hDiff]; exact hF.sub hHI) ?_
+  rw [hDiff, integral_sub hF hHI, hHT, integral_const_mul, hTV]
+  ring
+
+/-- For scalar uniformizer translation, the test difference vanishes near
+the zero matrix and its zeta integral is the original integral multiplied
+by one minus the scalar-character value times the prime-norm weight. -/
+theorem exists_heckeLocalZetaTest_scalarUniformizerCancellation
+    (n : Nat) [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [MeasurableMul (Units (Matrix (Fin n) (Fin n) L))]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) L))) [mu.IsMulLeftInvariant]
+    (u : Units L) (hu : Valued.v u.val = finiteUniformizerValue)
+    (Phi : LocallyConstant (Matrix (Fin n) (Fin n) L) Complex)
+    (hPhi : HasCompactSupport (fun X => Phi X))
+    (c : Units (Matrix (Fin n) (Fin n) L) -> Complex)
+    (lambda : Units Complex)
+    (hc : forall g, c (Matrix.GeneralLinearGroup.scalar (Fin n) u * g) = lambda.val * c g) :
+    Exists (fun Delta : LocallyConstant (Matrix (Fin n) (Fin n) L) Complex =>
+      And (HasCompactSupport (fun X => Delta X))
+        (And (forall X, Delta X =
+          Phi X - Phi ((Matrix.GeneralLinearGroup.scalar (Fin n) (Inv.inv u)).val * X))
+          (And (Filter.EventuallyEq (nhds (0 : Matrix (Fin n) (Fin n) L)) Delta (fun _ => 0))
+          (forall z : Complex,
+            let F := fun g : Units (Matrix (Fin n) (Fin n) L) =>
+              (norm g.val.det : Complex) ^ z * (Phi g.val * c g)
+            let D := fun g : Units (Matrix (Fin n) (Fin n) L) =>
+              (norm g.val.det : Complex) ^ z * (Delta g.val * c g)
+            Integrable F mu -> And (Integrable D mu)
+              (integral mu D = (1 - lambda.val *
+                ((dedekindPrimeNorm K p : Complex) ^ (-z)) ^ n) * integral mu F))))) := by
+  let G := Units (Matrix (Fin n) (Fin n) L)
+  let B : G := Matrix.GeneralLinearGroup.scalar (Fin n) u
+  let A : G := Matrix.GeneralLinearGroup.scalar (Fin n) (Inv.inv u)
+  have hAdjust (g : G) : c (A * g) = (Inv.inv lambda).val * c g := by
+    have hBA : B * A = 1 := by
+      change Matrix.GeneralLinearGroup.scalar (Fin n) u *
+        Matrix.GeneralLinearGroup.scalar (Fin n) (Inv.inv u) = 1
+      rw [<- map_mul, mul_inv_cancel, map_one]
+    have h := hc (A * g)
+    change c (B * (A * g)) = lambda.val * c (A * g) at h
+    rw [<- mul_assoc, hBA, one_mul] at h
+    rw [Units.val_inv_eq_inv_val, h]
+    field_simp [lambda.ne_zero]
+  choose Delta hDelta using exists_heckeLocalZetaTest_originCancellation
+    p n mu A Phi hPhi c (Inv.inv lambda).val (Inv.inv lambda).ne_zero hAdjust
+  have hNorm : norm A.val.det = (dedekindPrimeNorm K p : Real) ^ n := by
+    change norm (Matrix.GeneralLinearGroup.det A).val = _
+    dsimp only [A]
+    rw [Matrix.GeneralLinearGroup.det_scalar, Fintype.card_fin, Units.val_pow_eq_pow_val, norm_pow,
+      Units.val_inv_eq_inv_val, norm_inv, norm_eq_inv_of_valuation_finiteUniformizer p u.val hu,
+      inv_inv]
+  have hArg : ((dedekindPrimeNorm K p : Real) : Complex).arg = 0 :=
+    Complex.arg_ofReal_of_nonneg (Nat.cast_nonneg _)
+  have hPow (z : Complex) : (norm A.val.det : Complex) ^ (-z) =
+      ((dedekindPrimeNorm K p : Complex) ^ (-z)) ^ n := by
+    have hLower : -Real.pi < (n : Real) * ((dedekindPrimeNorm K p : Real) : Complex).arg := by
+      simpa only [hArg, mul_zero] using neg_lt_zero.mpr Real.pi_pos
+    have hUpper : (n : Real) * ((dedekindPrimeNorm K p : Real) : Complex).arg <= Real.pi := by
+      simpa only [hArg, mul_zero] using Real.pi_pos.le
+    rw [hNorm, Complex.ofReal_pow, <- Complex.cpow_nat_mul' hLower hUpper, Complex.cpow_nat_mul,
+      Complex.ofReal_natCast]
+  refine Exists.intro Delta (And.intro hDelta.1 (And.intro hDelta.2.1 (And.intro hDelta.2.2.1 ?_)))
+  intro z F D hF
+  have h := hDelta.2.2.2 z hF
+  refine And.intro h.1 ?_
+  have hValue : integral mu D =
+      (1 - Inv.inv (Inv.inv lambda).val * (norm A.val.det : Complex) ^ (-z)) * integral mu F := h.2
+  rw [hValue, Units.val_inv_eq_inv_val, inv_inv, hPow]
+
+/-- In rank one the origin is the whole singular locus. Clearing the
+scalar-uniformizer factor gives a finite Laurent polynomial numerator
+for the local zeta integral on its domain of absolute convergence. -/
+theorem exists_heckeLocalZetaTest_rankOneLaurentNumerator
+    [MeasurableSpace (Units (Matrix (Fin 1) (Fin 1) L))]
+    [BorelSpace (Units (Matrix (Fin 1) (Fin 1) L))]
+    (mu : Measure (Units (Matrix (Fin 1) (Fin 1) L))) [mu.IsHaarMeasure]
+    (u : Units L) (hu : Valued.v u.val = finiteUniformizerValue)
+    (Phi : LocallyConstant (Matrix (Fin 1) (Fin 1) L) Complex)
+    (hPhi : HasCompactSupport (fun X => Phi X))
+    (c : Units (Matrix (Fin 1) (Fin 1) L) -> Complex) (hC : Continuous c)
+    (lambda : Units Complex)
+    (hc : forall g, c (Matrix.GeneralLinearGroup.scalar (Fin 1) u * g) = lambda.val * c g) :
+    Exists (fun S : Finset Int => Exists (fun a : Int -> Complex =>
+      forall z : Complex,
+        let F := fun g : Units (Matrix (Fin 1) (Fin 1) L) =>
+          (norm g.val.det : Complex) ^ z * (Phi g.val * c g)
+        Integrable F mu ->
+          (1 - lambda.val * (dedekindPrimeNorm K p : Complex) ^ (-z)) * integral mu F =
+            S.sum (fun k => ((dedekindPrimeNorm K p : Complex) ^ z) ^ k * a k))) := by
+  let M := Matrix (Fin 1) (Fin 1) L
+  let G := Units M
+  choose Delta hDelta using exists_heckeLocalZetaTest_scalarUniformizerCancellation
+    p 1 mu u hu Phi hPhi c lambda hc
+  have hAvoid (X : M) (hX : Membership.mem (tsupport (fun Y => Delta Y)) X) :
+      Not (X.det = 0) := by
+    intro hDet
+    have hZero : X = 0 := by
+      apply Matrix.ext
+      intro i j
+      have hi : i = (0 : Fin 1) := Subsingleton.elim _ _
+      have hj : j = (0 : Fin 1) := Subsingleton.elim _ _
+      change X i j = 0
+      have hEntry : X 0 0 = 0 := (Matrix.det_fin_one X).symm.trans hDet
+      rw [hi, hj, hEntry]
+    have h0 : Not (Membership.mem (tsupport (fun Y => Delta Y)) (0 : M)) :=
+      notMem_tsupport_iff_eventuallyEq.mpr hDelta.2.2.1
+    exact h0 (by rw [<- hZero]; exact hX)
+  choose S hS using integrableAndIntegral_heckeLocalZetaTest_awayFromSingular p 1 mu
+    Delta hDelta.1 hAvoid c hC
+  let a (k : Int) := integral mu
+    (Set.indicator {g : G | heckeLocalDetValueIndex p 1 g = k} (fun g => Delta g.val * c g))
+  refine Exists.intro S (Exists.intro a ?_)
+  intro z F hF
+  let D (g : G) := (norm g.val.det : Complex) ^ z * (Delta g.val * c g)
+  have hCanc : integral mu D =
+      (1 - lambda.val * ((dedekindPrimeNorm K p : Complex) ^ (-z)) ^ (1 : Nat)) *
+        integral mu F := (hDelta.2.2.2 z hF).2
+  rw [pow_one] at hCanc
+  exact hCanc.symm.trans (hS z).2
 
 end LocalUnitZetaTest
 
