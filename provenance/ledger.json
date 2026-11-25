@@ -2679,9 +2679,9 @@
       "path": "Robin1984/GRH/ValuationPrincipalCongruenceFactorization.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Block Gaussian elimination at a unit pivot and double cosets of principal congruence subgroups.",
-      "formalization_note": "Proves upper-diagonal-lower factorization and the ordered diagonal double-coset identity at every principal congruence level below one.",
-      "content_basis": "Eliminates a unit scalar pivot while preserving the congruence level, proves inverse support using triangular multiplication, and combines opposite diagonal conjugations into the double-coset factorization.",
-      "dependency_status": "Uses principal congruence contractions and Schur pivot bounds. Supplies the double-coset identity for the local subgroup-averaging recurrence.",
+      "formalization_note": "Proves principal congruence factorization, the ordered diagonal double-coset identity, and Cartan decomposition over a valuation ring.",
+      "content_basis": "Eliminates a unit scalar pivot to preserve congruence levels and derives the ordered diagonal double-coset law. For Cartan decomposition, maximal-value pivots preserve the valuation bound for the remaining block.",
+      "dependency_status": "Uses principal congruence contractions, Schur elimination, and integral permutation matrices. Provides the ordered double-coset law and ordered diagonal orbit representatives.",
       "reviewed": true
     },
     {

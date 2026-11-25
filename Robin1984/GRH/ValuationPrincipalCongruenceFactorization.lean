@@ -5,17 +5,18 @@ import Robin1984.GRH.ValuationPrincipalCongruence
 
 - Classification: **Standard mathematical formalization**.
 - Mathematical source: Block Gaussian elimination at a unit pivot and double cosets of principal congruence subgroups.
-- Formalization note: Proves upper-diagonal-lower factorization and the ordered diagonal double-coset identity at every principal congruence level below one.
+- Formalization note: Proves principal congruence factorization, the ordered diagonal double-coset identity, and Cartan decomposition over a valuation ring.
 - PROVENANCE-END
 -/
 
 /-!
-# Principal congruence factorization and ordered diagonal double cosets
+# Principal congruence factorization and Cartan decomposition
 
 The last scalar pivot is a unit. Its Schur complement remains at the same
 valuation bound, so eliminating the last row and column reduces the rank.
 The triangular factors and their inverses have the supports needed for
-diagonal conjugation in the two opposite directions.
+diagonal conjugation in the two opposite directions. A maximal pivot also
+gives the Cartan decomposition by integral left and right operations.
 -/
 
 set_option autoImplicit false
@@ -689,5 +690,391 @@ theorem exists_valuationPrincipalCongruence_doubleCoset_factor_pow
     t * k.val * (valuationDiagonalSection F n (a ^ m)).val =
       u.val * (t * (valuationDiagonalSection F n (a ^ m)).val) * l.val at h
   simpa only [ht] using h
+
+/-- If the last pivot has maximal valuation, integral elementary factors
+split off that pivot. The remaining invertible block stays bounded by the
+pivot valuation. -/
+private theorem exists_valuationIntegralMatrix_maximalLastPivot
+    {F W : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
+    (v : Valuation F W) (n : Nat)
+    (g : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) F))
+    (hPivot : Not (g.val (Fin.last n) (Fin.last n) = 0))
+    (hMax : forall i j, v (g.val i j) <= v (g.val (Fin.last n) (Fin.last n))) :
+    let e : Equiv (Sum (Fin n) (Fin 1)) (Fin (n + 1)) := finSumFinEquiv
+    let D : Matrix (Fin 1) (Fin 1) F := Matrix.of (fun _ _ => g.val (Fin.last n) (Fin.last n))
+    exists upper lower : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) F),
+      exists block : Units (Matrix (Fin n) (Fin n) F),
+        And (Membership.mem (valuationIntegralMatrixSubgroup v (n + 1)) upper)
+        (And (Membership.mem (valuationIntegralMatrixSubgroup v (n + 1)) lower)
+          (And (g.val = upper.val * Matrix.reindexRingEquiv F e
+              (Matrix.fromBlocks block.val 0 0 D) * lower.val)
+            (forall i j, v (block.val i j) <= v (g.val (Fin.last n) (Fin.last n))))) := by
+  intro e D
+  let reindex := Matrix.reindexRingEquiv F e
+  let M := reindex.symm g.val
+  have eLeft (i : Fin n) : e (Sum.inl i) = i.castSucc := by
+    apply Fin.ext
+    rfl
+  have eRight : e (Sum.inr 0) = Fin.last n := by
+    apply Fin.ext
+    simp [e]
+  let A : Matrix (Fin n) (Fin n) F := Matrix.of (fun i j => M (Sum.inl i) (Sum.inl j))
+  let b (i : Fin n) := M (Sum.inl i) (Sum.inr 0)
+  let c (j : Fin n) := M (Sum.inr 0) (Sum.inl j)
+  let pivot := g.val (Fin.last n) (Fin.last n)
+  let d := Units.mk0 pivot hPivot
+  have hD : M (Sum.inr 0) (Sum.inr 0) = pivot := by
+    change g.val (e (Sum.inr 0)) (e (Sum.inr 0)) = _
+    rw [eRight]
+  have boundM (i j : Sum (Fin n) (Fin 1)) : v (M i j) <= v pivot :=
+    hMax (e i) (e j)
+  have hRatio (x : F) (hx : v x <= v pivot) : v (x * d.inv) <= 1 := by
+    calc
+      _ = v x * v d.inv := v.map_mul _ _
+      _ <= v d.val * v d.inv := mul_le_mul' hx (le_refl _)
+      _ = 1 := by rw [<- v.map_mul, d.val_inv, v.map_one]
+  let B : Matrix (Fin n) (Fin 1) F := Matrix.of (fun i _ => b i * d.inv)
+  let C : Matrix (Fin 1) (Fin n) F := Matrix.of (fun _ j => d.inv * c j)
+  let S : Matrix (Fin n) (Fin n) F := Matrix.of (fun i j => A i j - b i * d.inv * c j)
+  have bBound (i : Fin n) : v (b i * d.inv) <= 1 :=
+    hRatio (b i) (boundM (Sum.inl i) (Sum.inr 0))
+  have hB (i : Fin n) (j : Fin 1) : v (B i j) <= 1 := bBound i
+  have hC (i : Fin 1) (j : Fin n) : v (C i j) <= 1 := by
+    change v (d.inv * c j) <= 1
+    rw [mul_comm]
+    exact hRatio (c j) (boundM (Sum.inr 0) (Sum.inl j))
+  have boundS (i j : Fin n) : v (S i j) <= v pivot := by
+    have hc : v (b i * d.inv * c j) <= v pivot := by
+      rw [v.map_mul]
+      exact (mul_le_mul' (bBound i) (boundM (Sum.inr 0) (Sum.inl j))).trans_eq
+        (one_mul _)
+    change v (A i j - b i * d.inv * c j) <= _
+    rw [sub_eq_add_neg]
+    exact (v.map_add _ _).trans (max_le (boundM (Sum.inl i) (Sum.inl j))
+      (by rw [v.map_neg]; exact hc))
+  choose upper lower hElim using exists_valuationPrincipalCongruence_lastBlock_elementary
+    v n 1 le_rfl B C hB hC
+  have hBlock : M = Matrix.fromBlocks A
+      (Matrix.of (fun i _ => b i)) (Matrix.of (fun _ j => c j)) D := by
+    ext i j
+    cases i <;> cases j
+    next => rfl
+    next =>
+      rename_i j
+      have hj : j = 0 := Subsingleton.elim _ _
+      subst j
+      rfl
+    next =>
+      rename_i i j
+      have hi : i = 0 := Subsingleton.elim _ _
+      subst i
+      rfl
+    next =>
+      rename_i i j
+      have hi : i = 0 := Subsingleton.elim _ _
+      have hj : j = 0 := Subsingleton.elim _ _
+      subst i
+      subst j
+      exact hD
+  have hFactor : g.val = upper.val * reindex (Matrix.fromBlocks S 0 0 D) * lower.val := by
+    calc
+      _ = reindex M := (reindex.apply_symm_apply _).symm
+      _ = reindex (Matrix.fromBlocks 1 B 0 1 * Matrix.fromBlocks S 0 0 D *
+          Matrix.fromBlocks 1 0 C 1) :=
+        congrArg reindex (hBlock.trans (lastBlock_eq_upper_diagonal_lower n A b c d))
+      _ = _ := by rw [hElim.1, hElim.2.1, map_mul, map_mul]
+  let mid := Inv.inv upper * g * Inv.inv lower
+  have hMid : mid.val = reindex (Matrix.fromBlocks S 0 0 D) := by
+    change upper.inv * g.val * lower.inv = _
+    rw [hFactor]
+    calc
+      _ = (upper.inv * upper.val) * reindex (Matrix.fromBlocks S 0 0 D) *
+          (lower.val * lower.inv) := by simp only [mul_assoc]
+      _ = _ := by rw [upper.inv_val, lower.val_inv, one_mul, mul_one]
+  have hEntry (i j : Sum (Fin n) (Fin 1)) :
+      mid.val (e i) (e j) = Matrix.fromBlocks S 0 0 D i j := by
+    rw [hMid]
+    change Matrix.fromBlocks S 0 0 D (e.symm (e i)) (e.symm (e j)) = _
+    rw [e.symm_apply_apply, e.symm_apply_apply]
+  have hRow (j : Fin n) : mid.val (Fin.last n) j.castSucc = 0 := by
+    have h := hEntry (Sum.inr 0) (Sum.inl j)
+    rw [eRight, eLeft] at h
+    exact h
+  have hMidPivot : Not (mid.val (Fin.last n) (Fin.last n) = 0) := by
+    have h := hEntry (Sum.inr 0) (Sum.inr 0)
+    rw [eRight] at h
+    change mid.val (Fin.last n) (Fin.last n) = pivot at h
+    rwa [h]
+  choose block hCorner using exists_unitUpperLeftCorner_of_lastRow n mid hRow hMidPivot
+  have hS : block.val = S := by
+    ext i j
+    rw [hCorner, <- eLeft i, <- eLeft j]
+    exact hEntry (Sum.inl i) (Sum.inl j)
+  refine Exists.intro upper (Exists.intro lower (Exists.intro block
+    (And.intro hElim.2.2.1.1 (And.intro hElim.2.2.2.1 ?_))))
+  rw [hS]
+  exact And.intro hFactor boundS
+
+private def valuationPivotPermutationUnit
+    {F : Type*} [Field F] {n : Nat} (s : Equiv.Perm (Fin n)) :
+    Units (Matrix (Fin n) (Fin n) F) where
+  val := s.permMatrix F
+  inv := (Inv.inv s).permMatrix F
+  val_inv := by rw [<- Matrix.permMatrix_mul, inv_mul_cancel, Matrix.permMatrix_one]
+  inv_val := by rw [<- Matrix.permMatrix_mul, mul_inv_cancel, Matrix.permMatrix_one]
+
+private theorem valuationPivotPermutationUnit_mem
+    {F W : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
+    (v : Valuation F W) (n : Nat) (s : Equiv.Perm (Fin n)) :
+    Membership.mem (valuationIntegralMatrixSubgroup v n) (valuationPivotPermutationUnit s) := by
+  apply (mem_valuationIntegralMatrixSubgroup_iff v n _).mpr
+  have h (p : Equiv.Perm (Fin n)) (i j : Fin n) : v (p.permMatrix F i j) <= 1 := by
+    by_cases hp : p i = j
+    next => simp [Equiv.Perm.permMatrix, PEquiv.toMatrix, Equiv.toPEquiv_apply, hp]
+    next =>
+      simp [Equiv.Perm.permMatrix, PEquiv.toMatrix, Equiv.toPEquiv_apply, hp]
+  exact And.intro (h s) (h (Inv.inv s))
+
+/-- Integral row and column operations split off a pivot of maximal
+valuation from any invertible matrix of positive rank. -/
+private theorem exists_valuationIntegralMatrix_maximalPivot
+    {F W : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
+    (v : Valuation F W) (n : Nat)
+    (g : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) F)) :
+    let e : Equiv (Sum (Fin n) (Fin 1)) (Fin (n + 1)) := finSumFinEquiv
+    exists left right : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) F),
+      exists block : Units (Matrix (Fin n) (Fin n) F),
+      exists d : Units F,
+        And (Membership.mem (valuationIntegralMatrixSubgroup v (n + 1)) left)
+        (And (Membership.mem (valuationIntegralMatrixSubgroup v (n + 1)) right)
+        (And (g.val = left.val * Matrix.reindexRingEquiv F e
+            (Matrix.fromBlocks block.val 0 0 (Matrix.of (fun _ _ => d.val))) * right.val)
+        (And (exists i j, d.val = g.val i j)
+          (And (forall i j, v (g.val i j) <= v d.val)
+            (forall i j, v (block.val i j) <= v d.val))))) := by
+  intro e
+  let J := Fin (n + 1)
+  let pmax : Prod J J -> W := fun p => v (g.val p.1 p.2)
+  have hUniv : (Finset.univ : Finset (Prod J J)).Nonempty :=
+    Exists.intro (0,0) (Finset.mem_univ _)
+  choose p hp using Finset.exists_max_image (Finset.univ : Finset (Prod J J)) pmax hUniv
+  have hMax (i j : J) : v (g.val i j) <= v (g.val p.1 p.2) := hp.2 (i,j) (Finset.mem_univ _)
+  have hp0 : Not (g.val p.1 p.2 = 0) := by
+    intro h0
+    have hZero (i j : J) : g.val i j = 0 := by
+      have h := hMax i j
+      rw [h0, v.map_zero] at h
+      have hz := le_antisymm h zero_le
+      exact (map_eq_zero v).mp hz
+    have hMat : g.val = 0 := by
+      ext i j
+      exact hZero i j
+    have hInv := g.val_inv
+    rw [hMat, zero_mul] at hInv
+    exact zero_ne_one hInv
+  let sl : Equiv.Perm J := Equiv.swap (Fin.last n) p.1
+  let sr : Equiv.Perm J := (Equiv.swap (Fin.last n) p.2).symm
+  let L : Units (Matrix J J F) := valuationPivotPermutationUnit sl
+  let R : Units (Matrix J J F) := valuationPivotPermutationUnit sr
+  let gp := L * g * R
+  have hEntry (i j : J) : gp.val i j = g.val (sl i) (sr.symm j) := by
+    change Matrix.vecMul (fun k => (L.val * g.val) i k) (sr.permMatrix F) j = _
+    rw [Matrix.vecMul_permMatrix]
+    change Matrix.mulVec (sl.permMatrix F) (fun k => g.val k (sr.symm j)) i = _
+    simp only [Matrix.permMatrix_mulVec, Function.comp_apply]
+  have hP : gp.val (Fin.last n) (Fin.last n) = g.val p.1 p.2 := by
+    rw [hEntry]
+    change g.val (Equiv.swap (Fin.last n) p.1 (Fin.last n))
+      (Equiv.swap (Fin.last n) p.2 (Fin.last n)) = _
+    simp only [Equiv.swap_apply_left]
+  have hGpMax (i j : J) : v (gp.val i j) <= v (gp.val (Fin.last n) (Fin.last n)) := by
+    rw [hEntry, hP]
+    exact hMax (sl i) (sr.symm j)
+  have hGpNZ : Not (gp.val (Fin.last n) (Fin.last n) = 0) := by rwa [hP]
+  choose upper lower block hFactor using exists_valuationIntegralMatrix_maximalLastPivot
+    v n gp hGpNZ hGpMax
+  let d := Units.mk0 (gp.val (Fin.last n) (Fin.last n)) hGpNZ
+  let K := valuationIntegralMatrixSubgroup v (n + 1)
+  have hLeft : Membership.mem K (Inv.inv L * upper) :=
+    K.mul_mem (K.inv_mem (valuationPivotPermutationUnit_mem v (n + 1) sl)) hFactor.1
+  have hRight : Membership.mem K (lower * Inv.inv R) :=
+    K.mul_mem hFactor.2.1 (K.inv_mem (valuationPivotPermutationUnit_mem v (n + 1) sr))
+  have hRestore : g.val = L.inv * gp.val * R.inv := by
+    change g.val = L.inv * (L.val * g.val * R.val) * R.inv
+    calc
+      _ = (L.inv * L.val) * g.val * (R.val * R.inv) := by
+        rw [L.inv_val, R.val_inv, one_mul, mul_one]
+      _ = _ := by simp only [mul_assoc]
+  have hProduct : g.val = (Inv.inv L * upper).val * Matrix.reindexRingEquiv F e
+      (Matrix.fromBlocks block.val 0 0 (Matrix.of (fun _ _ => d.val))) *
+        (lower * Inv.inv R).val := by
+    change g.val = (L.inv * upper.val) * Matrix.reindexRingEquiv F e
+      (Matrix.fromBlocks block.val 0 0 (Matrix.of (fun _ _ => d.val))) *
+        (lower.val * R.inv)
+    rw [hRestore, hFactor.2.2.1]
+    simp only [mul_assoc]
+    rfl
+  exact Exists.intro (Inv.inv L * upper) (Exists.intro (lower * Inv.inv R)
+    (Exists.intro block (Exists.intro d (And.intro hLeft (And.intro hRight
+      (And.intro hProduct (And.intro (Exists.intro p.1 (Exists.intro p.2 hP))
+        (And.intro (fun i j => (hMax i j).trans_eq (congrArg v hP).symm) hFactor.2.2.2))))))))
+
+private theorem exists_valuationIntegralMatrix_embedOne
+    {F W : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
+    (v : Valuation F W) (n : Nat) (g : Units (Matrix (Fin n) (Fin n) F))
+    (hg : Membership.mem (valuationIntegralMatrixSubgroup v n) g) :
+    let e : Equiv (Sum (Fin n) (Fin 1)) (Fin (n + 1)) := finSumFinEquiv
+    exists lifted : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) F),
+      And (lifted.val = Matrix.reindexRingEquiv F e (Matrix.fromBlocks g.val 0 0 1))
+        (Membership.mem (valuationIntegralMatrixSubgroup v (n + 1)) lifted) := by
+  intro e
+  have hVal := ((mem_valuationIntegralMatrixSubgroup_iff v n g).mp hg).1
+  have hId := ((mem_valuationIntegralMatrixSubgroup_iff v n 1).mp
+    (valuationIntegralMatrixSubgroup v n).one_mem).1
+  have hDiff (i j : Fin n) : v ((g.val - 1) i j) <= 1 := by
+    rw [Matrix.sub_apply, sub_eq_add_neg]
+    exact (v.map_add _ _).trans (max_le (hVal i j) (by rw [v.map_neg]; exact hId i j))
+  have hMem : Membership.mem (valuationPrincipalCongruenceSubgroup v n 1) g :=
+    And.intro hg hDiff
+  have hOne : v (1 : F) <= 1 := by rw [v.map_one]
+  have hClose : v ((1 : F) - 1) <= 1 := by
+    rw [sub_self, v.map_zero]
+    exact zero_le
+  choose lifted hl using exists_valuationPrincipalCongruence_lastBlock_diagonal
+    v n 1 g 1 hMem hOne hOne hClose
+  have hScalar : Matrix.of (fun _ _ : Fin 1 => (1 : F)) = 1 := by
+    ext i j
+    have hji : j = i := Subsingleton.elim _ _
+    subst j
+    rw [Matrix.one_apply_eq]
+    rfl
+  exact Exists.intro lifted (And.intro (by simpa only [Units.val_one, hScalar] using hl.1) hl.2.1)
+
+/-- Integral left and right factors give a diagonal representative with
+ordered valuations bounded by the original entrywise bound. -/
+theorem exists_valuationIntegralMatrix_ordered_doubleDiagonal
+    {F W : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
+    (v : Valuation F W) (n : Nat)
+    (g : Units (Matrix (Fin n) (Fin n) F)) (bound : W)
+    (hBound : forall i j, v (g.val i j) <= bound) :
+    exists left right : Units (Matrix (Fin n) (Fin n) F), exists a : Units (Fin n -> F),
+      And (Membership.mem (valuationIntegralMatrixSubgroup v n) left)
+      (And (Membership.mem (valuationIntegralMatrixSubgroup v n) right)
+      (And (g.val = left.val * Matrix.diagonal a.val * right.val)
+      (And (Monotone (fun i => v (a.val i))) (forall i, v (a.val i) <= bound)))) := by
+  induction n generalizing bound with
+  | zero =>
+    have h := (valuationIntegralMatrixSubgroup v 0).one_mem
+    refine Exists.intro 1 (Exists.intro 1 (Exists.intro 1
+      (And.intro h (And.intro h (And.intro ?_ (And.intro ?_ ?_))))))
+    next => ext i; exact Fin.elim0 i
+    next => intro i; exact Fin.elim0 i
+    next => intro i; exact Fin.elim0 i
+  | succ n ih =>
+    let e : Equiv (Sum (Fin n) (Fin 1)) (Fin (n + 1)) := finSumFinEquiv
+    let reindex := Matrix.reindexRingEquiv F e
+    choose outerLeft outerRight block d hPivot using exists_valuationIntegralMatrix_maximalPivot v n g
+    choose i j hEntry using hPivot.2.2.2.1
+    have hDBound : v d.val <= bound := by
+      rw [hEntry]
+      exact hBound i j
+    choose innerLeft innerRight a hBlock using ih block (v d.val) hPivot.2.2.2.2.2
+    choose liftLeft hLiftLeft using exists_valuationIntegralMatrix_embedOne v n innerLeft hBlock.1
+    choose liftRight hLiftRight using exists_valuationIntegralMatrix_embedOne v n innerRight hBlock.2.1
+    let D : Matrix (Fin 1) (Fin 1) F := Matrix.of (fun _ _ => d.val)
+    let appended : Units (Fin (n + 1) -> F) :=
+      { val := fun i => Sum.elim a.val (fun _ => d.val) (e.symm i)
+        inv := fun i => Sum.elim a.inv (fun _ => d.inv) (e.symm i)
+        val_inv := by
+          funext i
+          change Sum.elim a.val (fun _ => d.val) (e.symm i) *
+            Sum.elim a.inv (fun _ => d.inv) (e.symm i) = 1
+          cases e.symm i with
+          | inl i => exact congrFun a.val_inv i
+          | inr i => exact d.val_inv
+        inv_val := by
+          funext i
+          change Sum.elim a.inv (fun _ => d.inv) (e.symm i) *
+            Sum.elim a.val (fun _ => d.val) (e.symm i) = 1
+          cases e.symm i with
+          | inl i => exact congrFun a.inv_val i
+          | inr i => exact d.inv_val }
+    have hAt (i : Sum (Fin n) (Fin 1)) :
+        appended.val (e i) = Sum.elim a.val (fun _ => d.val) i := by
+      change Sum.elim a.val (fun _ => d.val) (e.symm (e i)) = _
+      rw [e.symm_apply_apply]
+    have hInside : reindex (Matrix.fromBlocks block.val 0 0 D) =
+        liftLeft.val * reindex (Matrix.fromBlocks (Matrix.diagonal a.val) 0 0 D) *
+          liftRight.val := by
+      rw [hLiftLeft.1, hLiftRight.1, <- map_mul, <- map_mul]
+      simp only [Matrix.fromBlocks_multiply, Matrix.mul_zero, Matrix.zero_mul,
+        add_zero, zero_add, Matrix.one_mul, Matrix.mul_one, hBlock.2.2.1.symm]
+      rfl
+    have hDiag : reindex (Matrix.fromBlocks (Matrix.diagonal a.val) 0 0 D) =
+        Matrix.diagonal appended.val := by
+      have hEntry (i j : Sum (Fin n) (Fin 1)) :
+          Matrix.fromBlocks (Matrix.diagonal a.val) 0 0 D i j =
+            Matrix.diagonal appended.val (e i) (e j) := by
+        by_cases h : i = j
+        next =>
+          subst j
+          rw [Matrix.diagonal_apply_eq, hAt]
+          cases i with
+          | inl i => exact Matrix.diagonal_apply_eq a.val i
+          | inr i => rfl
+        next =>
+          rw [Matrix.diagonal_apply_ne _ (fun he => h (e.injective he))]
+          cases i with
+          | inl i =>
+            cases j with
+            | inl j =>
+              exact Matrix.diagonal_apply_ne a.val
+                (fun hij => h (congrArg (Sum.inl : Fin n -> Sum (Fin n) (Fin 1)) hij))
+            | inr j => rfl
+          | inr i =>
+            cases j with
+            | inl j => rfl
+            | inr j =>
+              have hEq : i = j := Subsingleton.elim _ _
+              subst j
+              exact False.elim (h rfl)
+      ext i j
+      change Matrix.fromBlocks (Matrix.diagonal a.val) 0 0 D (e.symm i) (e.symm j) = _
+      have h := hEntry (e.symm i) (e.symm j)
+      simpa only [e.apply_symm_apply] using h
+    have hOrder : Monotone (fun i => v (appended.val i)) := by
+      have atBlock (i j : Sum (Fin n) (Fin 1)) (h : e i <= e j) :
+          v (appended.val (e i)) <= v (appended.val (e j)) := by
+        rw [hAt, hAt]
+        cases i with
+        | inl i =>
+          cases j with
+          | inl j => exact hBlock.2.2.2.1 h
+          | inr j => exact hBlock.2.2.2.2 i
+        | inr i =>
+          cases j with
+          | inl j =>
+            change n + i.val <= j.val at h
+            exact False.elim (by omega)
+          | inr j => exact le_rfl
+      intro i j hij
+      have he : e (e.symm i) <= e (e.symm j) := by simpa only [e.apply_symm_apply] using hij
+      simpa only [e.apply_symm_apply] using atBlock (e.symm i) (e.symm j) he
+    have hAppBound (i : Fin (n + 1)) : v (appended.val i) <= bound := by
+      change v (Sum.elim a.val (fun _ => d.val) (e.symm i)) <= bound
+      cases e.symm i with
+      | inl i => exact (hBlock.2.2.2.2 i).trans hDBound
+      | inr i => exact hDBound
+    have hProduct : g.val = (outerLeft * liftLeft).val * Matrix.diagonal appended.val *
+        (liftRight * outerRight).val := by
+      have hStep : g.val = outerLeft.val * reindex (Matrix.fromBlocks block.val 0 0 D) *
+          outerRight.val := hPivot.2.2.1
+      rw [hStep, hInside, hDiag]
+      simp only [Units.val_mul, mul_assoc]
+    let K := valuationIntegralMatrixSubgroup v (n + 1)
+    exact Exists.intro (outerLeft * liftLeft) (Exists.intro (liftRight * outerRight)
+      (Exists.intro appended (And.intro (K.mul_mem hPivot.1 hLiftLeft.2)
+        (And.intro (K.mul_mem hLiftRight.2 hPivot.2.1)
+          (And.intro hProduct (And.intro hOrder hAppBound))))))
 
 end Robin1984.GRH
