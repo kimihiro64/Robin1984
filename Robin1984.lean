@@ -26,6 +26,7 @@ import Robin1984.GRH.GodementJacquetThetaKernel
 import Robin1984.GRH.GodementJacquetThetaL2Decay
 import Robin1984.GRH.GodementJacquetThetaLatticeDecay
 import Robin1984.GRH.GodementJacquetThetaMellin
+import Robin1984.GRH.GodementJacquetThetaWeightedCancellation
 import Robin1984.GRH.GodementJacquetUnfolding
 import Robin1984.GRH.GodementJacquetVectorPoisson
 import Robin1984.GRH.HeckeTateAdelicEuler
