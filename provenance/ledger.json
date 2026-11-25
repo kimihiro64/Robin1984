@@ -2703,6 +2703,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetCartanLocalIntegral.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Cartan double cosets, principal congruence fixed spaces, and rational generating series of coordinatewise linear recurrences.",
+      "formalization_note": "Regroups the finite-place integral on the integral matrix locus into finitely many rational cone series using locally constant tests and normalized Haar volumes.",
+      "content_basis": "Proves the finite quotient expansion, the geometric shift of the Haar volumes, and a common denominator for the finitely many cone series.",
+      "dependency_status": "Uses the local Cartan decomposition, principal congruence fixed vectors and functionals, and finite-dimensional ordered diagonal compression.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetCartanResidueMeasure.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Reduction modulo the maximal ideal, normalized additive local Haar measure, and finite product measures.",
