@@ -488,7 +488,9 @@ private theorem normalized_localZeta_divisor_of_numeratorIdeal
   exact Exists.intro H (Exists.intro Q (And.intro hH (And.intro hQ
     (And.intro hFactor (hSpan.symm.trans hUnits)))))
 
-private theorem polynomial_eval_ne_zero_on_rightHalfPlane
+/-- A polynomial with constant term one stays nonzero at the local Euler
+variable on a sufficiently far right half-plane. -/
+theorem polynomial_eval_ne_zero_on_rightHalfPlane
     {q : Real} (hq0 : 0 < q) (hq1 : q < 1)
     (H : Polynomial Complex) (hH : H.eval 0 = 1) :
     exists sigma : Real, forall s : Complex, sigma < s.re ->
