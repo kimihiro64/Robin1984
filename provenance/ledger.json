@@ -1776,6 +1776,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetMellinAbsolute.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Tonelli disintegration over a fundamental domain.",
+      "formalization_note": "Transforms the original nonnegative zeta kernel into its periodized determinant-coordinate integral, then derives absolute integrability of the theta Mellin kernel.",
+      "content_basis": "A Haar substitution and Tonelli's theorem, followed by the triangle inequality for the rational-matrix sum.",
+      "dependency_status": "Uses the checked Mellin identification and joint theta measurability. Absolute convergence of the original zeta kernel and pointwise summability of the test series are hypotheses.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetMellinGrowth.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and absolute bounds for Mellin transforms on vertical strips.",

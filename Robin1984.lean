@@ -16,6 +16,7 @@ import Robin1984.GRH.GodementJacquetHaarUnimodularity
 import Robin1984.GRH.GodementJacquetHaarVolume
 import Robin1984.GRH.GodementJacquetMatrixMeasure
 import Robin1984.GRH.GodementJacquetMatrixPoisson
+import Robin1984.GRH.GodementJacquetMellinAbsolute
 import Robin1984.GRH.GodementJacquetMellinGrowth
 import Robin1984.GRH.GodementJacquetMellinIdentification
 import Robin1984.GRH.GodementJacquetProductLattice
