@@ -1686,6 +1686,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetFiniteAdelicCanonicalTensors.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement-Jacquet finite adelic zeta integrals and factorization over the places.",
+      "formalization_note": "Realizes the finite Euler product with canonical ramified factors by a fixed finite sum of integrals of pure local tensors.",
+      "content_basis": "Chooses compact translated tests at the ramified places, bounds their thresholds uniformly, and commutes the finite tensor expansion with integration.",
+      "dependency_status": "Uses the existing spherical integral formula, the finite adelic Haar chart factorization, and the local inverse-denominator test combinations.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetFiniteAdelicFixedTensors.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Finite multilinearity of restricted products and the normalized finite adelic matrix-unit charts.",

@@ -14,6 +14,7 @@ import Robin1984.GRH.GodementJacquetCartanTestPartition
 import Robin1984.GRH.GodementJacquetCartanVolume
 import Robin1984.GRH.GodementJacquetCoordinates
 import Robin1984.GRH.GodementJacquetFiniteAdelicCanonicalFactors
+import Robin1984.GRH.GodementJacquetFiniteAdelicCanonicalTensors
 import Robin1984.GRH.GodementJacquetFiniteAdelicFixedTensors
 import Robin1984.GRH.GodementJacquetFiniteAdelicTestRectangles
 import Robin1984.GRH.GodementJacquetFiniteMatrixDenominator
