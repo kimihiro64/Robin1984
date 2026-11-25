@@ -1785,12 +1785,30 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetMellinIdentification.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and integration over a measurable fundamental domain.",
+      "formalization_note": "Identifies the adelic matrix-coefficient zeta integral with the logarithmic Mellin transform of the invertible double theta integral.",
+      "content_basis": "Reindexing the rational principal range and applying Fubini give the exact determinant-coordinate kernel.",
+      "dependency_status": "Uses the checked determinant-norm disintegration. The original and theta kernels are assumed absolutely integrable.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetProductLattice.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Poisson summation for full-rank Euclidean lattices and the matrix lattice in the Godement-Jacquet zeta integral.",
       "formalization_note": "Identifies the product lattice, its dual, and its covolume, then applies shifted Poisson summation to an arbitrary Schwartz function on the product.",
       "content_basis": "Uses coordinate embeddings of lattices, the Euclidean product measure, rectangular fundamental domains, and the existing Schwartz periodisation identity.",
       "dependency_status": "Uses the verified DedekindZeta lattice Poisson theorem and pinned Mathlib product measure, lattice and inner-product-space API.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetReductionWeights.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and integration over a measurable fundamental domain.",
+      "formalization_note": "Restricts a fundamental domain to a measurable orbit cover. Proves the denominator and integrability inputs for simultaneous cancellation of singular terms in the primal and dual theta integrals.",
+      "content_basis": "A first-translate selection, finite denominators on compact sets, and a bounded-integrand estimate on a finite-measure set.",
+      "dependency_status": "Uses the checked full theta growth bound and weighted cancellations. The reduction cover and weighted cusp bounds are explicit hypotheses.",
       "reviewed": true
     },
     {
