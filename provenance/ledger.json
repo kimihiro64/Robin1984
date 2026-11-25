@@ -1857,6 +1857,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetSubgroupAveraging.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Compact-open averaging and the positive torus in Casselman's notes on representations of p-adic groups, Section 4, and the Cayley-Hamilton theorem.",
+      "formalization_note": "Proves a finite recurrence for matrix coefficients from double-coset multiplication and a subgroup average.",
+      "content_basis": "Verified the compressed product and powers, the recurrence of order equal to the dimension of the averaging range, and the double-coset condition from a subgroup decomposition.",
+      "dependency_status": "The recurrence assumes a subgroup average, finite-dimensional range, and subgroup invariance of the vector and functional. Construction and specialization of the average for principal congruence subgroups are separate steps.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetThetaAnalyticContinuation.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Mellin transforms of exponentially decaying theta integrals.",

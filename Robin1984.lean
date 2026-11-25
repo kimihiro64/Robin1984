@@ -24,6 +24,7 @@ import Robin1984.GRH.GodementJacquetReductionContinuation
 import Robin1984.GRH.GodementJacquetReductionWeights
 import Robin1984.GRH.GodementJacquetSchwartzDilation
 import Robin1984.GRH.GodementJacquetSingularOrbits
+import Robin1984.GRH.GodementJacquetSubgroupAveraging
 import Robin1984.GRH.GodementJacquetThetaAnalyticContinuation
 import Robin1984.GRH.GodementJacquetThetaDecay
 import Robin1984.GRH.GodementJacquetThetaDualDecay
