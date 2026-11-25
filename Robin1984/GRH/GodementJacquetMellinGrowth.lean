@@ -16,6 +16,8 @@ The two-sided exponential moment bounds the transform uniformly in the
 imaginary part. This bound supplies the middle strip in the order-one
 estimate when the paired completion has the required Euler identity
 on the right and the norm reflection on the left.
+For an individual completion, the contragredient Euler product controls
+the reflected half-plane.
 -/
 
 set_option autoImplicit false
@@ -129,6 +131,84 @@ theorem entireOrderOne_of_standardPairedEulerProduct_and_godementJacquetLogMelli
     _ = norm (godementJacquetLogMellin n F s) * norm (godementJacquetLogMellin n G s) := by
       rw [hMellin s, norm_mul]
     _ <= M * N := mul_le_mul (hM.2 s hs1 hs2) (hN.2 s hs1 hs2) (norm_nonneg _) (le_of_lt hM.1)
+    _ <= Real.exp C := by
+      have h := Real.add_one_le_exp C
+      dsimp only [C] at h
+      linarith
+    _ <= _ := Real.exp_le_exp.mpr (le_mul_of_one_le_right (le_of_lt hC) hPow)
+
+private theorem hasOrderOneBoundOn_standardIndividualEulerCompletion_on_right
+    {powers realPlaces complexPlaces : Type*}
+    [Fintype realPlaces] [Fintype complexPlaces]
+    (q : powers -> Real) (b : powers -> Complex) (hTwo : forall i, 2 <= q i)
+    (hSum : Summable (fun i => norm (b i) * q i ^ (-(2 : Real))))
+    {conductor : Real} (hConductor : 0 < conductor) (m : Nat)
+    (mu : realPlaces -> Complex) (nu : complexPlaces -> Complex)
+    (hMu : forall i, -(1 : Real) / 2 < (mu i).re)
+    (hNu : forall i, -(1 : Real) / 2 < (nu i).re)
+    {Lambda : Complex -> Complex}
+    (hEuler : forall s : Complex, 3 <= s.re ->
+      Lambda s = standardCompletionFactor conductor m mu nu s *
+        ((s - 1) ^ m * Complex.exp (complexPrimePowerEulerLog q b s))) :
+    forall eps : Real, 0 < eps -> Exists (fun C : Real => And (0 < C)
+      (forall s : Complex, 3 <= s.re ->
+        norm (Lambda s) <= Real.exp (C * (1 + norm s) ^ (1 + eps)))) := by
+  let C := tsum (fun i => (Real.log 2) ^ (-1 : Int) * (norm (b i) * q i ^ (-(2 : Real))))
+  refine standardCompletion_orderOneBound_on_right hConductor m mu nu hMu hNu C ?_ hEuler
+  intro s hs
+  have h2 : (2 : Real) <= s.re := (by norm_num : (2 : Real) <= 3).trans hs
+  rw [Complex.norm_exp]
+  exact Real.exp_le_exp.mpr
+    ((Complex.re_le_norm _).trans (norm_complexPrimePowerEulerLog_le q b hTwo hSum h2))
+
+/-- The primal Mellin is entire of order at most one. The original Euler
+product bounds it on the right, the contragredient Euler product bounds
+it on the left through reflection, and the Mellin moment bounds the
+middle strip. -/
+theorem entireOrderOne_of_individualGodementJacquetMellin
+    {powers dualPowers realPlaces complexPlaces dualRealPlaces dualComplexPlaces : Type*}
+    [Fintype realPlaces] [Fintype complexPlaces]
+    [Fintype dualRealPlaces] [Fintype dualComplexPlaces]
+    (n : Nat) (F G : Real -> Complex) (hF : Measurable F)
+    (hMoment : forall a : Real, Integrable (fun t : Real =>
+      norm (F t) * (Real.exp (abs t)) ^ a) (volume : Measure Real))
+    (q : powers -> Real) (b : powers -> Complex) (hTwo : forall i, 2 <= q i)
+    (hSum : Summable (fun i => norm (b i) * q i ^ (-(2 : Real))))
+    (qD : dualPowers -> Real) (bD : dualPowers -> Complex) (hTwoD : forall i, 2 <= qD i)
+    (hSumD : Summable (fun i => norm (bD i) * qD i ^ (-(2 : Real))))
+    {conductor conductorD : Real} (hConductor : 0 < conductor) (hConductorD : 0 < conductorD)
+    (m mD : Nat) (mu : realPlaces -> Complex) (nu : complexPlaces -> Complex)
+    (muD : dualRealPlaces -> Complex) (nuD : dualComplexPlaces -> Complex)
+    (hMu : forall i, -(1 : Real) / 2 < (mu i).re)
+    (hNu : forall i, -(1 : Real) / 2 < (nu i).re)
+    (hMuD : forall i, -(1 : Real) / 2 < (muD i).re)
+    (hNuD : forall i, -(1 : Real) / 2 < (nuD i).re)
+    (hEuler : forall s : Complex, 3 <= s.re ->
+      godementJacquetLogMellin n F s = standardCompletionFactor conductor m mu nu s *
+        ((s - 1) ^ m * Complex.exp (complexPrimePowerEulerLog q b s)))
+    (hEulerD : forall s : Complex, 3 <= s.re ->
+      godementJacquetLogMellin n G s = standardCompletionFactor conductorD mD muD nuD s *
+        ((s - 1) ^ mD * Complex.exp (complexPrimePowerEulerLog qD bD s)))
+    (hReflect : forall s : Complex,
+      norm (godementJacquetLogMellin n G (1 - s)) = norm (godementJacquetLogMellin n F s)) :
+    Complex.Hadamard.EntireOfOrderAtMost 1 (godementJacquetLogMellin n F) := by
+  have hRight := hasOrderOneBoundOn_standardIndividualEulerCompletion_on_right
+    q b hTwo hSum hConductor m mu nu hMu hNu hEuler
+  have hRightD := hasOrderOneBoundOn_standardIndividualEulerCompletion_on_right
+    qD bD hTwoD hSumD hConductorD mD muD nuD hMuD hNuD hEulerD
+  refine entireOrderOne_of_dualRightBounds_and_stripBound
+    (differentiable_godementJacquetLogMellin_of_exponentialMoments n F hF hMoment)
+    hRight hRightD hReflect ?_
+  choose M hM using exists_godementJacquetLogMellin_verticalStrip_bound_of_exponentialMoments n F hMoment
+  let C := M + 1
+  have hC : 0 < C := add_pos hM.1 zero_lt_one
+  intro eps hEps
+  refine Exists.intro C (And.intro hC ?_)
+  intro s hs1 hs2
+  have hPow : 1 <= (1 + norm s) ^ (1 + eps) :=
+    Real.one_le_rpow (le_add_of_nonneg_right (norm_nonneg _)) (by linarith)
+  calc
+    _ <= M := hM.2 s hs1 hs2
     _ <= Real.exp C := by
       have h := Real.add_one_le_exp C
       dsimp only [C] at h

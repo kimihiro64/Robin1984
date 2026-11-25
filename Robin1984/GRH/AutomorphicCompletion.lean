@@ -1095,29 +1095,25 @@ theorem standardCompletionFactor_orderOneBound_on_right
   have hProduct := (((pow_hasOrderOneBoundOn S m).mul hCond).mul hR).mul hC
   exact hProduct eps heps
 
-/-- For a pole-cleared paired completion, the Euler product and Gamma factors
-control the right half-plane. Reflection controls the left. A growth bound on
-the intervening strip then suffices for the entire order-one bound. -/
-theorem entireOrderOne_of_standardPairedCompletion_and_stripBound
+/-- The completed Euler product has the order-one bound in the right
+half-plane where the ordinary Euler product is uniformly bounded. -/
+theorem standardCompletion_orderOneBound_on_right
     {realPlaces complexPlaces : Type*}
     [Fintype realPlaces] [Fintype complexPlaces]
     {conductor : Real} (hConductor : 0 < conductor) (m : Nat)
     (mu : realPlaces -> Complex) (nu : complexPlaces -> Complex)
     (hMu : forall i, -(1 : Real) / 2 < (mu i).re)
     (hNu : forall i, -(1 : Real) / 2 < (nu i).re)
-    {ordinary Lambda : Complex -> Complex} (hEntire : Differentiable Complex Lambda)
+    {ordinary Lambda : Complex -> Complex}
     (B : Real) (hOrdinaryBound : forall s : Complex, 3 <= s.re ->
       norm (ordinary s) <= Real.exp B)
     (hCompletion : forall s : Complex, 3 <= s.re ->
       Lambda s = standardCompletionFactor conductor m mu nu s *
-        ((s - 1) ^ m * ordinary s))
-    (hReflect : forall s : Complex, norm (Lambda (1 - s)) = norm (Lambda s))
-    (hStrip : forall eps : Real, 0 < eps -> exists C : Real, 0 < C /\
-      forall s : Complex, -2 <= s.re -> s.re <= 3 ->
-        norm (Lambda s) <= Real.exp (C * (1 + norm s) ^ (1 + eps))) :
-    EntireOfOrderAtMost 1 Lambda := by
+        ((s - 1) ^ m * ordinary s)) :
+    forall eps : Real, 0 < eps -> Exists (fun C : Real => And (0 < C)
+      (forall s : Complex, 3 <= s.re ->
+        norm (Lambda s) <= Real.exp (C * (1 + norm s) ^ (1 + eps)))) := by
   let Right : Set Complex := Set.ofPred (fun s => 3 <= s.re)
-  let Left : Set Complex := Set.ofPred (fun s => s.re <= -2)
   have hFactor : HasOrderOneBoundOn Right (standardCompletionFactor conductor m mu nu) :=
     fun _ heps => standardCompletionFactor_orderOneBound_on_right hConductor m mu nu hMu hNu heps
   have hOrdinary : HasOrderOneBoundOn Right ordinary :=
@@ -1126,13 +1122,34 @@ theorem entireOrderOne_of_standardPairedCompletion_and_stripBound
     have hP := (pow_hasOrderOneBoundOn (Set.univ : Set Complex) m).affine
       (S := Right) 1 (-1) (fun _ _ => Set.mem_univ _)
     simpa only [one_mul, sub_eq_add_neg] using hP
-  have hRight : HasOrderOneBoundOn Right Lambda := by
-    intro eps heps
-    choose C hC using (hFactor.mul (hPower.mul hOrdinary)) eps heps
-    refine Exists.intro C (And.intro hC.1 ?_)
-    intro s hs
-    rw [hCompletion s hs]
-    exact hC.2 s hs
+  change HasOrderOneBoundOn Right Lambda
+  intro eps heps
+  choose C hC using (hFactor.mul (hPower.mul hOrdinary)) eps heps
+  refine Exists.intro C (And.intro hC.1 ?_)
+  intro s hs
+  rw [hCompletion s hs]
+  exact hC.2 s hs
+
+/-- A functional equation transfers the dual right-half-plane growth
+bound to the original function on the left. A bound on the middle strip
+then gives the entire order-one bound for the original function. -/
+theorem entireOrderOne_of_dualRightBounds_and_stripBound
+    {Lambda Dual : Complex -> Complex} (hEntire : Differentiable Complex Lambda)
+    (hRightF : forall eps : Real, 0 < eps -> Exists (fun C : Real => And (0 < C)
+      (forall s : Complex, 3 <= s.re ->
+        norm (Lambda s) <= Real.exp (C * (1 + norm s) ^ (1 + eps)))))
+    (hRightG : forall eps : Real, 0 < eps -> Exists (fun C : Real => And (0 < C)
+      (forall s : Complex, 3 <= s.re ->
+        norm (Dual s) <= Real.exp (C * (1 + norm s) ^ (1 + eps)))))
+    (hReflect : forall s : Complex, norm (Dual (1 - s)) = norm (Lambda s))
+    (hStrip : forall eps : Real, 0 < eps -> Exists (fun C : Real => And (0 < C)
+      (forall s : Complex, -2 <= s.re -> s.re <= 3 ->
+        norm (Lambda s) <= Real.exp (C * (1 + norm s) ^ (1 + eps))))) :
+    EntireOfOrderAtMost 1 Lambda := by
+  let Right : Set Complex := Set.ofPred (fun s => 3 <= s.re)
+  let Left : Set Complex := Set.ofPred (fun s => s.re <= -2)
+  have hRight : HasOrderOneBoundOn Right Lambda := hRightF
+  have hRightDual : HasOrderOneBoundOn Right Dual := hRightG
   have hLeft : HasOrderOneBoundOn Left Lambda := by
     have hMap (s : Complex) (hs : Membership.mem Left s) :
         Membership.mem Right ((-1 : Complex) * s + 1) := by
@@ -1140,7 +1157,7 @@ theorem entireOrderOne_of_standardPairedCompletion_and_stripBound
       rw [neg_one_mul, Complex.add_re, Complex.neg_re, Complex.one_re]
       linarith only [show s.re <= -2 from hs]
     intro eps heps
-    choose C hC using (hRight.affine (-1) 1 hMap) eps heps
+    choose C hC using (hRightDual.affine (-1) 1 hMap) eps heps
     refine Exists.intro C (And.intro hC.1 ?_)
     intro s hs
     have heq : (-1 : Complex) * s + 1 = 1 - s := by ring
@@ -1166,6 +1183,31 @@ theorem entireOrderOne_of_standardPairedCompletion_and_stripBound
     case neg =>
       exact (hC.2 s (le_of_lt (lt_of_not_ge hL)) (le_of_lt (lt_of_not_ge hs))).trans
         (hMono C (by linarith only [hA.1, hD.1]))
+
+/-- For a pole-cleared paired completion, the Euler product and Gamma factors
+control the right half-plane. Reflection controls the left. A growth bound on
+the intervening strip then suffices for the entire order-one bound. -/
+theorem entireOrderOne_of_standardPairedCompletion_and_stripBound
+    {realPlaces complexPlaces : Type*}
+    [Fintype realPlaces] [Fintype complexPlaces]
+    {conductor : Real} (hConductor : 0 < conductor) (m : Nat)
+    (mu : realPlaces -> Complex) (nu : complexPlaces -> Complex)
+    (hMu : forall i, -(1 : Real) / 2 < (mu i).re)
+    (hNu : forall i, -(1 : Real) / 2 < (nu i).re)
+    {ordinary Lambda : Complex -> Complex} (hEntire : Differentiable Complex Lambda)
+    (B : Real) (hOrdinaryBound : forall s : Complex, 3 <= s.re ->
+      norm (ordinary s) <= Real.exp B)
+    (hCompletion : forall s : Complex, 3 <= s.re ->
+      Lambda s = standardCompletionFactor conductor m mu nu s *
+        ((s - 1) ^ m * ordinary s))
+    (hReflect : forall s : Complex, norm (Lambda (1 - s)) = norm (Lambda s))
+    (hStrip : forall eps : Real, 0 < eps -> exists C : Real, 0 < C /\
+      forall s : Complex, -2 <= s.re -> s.re <= 3 ->
+        norm (Lambda s) <= Real.exp (C * (1 + norm s) ^ (1 + eps))) :
+    EntireOfOrderAtMost 1 Lambda := by
+  have hRight := standardCompletion_orderOneBound_on_right hConductor m mu nu hMu hNu
+    B hOrdinaryBound hCompletion
+  exact entireOrderOne_of_dualRightBounds_and_stripBound hEntire hRight hRight hReflect hStrip
 
 end
 

@@ -253,6 +253,21 @@ theorem norm_grandEulerLog_le {powers : Type*} (d : GrandRobinEulerData powers)
   exact (norm_tsum_le_tsum_norm hNorm).trans (hNorm.tsum_le_tsum hBound hM)
 
 
+/-- Absolute convergence at a real exponent bounds an individual Euler
+logarithm uniformly to the right of that exponent. -/
+theorem norm_complexPrimePowerEulerLog_le {powers : Type*}
+    (q : powers -> Real) (b : powers -> Complex) (hTwo : forall i, 2 <= q i)
+    {a : Real} (hSummable : Summable (fun i => norm (b i) * q i ^ (-a)))
+    {s : Complex} (hs : a <= s.re) :
+    norm (complexPrimePowerEulerLog q b s) <=
+      tsum (fun i => (Real.log 2) ^ (-1 : Int) * (norm (b i) * q i ^ (-a))) := by
+  have hM := hSummable.mul_left ((Real.log 2) ^ (-1 : Int))
+  have hBound (i : powers) := norm_complexPrimePowerLogTerm_le q b i (hTwo i) hs
+  have hNorm := Summable.of_nonneg_of_le (fun i => norm_nonneg (complexPrimePowerLogTerm q b i s))
+    hBound hM
+  change norm (tsum (fun i => complexPrimePowerLogTerm q b i s)) <= _
+  exact (norm_tsum_le_tsum_norm hNorm).trans (hNorm.tsum_le_tsum hBound hM)
+
 /-- Absolute convergence and the functional equation reduce the order-one
 growth condition for the paired completion to its closed middle strip. -/
 theorem entireOrderOne_of_standardPairedEulerProduct_and_stripBound
