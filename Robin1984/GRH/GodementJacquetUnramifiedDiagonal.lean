@@ -1,6 +1,7 @@
 import Mathlib.Algebra.Group.Pi.Units
 import Mathlib.MeasureTheory.Integral.Pi
 import Mathlib.Topology.Algebra.Group.Units
+import Robin1984.GRH.GodementJacquetFiniteMatrixVolume
 import Robin1984.GRH.GodementJacquetUnramifiedSpherical
 
 /-!
@@ -1042,5 +1043,122 @@ theorem integrableAndAbsoluteIntegral_le_unramifiedLocalWeight
   exact And.intro hF (hDomInt.trans_eq hPosInt)
 
 end AbsoluteEulerMajorant
+
+section FiniteAdelicEulerProduct
+
+open MeasureTheory MeasureTheory.Measure
+
+section
+
+variable {K : Type*} [Field K] [NumberField K]
+variable (p : HeightOneSpectrum (RingOfIntegers K))
+
+local notation "L" => p.adicCompletion K
+local notation "v" => (Valued.v : Valuation L (WithZero (Multiplicative Int)))
+
+private theorem finiteLocalMatrixUnitSubgroup_eq_valuationIntegralMatrixSubgroup (n : Nat) :
+    finiteLocalMatrixUnitSubgroup K n p = valuationIntegralMatrixSubgroup v n := by
+  ext g
+  rw [mem_valuationIntegralMatrixSubgroup_iff v n g]
+  change (And
+    (forall i j : Fin n, Membership.mem (p.adicCompletionIntegers K) (g.val i j))
+    (forall i j : Fin n, Membership.mem (p.adicCompletionIntegers K) (g.inv i j))) <-> _
+  rfl
+
+end
+
+variable (K : Type*) [Field K] [NumberField K]
+
+local notation "P" => HeightOneSpectrum (RingOfIntegers K)
+local notation "FA" => FiniteAdeleRing (RingOfIntegers K) K
+
+private abbrev localValuedIntegralMatrixSubgroup (n : Nat) (p : P) :=
+  valuationIntegralMatrixSubgroup
+    (Valued.v : Valuation (p.adicCompletion K) (WithZero (Multiplicative Int))) n
+
+/-- With normalized chart measures, the finite adelic integral of the
+unramified spherical zeta integrand is absolutely convergent and is the
+Euler product of its prime-norm factors. The local spherical coefficients
+are bounded in norm by one, and each local geometric integral converges. -/
+theorem integrableAndHasProd_finiteAdeleUnramifiedSphericalZetaIntegral
+    (n : Nat) [Countable P] [(Filter.atTop : Filter (Finset P)).IsCountablyGenerated]
+    [forall S : Finset P, Fintype (S : Set P)]
+    [MeasurableSpace FA] [BorelSpace FA]
+    [forall p : P, MeasurableSpace (p.adicCompletion K)]
+    [forall p : P, BorelSpace (p.adicCompletion K)]
+    [forall p : P, MeasurableSpace (Units (p.adicCompletion K))]
+    [forall p : P, BorelSpace (Units (p.adicCompletion K))]
+    [forall p : P, SigmaFinite (heckeLocalHaar p)]
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) FA))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) FA))]
+    [forall p : P, MeasurableSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    [forall p : P, BorelSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    [forall p : P, MeasurableSpace (localValuedIntegralMatrixSubgroup K n p)]
+    [forall p : P, BorelSpace (localValuedIntegralMatrixSubgroup K n p)]
+    [forall S : Finset P, MeasurableSpace ((p : {q : P // Not (Membership.mem (S : Set P) q)}) ->
+      finiteLocalMatrixUnitSubgroup K n p.val)]
+    [forall S : Finset P, BorelSpace (FiniteAdeleMatrixHaarChart K n S)]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) FA)))
+    (localHaar : forall p : P, Measure (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))))
+    [forall p, (localHaar p).IsMulLeftInvariant] [forall p, SigmaFinite (localHaar p)]
+    (hLocalMass : forall p, localHaar p (finiteLocalMatrixUnitSubgroup K n p :
+      Set (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))) = 1)
+    (tailHaar : forall S : Finset P, Measure ((p : {q : P // Not (Membership.mem (S : Set P) q)}) ->
+      finiteLocalMatrixUnitSubgroup K n p.val))
+    [forall S, IsProbabilityMeasure (tailHaar S)]
+    (hMeasure : forall S : Finset P, mu.comap (finiteAdeleMatrixHaarChartEmbedding K n S) =
+      (Measure.pi (fun p : (S : Set P) => localHaar p.val)).prod (tailHaar S))
+    (nu : forall p : P, Measure (localValuedIntegralMatrixSubgroup K n p))
+    [forall p, IsProbabilityMeasure (nu p)]
+    (u0 : forall p : P, Units (p.adicCompletion K))
+    (hu0 : forall p, Valued.v (u0 p).val = finiteUniformizerValue)
+    (chi : forall p : P, Fin n -> MonoidHom (Units (p.adicCompletion K)) Complex)
+    (hUnit : forall p i x, Membership.mem (heckeLocalUnitShell p) x -> chi p i x = 1)
+    (s : Complex) (hs : ((n : Real) + 1) / 2 < s.re)
+    (hSpherical : forall p, Filter.Eventually
+      (fun g => norm (heckeUnramifiedSphericalCoefficient p n (nu p)
+        (productDiagonalCharacter n (chi p)) g) <= 1) (ae (localHaar p)))
+    (hWeighted : forall p i, norm (chi p i (u0 p) *
+      (dedekindPrimeNorm K p : Complex) ^ (-s)) < 1) :
+    let F := finiteAdeleMatrixRestrictedZetaIntegrand K n
+      (fun p => heckeUnramifiedLocalZetaIntegrand p n (nu p) (chi p) s)
+    And (Integrable F mu) (HasProd (fun p : P => Finset.univ.prod (fun i : Fin n =>
+      Inv.inv (1 - chi p i (u0 p) * (dedekindPrimeNorm K p : Complex) ^ (-s)))) (integral mu F)) := by
+  let f := fun p : P => heckeUnramifiedLocalZetaIntegrand p n (nu p) (chi p) s
+  let F := finiteAdeleMatrixRestrictedZetaIntegrand K n f
+  have hOne (p : P) (g : Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))
+      (hg : Membership.mem (finiteLocalMatrixUnitSubgroup K n p) g) : f p g = 1 := by
+    apply heckeUnramifiedLocalZetaIntegrand_eq_one_of_mem_integral p n (nu p) (chi p) (hUnit p) s g
+    rw [<- finiteLocalMatrixUnitSubgroup_eq_valuationIntegralMatrixSubgroup p n]
+    exact hg
+  have hMass (p : P) : localHaar p
+      (localValuedIntegralMatrixSubgroup K n p :
+        Set (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))) = 1 := by
+    rw [show localValuedIntegralMatrixSubgroup K n p = finiteLocalMatrixUnitSubgroup K n p from
+      (finiteLocalMatrixUnitSubgroup_eq_valuationIntegralMatrixSubgroup p n).symm]
+    exact hLocalMass p
+  have hLocal (p : P) : And (Integrable (f p) (localHaar p))
+      (integral (localHaar p) (f p) = Finset.univ.prod (fun i : Fin n =>
+        Inv.inv (1 - chi p i (u0 p) * (dedekindPrimeNorm K p : Complex) ^ (-s)))) :=
+    integrableAndIntegral_heckeUnramifiedSphericalCoefficient_primeNorm p n (u0 p) (hu0 p)
+      (localHaar p) (hMass p) (nu p) (chi p) (hUnit p) s (hWeighted p)
+  have hAbsolute (p : P) : integral (localHaar p) (fun g => norm (f p g)) <=
+      unramifiedLocalAbsoluteEulerFactor p n s.re :=
+    (integrableAndAbsoluteIntegral_le_unramifiedLocalWeight p n (u0 p) (hu0 p) (localHaar p)
+      (hMass p) s hs _ (hSpherical p) (hLocal p).1.aestronglyMeasurable).2
+  let C := Finset.univ.prod (fun i : Fin n =>
+    (dedekindZeta K ((s.re - (((n : Real) - 1) / 2 - (i.val : Real)) : Real) : Complex)).re)
+  have hBound (S : Finset P) :
+      S.prod (fun p => integral (localHaar p) (fun g => norm (f p g))) <= C := by
+    refine le_trans ?_ (prod_unramifiedLocalAbsoluteEulerFactor_le (K := K) n s.re hs S)
+    exact Finset.prod_le_prod (fun p _ => integral_nonneg (fun g => norm_nonneg (f p g)))
+      (fun p _ => hAbsolute p)
+  have hGlobal := integrableAndHasProd_finiteAdeleMatrixRestrictedZetaIntegrand K n
+    mu localHaar tailHaar hMeasure f hOne (fun p => (hLocal p).1) C hBound
+  refine And.intro hGlobal.1 ?_
+  rw [<- funext (fun p => (hLocal p).2)]
+  exact hGlobal.2
+
+end FiniteAdelicEulerProduct
 
 end Robin1984.GRH
