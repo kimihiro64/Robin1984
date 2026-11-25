@@ -2658,6 +2658,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetUniformizerCone.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Ordered diagonal exponent gaps and determinant multiplicativity.",
+      "formalization_note": "Identifies ordered exponents with uniformizer prefix directions and proves the corresponding rational matrix-coefficient series with the complex determinant weight.",
+      "content_basis": "Recovers the gap vector from an ordered exponent family, evaluates prefix uniformizer products and their determinants, and converts the cone generating series to the complex determinant weight.",
+      "dependency_status": "Uses the weighted ordered diagonal cone theorem. The matrix-coefficient sum is assumed summable at the evaluation point.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetOrderedDiagonalSeries.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Cayley-Hamilton and the rational generating series of a linear recurrence.",
