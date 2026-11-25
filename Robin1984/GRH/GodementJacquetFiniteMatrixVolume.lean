@@ -1,3 +1,4 @@
+import Mathlib.Topology.Algebra.Group.Units
 import Robin1984.GRH.HeckeAdeleLattice
 
 /-!
@@ -377,5 +378,308 @@ theorem measure_finiteAdeleMatrixDenominatorSet_le
         Fintype.card_fin _
       simp_rw [hCoset, tsum_fintype, Finset.sum_const, Finset.card_univ, nsmul_eq_mul, hCard, Nat.cast_pow]
       rfl
+
+section FiniteMatrixCoordinates
+
+variable (K : Type*) [Field K] [NumberField K]
+
+local notation "P" => HeightOneSpectrum (RingOfIntegers K)
+local notation "FA" => FiniteAdeleRing (RingOfIntegers K) K
+
+private abbrev finiteLocalMatrix (n : Nat) (p : P) :=
+  Matrix (Fin n) (Fin n) (p.adicCompletion K)
+
+private abbrev finiteLocalIntegralMatrices (n : Nat) (p : P) :=
+  (p.adicCompletionIntegers K).matrix (n := Fin n)
+
+/-- Evaluate a finite adelic matrix at one finite place. -/
+def finiteAdeleMatrixEval (n : Nat) (p : P) :
+    RingHom (Matrix (Fin n) (Fin n) FA) (finiteLocalMatrix K n p) :=
+  (RestrictedProduct.evalRingHom (fun q : P => q.adicCompletion K) p :
+    RingHom FA (p.adicCompletion K)).mapMatrix
+
+/-- Local evaluation acts on each matrix entry. -/
+theorem finiteAdeleMatrixEval_apply (n : Nat) (p : P)
+    (M : Matrix (Fin n) (Fin n) FA) (i j : Fin n) :
+    finiteAdeleMatrixEval K n p M i j = M i j p := rfl
+
+/-- Finite adelic matrices are the restricted product of local matrices with
+respect to their integral matrix rings. -/
+def finiteAdeleMatrixRestrictedProductEquiv (n : Nat) :
+    RingEquiv (Matrix (Fin n) (Fin n) FA)
+      (RestrictedProduct (finiteLocalMatrix K n)
+        (fun p => (finiteLocalIntegralMatrices K n p : Set (finiteLocalMatrix K n p)))
+        Filter.cofinite) where
+  toFun M := Subtype.mk (fun p => finiteAdeleMatrixEval K n p M) (by
+    have hMem (ij : Prod (Fin n) (Fin n)) : Filter.Eventually
+        (fun p : P => Membership.mem (p.adicCompletionIntegers K) (M ij.1 ij.2 p))
+        Filter.cofinite := (M ij.1 ij.2).2
+    filter_upwards [Filter.eventually_all.mpr hMem] with p hp
+    intro i j
+    exact hp (i, j))
+  invFun X := Matrix.of (fun i j => Subtype.mk (fun p => X p i j) (by
+    filter_upwards [X.2] with p hp
+    exact hp i j))
+  left_inv M := by
+    apply Matrix.ext
+    intro i j
+    apply FiniteAdeleRing.ext
+    intro p
+    rfl
+  right_inv X := by
+    apply RestrictedProduct.ext
+    intro p
+    apply Matrix.ext
+    intro i j
+    rfl
+  map_mul' M N := by
+    apply RestrictedProduct.ext
+    intro p
+    exact map_mul (finiteAdeleMatrixEval K n p) M N
+  map_add' M N := by
+    apply RestrictedProduct.ext
+    intro p
+    exact map_add (finiteAdeleMatrixEval K n p) M N
+
+/-- Finite adelic matrix units are the restricted product of local matrix
+units with respect to their integral subgroups. -/
+def finiteAdeleMatrixUnitsRestrictedProductEquiv (n : Nat) :
+    MulEquiv (Units (Matrix (Fin n) (Fin n) FA))
+      (RestrictedProduct (fun p : P => Units (finiteLocalMatrix K n p))
+        (fun p => (Submonoid.ofClass (finiteLocalIntegralMatrices K n p)).units)
+        Filter.cofinite) :=
+  (Units.mapEquiv (finiteAdeleMatrixRestrictedProductEquiv K n).toMulEquiv).trans
+    (RestrictedProduct.unitsEquiv (finiteLocalMatrix K n)
+      (B := finiteLocalIntegralMatrices K n))
+
+/-- In the restricted product, the coordinate at each place is local
+matrix evaluation on units. -/
+theorem finiteAdeleMatrixUnitsRestrictedProductEquiv_apply (n : Nat) (p : P)
+    (g : Units (Matrix (Fin n) (Fin n) FA)) :
+    finiteAdeleMatrixUnitsRestrictedProductEquiv K n g p =
+      Units.map (finiteAdeleMatrixEval K n p) g := rfl
+
+
+private abbrev finiteAdeleMatrixUnits (n : Nat) :=
+  Units (Matrix (Fin n) (Fin n) FA)
+
+/-- Invertible matrices whose matrices and inverses have integral entries
+at a finite place. -/
+abbrev finiteLocalMatrixUnitSubgroup (n : Nat) (p : P) :=
+  (Submonoid.ofClass (finiteLocalIntegralMatrices K n p)).units
+
+/-- Local matrix units with an integrality restriction on the given filter. -/
+abbrev finiteLocalMatrixUnitProduct (n : Nat) (f : Filter P) :=
+  RestrictedProduct (fun p : P => Units (finiteLocalMatrix K n p))
+    (fun p => (finiteLocalMatrixUnitSubgroup K n p : Set (Units (finiteLocalMatrix K n p)))) f
+
+private theorem continuous_finiteAdeleMatrixEval (n : Nat) (p : P) :
+    Continuous (finiteAdeleMatrixEval K n p) := by
+  change Continuous (fun M : Matrix (Fin n) (Fin n) FA => fun i j => M i j p)
+  exact continuous_pi (fun i => continuous_pi (fun j =>
+    (RestrictedProduct.continuous_eval p).comp ((continuous_apply j).comp (continuous_apply i))))
+
+private theorem isOpen_finiteLocalMatrixUnitSubgroup (n : Nat) (p : P) :
+    IsOpen (finiteLocalMatrixUnitSubgroup K n p : Set (Units (finiteLocalMatrix K n p))) := by
+  apply Submonoid.isOpen_units
+  have hInt : IsOpen (p.adicCompletionIntegers K : Set (p.adicCompletion K)) :=
+    Valued.isOpen_valuationSubring (p.adicCompletion K)
+  have hEntry (i j : Fin n) :
+      Continuous (fun M : finiteLocalMatrix K n p => M i j) :=
+    (continuous_apply j).comp (continuous_apply i)
+  have hOpen := isOpen_iInter_of_finite (fun i : Fin n =>
+    isOpen_iInter_of_finite (fun j : Fin n => hInt.preimage (hEntry i j)))
+  convert hOpen using 1
+  ext M
+  simp only [Set.mem_iInter, Set.mem_preimage]
+  rfl
+
+/-- The local coordinates of finite adelic matrix units are continuous
+for the restricted-product topology. -/
+theorem continuous_finiteAdeleMatrixUnitsRestrictedProductEquiv (n : Nat) :
+    Continuous (finiteAdeleMatrixUnitsRestrictedProductEquiv K n) := by
+  let G := finiteAdeleMatrixUnits K n
+  let e := finiteAdeleMatrixUnitsRestrictedProductEquiv K n
+  let b : (p : P) -> Set (Units (finiteLocalMatrix K n p)) :=
+    fun p => (finiteLocalMatrixUnitSubgroup K n p : Set (Units (finiteLocalMatrix K n p)))
+  let _ : Fact (forall p, IsOpen (b p)) :=
+    Fact.mk (isOpen_finiteLocalMatrixUnitSubgroup K n)
+  let I : Set FA := {a | forall p : P, Membership.mem (p.adicCompletionIntegers K) (a p)}
+  let T : Set (Matrix (Fin n) (Fin n) FA) := Set.iInter (fun i : Fin n =>
+    Set.iInter (fun j : Fin n => Set.preimage (fun M => M i j) I))
+  let U : Set G := Set.inter (Set.preimage (fun g : G => g.val) T)
+    (Set.preimage (fun g : G => g.inv) T)
+  have hI : IsOpen I :=
+    RestrictedProduct.isOpen_forall_mem
+      (R := fun p : P => p.adicCompletion K)
+      (A := fun p => (p.adicCompletionIntegers K : Set (p.adicCompletion K)))
+      (fun p => Valued.isOpen_valuationSubring (p.adicCompletion K))
+  have hT : IsOpen T :=
+    isOpen_iInter_of_finite (fun i => isOpen_iInter_of_finite (fun j =>
+      hI.preimage ((continuous_apply j).comp (continuous_apply i))))
+  have hU : IsOpen U :=
+    (hT.preimage Units.continuous_val).inter (hT.preimage Units.continuous_coe_inv)
+  have hOne : Membership.mem U (1 : G) := by
+    have hE (i j : Fin n) : Membership.mem I ((1 : Matrix (Fin n) (Fin n) FA) i j) := by
+      intro p
+      by_cases eij : i = j
+      next => simp [eij, Matrix.one_apply, show (1 : FA) p = 1 from rfl]
+      next => simp [eij, show (0 : FA) p = 0 from rfl]
+    have hIdentity : Membership.mem T (1 : Matrix (Fin n) (Fin n) FA) := by
+      simpa only [T, Set.mem_preimage, Set.mem_iInter] using hE
+    exact And.intro hIdentity hIdentity
+  have hCoord (p : P) : Continuous (fun g : G => e g p) :=
+    (continuous_finiteAdeleMatrixEval K n p).units_map _
+  let u : U -> finiteLocalMatrixUnitProduct K n Top.top := fun g =>
+    Subtype.mk (fun p => e g.val p) (Filter.eventually_top.mpr (by
+      intro p
+      have hVal : forall i j : Fin n, Membership.mem I (g.val.val i j) := by
+        simpa only [T, Set.mem_preimage, Set.mem_iInter] using g.property.1
+      have hInv : forall i j : Fin n, Membership.mem I (g.val.inv i j) := by
+        simpa only [T, Set.mem_preimage, Set.mem_iInter] using g.property.2
+      exact And.intro (fun i j => hVal i j p) (fun i j => hInv i j p)))
+  have hChart : Continuous u := RestrictedProduct.continuous_rng_of_top.mpr
+    (continuous_pi (fun p => (hCoord p).comp continuous_subtype_val))
+  have hRestr : ContinuousOn e U := continuousOn_iff_continuous_domRestrict.mpr
+    ((RestrictedProduct.continuous_inclusion (le_top : Filter.cofinite <= (Top.top : Filter P))).comp
+      hChart)
+  exact continuous_of_continuousAt_one e (hRestr.continuousAt (hU.mem_nhds hOne))
+
+/-- Reassembling the local matrix units into a finite adelic matrix unit
+is continuous. -/
+theorem continuous_finiteAdeleMatrixUnitsRestrictedProductEquiv_symm (n : Nat) :
+    Continuous (finiteAdeleMatrixUnitsRestrictedProductEquiv K n).symm := by
+  let e := finiteAdeleMatrixUnitsRestrictedProductEquiv K n
+  let C := finiteLocalMatrixUnitProduct K n Filter.cofinite
+  let b : (p : P) -> Set (p.adicCompletion K) :=
+    fun p => (p.adicCompletionIntegers K : Set (p.adicCompletion K))
+  apply Units.continuous_iff.mpr
+  have hEntry (i j : Fin n) :
+      Continuous (fun x : C => (e.symm x).val i j) := by
+    apply RestrictedProduct.continuous_dom.mpr
+    intro S hS
+    let y : finiteLocalMatrixUnitProduct K n (Filter.principal S) ->
+        RestrictedProduct (fun p : P => p.adicCompletion K) b (Filter.principal S) :=
+      fun x => Subtype.mk (fun p => (x p).val i j)
+        (x.2.mono (fun p hp => hp.1 i j))
+    have hy : Continuous y := by
+      apply RestrictedProduct.continuous_rng_of_principal.mpr
+      apply continuous_pi
+      intro p
+      change Continuous (fun x : finiteLocalMatrixUnitProduct K n (Filter.principal S) =>
+        (x p).val i j)
+      have hIJ : Continuous (fun M : finiteLocalMatrix K n p => M i j) :=
+        (continuous_apply j).comp (continuous_apply i)
+      exact hIJ.comp (Units.continuous_val.comp (RestrictedProduct.continuous_eval p))
+    exact (RestrictedProduct.continuous_inclusion hS).comp hy
+  have hInvEntry (i j : Fin n) :
+      Continuous (fun x : C => (e.symm x).inv i j) := by
+    apply RestrictedProduct.continuous_dom.mpr
+    intro S hS
+    let y : finiteLocalMatrixUnitProduct K n (Filter.principal S) ->
+        RestrictedProduct (fun p : P => p.adicCompletion K) b (Filter.principal S) :=
+      fun x => Subtype.mk (fun p => (x p).inv i j)
+        (x.2.mono (fun p hp => hp.2 i j))
+    have hy : Continuous y := by
+      apply RestrictedProduct.continuous_rng_of_principal.mpr
+      apply continuous_pi
+      intro p
+      change Continuous (fun x : finiteLocalMatrixUnitProduct K n (Filter.principal S) =>
+        (x p).inv i j)
+      have hIJ : Continuous (fun M : finiteLocalMatrix K n p => M i j) :=
+        (continuous_apply j).comp (continuous_apply i)
+      exact hIJ.comp (Units.continuous_coe_inv.comp (RestrictedProduct.continuous_eval p))
+    exact (RestrictedProduct.continuous_inclusion hS).comp hy
+  exact And.intro (continuous_pi (fun i => continuous_pi (hEntry i)))
+    (continuous_pi (fun i => continuous_pi (hInvEntry i)))
+
+/-- The local matrix unit coordinates give a topological group
+isomorphism of finite adelic matrix units and the restricted product. -/
+def finiteAdeleMatrixUnitsRestrictedProductHomeomorph (n : Nat) :
+    ContinuousMulEquiv (finiteAdeleMatrixUnits K n)
+      (finiteLocalMatrixUnitProduct K n Filter.cofinite) where
+  __ := finiteAdeleMatrixUnitsRestrictedProductEquiv K n
+  continuous_toFun := continuous_finiteAdeleMatrixUnitsRestrictedProductEquiv K n
+  continuous_invFun := continuous_finiteAdeleMatrixUnitsRestrictedProductEquiv_symm K n
+
+end FiniteMatrixCoordinates
+
+section PrincipalSubgroupChart
+
+variable {J : Type*} (G : J -> Type*)
+variable [forall p, Group (G p)] [forall p, TopologicalSpace (G p)]
+variable (U : forall p, Subgroup (G p))
+
+local notation "C" => fun p => (U p : Set (G p))
+
+/-- A principal restricted-product chart has unrestricted coordinates on
+its exceptional set and subgroup coordinates at every other place. -/
+def restrictedProductPrincipalSubgroupChart (S : Set J) :
+    ContinuousMulEquiv (RestrictedProduct G C
+      (Filter.principal {p | Not (Membership.mem S p)}))
+      (Prod ((p : S) -> G p.val)
+        ((p : {j : J // Not (Membership.mem S j)}) -> U p.val)) := by
+  classical
+  let X := RestrictedProduct G C (Filter.principal {p | Not (Membership.mem S p)})
+  let Y := Prod ((p : S) -> G p.val)
+    ((p : {j : J // Not (Membership.mem S j)}) -> U p.val)
+  let evalOutside (x : X) (p : {j : J // Not (Membership.mem S j)}) : U p.val :=
+    Subtype.mk (x p.val) (Filter.eventually_principal.mp x.2 p.val p.property)
+  let merge (y : Y) (p : J) : G p :=
+    if hp : Membership.mem S p then y.1 (Subtype.mk p hp)
+      else (y.2 (Subtype.mk p hp)).val
+  let e : MulEquiv X Y :=
+    { toFun := fun x => (fun p => x p.val, evalOutside x)
+      invFun := fun y => Subtype.mk (merge y) (Filter.eventually_principal.mpr (by
+        intro p hp
+        change Not (Membership.mem S p) at hp
+        simp only [merge, dif_neg hp]
+        exact (y.2 (Subtype.mk p hp)).property))
+      left_inv := by
+        intro x
+        apply RestrictedProduct.ext
+        intro p
+        change merge (fun p : S => x p.val, evalOutside x) p = x p
+        by_cases hp : Membership.mem S p <;> simp [merge, hp, evalOutside]
+      right_inv := by
+        intro y
+        apply Prod.ext
+        next =>
+          funext p
+          change merge y p.val = y.1 p
+          simp [merge, p.property]
+        next =>
+          funext p
+          apply Subtype.ext
+          change merge y p.val = (y.2 p).val
+          simp [merge, p.property]
+      map_mul' := by
+        intro x y
+        rfl }
+  refine { __ := e, continuous_toFun := ?_, continuous_invFun := ?_ }
+  next =>
+    exact (continuous_pi (fun p => RestrictedProduct.continuous_eval p.val)).prodMk
+      (continuous_pi (fun p => (RestrictedProduct.continuous_eval p.val).subtype_mk _))
+  next =>
+    apply RestrictedProduct.continuous_rng_of_principal.mpr
+    apply continuous_pi
+    intro p
+    change Continuous (fun y : Y => merge y p)
+    by_cases hp : Membership.mem S p
+    next =>
+      have hMerge : (fun y : Y => merge y p) = (fun y : Y => y.1 (Subtype.mk p hp)) := by
+        funext y
+        exact dif_pos hp
+      rw [hMerge]
+      exact (continuous_apply (Subtype.mk p hp)).comp continuous_fst
+    next =>
+      have hMerge : (fun y : Y => merge y p) =
+          (fun y : Y => (y.2 (Subtype.mk p hp)).val) := by
+        funext y
+        exact dif_neg hp
+      rw [hMerge]
+      exact continuous_subtype_val.comp ((continuous_apply (Subtype.mk p hp)).comp continuous_snd)
+
+end PrincipalSubgroupChart
 
 end Robin1984.GRH
