@@ -2667,6 +2667,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetCartanDoubleCosets.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Cartan decomposition over valuation rings and finite ordinal comparison.",
+      "formalization_note": "Proves the uniqueness of ordered diagonal valuations and partitions entrywise integral invertible matrices into uniformizer double cosets.",
+      "content_basis": "Uses the determinant expansion to find a valuation-one permutation and a finite order comparison to recover the ordered diagonal values. Integral diagonal units remove the residual scalar units from the Cartan representatives.",
+      "dependency_status": "Uses the Cartan existence theorem and uniformizer cone exponents. The union theorem assumes that nonzero integral scalar valuations are powers of a chosen uniformizer.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetOrderedDiagonalSeries.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Cayley-Hamilton and the rational generating series of a linear recurrence.",
