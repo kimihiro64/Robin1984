@@ -1615,6 +1615,61 @@ theorem exists_heckeLocalZetaTest_primeNormLaurentTranslate
   rw [integral_const_mul, show integral mu (fShift m) =
     ((dedekindPrimeNorm K p : Complex) ^ z) ^ m * integral mu f from ((hPsi m).2 z).2, mul_assoc]
 
+/-- A vector fixed near the identity and a dual vector pairing to one give
+local zeta tests realizing every Laurent polynomial in the prime-norm
+multiplier. The translated matrix coefficients keep the original vector
+and use dual vectors in the same translation-stable subspace. Each finite
+linear combination is absolutely integrable at every complex exponent. -/
+theorem exists_heckeLocalZetaTest_matrixCoefficientLaurentNormalization
+    (n : Nat) [MeasurableSpace (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L))]
+    [BorelSpace (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L))]
+    (mu : Measure (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L))) [mu.IsHaarMeasure]
+    (u : Units L) (hu : Valued.v u.val = finiteUniformizerValue)
+    (V : Type*) [AddCommGroup V] [Module Complex V]
+    (rho : MonoidHom (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L)) (Module.End Complex V))
+    (D : Submodule Complex (LinearMap (RingHom.id Complex) V Complex))
+    (hStable : forall k : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L),
+      forall d : LinearMap (RingHom.id Complex) V Complex,
+        Membership.mem D d -> Membership.mem D (d.comp (rho k)))
+    (ell : LinearMap (RingHom.id Complex) V Complex) (hell : Membership.mem D ell)
+    (vec : V) (hPair : ell vec = 1)
+    (hFixed : Filter.Eventually (fun g => rho g vec = vec)
+      (nhds (1 : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L)))) :
+    Exists (fun Psi : Int -> LocallyConstant (Matrix (Fin (n + 1)) (Fin (n + 1)) L) Complex =>
+      Exists (fun ellShift : Int -> LinearMap (RingHom.id Complex) V Complex =>
+        And (forall m, And (HasCompactSupport (fun X => Psi m X))
+          (Membership.mem D (ellShift m)))
+          (forall (S : Finset Int) (a : Int -> Complex) (z : Complex),
+            let F := fun g : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L) =>
+              S.sum (fun m => a m * ((norm g.val.det : Complex) ^ z *
+                (Psi m g.val * ellShift m (rho g vec))))
+            And (Integrable F mu)
+              (integral mu F = S.sum (fun m =>
+                a m * ((dedekindPrimeNorm K p : Complex) ^ z) ^ m))))) := by
+  let G := Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L)
+  let c (g : G) := ell (rho g vec)
+  have hNear : Filter.EventuallyEq (nhds (1 : G)) c (fun _ => 1) :=
+    hFixed.mono (fun g hg => by change ell (rho g vec) = 1; rw [hg, hPair])
+  choose Phi hPhi using exists_heckeLocalZetaTest_integral_one p (n + 1) mu c hNear
+  choose A hA using exists_heckeLocalZetaTest_primeNormLaurentTranslate p n mu u hu Phi hPhi.1 c
+  choose Psi hPsi using hA.2
+  let ellShift (m : Int) := ell.comp (rho (A ^ m))
+  refine Exists.intro Psi (Exists.intro ellShift (And.intro
+    (fun m => And.intro (hPsi.1 m) (hStable (A ^ m) ell hell)) ?_))
+  intro S a z F
+  have hEq (m : Int) (g : G) : c (A ^ m * g) = ellShift m (rho g vec) := by
+    change ell (rho (A ^ m * g) vec) = ell (rho (A ^ m) (rho g vec))
+    exact congrArg (fun T : Module.End Complex V => ell (T vec)) (map_mul rho (A ^ m) g)
+  let f (g : G) := (norm g.val.det : Complex) ^ z * (Phi g.val * c g)
+  have hz : And (Integrable f mu) (integral mu f = 1) := by
+    simpa only [sub_add_cancel] using
+      hPhi.2 (z - ((((n + 1 : Nat) : Real) - 1) / 2 : Real))
+  have hSum := hPsi.2 S a z hz.1
+  have hUnitIntegral : integral mu (fun g : G =>
+      (norm g.val.det : Complex) ^ z * (Phi g.val * c g)) = 1 := hz.2
+  rw [hUnitIntegral, mul_one] at hSum
+  simpa only [hEq] using hSum
+
 end LocalUnitZetaTest
 
 section FiniteAdelicEulerProduct
