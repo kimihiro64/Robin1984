@@ -60,6 +60,20 @@ private theorem cartanStabilizer_zeroGaps
     intro i j _
     simpa only [he, Nat.sub_zero, pow_zero] using hEntry i j
 
+private theorem natCard_valuationCartanAdmissibleResidueMatrix_ne_zero
+    {F : Type*} [Field F] (v : Valuation F (WithZero (Multiplicative Int)))
+    (n : Nat) (e : Fin n -> Nat) [Finite (IsLocalRing.ResidueField v.integer)] :
+    Not ((Nat.card (valuationCartanAdmissibleResidueMatrix v n e) : ENNReal) = 0) := by
+  let I := valuationCartanAdmissibleResidueMatrix v n e
+  let _ : Finite (Matrix (Fin n) (Fin n) (IsLocalRing.ResidueField v.integer)) :=
+    inferInstanceAs (Finite (Fin n -> Fin n -> IsLocalRing.ResidueField v.integer))
+  let _ : Finite I := Finite.of_injective (fun b : I => b.val) Subtype.val_injective
+  let _ : Nonempty I := Nonempty.intro (Subtype.mk 1
+    (And.intro isUnit_one (fun i j hij _ => Matrix.one_apply_ne (ne_of_lt hij))))
+  change Not ((Nat.card I : ENNReal) = 0)
+  norm_cast
+  exact Nat.ne_of_gt Nat.card_pos
+
 /-- For Haar measure normalized on the integral subgroup, the volume of a
 Cartan double coset is the ratio of the two additive residue-class masses. -/
 theorem measure_heckeLocal_valuationUniformizerGapDoubleCoset_eq_residueRatio
@@ -159,17 +173,9 @@ theorem measure_heckeLocal_valuationUniformizerGapDoubleCoset_eq_residueRatio
   have hMul : mu (DoubleCoset.doubleCoset d (C : Set G) (C : Set G)) * mu (H : Set G) = 1 := by
     simpa only [hMu, one_pow] using measure_cartanDoubleCoset_mul_stabilizerMeasure mu C
       hCompact hC d
-  let E := orderedValuationConeExponents n gaps
-  let I := valuationCartanAdmissibleResidueMatrix v n E
   let _ : Finite (IsLocalRing.ResidueField v.integer) := finite_heckeLocalResidueField p
-  let _ : Finite (Matrix (Fin n) (Fin n) (IsLocalRing.ResidueField v.integer)) :=
-    inferInstanceAs (Finite (Fin n -> Fin n -> IsLocalRing.ResidueField v.integer))
-  let _ : Finite I := Finite.of_injective (fun b : I => b.val) Subtype.val_injective
-  let _ : Nonempty I := Nonempty.intro (Subtype.mk 1
-    (And.intro isUnit_one (fun i j hij _ => Matrix.one_apply_ne (ne_of_lt hij))))
-  have hCard : Not ((Nat.card I : ENNReal) = 0) := by
-    norm_cast
-    exact Nat.ne_of_gt Nat.card_pos
+  have hCard := natCard_valuationCartanAdmissibleResidueMatrix_ne_zero v n
+    (orderedValuationConeExponents n gaps)
   have hNormPos : Not (ENNReal.ofReal (norm pi.val) = 0) :=
     ne_of_gt (ENNReal.ofReal_pos.mpr (norm_pos_iff.mpr pi.ne_zero))
   have hDenom : Not (mass gaps = 0) := mul_ne_zero hCard (pow_ne_zero _ hNormPos)
@@ -306,5 +312,121 @@ theorem sum_cartanResidueEntryExponent_add_positivePairCount
     _ = _ := by
       simp only [Finset.sum_add_distrib, Finset.sum_const, Finset.card_univ, Fintype.card_fin,
         nsmul_eq_mul, Nat.cast_id, mul_one, e, sum_orderedValuationConeExponents_sub]
+
+private theorem orderedValuationConeExponents_lt_congr
+    (n : Nat) (gaps other : Fin n -> Nat)
+    (h : forall k, 0 < gaps k <-> 0 < other k) (i j : Fin n) :
+    orderedValuationConeExponents n gaps j < orderedValuationConeExponents n gaps i <->
+      orderedValuationConeExponents n other j < orderedValuationConeExponents n other i := by
+  rw [orderedValuationConeExponents_lt_iff, orderedValuationConeExponents_lt_iff]
+  exact exists_congr (fun k => by rw [h k])
+
+/-- The admissible residue matrix count depends only on which gaps are positive. -/
+theorem natCard_valuationCartanAdmissibleResidueMatrix_eq_of_positiveGaps
+    {F : Type*} [Field F] (v : Valuation F (WithZero (Multiplicative Int)))
+    (n : Nat) (gaps other : Fin n -> Nat) (h : forall k, 0 < gaps k <-> 0 < other k) :
+    Nat.card (valuationCartanAdmissibleResidueMatrix v n
+      (orderedValuationConeExponents n gaps)) =
+      Nat.card (valuationCartanAdmissibleResidueMatrix v n
+        (orderedValuationConeExponents n other)) := by
+  let I := valuationCartanAdmissibleResidueMatrix v n (orderedValuationConeExponents n gaps)
+  let J := valuationCartanAdmissibleResidueMatrix v n (orderedValuationConeExponents n other)
+  let e : Equiv I J :=
+    { toFun := fun B => Subtype.mk B.val (And.intro B.property.1 (fun i j hij hji =>
+        B.property.2 i j hij ((orderedValuationConeExponents_lt_congr n gaps other h i j).mpr hji)))
+      invFun := fun B => Subtype.mk B.val (And.intro B.property.1 (fun i j hij hji =>
+        B.property.2 i j hij ((orderedValuationConeExponents_lt_congr n gaps other h i j).mp hji)))
+      left_inv := fun _ => Subtype.ext rfl
+      right_inv := fun _ => Subtype.ext rfl }
+  exact Nat.card_congr e
+
+/-- The count of strictly constrained upper entries depends only on which gaps
+are positive. -/
+theorem cartanPositivePairCount_eq_of_positiveGaps
+    (n : Nat) (gaps other : Fin n -> Nat) (h : forall k, 0 < gaps k <-> 0 < other k) :
+    Finset.univ.sum (fun i : Fin n => Finset.univ.sum (fun j : Fin n =>
+      if And (i < j) (orderedValuationConeExponents n gaps j <
+        orderedValuationConeExponents n gaps i) then (1 : Nat) else 0)) =
+      Finset.univ.sum (fun i : Fin n => Finset.univ.sum (fun j : Fin n =>
+        if And (i < j) (orderedValuationConeExponents n other j <
+          orderedValuationConeExponents n other i) then (1 : Nat) else 0)) := by
+  refine Finset.sum_congr rfl (fun i _ => Finset.sum_congr rfl (fun j _ => ?_))
+  simp only [orderedValuationConeExponents_lt_congr n gaps other h i j]
+
+/-- The normalized Cartan volume separates into a residue factor and a
+monomial in the inverse uniformizer norm. -/
+theorem measure_heckeLocal_valuationUniformizerGapDoubleCoset_eq_monomial
+    {K : Type*} [Field K] [NumberField K]
+    [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    (p : HeightOneSpectrum (RingOfIntegers K))
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    (n : Nat) (pi : Units (p.adicCompletion K))
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))))
+    [mu.IsHaarMeasure] (gaps : Fin n -> Nat) :
+    let L := p.adicCompletion K
+    let v : Valuation L (WithZero (Multiplicative Int)) := Valued.v
+    let C := valuationIntegralMatrixSubgroup v n
+    let e := orderedValuationConeExponents n gaps
+    let A : ENNReal := Nat.card (valuationCartanAdmissibleResidueMatrix v n
+      (orderedValuationConeExponents n (fun _ => 0)))
+    let B : ENNReal := Nat.card (valuationCartanAdmissibleResidueMatrix v n e)
+    let b := Finset.univ.sum (fun i : Fin n => Finset.univ.sum (fun j : Fin n =>
+      if And (i < j) (e j < e i) then (1 : Nat) else 0))
+    let W := Finset.univ.sum (fun k : Fin n => ((k.val + 1) * (n - (k.val + 1))) * gaps k)
+    let w := ENNReal.ofReal (norm pi.val)
+    v pi.val = finiteUniformizerValue -> v pi.val < 1 ->
+    mu (C : Set (Units (Matrix (Fin n) (Fin n) L))) = 1 ->
+    mu (valuationIntegralDiagonalDoubleCoset v n (valuationUniformizerGapDiagonal n pi gaps)) =
+      (A / B * w ^ b) * (Inv.inv w) ^ W := by
+  intro L v C e A B b W w hPi hPiLt hMu
+  let a := Finset.univ.sum (fun i : Fin n => Finset.univ.sum (cartanResidueEntryExponent e i))
+  have hExp : a + b = n * n + W :=
+    sum_cartanResidueEntryExponent_add_positivePairCount n gaps
+  have he0 (i : Fin n) : orderedValuationConeExponents n (fun _ => 0) i = 0 := by
+    rw [orderedValuationConeExponents_eq_sum]
+    simp
+  have ha0 : Finset.univ.sum (fun i : Fin n => Finset.univ.sum
+      (cartanResidueEntryExponent (orderedValuationConeExponents n (fun _ => 0)) i)) =
+        n * n := by
+    have h (i j : Fin n) :
+        cartanResidueEntryExponent (orderedValuationConeExponents n (fun _ => 0)) i j = 1 := by
+      simp [cartanResidueEntryExponent, he0]
+    change Finset.univ.sum (fun i : Fin n => Finset.univ.sum (fun j : Fin n =>
+      cartanResidueEntryExponent (orderedValuationConeExponents n (fun _ => 0)) i j)) = _
+    simp only [h, Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul,
+      Nat.cast_id, mul_one]
+  have hMass := measure_heckeLocal_valuationUniformizerGapDoubleCoset_eq_residueRatio
+    p n pi mu gaps hPi hPiLt hMu
+  dsimp only at hMass
+  rw [ha0] at hMass
+  change mu (valuationIntegralDiagonalDoubleCoset v n
+    (valuationUniformizerGapDiagonal n pi gaps)) = (A * w ^ (n * n)) / (B * w ^ a) at hMass
+  rw [hMass]
+  let _ : Finite (IsLocalRing.ResidueField v.integer) := finite_heckeLocalResidueField p
+  have hB0 : Not (B = 0) := natCard_valuationCartanAdmissibleResidueMatrix_ne_zero v n e
+  have hBt : Not (B = Top.top) := ENNReal.natCast_ne_top _
+  have hw0 : Not (w = 0) := ne_of_gt (ENNReal.ofReal_pos.mpr (norm_pos_iff.mpr pi.ne_zero))
+  have hwt (k : Nat) : Not (w ^ k = Top.top) := by
+    dsimp only [w]
+    simp
+  have hRight : (A / B * w ^ b * (Inv.inv w) ^ W) * (B * w ^ a) =
+      A * w ^ (n * n) := by
+    rw [div_eq_mul_inv, <- ENNReal.inv_pow]
+    calc
+      _ = A * (Inv.inv B * (w ^ b * (Inv.inv (w ^ W) * (B * w ^ a)))) := by
+        simp only [mul_assoc]
+      _ = A * (Inv.inv B * (B * (w ^ b * (Inv.inv (w ^ W) * w ^ a)))) := by
+        rw [mul_left_comm (Inv.inv (w ^ W)) B, mul_left_comm (w ^ b) B]
+      _ = A * (Inv.inv B * B) * ((w ^ a * w ^ b) * Inv.inv (w ^ W)) := by
+        rw [mul_comm (Inv.inv (w ^ W)) (w ^ a), mul_left_comm (w ^ b) (w ^ a)]
+        simp only [mul_assoc]
+      _ = _ := by
+        rw [ENNReal.inv_mul_cancel hB0 hBt, mul_one, <- pow_add, hExp, pow_add, mul_assoc,
+          ENNReal.mul_inv_cancel (pow_ne_zero _ hw0) (hwt W), mul_one]
+  rw [<- hRight, div_eq_mul_inv, mul_assoc, ENNReal.mul_inv_cancel
+    (mul_ne_zero hB0 (pow_ne_zero _ hw0)) (ENNReal.mul_ne_top hBt (hwt a)), mul_one]
 
 end Robin1984.GRH

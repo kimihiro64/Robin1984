@@ -513,4 +513,84 @@ theorem valuationPrincipalCongruence_diagonalCone_series
   exact Exists.intro (weightedConeNumerator n w (fun _ => d) c aseq)
     (And.intro hDen (weightedCone_tsum_polynomial n w (fun _ => d) c aseq hW hRec))
 
+private theorem coordinateRecurrence_mul_powers
+    (n : Nat) (d : Fin n -> Nat) (c : Fin n -> Nat -> Complex)
+    (alpha : Fin n -> Complex) (f : (Fin n -> Nat) -> Complex)
+    (hRec : forall (i : Fin n) (t : Fin n -> Nat),
+      (Finset.range (d i + 1)).sum (fun j => c i j * f (Function.update t i (t i + j))) = 0) :
+    let C (i : Fin n) (j : Nat) := c i j * alpha i ^ (d i - j)
+    let F (t : Fin n -> Nat) := f t * Finset.univ.prod (fun i => alpha i ^ t i)
+    forall (i : Fin n) (t : Fin n -> Nat),
+      (Finset.range (d i + 1)).sum (fun j => C i j * F (Function.update t i (t i + j))) = 0 := by
+  intro C F i t
+  let rest := (Finset.univ.erase i).prod (fun k => alpha k ^ t k)
+  have hProduct (j : Nat) :
+      Finset.univ.prod (fun k => alpha k ^ Function.update t i (t i + j) k) =
+        rest * alpha i ^ (t i + j) := by
+    rw [<- Finset.prod_erase_mul Finset.univ
+      (fun k => alpha k ^ Function.update t i (t i + j) k) (Finset.mem_univ i),
+      Function.update_self]
+    congr 1
+    exact Finset.prod_congr rfl (fun k hk => by
+      rw [Function.update_of_ne (Finset.ne_of_mem_erase hk)])
+  have hTerm (j : Nat) (hj : Membership.mem (Finset.range (d i + 1)) j) :
+      C i j * F (Function.update t i (t i + j)) =
+        (rest * alpha i ^ (t i + d i)) * (c i j * f (Function.update t i (t i + j))) := by
+    have hjd : j <= d i := Nat.le_of_lt_succ (Finset.mem_range.mp hj)
+    have hPower : d i - j + (t i + j) = t i + d i := by
+      calc
+        _ = t i + (d i - j + j) := by ac_rfl
+        _ = _ := by rw [Nat.sub_add_cancel hjd]
+    change (c i j * alpha i ^ (d i - j)) *
+      (f (Function.update t i (t i + j)) *
+        Finset.univ.prod (fun k => alpha k ^ Function.update t i (t i + j) k)) = _
+    rw [hProduct j]
+    calc
+      _ = (rest * (alpha i ^ (d i - j) * alpha i ^ (t i + j))) *
+          (c i j * f (Function.update t i (t i + j))) := by ac_rfl
+      _ = _ := by rw [<- pow_add, hPower]
+  rw [Finset.sum_congr rfl hTerm, <- Finset.mul_sum, hRec i t, mul_zero]
+
+/-- A coordinatewise monic recurrence gives a rational cone series after
+multiplying each coordinate by its own geometric weight. -/
+theorem weightedCone_tsum_polynomial_mul_powers
+    (n : Nat) (w d : Fin n -> Nat) (c : Fin n -> Nat -> Complex)
+    (alpha : Fin n -> Complex) (f : (Fin n -> Nat) -> Complex)
+    (hW : forall i, 0 < w i) (hLead : forall i, c i (d i) = 1)
+    (hRec : forall (i : Fin n) (t : Fin n -> Nat),
+      (Finset.range (d i + 1)).sum (fun j => c i j * f (Function.update t i (t i + j))) = 0) :
+    let F (t : Fin n -> Nat) := f t * Finset.univ.prod (fun i => alpha i ^ t i)
+    let denominator : Polynomial Complex := Finset.univ.prod (fun i =>
+      (Finset.range (d i + 1)).sum (fun j =>
+        Polynomial.C (c i j * alpha i ^ (d i - j)) * Polynomial.X ^ (w i * (d i - j))))
+    exists numerator : Polynomial Complex,
+      And (denominator.eval 0 = 1)
+        (forall z : Complex,
+          Summable (fun t => F t * z ^ Finset.univ.sum (fun i => w i * t i)) ->
+          denominator.eval z * tsum (fun t => F t * z ^ Finset.univ.sum (fun i => w i * t i)) =
+            numerator.eval z) := by
+  intro F denominator
+  let C (i : Fin n) (j : Nat) := c i j * alpha i ^ (d i - j)
+  have hC (i : Fin n) : C i (d i) = 1 := by
+    simp [C, hLead i]
+  have hDen : denominator.eval 0 = 1 := by
+    change Polynomial.evalRingHom 0
+      (Finset.univ.prod (fun i => weightedRecurrencePolynomial (w i) (d i) (C i))) = 1
+    rw [map_prod]
+    refine Finset.prod_eq_one (fun i _ => ?_)
+    change (weightedRecurrencePolynomial (w i) (d i) (C i)).eval 0 = 1
+    rw [eval_weightedRecurrencePolynomial, zero_pow (hW i).ne', Finset.sum_eq_single (d i)]
+    next => simp [hC]
+    next =>
+      intro j hj hne
+      have hjd : j <= d i := Nat.le_of_lt_succ (Finset.mem_range.mp hj)
+      have hsub : Not (d i - j = 0) := Nat.ne_of_gt (Nat.sub_pos_of_lt (lt_of_le_of_ne hjd hne))
+      rw [zero_pow hsub, mul_zero]
+    next =>
+      intro h
+      exact False.elim (h (Finset.mem_range.mpr (Nat.lt_succ_self (d i))))
+  refine Exists.intro (weightedConeNumerator n w d C F) (And.intro hDen ?_)
+  exact weightedCone_tsum_polynomial n w d C F hW
+    (coordinateRecurrence_mul_powers n d c alpha f hRec)
+
 end Robin1984.GRH

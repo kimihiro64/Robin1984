@@ -133,6 +133,46 @@ theorem measure_doubleCoset_of_left_isCompact_right_isOpen
   simp only [hMass, tsum_fintype, Finset.sum_const, Finset.card_univ,
     Nat.card_eq_fintype_card, nsmul_eq_mul]
 
+/-- Integrate over a double coset by summing the integrals on its disjoint
+left translates of the right subgroup. -/
+theorem hasSum_integral_doubleCoset_leftTranslate
+    {G E : Type*} [Group G] [TopologicalSpace G] [IsTopologicalGroup G]
+    [MeasurableSpace G] [OpensMeasurableSpace G] [MeasurableMul G]
+    [NormedAddCommGroup E] [NormedSpace Real E]
+    (mu : Measure G) [mu.IsMulLeftInvariant]
+    (C U : Subgroup G) (hCompact : IsCompact (C : Set G)) (hOpen : IsOpen (U : Set G))
+    (d : G) (f : G -> E) :
+    let D := DoubleCoset.doubleCoset d (C : Set G) (U : Set G)
+    let J := doubleCosetLeftStabilizer C U d
+    let Q := Quotient (QuotientGroup.leftRel J)
+    IntegrableOn f D mu ->
+    HasSum (fun q : Q => integral (mu.restrict (U : Set G)) (fun x => f (q.out.val * d * x)))
+      (integral (mu.restrict D) f) := by
+  intro D J Q hInt
+  let T (q : Q) := Set.preimage (fun g : G => Inv.inv (q.out.val * d) * g) (U : Set G)
+  let _ : CompactSpace C := isCompact_iff_compactSpace.mp hCompact
+  let _ : Finite Q := J.quotient_finite_of_isOpen (isOpen_doubleCosetLeftStabilizer C U d hOpen)
+  have hSplit := doubleCoset_leftTranslate_partition C U d
+  change And (Set.iUnion T = D) (Pairwise (fun q q' : Q => Disjoint (T q) (T q'))) at hSplit
+  have hMeas (q : Q) : MeasurableSet (T q) :=
+    (hOpen.preimage (continuous_const.mul continuous_id)).measurableSet
+  have hIntUnion : IntegrableOn f (Set.iUnion T) mu := by rw [hSplit.1]; exact hInt
+  have hSum := hasSum_integral_iUnion hMeas hSplit.2 hIntUnion
+  rw [hSplit.1] at hSum
+  have hTerm (q : Q) : integral (mu.restrict (T q)) f =
+      integral (mu.restrict (U : Set G)) (fun x => f (q.out.val * d * x)) := by
+    let g := q.out.val * d
+    let e := MeasurableEquiv.mulLeft g
+    have hPre : Set.preimage e (T q) = (U : Set G) := by
+      ext x
+      change Membership.mem U (Inv.inv g * (g * x)) <-> Membership.mem U x
+      simp
+    have h := (measurePreserving_mul_left mu g).restrict_preimage_emb e.measurableEmbedding (T q)
+    change MeasurePreserving e (mu.restrict (Set.preimage e (T q))) (mu.restrict (T q)) at h
+    rw [hPre] at h
+    exact (h.integral_comp e.measurableEmbedding f).symm
+  simpa only [hTerm] using hSum
+
 /-- The left Haar measure of a compact open subgroup's double coset is
 its subgroup measure times the index of the left translate stabilizer. -/
 theorem measure_cartanDoubleCoset_of_isCompact_isOpen
