@@ -363,6 +363,70 @@ private theorem mem_heckeDiagonalIntegral_iff_localUnitShell
       exact hP.le
     exact And.intro (hEntries a.val hVal) (hEntries a.inv hInv)
 
+/-- Integral matrix units have determinant of local norm one. -/
+private theorem norm_det_heckeIntegralMatrixUnit (n : Nat)
+    (k : Units (Matrix (Fin n) (Fin n) L))
+    (hk : Membership.mem (valuationIntegralMatrixSubgroup v n) k) :
+    norm k.val.det = 1 := by
+  let R := (v).integer
+  have hDetMem (A : Matrix (Fin n) (Fin n) L)
+      (hA : forall i j, Membership.mem R (A i j)) : Membership.mem R A.det := by
+    let A0 : Matrix (Fin n) (Fin n) R := Matrix.of (fun i j => Subtype.mk (A i j) (hA i j))
+    have hMap : R.subtype.mapMatrix A0 = A := by ext i j; rfl
+    rw [<- hMap, <- RingHom.map_det]
+    exact A0.det.property
+  have hkEntries := (mem_valuationIntegralMatrixSubgroup_iff v n k).mp hk
+  have hNorm (x : L) : Membership.mem R x <-> norm x <= 1 :=
+    heckeLocal_mem_integers_iff_norm_le_one p x
+  have hLeft := (hNorm k.val.det).mp (hDetMem k.val hkEntries.1)
+  have hRight := (hNorm k.inv.det).mp (hDetMem k.inv hkEntries.2)
+  have hDetProd : norm k.val.det * norm k.inv.det = 1 := by
+    rw [<- norm_mul, <- Matrix.det_mul, k.val_inv, Matrix.det_one, norm_one]
+  exact le_antisymm hLeft (hDetProd.symm.le.trans (mul_le_of_le_one_right (norm_nonneg _) hRight))
+
+/-- The shifted determinant weight with the integral matrix test. -/
+def heckeUnramifiedLocalMatrixWeight (n : Nat) (s : Complex) :
+    Units (Matrix (Fin n) (Fin n) L) -> Complex :=
+  Set.indicator
+    {g : Units (Matrix (Fin n) (Fin n) L) |
+      forall i j : Fin n, Membership.mem (v).integer (g.val i j)}
+    (fun g => (norm g.val.det : Complex) ^ (s + (((n : Real) - 1) / 2 : Real)))
+
+private theorem heckeUnramifiedLocalMatrixWeight_left (n : Nat) (s : Complex)
+    (g k : Units (Matrix (Fin n) (Fin n) L))
+    (hk : Membership.mem (valuationIntegralMatrixSubgroup v n) k) :
+    heckeUnramifiedLocalMatrixWeight p n s (k * g) =
+      heckeUnramifiedLocalMatrixWeight p n s g := by
+  let G := Units (Matrix (Fin n) (Fin n) L)
+  let R := (v).integer
+  let S : Set G := {x : G | forall i j : Fin n, Membership.mem R (x.val i j)}
+  have hKeep (x y : G) (hx : Membership.mem (valuationIntegralMatrixSubgroup v n) x)
+      (hy : Membership.mem S y) : Membership.mem S (x * y) := by
+    change Membership.mem R.matrix (x.val * y.val)
+    exact R.matrix.mul_mem ((mem_valuationIntegralMatrixSubgroup_iff v n x).mp hx).1 hy
+  have hMem : Membership.mem S (k * g) <-> Membership.mem S g := by
+    refine Iff.intro ?_ (hKeep k g hk)
+    intro h
+    have h' := hKeep (Inv.inv k) (k * g) ((valuationIntegralMatrixSubgroup v n).inv_mem hk) h
+    rwa [inv_mul_cancel_left] at h'
+  unfold heckeUnramifiedLocalMatrixWeight
+  by_cases hg : Membership.mem S g
+  next =>
+    rw [Set.indicator_of_mem (hMem.mpr hg), Set.indicator_of_mem hg]
+    rw [show (k * g).val.det = k.val.det * g.val.det from Matrix.det_mul _ _,
+      norm_mul, norm_det_heckeIntegralMatrixUnit p n k hk, one_mul]
+  next =>
+    rw [Set.indicator_of_notMem (fun h => hg (hMem.mp h)), Set.indicator_of_notMem hg]
+
+private theorem heckeUnramifiedSphericalIntegrand_eq_weight_mul (n : Nat)
+    (chi : MonoidHom (Units (Fin n -> L)) Complex) (s : Complex)
+    (g : Units (Matrix (Fin n) (Fin n) L)) :
+    valuationUnramifiedSphericalIntegrand L v n chi s g =
+      heckeUnramifiedLocalMatrixWeight p n s g *
+        valuationSphericalSection v n (valuationNormalizedInducingCharacter L n chi) g := by
+  unfold valuationUnramifiedSphericalIntegrand heckeUnramifiedLocalMatrixWeight
+  exact Set.indicator_mul_left _ _ _
+
 /-- The spherical kernel is invariant under right multiplication by
 an integral matrix unit. -/
 private theorem heckeUnramifiedSphericalIntegrand_rightInvariant
@@ -386,21 +450,7 @@ private theorem heckeUnramifiedSphericalIntegrand_rightInvariant
     intro h
     have h' := hKeep (g * k) (Inv.inv k) ((valuationIntegralMatrixSubgroup v n).inv_mem hk) h
     rwa [mul_assoc, mul_inv_cancel, mul_one] at h'
-  have hDetMem (A : Matrix (Fin n) (Fin n) L)
-      (hA : forall i j, Membership.mem R (A i j)) : Membership.mem R A.det := by
-    let A0 : Matrix (Fin n) (Fin n) R := Matrix.of (fun i j => Subtype.mk (A i j) (hA i j))
-    have hMap : R.subtype.mapMatrix A0 = A := by ext i j; rfl
-    rw [<- hMap, <- RingHom.map_det]
-    exact A0.det.property
-  have hkEntries := (mem_valuationIntegralMatrixSubgroup_iff v n k).mp hk
-  have hNorm (x : L) : Membership.mem R x <-> norm x <= 1 :=
-    heckeLocal_mem_integers_iff_norm_le_one p x
-  have hLeft := (hNorm k.val.det).mp (hDetMem k.val hkEntries.1)
-  have hRight := (hNorm k.inv.det).mp (hDetMem k.inv hkEntries.2)
-  have hDetProd : norm k.val.det * norm k.inv.det = 1 := by
-    rw [<- norm_mul, <- Matrix.det_mul, k.val_inv, Matrix.det_one, norm_one]
-  have hDet : norm k.val.det = 1 :=
-    le_antisymm hLeft (hDetProd.symm.le.trans (mul_le_of_le_one_right (norm_nonneg _) hRight))
+  have hDet := norm_det_heckeIntegralMatrixUnit p n k hk
   let w := valuationNormalizedInducingCharacter L n chi
   change S.indicator (fun x : G => (norm x.val.det : Complex) ^
       (s + (((n : Real) - 1) / 2 : Real)) * valuationSphericalSection v n w x) (g * k) =
@@ -414,7 +464,7 @@ private theorem heckeUnramifiedSphericalIntegrand_rightInvariant
   next =>
     rw [Set.indicator_of_notMem (fun hh => h (hMem.mp hh)), Set.indicator_of_notMem h]
 
-private def measurableMul_of_continuousBorel (H : Type*) [Mul H] [TopologicalSpace H]
+private theorem measurableMul_of_continuousBorel (H : Type*) [Mul H] [TopologicalSpace H]
     [ContinuousMul H] [MeasurableSpace H] [BorelSpace H] : MeasurableMul H :=
   { measurable_const_mul := fun x => (continuous_const_mul x).measurable
     measurable_mul_const := fun x => (continuous_mul_const x).measurable }
@@ -544,6 +594,87 @@ theorem integrableAndIntegral_heckeUnramifiedSpherical_haar
     muG muA muU hMassG hMassA hMassU f hF.measurable
     (heckeUnramifiedSphericalIntegrand_rightInvariant p n _ hInducing s)
   exact And.intro (hCompare.1.mpr hIntA) (hCompare.2.trans hIA)
+
+/-- The spherical coefficient is the compact average of the normalized
+section in the unramified induced model. -/
+def heckeUnramifiedSphericalCoefficient (n : Nat)
+    [MeasurableSpace (valuationIntegralMatrixSubgroup v n)]
+    (nu : Measure (valuationIntegralMatrixSubgroup v n))
+    (chi : MonoidHom (Units (Fin n -> L)) Complex) (g : Units (Matrix (Fin n) (Fin n) L)) :
+    Complex :=
+  integral nu (fun k : valuationIntegralMatrixSubgroup v n =>
+    valuationSphericalSection v n (valuationNormalizedInducingCharacter L n chi) (k.val * g))
+
+/-- Compact averaging preserves absolute convergence and the Euler factor
+in the normalized full-group local Godement-Jacquet zeta integral. -/
+theorem integrableAndIntegral_heckeUnramifiedSphericalCoefficient_haar
+    [SigmaFinite (heckeLocalHaar p)]
+    (n : Nat) (u0 : GU) (hu0 : Valued.v u0.val = finiteUniformizerValue)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [MeasurableSpace (valuationIntegralMatrixSubgroup v n)]
+    [BorelSpace (valuationIntegralMatrixSubgroup v n)]
+    (muG : Measure (Units (Matrix (Fin n) (Fin n) L))) [muG.IsMulLeftInvariant] [SFinite muG]
+    (hMass : muG (valuationIntegralMatrixSubgroup v n : Set (Units (Matrix (Fin n) (Fin n) L))) = 1)
+    (nu : Measure (valuationIntegralMatrixSubgroup v n)) [IsProbabilityMeasure nu]
+    (chi : Fin n -> MonoidHom GU Complex)
+    (hUnit : forall i x, Membership.mem (heckeLocalUnitShell p) x -> chi i x = 1)
+    (s : Complex)
+    (hNorm : forall i, norm (unramifiedLocalWeightedCharacter (chi i) s u0) < 1) :
+    let c := heckeUnramifiedSphericalCoefficient p n nu (productDiagonalCharacter n chi)
+    let f := fun g => heckeUnramifiedLocalMatrixWeight p n s g * c g
+    And (Integrable f muG) (integral muG f = Finset.univ.prod
+      (fun i : Fin n => Inv.inv (1 - unramifiedLocalWeightedCharacter (chi i) s u0))) := by
+  let M := Matrix (Fin n) (Fin n) L
+  let G := Units M
+  let C := valuationIntegralMatrixSubgroup v n
+  let _ : MeasurableMul G := measurableMul_of_continuousBorel G
+  let _ : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  let _ : SecondCountableTopology M :=
+    inferInstanceAs (SecondCountableTopology (Fin n -> Fin n -> L))
+  let op : Homeomorph M (MulOpposite M) := MulOpposite.opHomeomorph
+  let _ : SecondCountableTopology (MulOpposite M) := op.symm.isEmbedding.secondCountableTopology
+  let hUnits : Topology.IsEmbedding (Units.embedProduct M) := Units.isEmbedding_embedProduct
+  let _ : SecondCountableTopology G := hUnits.secondCountableTopology
+  let g0 := valuationUnramifiedSphericalIntegrand L v n (productDiagonalCharacter n chi) s
+  let T (x : Prod C G) : G := x.1.val * x.2
+  have hT : Measurable T :=
+    ((continuous_subtype_val.comp continuous_fst).mul continuous_snd).measurable
+  have hSkew : MeasurePreserving (fun x : Prod C G => (x.1, T x))
+      (nu.prod muG) (nu.prod muG) :=
+    (MeasurePreserving.id nu).skew_product hT
+      (Filter.Eventually.of_forall (fun k => map_mul_left_eq_self muG k.val))
+  have hProj : MeasurePreserving (Prod.snd : Prod C G -> G) (nu.prod muG) muG :=
+    measurePreserving_snd
+  have hPres : MeasurePreserving T (nu.prod muG) muG := hProj.comp hSkew
+  have hZ := integrableAndIntegral_heckeUnramifiedSpherical_haar p n u0 hu0
+    muG hMass chi hUnit s hNorm
+  let G0 : Prod C G -> Complex := Function.comp g0 T
+  have hInt : Integrable G0 (nu.prod muG) := hPres.integrable_comp_of_integrable hZ.1
+  have hAvg : (fun g : G => integral nu (fun k : C => G0 (k, g))) = fun g : G =>
+      heckeUnramifiedLocalMatrixWeight p n s g *
+        heckeUnramifiedSphericalCoefficient p n nu (productDiagonalCharacter n chi) g := by
+    funext g
+    have hVal (k : C) : G0 (k, g) = heckeUnramifiedLocalMatrixWeight p n s g *
+        valuationSphericalSection v n
+          (valuationNormalizedInducingCharacter L n (productDiagonalCharacter n chi)) (k.val * g) := by
+      change g0 (k.val * g) = _
+      dsimp only [g0]
+      rw [heckeUnramifiedSphericalIntegrand_eq_weight_mul,
+        heckeUnramifiedLocalMatrixWeight_left p n s g k.val k.property]
+    simp only [hVal, heckeUnramifiedSphericalCoefficient]
+    exact integral_const_mul _ _
+  have hAvgInt := hInt.integral_prod_right
+  have hI : integral muG (fun g : G => integral nu (fun k : C => G0 (k, g))) =
+      integral muG g0 := by
+    have hStrong : AEStronglyMeasurable g0 (Measure.map T (nu.prod muG)) := by
+      rw [hPres.map_eq]
+      exact hZ.1.aestronglyMeasurable
+    have hMap := integral_map hPres.aemeasurable hStrong
+    rw [hPres.map_eq] at hMap
+    exact (integral_prod_symm G0 hInt).symm.trans hMap.symm
+  rw [hAvg] at hAvgInt hI
+  exact And.intro hAvgInt (hI.trans hZ.2)
 
 end ActualHaar
 
