@@ -1767,6 +1767,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetLocalZetaCoefficientOrbit.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement-Jacquet local zeta integrals and the two-sided action on matrix coefficients.",
+      "formalization_note": "Transfers the reduced denominator of one coefficient to the vector and dual orbit spans by normalized Haar invariance and integer determinant weights.",
+      "content_basis": "Proves both Haar translations, polynomial denominator stability under finite linear combinations, and the matrix coefficient orbit theorem.",
+      "dependency_status": "Uses the verified finite-place reduced denominator and the determinant-density comparison with normalized Haar measure.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetLocalZetaRationality.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement-Jacquet local zeta integrals, compact support, and smooth admissible representations.",
