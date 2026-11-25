@@ -1,4 +1,6 @@
+import Mathlib.MeasureTheory.Measure.Haar.Unique
 import Mathlib.MeasureTheory.Measure.WithDensity
+import Mathlib.Topology.Algebra.Group.Units
 import Robin1984.GRH.GodementJacquetMatrixMeasure
 import Robin1984.GRH.HeckeFiniteHaarDilation
 import Robin1984.GRH.ValuationUnitriangularMeasure
@@ -755,5 +757,282 @@ theorem measure_heckeLocalUnitriangular_scaledIntegral
       inv_val := congrArg (fun f : Fin n -> L => f i) a.inv_val }
   exact congrArg (fun c : ENNReal => c ^ (n - (i.val + 1)))
     (heckeLocalAdditiveMeasure_scaledIntegral p ai)
+
+section LocalMatrixGroupMeasure
+
+open Topology
+
+/-- The row coordinates of an invertible matrix. -/
+def heckeLocalMatrixUnitEntries {I F : Type*} [Fintype I] [DecidableEq I] [Semiring F]
+    (g : Units (Matrix I I F)) : I -> I -> F :=
+  fun i j => g.val i j
+
+private theorem isOpenEmbedding_heckeLocalMatrixUnitEntries
+    {I F : Type*} [Fintype I] [DecidableEq I] [NormedField F] :
+    IsOpenEmbedding (heckeLocalMatrixUnitEntries (I := I) (F := F)) := by
+  let M := Matrix I I F
+  let G := Units M
+  let D : Set (I -> I -> F) := {X | Not ((Matrix.of X).det = 0)}
+  have hMatrix : Continuous (fun X : I -> I -> F => Matrix.of X) :=
+    continuous_matrixOf.mpr continuous_id
+  have hD : IsOpen D := isOpen_ne_fun hMatrix.matrix_det continuous_const
+  let encode (g : G) : D := Subtype.mk (heckeLocalMatrixUnitEntries g)
+    (g.isUnit.map Matrix.detMonoidHom).ne_zero
+  let decode (X : D) : G := Matrix.GeneralLinearGroup.mkOfDetNeZero (Matrix.of X.val) X.property
+  have hEntries : Continuous (heckeLocalMatrixUnitEntries (I := I) (F := F)) := by
+    apply continuous_pi
+    intro i
+    apply continuous_pi
+    intro j
+    have hVal0 : Continuous (fun g : G => g.val) := Units.continuous_val
+    have hEval : Continuous (fun M0 : M => M0 i j) :=
+      (continuous_apply j).comp (continuous_apply i)
+    exact hEval.comp hVal0
+  have hEncode : Continuous encode := hEntries.subtype_mk (fun g => (encode g).property)
+  have hVal : Continuous (fun X : D => Matrix.of X.val) := hMatrix.comp continuous_subtype_val
+  have hDecode : Continuous decode := by
+    apply Units.continuous_iff.mpr
+    refine And.intro hVal ?_
+    have hEq (X : D) : (Inv.inv (decode X)).val = Inv.inv (Matrix.of X.val) :=
+      Matrix.coe_units_inv (decode X)
+    simp only [hEq]
+    rw [continuous_iff_continuousAt]
+    intro X
+    have hInv : ContinuousAt (Ring.inverse : F -> F) (Matrix.of X.val).det := by
+      rw [show (Ring.inverse : F -> F) = Inv.inv from funext Ring.inverse_eq_inv]
+      fun_prop (disch := exact X.property)
+    have hAt : ContinuousAt (fun Y : D => Matrix.of Y.val) X := hVal.continuousAt
+    have hMatrixInv : ContinuousAt (Inv.inv : M -> M) (Matrix.of X.val) :=
+      continuousAt_matrix_inv _ hInv
+    exact hMatrixInv.comp (f := fun Y : D => Matrix.of Y.val) (x := X) hAt
+  let e : Homeomorph G D :=
+    { toFun := encode
+      invFun := decode
+      left_inv := fun g => Units.ext rfl
+      right_inv := fun X => Subtype.ext rfl
+      continuous_toFun := hEncode
+      continuous_invFun := hDecode }
+  exact hD.isOpenEmbedding_subtypeVal.comp e.isOpenEmbedding
+
+/-- Pullback of the determinant-weighted measure to invertible matrices. -/
+def heckeLocalMatrixUnitWeightedMeasure (p : Place) (I : Type*) [Fintype I] [DecidableEq I]
+    [MeasurableSpace (p.adicCompletion K)]
+    [MeasurableSpace (Units (Matrix I I (p.adicCompletion K)))] :
+    Measure (Units (Matrix I I (p.adicCompletion K))) :=
+  Measure.comap heckeLocalMatrixUnitEntries (heckeLocalDeterminantWeightedMeasure p I)
+
+/-- Pushing the pullback forward recovers the determinant-weighted measure. -/
+theorem map_heckeLocalMatrixUnitWeightedMeasure (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I]
+    [MeasurableSpace (Units (Matrix I I (p.adicCompletion K)))]
+    [BorelSpace (Units (Matrix I I (p.adicCompletion K)))] :
+    Measure.map heckeLocalMatrixUnitEntries (heckeLocalMatrixUnitWeightedMeasure p I) =
+      heckeLocalDeterminantWeightedMeasure p I := by
+  let L := p.adicCompletion K
+  let : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  let G := Units (Matrix I I L)
+  let e : G -> I -> I -> L := heckeLocalMatrixUnitEntries
+  let nu := heckeLocalDeterminantWeightedMeasure p I
+  have hE : MeasurableEmbedding e := isOpenEmbedding_heckeLocalMatrixUnitEntries.measurableEmbedding
+  have hRange : Set.range e = {X : I -> I -> L | Not ((Matrix.of X).det = 0)} := by
+    ext X
+    constructor
+    . intro hX
+      change exists g : G, e g = X at hX
+      choose g hg using hX
+      rw [<- hg]
+      exact (g.isUnit.map Matrix.detMonoidHom).ne_zero
+    . intro hX
+      exact Exists.intro (Matrix.GeneralLinearGroup.mkOfDetNeZero (Matrix.of X) hX) rfl
+  change Measure.map e (Measure.comap e nu) = nu
+  rw [hE.map_comap]
+  apply Measure.restrict_eq_self_of_ae_mem
+  apply ae_iff.mpr
+  have hS : {X | Not (Membership.mem (Set.range e) X)} =
+      {X : I -> I -> L | (Matrix.of X).det = 0} := by
+    ext X
+    rw [hRange]
+    exact not_not
+  rw [hS]
+  exact heckeLocalDeterminantWeightedMeasure_singular p
+
+/-- The pulled-back measure is invariant under left translation. -/
+theorem isMulLeftInvariant_heckeLocalMatrixUnitWeightedMeasure (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I]
+    [MeasurableSpace (Units (Matrix I I (p.adicCompletion K)))]
+    [BorelSpace (Units (Matrix I I (p.adicCompletion K)))] :
+    (heckeLocalMatrixUnitWeightedMeasure p I).IsMulLeftInvariant := by
+  let L := p.adicCompletion K
+  let : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  let G := Units (Matrix I I L)
+  let e : G -> I -> I -> L := heckeLocalMatrixUnitEntries
+  let nu := heckeLocalDeterminantWeightedMeasure p I
+  let mu := heckeLocalMatrixUnitWeightedMeasure p I
+  have hE : MeasurableEmbedding e := isOpenEmbedding_heckeLocalMatrixUnitEntries.measurableEmbedding
+  have hMap : Measure.map e mu = nu := map_heckeLocalMatrixUnitWeightedMeasure p
+  constructor
+  intro m
+  let f (X : I -> I -> L) : I -> I -> L :=
+    @Mul.mul (Matrix I I L) inferInstance m.val (Matrix.of X)
+  have hm : Measurable (fun g : G => m * g) := (continuous_const.mul continuous_id).measurable
+  have hf : Measurable f := by
+    have hMat : Continuous (fun X : I -> I -> L => Matrix.of X) :=
+      continuous_matrixOf.mpr continuous_id
+    have hMul : Continuous (fun X : I -> I -> L => m.val * Matrix.of X) :=
+      continuous_const.mul hMat
+    exact (continuous_pi (fun i => continuous_pi (fun j =>
+      (continuous_apply j).comp ((continuous_apply i).comp hMul)))).measurable
+  have hRel : Function.comp e (fun g : G => m * g) = Function.comp f e := by
+    funext g
+    rfl
+  apply hE.map_injective
+  change Measure.map e (Measure.map (fun g : G => m * g) mu) = Measure.map e mu
+  rw [Measure.map_map hE.measurable hm, hRel, <- Measure.map_map hf hE.measurable, hMap]
+  exact map_heckeLocalDeterminantWeightedMeasure_mul_left p m
+
+/-- The pulled-back measure is finite in a neighborhood of each matrix unit. -/
+theorem isLocallyFiniteMeasure_heckeLocalMatrixUnitWeightedMeasure (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I]
+    [MeasurableSpace (Units (Matrix I I (p.adicCompletion K)))]
+    [BorelSpace (Units (Matrix I I (p.adicCompletion K)))] :
+    IsLocallyFiniteMeasure (heckeLocalMatrixUnitWeightedMeasure p I) := by
+  let L := p.adicCompletion K
+  let G := Units (Matrix I I L)
+  let e : G -> I -> I -> L := heckeLocalMatrixUnitEntries
+  let mu := heckeLocalAdditiveMeasure p
+  let base := Measure.pi (fun _ : I => Measure.pi (fun _ : I => mu))
+  let nu := heckeLocalMatrixUnitWeightedMeasure p I
+  let weight := heckeLocalMatrixDeterminantWeight (I := I) p
+  let : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  let : SigmaFinite mu := sigmaFinite_heckeLocalAdditiveMeasure p
+  let : IsLocallyFiniteMeasure mu := isLocallyFiniteMeasure_heckeLocalAdditiveMeasure p
+  let : IsLocallyFiniteMeasure base := inferInstance
+  have he : IsOpenEmbedding e := isOpenEmbedding_heckeLocalMatrixUnitEntries
+  have hE : MeasurableEmbedding e := he.measurableEmbedding
+  let w (g : G) : NNReal := heckeLocalInverseNorm p g.val.det ^ Fintype.card I
+  have hVal : Continuous (fun g : G => g.val) := Units.continuous_val
+  have hInv : Continuous (fun g : G => Inv.inv (norm g.val.det)) := by
+    have hNorm : Continuous (fun g : G => norm g.val.det) := hVal.matrix_det.norm
+    rw [continuous_iff_continuousAt]
+    intro g
+    have hNormNeZero : Not (norm g.val.det = 0) := norm_ne_zero_iff.mpr
+      (g.isUnit.map Matrix.detMonoidHom).ne_zero
+    have hRe : ContinuousAt (Inv.inv : Real -> Real) (norm g.val.det) := by
+      fun_prop (disch := exact hNormNeZero)
+    exact hRe.comp (f := fun y : G => norm y.val.det) (x := g) hNorm.continuousAt
+  have hToNNReal : Continuous Real.toNNReal :=
+    (continuous_id.max continuous_const).subtype_mk (fun y : Real => le_max_right y 0)
+  have hW : Continuous w := (hToNNReal.comp hInv).pow _
+  constructor
+  intro g
+  choose U hU using base.exists_isOpen_measure_lt_top (e g)
+  let B := w g + 1
+  let V := Set.inter {x : G | w x < B} (Set.preimage e U)
+  have hV : IsOpen V := (isOpen_lt hW continuous_const).inter (hU.2.1.preimage he.continuous)
+  have hgV : Membership.mem V g := by
+    refine And.intro ?_ hU.1
+    change w g < w g + 1
+    exact lt_add_of_pos_right _ zero_lt_one
+  refine Exists.intro V (And.intro (hV.mem_nhds hgV) ?_)
+  have hImage : MeasurableSet (Set.image e V) := (he.isOpenMap V hV).measurableSet
+  have hFinite : base (Set.image e V) < Top.top := by
+    refine lt_of_le_of_lt (measure_mono ?_) hU.2.2
+    intro X hX
+    choose x hx using hX
+    rw [<- hx.2]
+    exact hx.1.2
+  have hBound : Filter.Eventually (fun X => weight X <= (B : ENNReal))
+      (ae (base.restrict (Set.image e V))) := by
+    filter_upwards [ae_restrict_mem hImage] with X hX
+    choose x hx using hX
+    rw [<- hx.2]
+    change (w x : ENNReal) <= (B : ENNReal)
+    exact ENNReal.coe_le_coe.mpr (le_of_lt hx.1.1)
+  change (Measure.comap e (base.withDensity weight)) V < Top.top
+  rw [hE.comap_apply, withDensity_apply _ hImage]
+  refine lt_of_le_of_lt (lintegral_mono_ae hBound) ?_
+  rw [lintegral_const, Measure.restrict_apply_univ]
+  exact ENNReal.mul_lt_top ENNReal.coe_lt_top hFinite
+
+/-- For a Haar measure normalized on a measurable set of unit determinant
+norm, the scalar for the determinant-weighted measure is the product
+additive volume of that set in row coordinates. -/
+theorem heckeLocalMatrixUnitWeightedMeasure_eq_smul_haar (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I]
+    [MeasurableSpace (Units (Matrix I I (p.adicCompletion K)))]
+    [BorelSpace (Units (Matrix I I (p.adicCompletion K)))]
+    (mu : Measure (Units (Matrix I I (p.adicCompletion K)))) [mu.IsHaarMeasure]
+    (C : Set (Units (Matrix I I (p.adicCompletion K)))) (hC : MeasurableSet C)
+    (hMu : mu C = 1) (hDet : forall g, Membership.mem C g -> norm g.val.det = 1) :
+    heckeLocalMatrixUnitWeightedMeasure p I =
+      HSMul.hSMul (((Measure.pi (fun _ : I => Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p)))
+        (Set.image heckeLocalMatrixUnitEntries C)).toNNReal) mu := by
+  let L := p.adicCompletion K
+  let G := Units (Matrix I I L)
+  let nu := heckeLocalMatrixUnitWeightedMeasure p I
+  let e : G -> I -> I -> L := heckeLocalMatrixUnitEntries
+  let base := Measure.pi (fun _ : I => Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p))
+  let O : Set L := p.adicCompletionIntegers K
+  have hComp : IsCompact O := isCompact_iff_compactSpace.mpr (compactSpace_heckeLocalIntegers p)
+  have hOpen : IsOpen O := Valued.isOpen_valuationSubring L
+  have hz : Membership.mem O (0 : L) := (p.adicCompletionIntegers K).zero_mem
+  let : LocallyCompactSpace L :=
+    hComp.locallyCompactSpace_of_mem_nhds_of_addGroup (hOpen.mem_nhds hz)
+  let : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  have he : IsOpenEmbedding e := isOpenEmbedding_heckeLocalMatrixUnitEntries
+  let : LocallyCompactSpace G := he.locallyCompactSpace
+  let : SecondCountableTopology G := he.isEmbedding.secondCountableTopology
+  let : IsLocallyFiniteMeasure nu := isLocallyFiniteMeasure_heckeLocalMatrixUnitWeightedMeasure p
+  let : nu.IsMulLeftInvariant := isMulLeftInvariant_heckeLocalMatrixUnitWeightedMeasure p
+  let c := nu.haarScalarFactor mu
+  have hScale : nu = HSMul.hSMul c mu := Measure.isMulLeftInvariant_eq_smul nu mu
+  have hE : MeasurableEmbedding e := he.measurableEmbedding
+  have hImage : MeasurableSet (Set.image e C) := hE.measurableSet_image' hC
+  have hD (X : I -> I -> L) (hX : Membership.mem (Set.image e C) X) :
+      norm (Matrix.of X).det = 1 := by
+    choose g hg using hX
+    rw [<- hg.2]
+    exact hDet g hg.1
+  have hBase : nu C = base (Set.image e C) := by
+    change (Measure.comap e (heckeLocalDeterminantWeightedMeasure p I)) C = _
+    rw [hE.comap_apply]
+    exact heckeLocalDeterminantWeightedMeasure_apply_of_detNorm_one p _ hImage hD
+  have hc : (c : ENNReal) = base (Set.image e C) := by
+    calc
+      (c : ENNReal) = (HSMul.hSMul c mu) C := by
+        rw [Measure.coe_nnreal_smul_apply, hMu, mul_one]
+      _ = nu C := (congrArg (fun m : Measure G => m C) hScale).symm
+      _ = base (Set.image e C) := hBase
+  change nu = HSMul.hSMul ((base (Set.image e C)).toNNReal) mu
+  rw [<- hc, ENNReal.toNNReal_coe]
+  exact hScale
+
+/-- The determinant-weighted measure is the pushforward of normalized Haar
+measure scaled by the additive volume of its normalizing set. -/
+theorem smul_map_heckeLocalMatrixHaar_eq_determinantWeightedMeasure (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I]
+    [MeasurableSpace (Units (Matrix I I (p.adicCompletion K)))]
+    [BorelSpace (Units (Matrix I I (p.adicCompletion K)))]
+    (mu : Measure (Units (Matrix I I (p.adicCompletion K)))) [mu.IsHaarMeasure]
+    (C : Set (Units (Matrix I I (p.adicCompletion K)))) (hC : MeasurableSet C)
+    (hMu : mu C = 1) (hDet : forall g, Membership.mem C g -> norm g.val.det = 1) :
+    HSMul.hSMul
+        (((Measure.pi (fun _ : I => Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p)))
+          (Set.image heckeLocalMatrixUnitEntries C)).toNNReal)
+        (Measure.map heckeLocalMatrixUnitEntries mu) =
+      heckeLocalDeterminantWeightedMeasure p I := by
+  let c := ((Measure.pi (fun _ : I => Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p)))
+    (Set.image heckeLocalMatrixUnitEntries C)).toNNReal
+  change HSMul.hSMul c (Measure.map heckeLocalMatrixUnitEntries mu) = _
+  rw [<- Measure.map_smul c,
+    <- heckeLocalMatrixUnitWeightedMeasure_eq_smul_haar p mu C hC hMu hDet,
+    map_heckeLocalMatrixUnitWeightedMeasure]
+
+end LocalMatrixGroupMeasure
 
 end Robin1984.GRH
