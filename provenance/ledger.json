@@ -2577,6 +2577,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/ValuationIwasawaCoordinates.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The diagonal and unipotent local integration in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
+      "formalization_note": "Proves the diagonal and upper-unitriangular homeomorphism and the normalized product-measure Iwasawa integral formula.",
+      "content_basis": "The diagonal retraction splits the upper-triangular group. Left translation is a measurable shear followed by left translation in the diagonal group. Integral upper-triangular matrices split into the product of the two integral subgroups.",
+      "dependency_status": "Uses the verified local subgroup Iwasawa integration and Mathlib product measures. Normalizations of the two coordinate measures are explicit; the spherical zeta evaluation is a separate step.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/ValuationIwasawaSubgroups.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Local Iwasawa integration over GL in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
