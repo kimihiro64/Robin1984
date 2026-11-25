@@ -1,6 +1,8 @@
 import Mathlib.Algebra.Group.Pi.Units
 import Mathlib.MeasureTheory.Integral.Pi
 import Mathlib.Topology.Algebra.Group.Units
+import Mathlib.Topology.LocallyConstant.Algebra
+import Mathlib.Topology.Separation.Profinite
 import Robin1984.GRH.GodementJacquetFiniteMatrixVolume
 import Robin1984.GRH.GodementJacquetUnramifiedSpherical
 
@@ -1203,6 +1205,186 @@ theorem integrable_heckeLocalZetaIntegrand_of_compactlySupportedTest
     s hs A a hSupport B (le_max_left _ _) hBound (hPow.measurable.aestronglyMeasurable.mul ha)
 
 end AbsoluteEulerMajorant
+
+section LocalUnitZetaTest
+
+open Topology
+
+private theorem isOpenEmbedding_matrixUnitsVal
+    (F : Type*) [NormedField F] (n : Nat) :
+    IsOpenEmbedding (fun g : Units (Matrix (Fin n) (Fin n) F) => g.val) := by
+  classical
+  let M := Matrix (Fin n) (Fin n) F
+  let G := Units M
+  let D : Set M := {A | Not (A.det = 0)}
+  have hD : IsOpen D := isOpen_ne_fun continuous_id.matrix_det continuous_const
+  let encode (g : G) : D :=
+    Subtype.mk g.val (g.isUnit.map Matrix.detMonoidHom).ne_zero
+  let decode (A : D) : G := Matrix.GeneralLinearGroup.mkOfDetNeZero A.val A.property
+  have hEncode : Continuous encode :=
+    Units.continuous_val.subtype_mk (fun g => (encode g).property)
+  have hDecode : Continuous decode := by
+    apply Units.continuous_iff.mpr
+    refine And.intro continuous_subtype_val ?_
+    have hEq (A : D) : (Inv.inv (decode A)).val = Inv.inv A.val :=
+      Matrix.coe_units_inv (decode A)
+    simp only [hEq]
+    rw [continuous_iff_continuousAt]
+    intro A
+    have hFieldInv : ContinuousAt (Ring.inverse : F -> F) A.val.det := by
+      rw [show (Ring.inverse : F -> F) = Inv.inv from funext Ring.inverse_eq_inv]
+      fun_prop (disch := exact A.property)
+    exact (continuousAt_matrix_inv A.val hFieldInv).comp continuous_subtype_val.continuousAt
+  let e : Homeomorph G D :=
+    { toFun := encode
+      invFun := decode
+      left_inv := fun g => Units.ext rfl
+      right_inv := fun A => Subtype.ext rfl
+      continuous_toFun := hEncode
+      continuous_invFun := hDecode }
+  exact hD.isOpenEmbedding_subtypeVal.comp e.isOpenEmbedding
+
+/- The local test uses the same determinant normalization as the
+unramified calculation. -/
+variable {K : Type*} [Field K] [NumberField K]
+variable (p : HeightOneSpectrum (RingOfIntegers K))
+
+local notation "L" => p.adicCompletion K
+local notation "v" => (Valued.v : Valuation L (WithZero (Multiplicative Int)))
+
+/-- A coefficient equal to one near the identity has a compactly supported
+locally constant matrix test whose Godement--Jacquet integral is identically
+one. The test is obtained by normalizing the Haar mass of a compact open
+neighborhood inside the integral matrix subgroup. -/
+theorem exists_heckeLocalZetaTest_integral_one
+    (n : Nat)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) L))]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) L))) [mu.IsHaarMeasure]
+    (c : Units (Matrix (Fin n) (Fin n) L) -> Complex)
+    (hNear : Filter.EventuallyEq (nhds (1 : Units (Matrix (Fin n) (Fin n) L)))
+      c (fun _ => 1)) :
+    Exists (fun Phi : LocallyConstant (Matrix (Fin n) (Fin n) L) Complex =>
+      And (HasCompactSupport (fun A => Phi A)) (forall s : Complex,
+        let f := fun g : Units (Matrix (Fin n) (Fin n) L) =>
+          (norm g.val.det : Complex) ^ (s + (((n : Real) - 1) / 2 : Real)) *
+            (Phi g.val * c g)
+        And (Integrable f mu) (integral mu f = 1))) := by
+  classical
+  let M := Matrix (Fin n) (Fin n) L
+  let G := Units M
+  let Integers : Set L := p.adicCompletionIntegers K
+  have hIntegerComp : IsCompact Integers :=
+    isCompact_iff_compactSpace.mpr (compactSpace_heckeLocalIntegers p)
+  have hIntegerOpen : IsOpen Integers := Valued.isOpen_valuationSubring L
+  have hIntegerZero : Membership.mem Integers (0 : L) := (p.adicCompletionIntegers K).zero_mem
+  let _ : LocallyCompactSpace L :=
+    hIntegerComp.locallyCompactSpace_of_mem_nhds_of_addGroup (hIntegerOpen.mem_nhds hIntegerZero)
+  let _ : LocallyCompactSpace M := inferInstanceAs (LocallyCompactSpace (Fin n -> Fin n -> L))
+  let _ : TotallySeparatedSpace L := by
+    apply totallySeparatedSpace_iff_exists_isClopen.mpr
+    intro x y hxy
+    let r := (v).restrict (y - x)
+    let D : Set L := {z | (v).restrict (z - x) < r}
+    have hD : IsClopen D :=
+      (Valued.isClopen_ball L r).preimage (continuous_id.sub continuous_const)
+    have hDiff : IsUnit (y - x) := isUnit_iff_ne_zero.mpr (sub_ne_zero.mpr hxy.symm)
+    have hr : 0 < r :=
+      zero_lt_iff.mpr (hDiff.map (v).restrict.toMonoidWithZeroHom).ne_zero
+    have hx : Membership.mem D x := by
+      change (v).restrict (x - x) < r
+      rw [sub_self, map_zero]
+      exact hr
+    have hy : Membership.mem (Compl.compl D) y := by
+      change Not (r < r)
+      exact lt_irrefl r
+    exact Exists.intro D (And.intro hD (And.intro hx hy))
+  let _ : TotallyDisconnectedSpace M :=
+    inferInstanceAs (TotallyDisconnectedSpace (Fin n -> Fin n -> L))
+  let C : Set G := valuationIntegralMatrixSubgroup v n
+  have hCOpen : IsOpen C :=
+    isOpen_valuationIntegralMatrixSubgroup v n (Valued.isOpen_valuationSubring L)
+  have hC1 : Membership.mem C (1 : G) := (valuationIntegralMatrixSubgroup v n).one_mem
+  have hNear1 : Membership.mem (nhds (1 : G)) {g : G | c g = 1} := hNear
+  have hBoth := Filter.inter_mem hNear1 (hCOpen.mem_nhds hC1)
+  choose V hV using mem_nhds_iff.mp hBoth
+  have hVOpen := hV.2.1
+  have hV1 := hV.2.2
+  have hEmbed := isOpenEmbedding_matrixUnitsVal L n
+  let vG : G -> M := fun g => g.val
+  have hVImage : IsOpen (vG '' V) := hEmbed.isOpenMap _ hVOpen
+  have hMatrixOne : Membership.mem (vG '' V) (1 : M) :=
+    Set.mem_image_of_mem vG hV1
+  choose S hS using exists_compact_subset hVImage hMatrixOne
+  have hSComp := hS.1
+  have hSIn := hS.2.1
+  have hSsub := hS.2.2
+  choose U hU using loc_compact_Haus_tot_disc_of_zero_dim.mem_nhds_iff.mp
+    (isOpen_interior.mem_nhds hSIn)
+  have hUClopen : IsClopen U := hU.1
+  have hU1 := hU.2.1
+  have hUsub := hU.2.2
+  have hUS : Set.Subset U S := hUsub.trans interior_subset
+  have hUComp : IsCompact U := hSComp.of_isClosed_subset hUClopen.1 hUS
+  have hUV : Set.Subset U (vG '' V) := hUS.trans hSsub
+  let W := Set.preimage vG U
+  have hWV : Set.Subset W V := by
+    intro g hg
+    choose g' hg' using hUV hg
+    rw [<- hEmbed.injective hg'.2]
+    exact hg'.1
+  have hWOpen : IsOpen W := hUClopen.2.preimage Units.continuous_val
+  have hW1 : Membership.mem W (1 : G) := hU1
+  have hWComp : IsCompact W := hEmbed.isEmbedding.isInducing.isCompact_preimage'
+    hUComp (hUV.trans (Set.image_subset_range vG V))
+  have hWMeas : MeasurableSet W := hWOpen.measurableSet
+  have hPos : 0 < mu W := by
+    apply measure_pos_of_nonempty_interior mu
+    rw [hWOpen.interior_eq]
+    exact Exists.intro (1 : G) hW1
+  have hFinite : mu W < (Top.top : ENNReal) := hWComp.measure_lt_top
+  have hRealPos : 0 < mu.real W := ENNReal.toReal_pos hPos.ne' hFinite.ne
+  let k : Complex := Inv.inv (mu.real W : Complex)
+  let Phi : LocallyConstant M Complex := LocallyConstant.const M k * LocallyConstant.charFn Complex hUClopen
+  have hPhi (A : M) : Phi A = U.indicator (fun _ => k) A := by
+    change k * (LocallyConstant.charFn Complex hUClopen) A = _
+    rw [show (LocallyConstant.charFn Complex hUClopen) A =
+      U.indicator (fun _ : M => (1 : Complex)) A from rfl]
+    by_cases hA : Membership.mem U A
+    next => rw [Set.indicator_of_mem hA, Set.indicator_of_mem hA, mul_one]
+    next => rw [Set.indicator_of_notMem hA, Set.indicator_of_notMem hA, mul_zero]
+  have hPhiSupport : Set.Subset (Function.support (fun A => Phi A)) U := by
+    intro A hA
+    by_contra hNot
+    exact hA ((hPhi A).trans (Set.indicator_of_notMem hNot _))
+  have hPhiComp : HasCompactSupport (fun A => Phi A) :=
+    hUComp.of_isClosed_subset isClosed_closure (closure_minimal hPhiSupport hUClopen.1)
+  refine Exists.intro Phi (And.intro hPhiComp ?_)
+  intro s
+  have hEquality : (fun g : G =>
+      (norm g.val.det : Complex) ^ (s + (((n : Real) - 1) / 2 : Real)) *
+        (Phi g.val * c g)) = W.indicator (fun _ => k) := by
+    funext g
+    rw [hPhi g.val]
+    by_cases hg : Membership.mem W g
+    next =>
+      have hUV := hV.1 (hWV hg)
+      have hDet : norm g.val.det = 1 := norm_det_heckeIntegralMatrixUnit p n g hUV.2
+      rw [Set.indicator_of_mem (show Membership.mem U g.val from hg),
+        Set.indicator_of_mem hg, hUV.1, hDet, Complex.ofReal_one, Complex.one_cpow, mul_one, one_mul]
+    next =>
+      rw [Set.indicator_of_notMem (show Not (Membership.mem U g.val) from hg),
+        Set.indicator_of_notMem hg, zero_mul, mul_zero]
+  dsimp only
+  rw [hEquality]
+  have _ : IsFiniteMeasure (mu.restrict W) := isFiniteMeasure_restrict.mpr hFinite.ne
+  have hInt : IntegrableOn (fun _ : G => k) W mu := integrable_const k
+  refine And.intro (hInt.integrable_indicator hWMeas) ?_
+  rw [integral_indicator hWMeas, setIntegral_const, Algebra.smul_def]
+  dsimp [k]
+  field_simp [Complex.ofReal_ne_zero.mpr hRealPos.ne']
+
+end LocalUnitZetaTest
 
 section FiniteAdelicEulerProduct
 
