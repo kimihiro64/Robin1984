@@ -420,98 +420,6 @@ private theorem weightedCone_tsum_polynomial
     intro m _
     rw [<- mul_assoc, hSmall]
 
-/-- The weighted sum over any finite family of ordered diagonal directions
-has the product of their reversed, weight-dilated characteristic polynomials
-as a denominator. This denominator is fixed by the directions and the weights. -/
-theorem valuationPrincipalCongruence_diagonalCone_series
-    {F W V : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
-    [AddCommGroup V] [Module Complex V]
-    (vf : Valuation F W) (rank : Nat) (r : W) (hr : r < 1)
-    (rho : MonoidHom (Units (Matrix (Fin rank) (Fin rank) F)) (Module.End Complex V))
-    (P : HeckeLocalSubgroupAverage rho (valuationPrincipalCongruenceSubgroup vf rank r))
-    [FiniteDimensional Complex (LinearMap.range P.proj)]
-    (n : Nat) (a : Fin n -> valuationOrderedDiagonalSubmonoid vf rank)
-    (w : Fin n -> Nat) (hW : forall i, 0 < w i) :
-    let op := P.orderedDiagonalOperators vf rank r hr rho
-    let d := Module.finrank Complex (LinearMap.range P.proj)
-    let c (i : Fin n) := (op (a i)).charpoly.coeff
-    let denominator : Polynomial Complex := Finset.univ.prod (fun i =>
-      (Finset.range (d + 1)).sum (fun j => Polynomial.C (c i j) *
-        Polynomial.X ^ (w i * (d - j))))
-    forall (b : valuationOrderedDiagonalSubmonoid vf rank)
-      (ell : LinearMap (RingHom.id Complex) V Complex),
-      (forall (k : valuationPrincipalCongruenceSubgroup vf rank r) (u : V),
-        ell (rho k.val u) = ell u) ->
-      forall (u : V),
-      (forall k : valuationPrincipalCongruenceSubgroup vf rank r, rho k.val u = u) ->
-      let aseq (e : Fin n -> Nat) :=
-        ell (rho ((valuationDiagonalSection F rank
-          (b * Finset.univ.prod (fun i => a i ^ e i)).val).val) u)
-      exists numerator : Polynomial Complex,
-        And (denominator.eval 0 = 1)
-          (forall z : Complex,
-            Summable (fun e : Fin n -> Nat => aseq e * z ^ Finset.univ.sum (fun i => w i * e i)) ->
-            denominator.eval z *
-              tsum (fun e : Fin n -> Nat => aseq e * z ^ Finset.univ.sum (fun i => w i * e i)) =
-              numerator.eval z) := by
-  intro op d c denominator b ell hEll u hU aseq
-  have hDeg (i : Fin n) : (op (a i)).charpoly.natDegree = d :=
-    LinearMap.charpoly_natDegree (op (a i))
-  have hLead (i : Fin n) : c i d = 1 := by
-    change (op (a i)).charpoly.coeff d = 1
-    rw [<- hDeg i]
-    exact LinearMap.charpoly_monic _
-  have hDen : denominator.eval 0 = 1 := by
-    change Polynomial.evalRingHom 0
-      (Finset.univ.prod (fun i => weightedRecurrencePolynomial (w i) d (c i))) = 1
-    rw [map_prod]
-    apply Finset.prod_eq_one
-    intro i _
-    change (weightedRecurrencePolynomial (w i) d (c i)).eval 0 = 1
-    rw [eval_weightedRecurrencePolynomial, zero_pow (hW i).ne', Finset.sum_eq_single d]
-    next => simp [hLead]
-    next =>
-      intro j hj hne
-      have hjd : j <= d := Nat.le_of_lt_succ (Finset.mem_range.mp hj)
-      have hsub : Not (d - j = 0) := Nat.ne_of_gt (Nat.sub_pos_of_lt (lt_of_le_of_ne hjd hne))
-      rw [zero_pow hsub, mul_zero]
-    next =>
-      intro h
-      exact False.elim (h (Finset.mem_range.mpr (Nat.lt_succ_self d)))
-  let fixed : LinearMap.range P.proj := Subtype.mk u (Exists.intro u (P.proj_eq_of_fixed u hU))
-  have hRec (i : Fin n) (e : Fin n -> Nat) :
-      (Finset.range (d + 1)).sum (fun j => c i j * aseq (Function.update e i (e i + j))) = 0 := by
-    let A := op (a i)
-    let rest := (Finset.univ.erase i).prod (fun k => a k ^ e k)
-    let ellW := (ell.comp (LinearMap.range P.proj).subtype).comp (op (b * rest))
-    have hOp : (Finset.range (d + 1)).sum (fun j => HSMul.hSMul (c i j) (A ^ j)) = 0 := by
-      change (Finset.range (d + 1)).sum
-        (fun j => HSMul.hSMul (A.charpoly.coeff j) (A ^ j)) = 0
-      rw [<- hDeg i, <- Polynomial.aeval_eq_sum_range (p := A.charpoly) A]
-      exact LinearMap.aeval_self_charpoly A
-    have h := congrArg (fun T : Module.End Complex (LinearMap.range P.proj) =>
-      ellW (T ((A ^ e i) fixed))) hOp
-    simp only [LinearMap.sum_apply, LinearMap.smul_apply, LinearMap.zero_apply, map_sum,
-      map_smul, smul_eq_mul, map_zero] at h
-    have hTerm (j : Nat) :
-        ellW ((A ^ j) ((A ^ e i) fixed)) = aseq (Function.update e i (e i + j)) := by
-      have hSplit : Finset.univ.prod (fun k => a k ^ Function.update e i (e i + j) k) =
-          rest * a i ^ (e i + j) := by
-        rw [<- Finset.prod_erase_mul Finset.univ
-          (fun k => a k ^ Function.update e i (e i + j) k) (Finset.mem_univ i)]
-        rw [Function.update_self]
-        congr 1
-        apply Finset.prod_congr rfl
-        intro k hk
-        rw [Function.update_of_ne (Finset.ne_of_mem_erase hk)]
-      change (ell.comp (LinearMap.range P.proj).subtype)
-        (op (b * rest) ((((op (a i)) ^ j) * ((op (a i)) ^ e i)) fixed)) = _
-      rw [<- pow_add, Nat.add_comm j (e i), <- map_pow, <- Module.End.mul_apply, <- map_mul]
-      rw [mul_assoc, <- hSplit]
-      exact P.pairing_proj ell hEll _
-    simpa only [hTerm] using h
-  exact Exists.intro (weightedConeNumerator n w (fun _ => d) c aseq)
-    (And.intro hDen (weightedCone_tsum_polynomial n w (fun _ => d) c aseq hW hRec))
 
 private theorem coordinateRecurrence_mul_powers
     (n : Nat) (d : Fin n -> Nat) (c : Fin n -> Nat -> Complex)
@@ -592,5 +500,119 @@ theorem weightedCone_tsum_polynomial_mul_powers
   refine Exists.intro (weightedConeNumerator n w d C F) (And.intro hDen ?_)
   exact weightedCone_tsum_polynomial n w d C F hW
     (coordinateRecurrence_mul_powers n d c alpha f hRec)
+
+/-- The ordered diagonal cone series with a geometric multiplier in each
+coordinate, on the principal congruence fixed space. -/
+theorem valuationPrincipalCongruence_diagonalCone_series_mul_powers
+    {F W V : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
+    [AddCommGroup V] [Module Complex V]
+    (vf : Valuation F W) (rank : Nat) (r : W) (hr : r < 1)
+    (rho : MonoidHom (Units (Matrix (Fin rank) (Fin rank) F)) (Module.End Complex V))
+    (P : HeckeLocalSubgroupAverage rho (valuationPrincipalCongruenceSubgroup vf rank r))
+    [FiniteDimensional Complex (LinearMap.range P.proj)]
+    (n : Nat) (a : Fin n -> valuationOrderedDiagonalSubmonoid vf rank)
+    (w : Fin n -> Nat) (hW : forall i, 0 < w i) (alpha : Fin n -> Complex) :
+    let op := P.orderedDiagonalOperators vf rank r hr rho
+    let d := Module.finrank Complex (LinearMap.range P.proj)
+    let c (i : Fin n) := (op (a i)).charpoly.coeff
+    let denominator : Polynomial Complex := Finset.univ.prod (fun i =>
+      (Finset.range (d + 1)).sum (fun j => Polynomial.C (c i j * alpha i ^ (d - j)) *
+        Polynomial.X ^ (w i * (d - j))))
+    forall (b : valuationOrderedDiagonalSubmonoid vf rank)
+      (ell : LinearMap (RingHom.id Complex) V Complex),
+      (forall (k : valuationPrincipalCongruenceSubgroup vf rank r) (u : V),
+        ell (rho k.val u) = ell u) ->
+      forall (u : V),
+      (forall k : valuationPrincipalCongruenceSubgroup vf rank r, rho k.val u = u) ->
+      let aseq (e : Fin n -> Nat) :=
+        ell (rho ((valuationDiagonalSection F rank
+          (b * Finset.univ.prod (fun i => a i ^ e i)).val).val) u)
+      let F (e : Fin n -> Nat) := aseq e * Finset.univ.prod (fun i => alpha i ^ e i)
+      exists numerator : Polynomial Complex,
+        And (denominator.eval 0 = 1)
+          (forall z : Complex,
+            Summable (fun e : Fin n -> Nat => F e * z ^ Finset.univ.sum (fun i => w i * e i)) ->
+            denominator.eval z *
+              tsum (fun e : Fin n -> Nat => F e * z ^ Finset.univ.sum (fun i => w i * e i)) =
+              numerator.eval z) := by
+  intro op d c denominator b ell hEll u hU aseq F
+  have hDeg (i : Fin n) : (op (a i)).charpoly.natDegree = d :=
+    LinearMap.charpoly_natDegree (op (a i))
+  have hLead (i : Fin n) : c i d = 1 := by
+    change (op (a i)).charpoly.coeff d = 1
+    rw [<- hDeg i]
+    exact LinearMap.charpoly_monic _
+  let fixed : LinearMap.range P.proj := Subtype.mk u (Exists.intro u (P.proj_eq_of_fixed u hU))
+  have hRec (i : Fin n) (e : Fin n -> Nat) :
+      (Finset.range (d + 1)).sum (fun j => c i j * aseq (Function.update e i (e i + j))) = 0 := by
+    let A := op (a i)
+    let rest := (Finset.univ.erase i).prod (fun k => a k ^ e k)
+    let ellW := (ell.comp (LinearMap.range P.proj).subtype).comp (op (b * rest))
+    have hOp : (Finset.range (d + 1)).sum (fun j => HSMul.hSMul (c i j) (A ^ j)) = 0 := by
+      change (Finset.range (d + 1)).sum
+        (fun j => HSMul.hSMul (A.charpoly.coeff j) (A ^ j)) = 0
+      rw [<- hDeg i, <- Polynomial.aeval_eq_sum_range (p := A.charpoly) A]
+      exact LinearMap.aeval_self_charpoly A
+    have h := congrArg (fun T : Module.End Complex (LinearMap.range P.proj) =>
+      ellW (T ((A ^ e i) fixed))) hOp
+    simp only [LinearMap.sum_apply, LinearMap.smul_apply, LinearMap.zero_apply, map_sum,
+      map_smul, smul_eq_mul, map_zero] at h
+    have hTerm (j : Nat) :
+        ellW ((A ^ j) ((A ^ e i) fixed)) = aseq (Function.update e i (e i + j)) := by
+      have hSplit : Finset.univ.prod (fun k => a k ^ Function.update e i (e i + j) k) =
+          rest * a i ^ (e i + j) := by
+        rw [<- Finset.prod_erase_mul Finset.univ
+          (fun k => a k ^ Function.update e i (e i + j) k) (Finset.mem_univ i)]
+        rw [Function.update_self]
+        congr 1
+        apply Finset.prod_congr rfl
+        intro k hk
+        rw [Function.update_of_ne (Finset.ne_of_mem_erase hk)]
+      change (ell.comp (LinearMap.range P.proj).subtype)
+        (op (b * rest) ((((op (a i)) ^ j) * ((op (a i)) ^ e i)) fixed)) = _
+      rw [<- pow_add, Nat.add_comm j (e i), <- map_pow, <- Module.End.mul_apply, <- map_mul]
+      rw [mul_assoc, <- hSplit]
+      exact P.pairing_proj ell hEll _
+    simpa only [hTerm] using h
+  exact weightedCone_tsum_polynomial_mul_powers n w (fun _ => d) c alpha aseq hW hLead hRec
+
+/-- The weighted sum over any finite family of ordered diagonal directions
+has the product of their reversed, weight-dilated characteristic polynomials
+as a denominator. This denominator is fixed by the directions and the weights. -/
+theorem valuationPrincipalCongruence_diagonalCone_series
+    {F W V : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
+    [AddCommGroup V] [Module Complex V]
+    (vf : Valuation F W) (rank : Nat) (r : W) (hr : r < 1)
+    (rho : MonoidHom (Units (Matrix (Fin rank) (Fin rank) F)) (Module.End Complex V))
+    (P : HeckeLocalSubgroupAverage rho (valuationPrincipalCongruenceSubgroup vf rank r))
+    [FiniteDimensional Complex (LinearMap.range P.proj)]
+    (n : Nat) (a : Fin n -> valuationOrderedDiagonalSubmonoid vf rank)
+    (w : Fin n -> Nat) (hW : forall i, 0 < w i) :
+    let op := P.orderedDiagonalOperators vf rank r hr rho
+    let d := Module.finrank Complex (LinearMap.range P.proj)
+    let c (i : Fin n) := (op (a i)).charpoly.coeff
+    let denominator : Polynomial Complex := Finset.univ.prod (fun i =>
+      (Finset.range (d + 1)).sum (fun j => Polynomial.C (c i j) *
+        Polynomial.X ^ (w i * (d - j))))
+    forall (b : valuationOrderedDiagonalSubmonoid vf rank)
+      (ell : LinearMap (RingHom.id Complex) V Complex),
+      (forall (k : valuationPrincipalCongruenceSubgroup vf rank r) (u : V),
+        ell (rho k.val u) = ell u) ->
+      forall (u : V),
+      (forall k : valuationPrincipalCongruenceSubgroup vf rank r, rho k.val u = u) ->
+      let aseq (e : Fin n -> Nat) :=
+        ell (rho ((valuationDiagonalSection F rank
+          (b * Finset.univ.prod (fun i => a i ^ e i)).val).val) u)
+      exists numerator : Polynomial Complex,
+        And (denominator.eval 0 = 1)
+          (forall z : Complex,
+            Summable (fun e : Fin n -> Nat => aseq e * z ^ Finset.univ.sum (fun i => w i * e i)) ->
+            denominator.eval z *
+              tsum (fun e : Fin n -> Nat => aseq e * z ^ Finset.univ.sum (fun i => w i * e i)) =
+              numerator.eval z) := by
+  intro op d c denominator b ell hEll u hU aseq
+  have h := valuationPrincipalCongruence_diagonalCone_series_mul_powers
+    vf rank r hr rho P n a w hW (fun _ => (1 : Complex)) b ell hEll u hU
+  simpa only [one_pow, Finset.prod_const_one, mul_one] using h
 
 end Robin1984.GRH

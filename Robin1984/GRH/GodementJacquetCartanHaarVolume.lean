@@ -157,18 +157,7 @@ theorem measure_heckeLocal_valuationUniformizerGapDoubleCoset_eq_residueRatio
     heckeLocalDeterminantWeightedMeasure_apply_of_detNorm_one p _ hImage hDetImage,
     Measure.coe_nnreal_smul_apply, hMassC, hMassH,
     ENNReal.coe_toNNReal (hFinite (fun _ => 0))] at hWeighted
-  have hSet : valuationIntegralDiagonalDoubleCoset v n a =
-      DoubleCoset.doubleCoset d (C : Set G) (C : Set G) := by
-    ext g
-    rw [DoubleCoset.mem_doubleCoset]
-    change (exists l r : C, g = l.val * d * r.val) <-> _
-    constructor
-    . intro hg
-      choose l r h using hg
-      exact Exists.intro l.val (And.intro l.property (Exists.intro r.val (And.intro r.property h)))
-    . intro hg
-      choose l hl r hr h using hg
-      exact Exists.intro (Subtype.mk l hl) (Exists.intro (Subtype.mk r hr) h)
+  have hSet := valuationIntegralDiagonalDoubleCoset_eq_doubleCoset v n a
   rw [hSet]
   have hMul : mu (DoubleCoset.doubleCoset d (C : Set G) (C : Set G)) * mu (H : Set G) = 1 := by
     simpa only [hMu, one_pow] using measure_cartanDoubleCoset_mul_stabilizerMeasure mu C
@@ -428,5 +417,81 @@ theorem measure_heckeLocal_valuationUniformizerGapDoubleCoset_eq_monomial
           ENNReal.mul_inv_cancel (pow_ne_zero _ hw0) (hwt W), mul_one]
   rw [<- hRight, div_eq_mul_inv, mul_assoc, ENNReal.mul_inv_cancel
     (mul_ne_zero hB0 (pow_ne_zero _ hw0)) (ENNReal.mul_ne_top hBt (hwt a)), mul_one]
+
+/-- The determinant-weighted finite-place integral is a sum of the Cartan
+volumes times their normalized subgroup averages and determinant weights. -/
+theorem hasSum_heckeLocal_detWeightedIntegral_cartanAverages
+    {K : Type*} [Field K] [NumberField K]
+    (p : HeightOneSpectrum (RingOfIntegers K)) (n : Nat)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    (pi : Units (p.adicCompletion K))
+    (hPi : Valued.v (pi : p.adicCompletion K) = finiteUniformizerValue)
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))))
+    [mu.IsMulLeftInvariant]
+    (f : Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)) -> Complex) (z : Complex) :
+    let L := p.adicCompletion K
+    let G := Units (Matrix (Fin n) (Fin n) L)
+    let v : Valuation L (WithZero (Multiplicative Int)) := Valued.v
+    let C := valuationIntegralMatrixSubgroup v n
+    let S := Set.ofPred (fun g : G => forall i j, v (g.val i j) <= 1)
+    let a (gaps : Fin n -> Nat) := valuationUniformizerGapDiagonal n pi gaps
+    let d (gaps : Fin n -> Nat) := (valuationDiagonalSection L n (a gaps)).val
+    let D (gaps : Fin n -> Nat) := valuationIntegralDiagonalDoubleCoset v n (a gaps)
+    let F (g : G) := (norm g.val.det : Complex) ^ z * f g
+    mu (C : Set G) = 1 -> IntegrableOn F S mu ->
+    HasSum (fun gaps : Fin n -> Nat =>
+      ((norm pi.val : Complex) ^ z) ^ Finset.univ.sum (fun j => (j.val + 1) * gaps j) *
+        (HSMul.hSMul ((mu (D gaps)).toReal)
+          (integral (mu.restrict (C : Set G)) (fun l =>
+            integral (mu.restrict (C : Set G)) (fun r0 => f (l * d gaps * r0))))))
+      (integral (mu.restrict S) F) := by
+  intro L G v C S a d D F hNorm hInt
+  let _ : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  have hRow : IsOpenEmbedding (heckeLocalMatrixUnitEntries (I := Fin n) (F := L)) :=
+    isOpenEmbedding_heckeLocalMatrixUnitEntries
+  let _ : SecondCountableTopology G := hRow.isEmbedding.secondCountableTopology
+  have hVO : IsOpen (v.integer : Set L) := Valued.isOpen_valuationSubring L
+  have hVC : IsCompact (v.integer : Set L) :=
+    isCompact_iff_compactSpace.mpr (compactSpace_heckeLocalIntegers p)
+  have hC := isOpen_valuationIntegralMatrixSubgroup v n hVO
+  have hCompact := isCompact_valuationIntegralMatrixSubgroup v n hVC
+  have hUnion : Set.iUnion D = S := iUnion_heckeLocal_valuationUniformizerGapDoubleCosets p n pi hPi
+  have hMeas (b : Fin n -> Nat) : MeasurableSet (D b) :=
+    (isOpen_valuationIntegralDiagonalDoubleCoset v n (a b) hVO).measurableSet
+  have hSub (b : Fin n -> Nat) : D b <= S := by
+    intro g hg
+    rw [<- hUnion]
+    exact Set.mem_iUnion_of_mem b hg
+  have hIntegrable (b : Fin n -> Nat) : IntegrableOn f (D b) mu := by
+    let m := Finset.univ.sum (fun j : Fin n => (j.val + 1) * b j)
+    let c := ((norm pi.val ^ m : Real) : Complex) ^ z
+    have hPos : 0 < norm pi.val ^ m := pow_pos (norm_pos_iff.mpr pi.ne_zero) _
+    have hC0 : Not (c = 0) := Complex.cpow_ne_zero_iff.mpr
+      (Or.inl (Complex.ofReal_ne_zero.mpr (ne_of_gt hPos)))
+    have hSame (g : G) (hg : Membership.mem (D b) g) : f g = Inv.inv c * F g := by
+      have hv := norm_det_of_mem_heckeLocal_valuationUniformizerGapDoubleCoset p n pi b g hg
+      change f g = Inv.inv c * ((norm g.val.det : Complex) ^ z * f g)
+      rw [hv]
+      change f g = Inv.inv c * (c * f g)
+      rw [<- mul_assoc]
+      simp [hC0]
+    exact (integrableOn_congr_fun hSame (hMeas b)).mpr
+      ((hInt.mono_set (hSub b)).const_mul (Inv.inv c))
+  have hSet (b : Fin n -> Nat) : D b = DoubleCoset.doubleCoset (d b) (C : Set G) (C : Set G) :=
+    valuationIntegralDiagonalDoubleCoset_eq_doubleCoset v n (a b)
+  have hAvg (b : Fin n -> Nat) : integral (mu.restrict (D b)) f =
+      HSMul.hSMul ((mu (D b)).toReal)
+        (integral (mu.restrict (C : Set G)) (fun l =>
+          integral (mu.restrict (C : Set G)) (fun r0 => f (l * d b * r0)))) := by
+    rw [hSet b]
+    refine integral_cartanDoubleCoset_eq_volume_smul_average mu C hCompact hC hNorm (d b) f ?_
+    rw [<- hSet b]
+    exact hIntegrable b
+  have h := hasSum_heckeLocal_detWeightedIntegral_valuationUniformizerGapDoubleCosets
+    p n pi hPi mu f z hInt
+  change HasSum (fun b : Fin n -> Nat => ((norm pi.val : Complex) ^ z) ^
+    Finset.univ.sum (fun j => (j.val + 1) * b j) * integral (mu.restrict (D b)) f) _ at h
+  simpa only [hAvg] using h
 
 end Robin1984.GRH

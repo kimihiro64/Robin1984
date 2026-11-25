@@ -186,18 +186,12 @@ theorem measure_cartanDoubleCoset_of_isCompact_isOpen
         mu (K : Set G) := by
   exact measure_doubleCoset_of_left_isCompact_right_isOpen mu K K hCompact hOpen d
 
-/-- A compact subgroup has measure equal to the mass of an open
-subgroup times its index. The open subgroup is viewed in the ambient group. -/
-theorem measure_subgroup_eq_index_mul_subgroupMeasure
-    {G : Type*} [Group G] [TopologicalSpace G] [IsTopologicalGroup G]
-    [MeasurableSpace G] [OpensMeasurableSpace G] [MeasurableMul G]
-    (mu : Measure G) [mu.IsMulLeftInvariant]
-    (K : Subgroup G) (H : Subgroup K) (hCompact : IsCompact (K : Set G))
-    (hOpen : IsOpen (H.map K.subtype : Set G)) :
-    mu (K : Set G) =
-      (Nat.card (Quotient (QuotientGroup.leftRel H)) : ENNReal) *
-        mu (H.map K.subtype : Set G) := by
-  let U := H.map K.subtype
+private theorem subgroup_doubleCoset_one_data {G : Type*} [Group G]
+    (K : Subgroup G) (H : Subgroup K) :
+    let U := H.map K.subtype
+    And (DoubleCoset.doubleCoset (1 : G) (K : Set G) (U : Set G) = (K : Set G))
+      (doubleCosetLeftStabilizer K U (1 : G) = H) := by
+  intro U
   have hLie : U <= K := by
     intro x hx
     choose h hh using (Subgroup.mem_map.mp hx)
@@ -227,6 +221,24 @@ theorem measure_subgroup_eq_index_mul_subgroupMeasure
       simpa only [hEq] using ha.1
     . intro hk
       exact Exists.intro k (And.intro hk rfl)
+  exact And.intro hCoset hStab
+
+/-- A compact subgroup has measure equal to the mass of an open
+subgroup times its index. The open subgroup is viewed in the ambient group. -/
+theorem measure_subgroup_eq_index_mul_subgroupMeasure
+    {G : Type*} [Group G] [TopologicalSpace G] [IsTopologicalGroup G]
+    [MeasurableSpace G] [OpensMeasurableSpace G] [MeasurableMul G]
+    (mu : Measure G) [mu.IsMulLeftInvariant]
+    (K : Subgroup G) (H : Subgroup K) (hCompact : IsCompact (K : Set G))
+    (hOpen : IsOpen (H.map K.subtype : Set G)) :
+    mu (K : Set G) =
+      (Nat.card (Quotient (QuotientGroup.leftRel H)) : ENNReal) *
+        mu (H.map K.subtype : Set G) := by
+  let U := H.map K.subtype
+  have hData := subgroup_doubleCoset_one_data K H
+  have hCoset : DoubleCoset.doubleCoset (1 : G) (K : Set G) (U : Set G) = (K : Set G) :=
+    hData.1
+  have hStab : doubleCosetLeftStabilizer K U (1 : G) = H := hData.2
   have h := measure_doubleCoset_of_left_isCompact_right_isOpen mu K U hCompact hOpen 1
   rw [hCoset, hStab] at h
   exact h
@@ -279,6 +291,124 @@ theorem measure_cartanDoubleCoset_mul_stabilizerMeasure
         mu (H.map K.subtype : Set G)) := by ac_rfl
     _ = _ := by rw [<- hIdx]
 
+/-- On a compact open subgroup normalized to have mass one, the integral on a
+Cartan double coset is its volume times the average over both subgroup factors. -/
+theorem integral_cartanDoubleCoset_eq_volume_smul_average
+    {G E : Type*} [Group G] [TopologicalSpace G] [IsTopologicalGroup G]
+    [MeasurableSpace G] [OpensMeasurableSpace G] [MeasurableMul G]
+    [NormedAddCommGroup E] [NormedSpace Real E] [CompleteSpace E]
+    (mu : Measure G) [mu.IsMulLeftInvariant]
+    (C : Subgroup G) (hCompact : IsCompact (C : Set G)) (hOpen : IsOpen (C : Set G))
+    (hNorm : mu (C : Set G) = 1) (d : G) (f : G -> E) :
+    let D := DoubleCoset.doubleCoset d (C : Set G) (C : Set G)
+    IntegrableOn f D mu ->
+    integral (mu.restrict D) f =
+      HSMul.hSMul ((mu D).toReal) (integral (mu.restrict (C : Set G)) (fun l =>
+        integral (mu.restrict (C : Set G)) (fun r => f (l * d * r)))) := by
+  intro D hInt
+  let J := cartanLeftCosetStabilizer C d
+  let H := J.map C.subtype
+  let Q := Quotient (QuotientGroup.leftRel J)
+  let F (l : G) := integral (mu.restrict (C : Set G)) (fun r => f (l * d * r))
+  let T (q : Q) := Set.preimage (fun g : G => Inv.inv q.out.val * g) (H : Set G)
+  let _ : CompactSpace C := isCompact_iff_compactSpace.mp hCompact
+  let _ : Finite Q := J.quotient_finite_of_isOpen (isOpen_doubleCosetLeftStabilizer C C d hOpen)
+  let _ : Fintype Q := Fintype.ofFinite Q
+  have hHOpen : IsOpen (H : Set G) := isOpen_map_cartanLeftCosetStabilizer C hOpen d
+  have hData := subgroup_doubleCoset_one_data C J
+  have hCoset : DoubleCoset.doubleCoset (1 : G) (C : Set G) (H : Set G) = (C : Set G) :=
+    hData.1
+  have hJ : doubleCosetLeftStabilizer C H (1 : G) = J := hData.2
+  have hSplit : And (Set.iUnion T = (C : Set G)) (Pairwise (fun q q' => Disjoint (T q) (T q'))) := by
+    have h := doubleCoset_leftTranslate_partition C H (1 : G)
+    dsimp only at h
+    rw [hJ, hCoset] at h
+    simpa only [mul_one] using h
+  have hTMeas (q : Q) : MeasurableSet (T q) :=
+    (hHOpen.preimage (continuous_const.mul continuous_id)).measurableSet
+  have hTfinite (q : Q) : Not (mu (T q) = Top.top) := by
+    have hLe : T q <= (C : Set G) := by
+      intro x hx
+      rw [<- hSplit.1]
+      exact Set.mem_iUnion_of_mem q hx
+    exact ne_of_lt ((measure_mono hLe).trans_lt (by rw [hNorm]; exact ENNReal.one_lt_top))
+  have hTranslate (c : G) (hc : Membership.mem C c) (g : G -> E) :
+      integral (mu.restrict (C : Set G)) (fun x => g (c * x)) =
+        integral (mu.restrict (C : Set G)) g := by
+    let e := MeasurableEquiv.mulLeft c
+    have hPre : Set.preimage e (C : Set G) = (C : Set G) := by
+      ext x
+      change Membership.mem C (c * x) <-> Membership.mem C x
+      constructor
+      . intro hx
+        simpa only [inv_mul_cancel_left] using C.mul_mem (C.inv_mem hc) hx
+      . exact C.mul_mem hc
+    have hP := (measurePreserving_mul_left mu c).restrict_preimage_emb e.measurableEmbedding (C : Set G)
+    change MeasurePreserving e (mu.restrict (Set.preimage e (C : Set G))) (mu.restrict (C : Set G)) at hP
+    rw [hPre] at hP
+    exact hP.integral_comp e.measurableEmbedding g
+  have hConst (q : Q) (x : G) (hx : Membership.mem (T q) x) : F x = F q.out.val := by
+    change Membership.mem (J.map C.subtype) (Inv.inv q.out.val * x) at hx
+    choose y hy using (Subgroup.mem_map.mp hx)
+    let c := Inv.inv d * (Inv.inv q.out.val * x) * d
+    have hcy : y.val = Inv.inv q.out.val * x := hy.2
+    have hc : Membership.mem C c := by
+      have hcy0 : Membership.mem C (MulAut.conj (Inv.inv d) y.val) := hy.1
+      rw [hcy, MulAut.conj_apply, inv_inv] at hcy0
+      exact hcy0
+    have hEq : x * d = (q.out.val * d) * c := by
+      simp [c, mul_assoc]
+    have hFun (r : G) : f (x * d * r) = f (q.out.val * d * (c * r)) := by
+      rw [hEq, mul_assoc]
+    change integral (mu.restrict (C : Set G)) (fun r => f (x * d * r)) = _
+    simp only [hFun]
+    exact hTranslate c hc (fun r => f (q.out.val * d * r))
+  have hOn (q : Q) : IntegrableOn F (T q) mu :=
+    (integrableOn_congr_fun (hConst q) (hTMeas q)).mpr
+      (integrableOn_const (C := F q.out.val) (hTfinite q))
+  have hOnUnion : IntegrableOn F (Set.iUnion T) mu :=
+    integrableOn_iUnion_of_summable_integral_norm hOn Summable.of_finite
+  have hSumC := hasSum_integral_iUnion hTMeas hSplit.2 hOnUnion
+  rw [hSplit.1] at hSumC
+  have hMassT (q : Q) : mu (T q) = mu (H : Set G) :=
+    (measurePreserving_mul_left mu (Inv.inv q.out.val)).measure_preimage hHOpen.measurableSet.nullMeasurableSet
+  have hTile (q : Q) : integral (mu.restrict (T q)) F =
+      HSMul.hSMul ((mu (H : Set G)).toReal) (F q.out.val) := by
+    rw [setIntegral_congr_fun (hTMeas q) (hConst q), setIntegral_const, Measure.real, hMassT]
+  have hSumD : HasSum (fun q : Q => F q.out.val) (integral (mu.restrict D) f) :=
+    hasSum_integral_doubleCoset_leftTranslate mu C C hCompact hOpen d f hInt
+  have hTotal : integral (mu.restrict (C : Set G)) F =
+      HSMul.hSMul ((mu (H : Set G)).toReal) (integral (mu.restrict D) f) := by
+    rw [<- hSumC.tsum_eq, <- hSumD.tsum_eq, tsum_fintype, tsum_fintype, Finset.smul_sum]
+    exact Finset.sum_congr rfl (fun q _ => hTile q)
+  have hProd : (mu D).toReal * (mu (H : Set G)).toReal = 1 := by
+    have h := congrArg ENNReal.toReal (measure_cartanDoubleCoset_mul_stabilizerMeasure mu C hCompact hOpen d)
+    simpa only [D, H, J, hNorm, one_pow, ENNReal.toReal_mul, ENNReal.toReal_one] using h
+  change integral (mu.restrict D) f = HSMul.hSMul ((mu D).toReal) (integral (mu.restrict (C : Set G)) F)
+  rw [hTotal, smul_smul, hProd, one_smul]
+
+/-- The valuation-matrix description of a diagonal stratum is its ordinary
+double coset in the ambient matrix-unit group. -/
+theorem valuationIntegralDiagonalDoubleCoset_eq_doubleCoset
+    {F W : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
+    (v : Valuation F W) (n : Nat) (a : Units (Fin n -> F)) :
+    let K := valuationIntegralMatrixSubgroup v n
+    let d := (valuationDiagonalSection F n a).val
+    valuationIntegralDiagonalDoubleCoset v n a =
+      DoubleCoset.doubleCoset d (K : Set (Units (Matrix (Fin n) (Fin n) F)))
+        (K : Set (Units (Matrix (Fin n) (Fin n) F))) := by
+  intro K d
+  ext g
+  rw [DoubleCoset.mem_doubleCoset]
+  change (exists l r : K, g = l.val * d * r.val) <-> _
+  constructor
+  . intro hg
+    choose l r h using hg
+    exact Exists.intro l.val (And.intro l.property (Exists.intro r.val (And.intro r.property h)))
+  . intro hg
+    choose l hl r hr h using hg
+    exact Exists.intro (Subtype.mk l hl) (Exists.intro (Subtype.mk r hr) h)
+
 /-- A Cartan stratum has Haar volume given by its integral subgroup
 conjugation index. -/
 theorem measure_valuationIntegralDiagonalDoubleCoset
@@ -296,19 +426,7 @@ theorem measure_valuationIntegralDiagonalDoubleCoset
       (Nat.card (Quotient (QuotientGroup.leftRel (cartanLeftCosetStabilizer K d))) : ENNReal) *
         mu (K : Set (Units (Matrix (Fin n) (Fin n) F))) := by
   intro K d
-  have hSet : valuationIntegralDiagonalDoubleCoset v n a =
-      DoubleCoset.doubleCoset d (K : Set (Units (Matrix (Fin n) (Fin n) F)))
-        (K : Set (Units (Matrix (Fin n) (Fin n) F))) := by
-    ext g
-    rw [DoubleCoset.mem_doubleCoset]
-    change (exists l r : K, g = l.val * d * r.val) <-> _
-    constructor
-    . intro hg
-      choose l r h using hg
-      exact Exists.intro l.val (And.intro l.property (Exists.intro r.val (And.intro r.property h)))
-    . intro hg
-      choose l hl r hr h using hg
-      exact Exists.intro (Subtype.mk l hl) (Exists.intro (Subtype.mk r hr) h)
+  have hSet := valuationIntegralDiagonalDoubleCoset_eq_doubleCoset v n a
   rw [hSet]
   exact measure_cartanDoubleCoset_of_isCompact_isOpen mu K
     (isCompact_valuationIntegralMatrixSubgroup v n hCompact)
