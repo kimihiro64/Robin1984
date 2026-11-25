@@ -2688,9 +2688,9 @@
       "path": "Robin1984/GRH/GodementJacquetCartanVolume.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Compact open subgroup double cosets, left Haar invariance, and the determinant criterion for invertible matrices.",
-      "formalization_note": "Computes the Haar volume of a Cartan double coset by a finite index and describes the stabilizer by entrywise valuation bounds.",
-      "content_basis": "Partitions the double coset into disjoint measurable left translates indexed by the conjugation stabilizer. Uses compactness for finite quotient and lifts an integral matrix with unit determinant back to the integral subgroup.",
-      "dependency_status": "Uses the Cartan diagonal double cosets, compactness and openness of the integral subgroup, and Mathlib finite left cosets and invariant measures.",
+      "formalization_note": "Computes Cartan double-coset volume from the Haar mass of the stabilizer and gives explicit uniformizer-power bounds for its matrix entries.",
+      "content_basis": "Counts disjoint left translates with separate compact and open factors, and compares their stabilizer index to its subgroup measure. Derives the ordered uniformizer bounds from the determinant-one and integral-entry criterion.",
+      "dependency_status": "Uses the Cartan gap partition, compactness and openness of the integral subgroup, and Mathlib quotient cosets and invariant measures.",
       "reviewed": true
     },
     {
