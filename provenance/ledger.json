@@ -1947,6 +1947,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetUnramifiedSpherical.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The unramified spherical section and unipotent integration in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
+      "formalization_note": "Evaluates the unipotent fibre of the actual finite-place spherical kernel in every rank using the normalized additive-product measure.",
+      "content_basis": "Checked the upper-entry box test, constancy of the inducing section on each fibre, and cancellation of Haar volume, half modulus, and the determinant shift.",
+      "dependency_status": "Uses the normalized finite-place additive measure and triangular-integral factorization. Diagonal integration and compact subgroup averaging are separate steps.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetVectorPoisson.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Poisson summation on the additive adelic matrix space in Godement and Jacquet, Zeta Functions of Simple Algebras.",
