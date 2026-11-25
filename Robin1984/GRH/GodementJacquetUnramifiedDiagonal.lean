@@ -1468,6 +1468,52 @@ theorem exists_heckeLocalZetaTest_leftTranslate
   next =>
     rw [integral_const_mul, integral_mul_left_eq_self f A]
 
+/-- In positive rank, a matrix with uniformizer determinant translates a
+compact locally constant zeta test to one whose integral is multiplied by
+the residue-field cardinality to the power of the complex exponent.
+The translation preserves absolute integrability at each exponent. -/
+theorem exists_heckeLocalZetaTest_primeNormTranslate
+    (n : Nat) [MeasurableSpace (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L))]
+    [MeasurableMul (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L))]
+    (mu : Measure (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L))) [mu.IsMulLeftInvariant]
+    (u : Units L) (hu : Valued.v u.val = finiteUniformizerValue)
+    (Phi : LocallyConstant (Matrix (Fin (n + 1)) (Fin (n + 1)) L) Complex)
+    (hPhi : HasCompactSupport (fun X => Phi X))
+    (c : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L) -> Complex) :
+    Exists (fun A : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L) =>
+      And (A.val.det = u.val)
+        (Exists (fun Psi : LocallyConstant (Matrix (Fin (n + 1)) (Fin (n + 1)) L) Complex =>
+          And (HasCompactSupport (fun X => Psi X)) (forall z : Complex,
+            And (Iff
+              (Integrable (fun g => (norm g.val.det : Complex) ^ z * (Psi g.val * c (A * g))) mu)
+              (Integrable (fun g => (norm g.val.det : Complex) ^ z * (Phi g.val * c g)) mu))
+              (integral mu (fun g => (norm g.val.det : Complex) ^ z * (Psi g.val * c (A * g))) =
+                (dedekindPrimeNorm K p : Complex) ^ z *
+                  integral mu (fun g => (norm g.val.det : Complex) ^ z * (Phi g.val * c g))))))) := by
+  classical
+  let d := Function.update (fun _ : Fin (n + 1) => (1 : L)) 0 u.val
+  have hd : (Matrix.diagonal d).det = u.val := by
+    rw [Matrix.det_diagonal]
+    rw [Finset.prod_eq_single (0 : Fin (n + 1))]
+    next => simp [d]
+    next =>
+      intro i _ hi
+      simp [d, Function.update_of_ne hi]
+    next => simp
+  let A := Matrix.GeneralLinearGroup.mkOfDetNeZero (Matrix.diagonal d) (fun h => u.ne_zero (hd.symm.trans h))
+  have hA : A.val.det = u.val := hd
+  refine Exists.intro A (And.intro hA ?_)
+  choose Psi hPsi using exists_heckeLocalZetaTest_leftTranslate p (n + 1) mu A Phi hPhi c
+  refine Exists.intro Psi (And.intro hPsi.1 ?_)
+  intro z
+  refine And.intro (hPsi.2 z).1 ?_
+  have hNorm := norm_eq_inv_of_valuation_finiteUniformizer p u.val hu
+  have hPow : (norm A.val.det : Complex) ^ (-z) = (dedekindPrimeNorm K p : Complex) ^ z := by
+    rw [hA, hNorm, Complex.ofReal_inv, Complex.inv_cpow_ofReal_nonneg (Nat.cast_nonneg _) (-z),
+      Complex.cpow_neg, inv_inv, Complex.ofReal_natCast]
+  rw [<- hPow]
+  exact (hPsi.2 z).2
+
 end LocalUnitZetaTest
 
 section FiniteAdelicEulerProduct
