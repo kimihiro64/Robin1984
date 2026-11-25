@@ -1572,6 +1572,93 @@ theorem integrableAndIntegral_heckeLocalZeta_schur (p : Place)
     nu (heckeLocalZetaAdditiveIntegrand p Phi c z)
   exact And.intro (hSchur.1.mp hAdd.1) (hSchur.2.symm.trans hAdd.2)
 
+section SchurDeterminant
+
+omit [MeasurableSpace A] [BorelSpace A] in
+/-- In the reconstructed matrix the determinant is the product of the
+invertible leading block determinant and the Schur block determinant. -/
+theorem det_godementJacquetSchurAssemble
+    {F I J : Type*} [NormedField F] [Fintype I] [Fintype J] [DecidableEq I] [DecidableEq J]
+    (a : Units (Matrix I I F)) (b : I -> J -> F) (c : J -> I -> F) (s : J -> J -> F) :
+    (Matrix.of (godementJacquetSchurAssemble
+      (Prod.mk (Prod.mk (heckeLocalMatrixUnitEntries a) b) (Prod.mk c s)))).det =
+      a.val.det * (Matrix.of s).det := by
+  let upper := a.inv * Matrix.of b
+  let lower := Matrix.of c * a.inv
+  let left := Matrix.fromBlocks (1 : Matrix I I F) 0 lower (1 : Matrix J J F)
+  let middle := Matrix.fromBlocks a.val 0 0 (Matrix.of s)
+  let right := Matrix.fromBlocks (1 : Matrix I I F) upper 0 (1 : Matrix J J F)
+  have haInv : Inv.inv a.val = a.inv := (Matrix.coe_units_inv a).symm
+  have hAssemble : Matrix.of (godementJacquetSchurAssemble
+      (Prod.mk (Prod.mk (heckeLocalMatrixUnitEntries a) b) (Prod.mk c s))) =
+      Matrix.fromBlocks a.val (Matrix.of b) (Matrix.of c)
+        (Matrix.of s + lower * Matrix.of b) := by
+    ext i j
+    cases i with
+    | inl i => cases j <;> rfl
+    | inr i =>
+      cases j with
+      | inl j => rfl
+      | inr j =>
+        change s i j + (Matrix.of c * Inv.inv a.val * Matrix.of b) i j =
+          s i j + (lower * Matrix.of b) i j
+        rw [haInv]
+  have hLower : lower * a.val = Matrix.of c := by
+    change (Matrix.of c * a.inv) * a.val = Matrix.of c
+    rw [Matrix.mul_assoc, a.inv_val, Matrix.mul_one]
+  have hUpper : a.val * upper = Matrix.of b := by
+    change a.val * (a.inv * Matrix.of b) = Matrix.of b
+    rw [<- Matrix.mul_assoc, a.val_inv, Matrix.one_mul]
+  have hCross : Matrix.of c * upper = lower * Matrix.of b :=
+    (Matrix.mul_assoc _ _ _).symm
+  have hFactor : left * middle * right =
+      Matrix.fromBlocks a.val (Matrix.of b) (Matrix.of c)
+        (Matrix.of s + lower * Matrix.of b) := by
+    simp only [left, middle, right, Matrix.fromBlocks_multiply, Matrix.one_mul, Matrix.mul_one,
+      Matrix.mul_zero, Matrix.zero_mul, add_zero, zero_add, hLower, hUpper, hCross, add_comm]
+  rw [hAssemble, <- hFactor, Matrix.det_mul, Matrix.det_mul]
+  simp [left, middle, right]
+
+omit [MeasurableSpace A] [BorelSpace A] in
+/-- For an invertible leading block, the additive zeta integrand vanishes
+whenever the trailing Schur block is singular. -/
+theorem heckeLocalZetaAdditiveIntegrand_schur_eq_zero (p : Place)
+    {I J : Type*} [Fintype I] [Fintype J] [DecidableEq I] [DecidableEq J]
+    (Phi : Matrix (Sum I J) (Sum I J) (p.adicCompletion K) -> Complex)
+    (c : Units (Matrix (Sum I J) (Sum I J) (p.adicCompletion K)) -> Complex) (z : Complex)
+    (a : Units (Matrix I I (p.adicCompletion K)))
+    (b : I -> J -> p.adicCompletion K) (d : J -> I -> p.adicCompletion K)
+    (s : J -> J -> p.adicCompletion K) (hSing : (Matrix.of s).det = 0) :
+    heckeLocalZetaAdditiveIntegrand p Phi c z (godementJacquetSchurAssemble
+      (Prod.mk (Prod.mk (heckeLocalMatrixUnitEntries a) b) (Prod.mk d s))) = 0 := by
+  apply heckeLocalZetaAdditiveIntegrand_eq_zero_of_det_eq_zero
+  rw [det_godementJacquetSchurAssemble, hSing, mul_zero]
+
+omit [MeasurableSpace A] [BorelSpace A] in
+/-- On a Schur chart with leading determinant norm one the determinant
+weight of the additive integrand depends only on the trailing block. -/
+theorem heckeLocalZetaAdditiveIntegrand_schur_of_unit_leading_det (p : Place)
+    {I J : Type*} [Fintype I] [Fintype J] [DecidableEq I] [DecidableEq J]
+    (Phi : Matrix (Sum I J) (Sum I J) (p.adicCompletion K) -> Complex)
+    (c : Units (Matrix (Sum I J) (Sum I J) (p.adicCompletion K)) -> Complex) (z : Complex)
+    (a : Units (Matrix I I (p.adicCompletion K))) (ha : norm a.val.det = 1)
+    (b : I -> J -> p.adicCompletion K) (d : J -> I -> p.adicCompletion K)
+    (s : J -> J -> p.adicCompletion K)
+    (g : Units (Matrix (Sum I J) (Sum I J) (p.adicCompletion K)))
+    (hg : heckeLocalMatrixUnitEntries g = godementJacquetSchurAssemble
+      (Prod.mk (Prod.mk (heckeLocalMatrixUnitEntries a) b) (Prod.mk d s))) :
+    heckeLocalZetaAdditiveIntegrand p Phi c z (godementJacquetSchurAssemble
+      (Prod.mk (Prod.mk (heckeLocalMatrixUnitEntries a) b) (Prod.mk d s))) =
+      (norm (Matrix.of s).det : Complex) ^
+        (z - (Fintype.card I : Complex) - (Fintype.card J : Complex)) * (Phi g.val * c g) := by
+  have hNorm : norm g.val.det = norm (Matrix.of s).det := by
+    change norm (Matrix.of (heckeLocalMatrixUnitEntries g)).det = _
+    rw [hg, det_godementJacquetSchurAssemble, norm_mul, ha, one_mul]
+  rw [<- hg, heckeLocalZetaAdditiveIntegrand_apply_entries, hNorm, Fintype.card_sum, Nat.cast_add]
+  rw [sub_sub]
+
+end SchurDeterminant
+
 end LocalMatrixGroupMeasure
 
 end Robin1984.GRH
