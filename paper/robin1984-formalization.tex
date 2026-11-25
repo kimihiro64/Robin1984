@@ -3065,12 +3065,46 @@ The time-zero lattice majorants are integrable by the dyadic Haar volume
 bound and Cauchy--Schwarz on the quotient. The finite rectangle
 decomposition permits the same estimate for the dual test.
 
-The module \path{GodementJacquetThetaMellin.lean} proves that the integrated
-full theta series equals its invertible part under absolute integrability,
-vanishing unipotent periods, and zero mean. It also proves the resulting
-Mellin reflection. The higher-rank instantiation still requires proofs of
-absolute convergence for the full cuspidal theta integrals and of the local
-and global Euler-product input.
+The full series also admits a product majorant, now including singular
+matrices. Let $\delta_A$ and $\delta_B$ be nonzero integers of $K$ that
+clear the finite-place matrix entries of $A$ and $B^{-1}$ respectively.
+Let $\delta_\Phi$ be a single nonzero integer that clears the finite-place
+entries of every matrix where $\Phi$ is nonzero. Regard these integers as
+principal scalar matrices. Write
+\[
+ H(U,V)=\max\!\left(1,\,
+   \left\| X\longmapsto U_\infty X V_\infty\right\|_{\mathrm{op}}\right),
+ \qquad H_L(A)=H(\delta_A A,1),\qquad
+ H_R(B)=H(1,B^{-1}\delta_B),
+\]
+where the operator acts on the real archimedean Minkowski coordinates.
+For each integer $m>\dim_{\mathbb R}M_n(K_\infty)$ there is a finite
+constant $C_\Phi\ge0$ such that
+\[
+ \sum_{P\in M_n(K)}|\Phi(A^{-1}z_tPB)|
+ \le C_\Phi\,
+   H(\delta_\Phi z_t^{-1},1)^m H_L(A)^m H_R(B)^m .
+\]
+The finite denominators place $\delta_A\delta_\Phi\delta_B P$
+in the integral matrix lattice whenever the summand is nonzero.
+The three operator norms control the archimedean distortion of that
+transport, and a Schwartz lattice sum bounds the transformed series.
+The left and right weights depend on the chosen denominators for the
+quotient variables alone. They also bound the finite rectangle expansion
+of $\widehat\Phi$, with a different factor depending on $t$.
+
+The module \path{GodementJacquetThetaWeightedCancellation.lean} proves
+that the full theta integral equals its invertible part for both tests
+when $c$ and $f$ have zero mean and vanishing unipotent periods, and when
+$|u|H_L^m$ and $|u|H_R^m$ lie in $L^1(D,\mu)$ for each $u=c,f$. These
+weighted hypotheses supply the absolute integrability required for
+Fubini. Together with the square-integrability conditions above, the
+two cancellation identities give entire Mellin continuation and
+reflection. Right invariance of an inner-regular Haar measure follows from a measurable
+fundamental domain of positive finite covolume. The higher-rank
+instantiation still requires verification of the weighted hypotheses
+for actual cuspidal data and of the local and global Euler products.
+\cite{GodementJacquet1972}
 
 The three classical equivalence declarations have the
 mathematical types

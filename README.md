@@ -159,10 +159,28 @@ as $O(e^{-\beta t})$ for every $\beta>0$ as $t\to+\infty$, given a measurable
 fundamental domain, bi-invariant Haar measure, and square-integrable quotient
 functions. [Fourier closure and dual decay](Robin1984/GRH/GodementJacquetThetaDualDecay.lean)
 
-The full theta cancellation and log Mellin reflection use absolute
-integrability, vanishing unipotent periods, and zero mean. The higher-rank
-instantiation still requires the corresponding absolute convergence of the
-full cuspidal theta integrals and the local and global Euler-product input.
+The full rational theta series, including singular matrices, has the
+bound
+$$
+\sum_{P\in M_n(K)} |\Phi(A^{-1}z_tPB)|
+\le C_\Phi(t) H_L(A)^m H_R(B)^m,\qquad
+m>\dim_{\mathbb R} M_n(K_\infty).
+$$
+Here $H(U,V)=\max(1,\|X\mapsto U_\infty X V_\infty\|_{\rm op})$ on the
+archimedean matrix coordinates. The weights are
+$H_L(A)=H(\delta_A A,1)$ and $H_R(B)=H(1,B^{-1}\delta_B)$, where the
+nonzero integers $\delta_A,\delta_B$ clear the finite entries of $A$
+and $B^{-1}$. The factor $C_\Phi(t)$ depends on the test and $t$.
+The same two weights apply to the Fourier dual.
+
+Lean proves cancellation of the singular terms for both tests when
+$c,f$ have zero mean and vanishing unipotent periods and both weighted
+absolute values $|u|H_L^m,|u|H_R^m$ belong to $L^1(D,\mu)$ for
+$u=c,f$. The resulting identities give entire Mellin continuation and
+reflection under the square-integrability assumptions above. The
+higher-rank instantiation needs the weighted bounds for actual
+cuspidal data and the local and global Euler products.
+[Weighted theta cancellation](Robin1984/GRH/GodementJacquetThetaWeightedCancellation.lean)
 [Generalized criteria](docs/GRH.md)
 
 ## Critical-line zeros and multiplicity
