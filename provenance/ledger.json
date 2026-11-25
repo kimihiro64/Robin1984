@@ -1686,6 +1686,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanIwasawa.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Gram-Schmidt orthonormalization and archimedean Iwasawa factorization for general linear groups over the real or complex field.",
+      "formalization_note": "Factors an invertible matrix into a positive-diagonal upper-triangular matrix and a unitary matrix, and proves uniqueness.",
+      "content_basis": "Computes the diagonal of the triangular coefficient matrix using the Gram-Schmidt residuals, reverses the adjoint factorization, and uses triangularity of inverses for uniqueness.",
+      "dependency_status": "Uses Mathlib orthonormal bases, Gram-Schmidt orthonormalization, and matrix group operations.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetEulerMellinContinuation.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The Godement-Jacquet global zeta unfolding and Euler product realization by test vectors.",
