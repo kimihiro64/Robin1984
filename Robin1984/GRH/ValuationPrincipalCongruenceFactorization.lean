@@ -570,18 +570,20 @@ private theorem valuationPrincipalCongruence_inv_order_support
   rw [hi, v.map_zero] at hOne
   exact zero_ne_one hOne
 
-/-- An ordered diagonal element multiplies its principal congruence double
-cosets without creating another double coset. -/
-theorem exists_valuationPrincipalCongruence_doubleCoset_factor_pow
+/-- Two diagonal elements ordered in the same valuation chamber multiply
+their principal congruence double cosets without creating another coset. -/
+theorem exists_valuationPrincipalCongruence_doubleCoset_factor_of_ordered
     {F V : Type*} [Field F] [LinearOrderedCommGroupWithZero V]
     (v : Valuation F V) (n : Nat) (r : V) (hr : r < 1)
-    (a : Units (Fin n -> F))
+    (a b : Units (Fin n -> F))
     (hOrdered : forall i j, i <= j -> v (a.val i) <= v (a.val j))
-    (m : Nat) (k : valuationPrincipalCongruenceSubgroup v n r) :
+    (hOrderedB : forall i j, i <= j -> v (b.val i) <= v (b.val j))
+    (k : valuationPrincipalCongruenceSubgroup v n r) :
     let K := valuationPrincipalCongruenceSubgroup v n r
     let t := (valuationDiagonalSection F n a).val
-    exists u l : K, t * k.val * t ^ m = u.val * (t * t ^ m) * l.val := by
-  intro K t
+    let s := (valuationDiagonalSection F n b).val
+    exists u l : K, t * k.val * s = u.val * (t * s) * l.val := by
+  intro K t s
   choose upper diagonal lower hFactor using
     exists_valuationPrincipalCongruence_upper_diagonal_lower v n r hr k.val.val k.property.2
   have hk : k.val = upper * diagonal * lower := Units.ext hFactor.1
@@ -636,47 +638,56 @@ theorem exists_valuationPrincipalCongruence_doubleCoset_factor_pow
     intro i j h
     subst j
     exact valuation_diagonalEntryRatio_le_one v n a i i le_rfl
-  have hInvT : (valuationDiagonalSection F n (Inv.inv a)).val = Inv.inv t := by
+  have hInvS : (valuationDiagonalSection F n (Inv.inv b)).val = Inv.inv s := by
     apply Units.ext
     rfl
-  have lowerConj (g : Units (Matrix (Fin n) (Fin n) F))
-      (hg : Membership.mem K g) (hs : forall i j, i < j -> g.val i j = 0) :
-      And (Membership.mem K (Inv.inv t * g * t))
-        (forall i j, i < j -> (Inv.inv t * g * t).val i j = 0) := by
-    constructor
-    next =>
-      have hRatio (i j : Fin n) (h : j <= i) :
-          v ((Inv.inv a).val i * (Inv.inv a).inv j) <= 1 := by
-        change v (a.inv i * a.val j) <= 1
-        rw [mul_comm]
-        exact valuation_diagonalEntryRatio_le_one v n a j i (hOrdered j i h)
-      have h := valuationPrincipalCongruenceSubgroup_conj_of_entrywise_contraction
-        v n r (Inv.inv a) (fun i j => j <= i) le_refl hRatio g hg
-        (fun i j h => hs i j (lt_of_not_ge h))
-        (fun i j h => lowerInv g hg hs i j (lt_of_not_ge h))
-      change Membership.mem K
-        ((valuationDiagonalSection F n (Inv.inv a)).val * g *
-          Inv.inv ((valuationDiagonalSection F n (Inv.inv a)).val)) at h
-      simpa only [hInvT, inv_inv] using h
-    next =>
-      intro i j hij
-      change (Matrix.diagonal a.inv * g.val * Matrix.diagonal a.val) i j = 0
-      rw [Matrix.mul_diagonal, Matrix.diagonal_mul, hs i j hij, mul_zero, zero_mul]
-  have lowPow (j : Nat) :
-      And (Membership.mem K (Inv.inv (t ^ j) * lower * t ^ j))
-        (forall i k, i < k -> (Inv.inv (t ^ j) * lower * t ^ j).val i k = 0) := by
-    induction j with
-    | zero => simpa only [pow_zero, inv_one, one_mul, mul_one] using And.intro hLowMem hLow
-    | succ j ih =>
-      have h := lowerConj (Inv.inv (t ^ j) * lower * t ^ j) ih.1 ih.2
-      simpa only [pow_succ, mul_inv_rev, mul_assoc] using h
+  have hLowConj : Membership.mem K (Inv.inv s * lower * s) := by
+    have hRatio (i j : Fin n) (h : j <= i) :
+        v ((Inv.inv b).val i * (Inv.inv b).inv j) <= 1 := by
+      change v (b.inv i * b.val j) <= 1
+      rw [mul_comm]
+      exact valuation_diagonalEntryRatio_le_one v n b j i (hOrderedB j i h)
+    have h := valuationPrincipalCongruenceSubgroup_conj_of_entrywise_contraction
+      v n r (Inv.inv b) (fun i j => j <= i) le_refl hRatio lower hLowMem
+      (fun i j h => hLow i j (lt_of_not_ge h))
+      (fun i j h => lowerInv lower hLowMem hLow i j (lt_of_not_ge h))
+    change Membership.mem K
+      ((valuationDiagonalSection F n (Inv.inv b)).val * lower *
+        Inv.inv ((valuationDiagonalSection F n (Inv.inv b)).val)) at h
+    simpa only [hInvS, inv_inv] using h
   let u : K := Subtype.mk ((t * upper * Inv.inv t) * (t * diagonal * Inv.inv t))
     (K.mul_mem hUpConj hDiagConj)
-  let l : K := Subtype.mk (Inv.inv (t ^ m) * lower * t ^ m) (lowPow m).1
+  let l : K := Subtype.mk (Inv.inv s * lower * s) hLowConj
   refine Exists.intro u (Exists.intro l ?_)
-  change t * k.val * t ^ m =
+  change t * k.val * s =
     ((t * upper * Inv.inv t) * (t * diagonal * Inv.inv t)) *
-      (t * t ^ m) * (Inv.inv (t ^ m) * lower * t ^ m)
+      (t * s) * (Inv.inv s * lower * s)
   simp [hk, mul_assoc]
+
+/-- The ordered diagonal double-coset identity applied to powers of a
+single diagonal element. -/
+theorem exists_valuationPrincipalCongruence_doubleCoset_factor_pow
+    {F V : Type*} [Field F] [LinearOrderedCommGroupWithZero V]
+    (v : Valuation F V) (n : Nat) (r : V) (hr : r < 1)
+    (a : Units (Fin n -> F))
+    (hOrdered : forall i j, i <= j -> v (a.val i) <= v (a.val j))
+    (m : Nat) (k : valuationPrincipalCongruenceSubgroup v n r) :
+    let K := valuationPrincipalCongruenceSubgroup v n r
+    let t := (valuationDiagonalSection F n a).val
+    exists u l : K, t * k.val * t ^ m = u.val * (t * t ^ m) * l.val := by
+  intro K t
+  have hOrderedPow (i j : Fin n) (hij : i <= j) :
+      v ((a ^ m).val i) <= v ((a ^ m).val j) := by
+    rw [Units.val_pow_eq_pow_val, Pi.pow_apply, Pi.pow_apply, map_pow, map_pow]
+    exact pow_le_pow_left' (hOrdered i j hij) m
+  have ht : (valuationDiagonalSection F n (a ^ m)).val = t ^ m :=
+    map_pow ((valuationUpperTriangularSubgroup F n).subtype.comp
+      (valuationDiagonalSection F n)) a m
+  have h := exists_valuationPrincipalCongruence_doubleCoset_factor_of_ordered
+    v n r hr a (a ^ m) hOrdered hOrderedPow k
+  change exists u l : K,
+    t * k.val * (valuationDiagonalSection F n (a ^ m)).val =
+      u.val * (t * (valuationDiagonalSection F n (a ^ m)).val) * l.val at h
+  simpa only [ht] using h
 
 end Robin1984.GRH

@@ -2658,6 +2658,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetOrderedDiagonalSeries.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Cayley-Hamilton and the rational generating series of a linear recurrence.",
+      "formalization_note": "Proves multiplicativity of compression on ordered diagonal units and an affine-ray generating series with a denominator fixed by the direction operator.",
+      "content_basis": "Combines the ordered two-element double-coset law with subgroup averaging. Cayley-Hamilton gives a uniform recurrence on every translated ray, and summing the recurrence gives the numerator and denominator identity.",
+      "dependency_status": "Uses principal congruence factorization and subgroup averaging. The equality holds wherever the weighted coefficient series is summable.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/ValuationPrincipalCongruenceFactorization.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Block Gaussian elimination at a unit pivot and double cosets of principal congruence subgroups.",
