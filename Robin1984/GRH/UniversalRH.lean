@@ -10,16 +10,16 @@ import Mathlib.Tactic.Linarith
 
 - Classification: **Standard mathematical formalization**.
 - Mathematical source: The condition that the full zero set of a complex function is contained in a vertical line.
-- Formalization note: Defines the line condition for all functions from Complex to Complex and proves the uniqueness of a critical line as the midpoint of the zero strip.
+- Formalization note: Defines URH for continuous functions with infinitely many isolated zeros and proves the critical line and finite triangular equivalences.
 - PROVENANCE-END
 -/
 
 /-!
 # The Universal Riemann Hypothesis
 
-These predicates describe the full zero set of any complex function. An
-entire or completed function can be supplied whenever a particular
-application requires it.
+The Universal Riemann Hypothesis concerns continuous complex functions
+with infinitely many distinct, isolated zeros. The finite triangular
+bound describes zero locations for any complex function.
 -/
 
 set_option autoImplicit false
@@ -30,25 +30,37 @@ namespace Robin1984.GRH
 def HasInfiniteZeros (F : Complex -> Complex) : Prop :=
   Set.Infinite {z : Complex | F z = 0}
 
+/-- Every zero has an open disk containing no other zero. -/
+def HasIsolatedZeros (F : Complex -> Complex) : Prop :=
+  forall z : Complex, F z = 0 -> exists r : Real, 0 < r /\
+    forall y : Complex, dist y z < r -> F y = 0 -> y = z
+
+/-- The domain of the Universal Riemann Hypothesis. Continuity and isolation
+give a local winding number at each zero. Any sign, including zero, is allowed. -/
+structure URHAdmissible (F : Complex -> Complex) : Prop where
+  continuous : Continuous F
+  infinite_zeros : HasInfiniteZeros F
+  isolated_zeros : HasIsolatedZeros F
+
 /-- All zeros of the complex function lie on the specified vertical line. -/
 def ZerosOnLine (F : Complex -> Complex) (c : Real) : Prop :=
   forall z : Complex, F z = 0 -> z.re = c
 
-/-- The Universal Riemann Hypothesis at `c` says that the function has
-infinitely many distinct zeros and every zero has real part `c`. -/
+/-- The Universal Riemann Hypothesis at `c` says that the function belongs
+to the URH domain and every zero has real part `c`. -/
 def UniversalRiemannHypothesisAt (F : Complex -> Complex) (c : Real) : Prop :=
-  HasInfiniteZeros F /\ ZerosOnLine F c
+  URHAdmissible F /\ ZerosOnLine F c
 
-/-- A complex function satisfies the Universal Riemann Hypothesis if
-its infinite zero set lies on a vertical line. -/
+/-- An admissible complex function satisfies the Universal Riemann
+Hypothesis if its full zero set lies on a vertical line. -/
 def UniversalRiemannHypothesis (F : Complex -> Complex) : Prop :=
   exists c : Real, UniversalRiemannHypothesisAt F c
 
-/-- The Universal Riemann Hypothesis is equivalent to infinitely many
-zeros with equal real parts for every pair. -/
+/-- On the URH domain, the Universal Riemann Hypothesis is equivalent to
+equality of the real parts for every pair of zeros. -/
 theorem universalRiemannHypothesis_iff_zero_realParts_eq (F : Complex -> Complex) :
     UniversalRiemannHypothesis F <->
-      HasInfiniteZeros F /\
+      URHAdmissible F /\
         (forall z w : Complex, F z = 0 -> F w = 0 -> z.re = w.re) := by
   constructor
   next =>
@@ -57,7 +69,7 @@ theorem universalRiemannHypothesis_iff_zero_realParts_eq (F : Complex -> Complex
     exact And.intro hc.1 (fun z w hz hw => (hc.2 z hz).trans (hc.2 w hw).symm)
   next =>
     intro h
-    choose z hz using Set.Infinite.nonempty h.1
+    choose z hz using Set.Infinite.nonempty h.1.infinite_zeros
     exact Exists.intro z.re (And.intro h.1 (fun y hy => h.2 y z hy hz))
 
 /-- The vertical line of a function satisfying URH is unique. -/
@@ -65,7 +77,7 @@ theorem universalRiemannHypothesisAt_line_unique
     {F : Complex -> Complex} {c d : Real}
     (hc : UniversalRiemannHypothesisAt F c) (hd : UniversalRiemannHypothesisAt F d) :
     c = d := by
-  choose z hz using Set.Infinite.nonempty hc.1
+  choose z hz using Set.Infinite.nonempty hc.1.infinite_zeros
   exact (hc.2 z hz).symm.trans (hd.2 z hz)
 
 /-- A function with finitely many distinct zero locations cannot satisfy URH. -/
@@ -74,17 +86,16 @@ theorem not_universalRiemannHypothesis_of_finiteZeros
     Not (UniversalRiemannHypothesis F) := by
   intro hURH
   choose c hc using hURH
-  exact hc.1 h
+  exact hc.1.infinite_zeros h
 
 /-- Real parts of all zeros of a complex function. -/
 def complexZeroRealParts (F : Complex -> Complex) : Set Real :=
   {r : Real | exists z : Complex, F z = 0 /\ z.re = r}
 
-/-- A critical line is a vertical reflection axis for an infinite zero set
-whose real parts are bounded. This predicate uses zero
-locations, so it is defined even for a function without analyticity. -/
+/-- A critical line is a vertical reflection axis for the zeros of an
+admissible function whose zero real parts are bounded. -/
 def HasCriticalLineAt (F : Complex -> Complex) (c : Real) : Prop :=
-  HasInfiniteZeros F /\
+  URHAdmissible F /\
     (exists w : Real, 0 <= w /\
       forall z : Complex, F z = 0 -> abs (z.re - c) <= w) /\
     (forall z : Complex, F z = 0 -> F (Complex.mk (2 * c - z.re) z.im) = 0)
@@ -95,7 +106,7 @@ theorem HasCriticalLineAt.eq_midpoint {F : Complex -> Complex} {c : Real}
     (h : HasCriticalLineAt F c) :
     c = (sInf (complexZeroRealParts F) + sSup (complexZeroRealParts F)) / 2 := by
   let S := complexZeroRealParts F
-  choose z0 hz using Set.Infinite.nonempty h.1
+  choose z0 hz using Set.Infinite.nonempty h.1.infinite_zeros
   choose w hw using h.2.1
   have hN : S.Nonempty :=
     Exists.intro z0.re (Exists.intro z0 (And.intro hz rfl))
@@ -242,11 +253,11 @@ theorem finiteTriangularZeroBound_iff (F : Complex -> Complex) (c w : Real) :
     exact abs_le.mpr (And.intro (by linarith) (by linarith))
 
 /-- The Universal Riemann Hypothesis is the width-zero triangular bound
-together with the existence of infinitely many distinct zero locations. -/
+together with admissibility of the function. -/
 theorem universalRiemannHypothesisAt_iff_finiteTriangularZeroBound
     (F : Complex -> Complex) (c : Real) :
     UniversalRiemannHypothesisAt F c <->
-      HasInfiniteZeros F /\ FiniteTriangularZeroBound F c 0 := by
+      URHAdmissible F /\ FiniteTriangularZeroBound F c 0 := by
   rw [finiteTriangularZeroBound_iff F c 0]
   constructor
   next =>

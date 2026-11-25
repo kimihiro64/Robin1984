@@ -2589,8 +2589,8 @@
       "path": "Robin1984/GRH/UniversalRH.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The condition that the full zero set of a complex function is contained in a vertical line.",
-      "formalization_note": "Defines the line condition for all functions from Complex to Complex and proves the uniqueness of a critical line as the midpoint of the zero strip.",
-      "content_basis": "Checked infinite distinct zero locations, equality of real parts for every pair, and the effect of reflection on the zero strip endpoints.",
+      "formalization_note": "Defines URH for continuous functions with infinitely many isolated zeros and proves the critical line and finite triangular equivalences.",
+      "content_basis": "Checked continuity, isolation and infinite distinct zeros at the URH boundary, reflection of the zero strip, and the finite triangular bound for arbitrary maps.",
       "dependency_status": "Mathlib complex numbers and elementary logic.",
       "reviewed": true
     },
