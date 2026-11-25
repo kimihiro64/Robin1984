@@ -1,3 +1,5 @@
+import Mathlib.MeasureTheory.Integral.Pi
+import Mathlib.MeasureTheory.Measure.Haar.Unique
 import Mathlib.Topology.Algebra.Group.Units
 import Robin1984.GRH.HeckeAdeleLattice
 
@@ -681,5 +683,372 @@ def restrictedProductPrincipalSubgroupChart (S : Set J) :
       exact continuous_subtype_val.comp ((continuous_apply (Subtype.mk p hp)).comp continuous_snd)
 
 end PrincipalSubgroupChart
+
+section FiniteMatrixHaarCharts
+
+open MeasureTheory MeasureTheory.Measure
+
+variable (K : Type*) [Field K] [NumberField K]
+
+local notation "P" => HeightOneSpectrum (RingOfIntegers K)
+local notation "FA" => FiniteAdeleRing (RingOfIntegers K) K
+
+/-- The matrix-unit coordinates in a finite-place chart. Each exceptional
+place contributes the whole local group, and each other place contributes
+its integral subgroup. -/
+abbrev FiniteAdeleMatrixHaarChart (n : Nat) (S : Finset P) :=
+  Prod ((p : (S : Set P)) -> Units (Matrix (Fin n) (Fin n) (p.val.adicCompletion K)))
+    ((p : {q : P // Not (Membership.mem (S : Set P) q)}) ->
+      finiteLocalMatrixUnitSubgroup K n p.val)
+
+omit [NumberField K] in
+private theorem cofinite_le_principal_finitePlaceComplement (S : Finset P) :
+    Filter.cofinite <= Filter.principal (Compl.compl (S : Set P)) := by
+  apply Filter.le_principal_iff.mpr
+  apply Filter.mem_cofinite.mpr
+  rw [compl_compl]
+  exact S.finite_toSet
+
+private def finiteAdeleMatrixHaarChartIntoRestrictedProduct (n : Nat) (S : Finset P) :
+    MonoidHom (FiniteAdeleMatrixHaarChart K n S)
+      (finiteLocalMatrixUnitProduct K n Filter.cofinite) := by
+  let hS := cofinite_le_principal_finitePlaceComplement K S
+  let U := finiteLocalMatrixUnitSubgroup K n
+  let T := fun p : P => Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))
+  let c := restrictedProductPrincipalSubgroupChart T U (S : Set P)
+  let F := Filter.principal (Compl.compl (S : Set P))
+  let incl : MonoidHom (finiteLocalMatrixUnitProduct K n F)
+      (finiteLocalMatrixUnitProduct K n Filter.cofinite) :=
+    { toFun := RestrictedProduct.inclusion T (fun p => (U p : Set (T p))) hS
+      map_one' := rfl
+      map_mul' := fun _ _ => rfl }
+  exact incl.comp c.symm.toMonoidHom
+
+/-- Reassemble the chart coordinates into a finite adelic matrix unit. -/
+def finiteAdeleMatrixHaarChartEmbedding (n : Nat) (S : Finset P) :
+    MonoidHom (FiniteAdeleMatrixHaarChart K n S)
+      (Units (Matrix (Fin n) (Fin n) FA)) :=
+  (finiteAdeleMatrixUnitsRestrictedProductHomeomorph K n).symm.toMonoidHom.comp
+    (finiteAdeleMatrixHaarChartIntoRestrictedProduct K n S)
+
+/-- The finite-place product chart identifies an open subset of the finite
+adelic matrix-unit group. -/
+theorem isOpenEmbedding_finiteAdeleMatrixHaarChartEmbedding (n : Nat) (S : Finset P) :
+    Topology.IsOpenEmbedding (finiteAdeleMatrixHaarChartEmbedding K n S) := by
+  let U := finiteLocalMatrixUnitSubgroup K n
+  let T := fun p : P => Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))
+  let c := restrictedProductPrincipalSubgroupChart T U (S : Set P)
+  let d := finiteAdeleMatrixUnitsRestrictedProductHomeomorph K n
+  let hS := cofinite_le_principal_finitePlaceComplement K S
+  have hU (p : P) : IsOpen (U p : Set (T p)) := isOpen_finiteLocalMatrixUnitSubgroup K n p
+  have hIncl := RestrictedProduct.isOpenEmbedding_inclusion_principal
+    (R := T) (A := fun p => (U p : Set (T p))) hU hS
+  exact d.symm.toHomeomorph.isOpenEmbedding.comp
+    (hIncl.comp c.symm.toHomeomorph.isOpenEmbedding)
+
+/-- The pullback of finite adelic Haar measure by a product chart is Haar. -/
+theorem isHaarMeasure_comap_finiteAdeleMatrixHaarChartEmbedding
+    (n : Nat) (S : Finset P)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) FA))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) FA))]
+    [MeasurableMul (Units (Matrix (Fin n) (Fin n) FA))]
+    [MeasurableSpace (FiniteAdeleMatrixHaarChart K n S)]
+    [BorelSpace (FiniteAdeleMatrixHaarChart K n S)]
+    [MeasurableMul (FiniteAdeleMatrixHaarChart K n S)]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) FA))) [mu.IsHaarMeasure] :
+    (mu.comap (finiteAdeleMatrixHaarChartEmbedding K n S)).IsHaarMeasure :=
+  IsHaarMeasure.comap (mH := inferInstance) mu
+    (isOpenEmbedding_finiteAdeleMatrixHaarChartEmbedding K n S)
+
+
+/-- At an exceptional place the assembled matrix evaluates to the
+unrestricted chart coordinate. -/
+theorem finiteAdeleMatrixHaarChartEval_of_mem (n : Nat) (S : Finset P)
+    (x : FiniteAdeleMatrixHaarChart K n S) (p : (S : Set P)) :
+    Units.map (finiteAdeleMatrixEval K n p.val) (finiteAdeleMatrixHaarChartEmbedding K n S x) =
+      x.1 p := by
+  let T := fun p : P => Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))
+  let c := restrictedProductPrincipalSubgroupChart T (finiteLocalMatrixUnitSubgroup K n) (S : Set P)
+  let d := finiteAdeleMatrixUnitsRestrictedProductHomeomorph K n
+  let z := finiteAdeleMatrixHaarChartIntoRestrictedProduct K n S x
+  have hd := congrArg (fun w : finiteLocalMatrixUnitProduct K n Filter.cofinite => w p.val)
+    (d.apply_symm_apply z)
+  have hc := congrArg (fun w : FiniteAdeleMatrixHaarChart K n S => w.1 p)
+    (c.apply_symm_apply x)
+  exact hd.trans hc
+
+/-- Outside the exceptional places the assembled matrix evaluates to the
+integral chart coordinate. -/
+theorem finiteAdeleMatrixHaarChartEval_of_notMem (n : Nat) (S : Finset P)
+    (x : FiniteAdeleMatrixHaarChart K n S) (p : {q : P // Not (Membership.mem (S : Set P) q)}) :
+    Units.map (finiteAdeleMatrixEval K n p.val) (finiteAdeleMatrixHaarChartEmbedding K n S x) =
+      (x.2 p).val := by
+  let T := fun p : P => Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))
+  let c := restrictedProductPrincipalSubgroupChart T (finiteLocalMatrixUnitSubgroup K n) (S : Set P)
+  let d := finiteAdeleMatrixUnitsRestrictedProductHomeomorph K n
+  let z := finiteAdeleMatrixHaarChartIntoRestrictedProduct K n S x
+  have hd := congrArg (fun w : finiteLocalMatrixUnitProduct K n Filter.cofinite => w p.val)
+    (d.apply_symm_apply z)
+  have hc := congrArg (fun w : FiniteAdeleMatrixHaarChart K n S => (w.2 p).val)
+    (c.apply_symm_apply x)
+  exact hd.trans hc
+
+/-- A finite adelic matrix unit is integral exactly when it and its inverse
+have integral entries at every finite place. -/
+theorem mem_integralFiniteAdeleMatrixGroup_iff_forall_local (n : Nat)
+    (g : Units (Matrix (Fin n) (Fin n) FA)) :
+    Membership.mem (integralFiniteAdeleMatrixGroup K n) g <->
+      forall p : P, Membership.mem (finiteLocalMatrixUnitSubgroup K n p)
+        (Units.map (finiteAdeleMatrixEval K n p) g) := by
+  constructor
+  next =>
+    intro hg p
+    exact And.intro (fun i j => hg.1 i j p) (fun i j => hg.2 i j p)
+  next =>
+    intro h
+    exact And.intro (fun i j p => (h p).1 i j) (fun i j p => (h p).2 i j)
+
+/-- The integral part of a chart restricts its exceptional coordinates
+to the local integral subgroups. -/
+def finiteAdeleMatrixHaarChartIntegralSet (n : Nat) (S : Finset P) :
+    Set (FiniteAdeleMatrixHaarChart K n S) :=
+  Set.prod (Set.pi Set.univ
+    (fun p : (S : Set P) => (finiteLocalMatrixUnitSubgroup K n p.val :
+      Set (Units (Matrix (Fin n) (Fin n) (p.val.adicCompletion K)))))) Set.univ
+
+/-- The chart coordinates of the global integral subgroup are integral
+at all exceptional places. -/
+theorem preimage_integralFiniteAdeleMatrixGroup_finiteAdeleMatrixHaarChartEmbedding
+    (n : Nat) (S : Finset P) :
+    Set.preimage (finiteAdeleMatrixHaarChartEmbedding K n S)
+      (integralFiniteAdeleMatrixGroup K n : Set (Units (Matrix (Fin n) (Fin n) FA))) =
+      finiteAdeleMatrixHaarChartIntegralSet K n S := by
+  ext x
+  change Membership.mem (integralFiniteAdeleMatrixGroup K n)
+    (finiteAdeleMatrixHaarChartEmbedding K n S x) <-> _
+  rw [mem_integralFiniteAdeleMatrixGroup_iff_forall_local K n]
+  constructor
+  next =>
+    intro h
+    refine And.intro ?_ (Set.mem_univ _)
+    intro p hp
+    have hLocal := h p.val
+    rwa [finiteAdeleMatrixHaarChartEval_of_mem K n S x p] at hLocal
+  next =>
+    intro h p
+    by_cases hp : Membership.mem (S : Set P) p
+    next =>
+      rw [finiteAdeleMatrixHaarChartEval_of_mem K n S x (Subtype.mk p hp)]
+      exact h.1 (Subtype.mk p hp) (Set.mem_univ _)
+    next =>
+      rw [finiteAdeleMatrixHaarChartEval_of_notMem K n S x (Subtype.mk p hp)]
+      exact (x.2 (Subtype.mk p hp)).property
+
+/-- A matrix unit belongs to a chart exactly when its local coordinates
+are integral outside the exceptional places. -/
+theorem mem_range_finiteAdeleMatrixHaarChartEmbedding_iff (n : Nat) (S : Finset P)
+    (g : Units (Matrix (Fin n) (Fin n) FA)) :
+    Membership.mem (Set.range (finiteAdeleMatrixHaarChartEmbedding K n S)) g <->
+      forall p : P, Not (Membership.mem (S : Set P) p) ->
+        Membership.mem (finiteLocalMatrixUnitSubgroup K n p)
+          (Units.map (finiteAdeleMatrixEval K n p) g) := by
+  constructor
+  next =>
+    intro h p hp
+    choose x hx using h
+    rw [<- hx, finiteAdeleMatrixHaarChartEval_of_notMem K n S x (Subtype.mk p hp)]
+    exact (x.2 (Subtype.mk p hp)).property
+  next =>
+    intro h
+    let T := fun p : P => Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))
+    let U := finiteLocalMatrixUnitSubgroup K n
+    let c := restrictedProductPrincipalSubgroupChart T U (S : Set P)
+    let d := finiteAdeleMatrixUnitsRestrictedProductHomeomorph K n
+    let hS := cofinite_le_principal_finitePlaceComplement K S
+    let w : finiteLocalMatrixUnitProduct K n (Filter.principal (Compl.compl (S : Set P))) :=
+      Subtype.mk (fun p => d g p) (Filter.eventually_principal.mpr h)
+    refine Exists.intro (c w) ?_
+    change d.symm (RestrictedProduct.inclusion T (fun p => (U p : Set (T p))) hS
+      (c.symm (c w))) = g
+    rw [c.symm_apply_apply]
+    exact d.symm_apply_apply g
+
+/-- Allowing more exceptional places enlarges the chart image. -/
+theorem monotone_range_finiteAdeleMatrixHaarChartEmbedding (n : Nat) :
+    Monotone (fun S : Finset P => Set.range (finiteAdeleMatrixHaarChartEmbedding K n S)) := by
+  intro S T hST g hg
+  have h := (mem_range_finiteAdeleMatrixHaarChartEmbedding_iff K n S g).mp hg
+  exact (mem_range_finiteAdeleMatrixHaarChartEmbedding_iff K n T g).mpr
+    (fun p hp => h p (fun hs => hp (hST hs)))
+
+/-- The finite-place chart images cover the finite adelic matrix-unit group. -/
+theorem iUnion_range_finiteAdeleMatrixHaarChartEmbedding (n : Nat) :
+    Set.iUnion (fun S : Finset P => Set.range (finiteAdeleMatrixHaarChartEmbedding K n S)) =
+      (Set.univ : Set (Units (Matrix (Fin n) (Fin n) FA))) := by
+  ext g
+  constructor
+  next =>
+    intro _
+    exact Set.mem_univ g
+  next =>
+    intro _
+    let z := finiteAdeleMatrixUnitsRestrictedProductHomeomorph K n g
+    let Q : Set P := {p | Membership.mem (finiteLocalMatrixUnitSubgroup K n p) (z p)}
+    have hQ : (Compl.compl Q).Finite := Filter.mem_cofinite.mp z.2
+    apply Set.mem_iUnion.mpr
+    refine Exists.intro hQ.toFinset ?_
+    apply (mem_range_finiteAdeleMatrixHaarChartEmbedding_iff K n hQ.toFinset g).mpr
+    intro p hp
+    by_contra h
+    apply hp
+    exact (Set.Finite.mem_toFinset hQ).mpr h
+
+/-- The integral part of each chart maps onto the whole integral
+finite adelic matrix subgroup. -/
+theorem image_finiteAdeleMatrixHaarChartIntegralSet (n : Nat) (S : Finset P) :
+    Set.image (finiteAdeleMatrixHaarChartEmbedding K n S)
+      (finiteAdeleMatrixHaarChartIntegralSet K n S) =
+      (integralFiniteAdeleMatrixGroup K n : Set (Units (Matrix (Fin n) (Fin n) FA))) := by
+  have hRange : (integralFiniteAdeleMatrixGroup K n : Set (Units (Matrix (Fin n) (Fin n) FA))) <=
+      Set.range (finiteAdeleMatrixHaarChartEmbedding K n S) := by
+    intro g hg
+    exact (mem_range_finiteAdeleMatrixHaarChartEmbedding_iff K n S g).mpr
+      (fun p _ => (mem_integralFiniteAdeleMatrixGroup_iff_forall_local K n g).mp hg p)
+  rw [<- preimage_integralFiniteAdeleMatrixGroup_finiteAdeleMatrixHaarChartEmbedding K n S,
+    Set.image_preimage_eq_inter_range, Set.inter_eq_self_of_subset_left hRange]
+
+/-- Haar measure normalized on the global integral subgroup pulls back
+to the product of the individually normalized local Haar measures at
+the exceptional places and Haar probability measure on the tail. -/
+theorem comap_finiteAdeleMatrixHaarChartEmbedding_eq_pi_prod
+    (n : Nat) (S : Finset P) [Fintype (S : Set P)]
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) FA))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) FA))]
+    [MeasurableMul (Units (Matrix (Fin n) (Fin n) FA))]
+    [forall p : (S : Set P), MeasurableSpace
+      (Units (Matrix (Fin n) (Fin n) (p.val.adicCompletion K)))]
+    [forall p : (S : Set P), MeasurableMul
+      (Units (Matrix (Fin n) (Fin n) (p.val.adicCompletion K)))]
+    [MeasurableSpace ((p : {q : P // Not (Membership.mem (S : Set P) q)}) ->
+      finiteLocalMatrixUnitSubgroup K n p.val)]
+    [MeasurableMul ((p : {q : P // Not (Membership.mem (S : Set P) q)}) ->
+      finiteLocalMatrixUnitSubgroup K n p.val)]
+    [BorelSpace (FiniteAdeleMatrixHaarChart K n S)]
+    [LocallyCompactSpace (FiniteAdeleMatrixHaarChart K n S)]
+    [SecondCountableTopology (FiniteAdeleMatrixHaarChart K n S)]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) FA))) [mu.IsHaarMeasure]
+    (hMu : mu (integralFiniteAdeleMatrixGroup K n :
+      Set (Units (Matrix (Fin n) (Fin n) FA))) = 1)
+    (localHaar : forall p : (S : Set P),
+      Measure (Units (Matrix (Fin n) (Fin n) (p.val.adicCompletion K))))
+    [forall p, (localHaar p).IsHaarMeasure] [forall p, SigmaFinite (localHaar p)]
+    (hLocal : forall p, localHaar p (finiteLocalMatrixUnitSubgroup K n p.val :
+      Set (Units (Matrix (Fin n) (Fin n) (p.val.adicCompletion K)))) = 1)
+    (tailHaar : Measure ((p : {q : P // Not (Membership.mem (S : Set P) q)}) ->
+      finiteLocalMatrixUnitSubgroup K n p.val))
+    [tailHaar.IsHaarMeasure] [IsProbabilityMeasure tailHaar] :
+    mu.comap (finiteAdeleMatrixHaarChartEmbedding K n S) =
+      (Measure.pi localHaar).prod tailHaar := by
+  let D := FiniteAdeleMatrixHaarChart K n S
+  let E := finiteAdeleMatrixHaarChartEmbedding K n S
+  let W := finiteAdeleMatrixHaarChartIntegralSet K n S
+  let rho : Measure D := mu.comap E
+  let eta : Measure D := (Measure.pi localHaar).prod tailHaar
+  let _ : rho.IsHaarMeasure := isHaarMeasure_comap_finiteAdeleMatrixHaarChartEmbedding K n S mu
+  let _ : eta.IsHaarMeasure := inferInstanceAs (((Measure.pi localHaar).prod tailHaar).IsHaarMeasure)
+  have hRho : rho W = 1 := by
+    change (mu.comap E) W = 1
+    rw [(isOpenEmbedding_finiteAdeleMatrixHaarChartEmbedding K n S).measurableEmbedding.comap_apply,
+      image_finiteAdeleMatrixHaarChartIntegralSet K n S, hMu]
+  have hEta : eta W = 1 := by
+    let V := Set.pi Set.univ (fun p : (S : Set P) =>
+      (finiteLocalMatrixUnitSubgroup K n p.val :
+        Set (Units (Matrix (Fin n) (Fin n) (p.val.adicCompletion K)))))
+    have hV : (Measure.pi localHaar) V = 1 := by
+      dsimp only [V]
+      rw [Measure.pi_pi]
+      simp only [hLocal, Finset.prod_const_one]
+    change ((Measure.pi localHaar).prod tailHaar) (Set.prod V Set.univ) = 1
+    calc
+      _ = (Measure.pi localHaar) V * tailHaar Set.univ := Measure.prod_prod _ _
+      _ = 1 := by rw [hV, IsProbabilityMeasure.measure_univ, one_mul]
+  let k := haarScalarFactor rho eta
+  have hScale : rho = SMul.smul k eta := isMulLeftInvariant_eq_smul rho eta
+  have hK : k = 1 := by
+    apply ENNReal.coe_eq_one.mp
+    calc
+      (k : ENNReal) = (k : ENNReal) * eta W := by rw [hEta, mul_one]
+      _ = (SMul.smul k eta) W := (Measure.coe_nnreal_smul_apply k eta W).symm
+      _ = rho W := (congrArg (fun M : Measure D => M W) hScale).symm
+      _ = 1 := hRho
+  exact hScale.trans (by rw [hK]; exact one_smul NNReal eta)
+
+
+/-- On a chart with product measure, the integral of a function that
+factors through the exceptional coordinates is the product of the
+local integrals. Local integrability implies integrability on the chart. -/
+theorem integrableOnAndSetIntegral_finiteAdeleMatrixHaarChartEmbedding
+    {k : Type*} [RCLike k] (n : Nat) (S : Finset P) [Fintype (S : Set P)]
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) FA))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) FA))]
+    [forall p : (S : Set P), MeasurableSpace
+      (Units (Matrix (Fin n) (Fin n) (p.val.adicCompletion K)))]
+    [MeasurableSpace ((p : {q : P // Not (Membership.mem (S : Set P) q)}) ->
+      finiteLocalMatrixUnitSubgroup K n p.val)]
+    [BorelSpace (FiniteAdeleMatrixHaarChart K n S)]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) FA)))
+    (localHaar : forall p : (S : Set P),
+      Measure (Units (Matrix (Fin n) (Fin n) (p.val.adicCompletion K))))
+    [forall p, SigmaFinite (localHaar p)]
+    (tailHaar : Measure ((p : {q : P // Not (Membership.mem (S : Set P) q)}) ->
+      finiteLocalMatrixUnitSubgroup K n p.val))
+    [IsProbabilityMeasure tailHaar]
+    (hMeasure : mu.comap (finiteAdeleMatrixHaarChartEmbedding K n S) =
+      (Measure.pi localHaar).prod tailHaar)
+    (F : Units (Matrix (Fin n) (Fin n) FA) -> k)
+    (f : forall p : (S : Set P), Units (Matrix (Fin n) (Fin n) (p.val.adicCompletion K)) -> k)
+    (hInt : forall p, Integrable (f p) (localHaar p))
+    (hFactor : forall x : FiniteAdeleMatrixHaarChart K n S,
+      F (finiteAdeleMatrixHaarChartEmbedding K n S x) =
+        Finset.univ.prod (fun p => f p (x.1 p))) :
+    let S' := Set.range (finiteAdeleMatrixHaarChartEmbedding K n S)
+    And (IntegrableOn F S' mu) (integral (mu.restrict S') F =
+      Finset.univ.prod (fun p => integral (localHaar p) (f p))) := by
+  let D := FiniteAdeleMatrixHaarChart K n S
+  let E := finiteAdeleMatrixHaarChartEmbedding K n S
+  let nu := Measure.pi localHaar
+  let m : Measure D := nu.prod tailHaar
+  let B (x : (p : (S : Set P)) -> Units (Matrix (Fin n) (Fin n) (p.val.adicCompletion K))) :=
+    Finset.univ.prod (fun p => f p (x p))
+  have hE : MeasurableEmbedding E :=
+    (isOpenEmbedding_finiteAdeleMatrixHaarChartEmbedding K n S).measurableEmbedding
+  have hPres : MeasurePreserving E m (mu.restrict (Set.range E)) :=
+    { measurable := hE.measurable
+      map_eq := by
+        change Measure.map E ((Measure.pi localHaar).prod tailHaar) =
+          mu.restrict (Set.range E)
+        rw [<- hMeasure]
+        exact hE.map_comap mu }
+  have hFst : MeasurePreserving (Prod.fst : D -> _) m nu := measurePreserving_fst
+  have hB : Integrable B nu := Integrable.fintype_prod_dep hInt
+  have hF : Function.comp F E = Function.comp B (Prod.fst : D -> _) := funext hFactor
+  have hIntComp : Integrable (Function.comp F E) m := by
+    rw [hF]
+    exact hFst.integrable_comp_of_integrable hB
+  have hStrong : AEStronglyMeasurable B (Measure.map Prod.fst m) := by
+    rw [hFst.map_eq]
+    exact hB.aestronglyMeasurable
+  refine And.intro ((hPres.integrable_comp_emb hE).mp hIntComp) ?_
+  calc
+    integral (mu.restrict (Set.range E)) F = integral m (Function.comp F E) :=
+      (hPres.integral_comp hE F).symm
+    _ = integral m (Function.comp B Prod.fst) := by rw [hF]
+    _ = integral (Measure.map Prod.fst m) B :=
+      (integral_map hFst.measurable.aemeasurable hStrong).symm
+    _ = integral nu B := by rw [hFst.map_eq]
+    _ = Finset.univ.prod (fun p => integral (localHaar p) (f p)) :=
+      integral_fintype_prod_eq_prod f
+
+end FiniteMatrixHaarCharts
 
 end Robin1984.GRH
