@@ -176,18 +176,17 @@ private theorem mul_norm_cpow_lt_one_of_log_threshold
   rw [hn, <- Real.exp_log hM, <- Real.exp_add]
   exact (Real.exp_lt_exp.mpr hExp).trans_eq Real.exp_zero
 
-/-- For a locally constant compactly supported test and a smooth matrix
-coefficient, finite-dimensional principal congruence fixed spaces ensure
-absolute convergence of the local zeta integral on a right half-plane.
-Its value is rational in the uniformizer weight. The dilation of the test
-support contributes a monomial denominator factor. -/
-theorem heckeLocal_compactlySupportedTest_integral_rational
+/-- The denominator determined by a depth-`R` fixed space works for every
+locally constant compactly supported matrix test. For each test, the scalar
+dilation of its support contributes only a monomial factor in the uniformizer
+weight. The integral is absolutely convergent on a right half-plane. -/
+theorem heckeLocal_compactlySupportedTest_commonDenominator
     {K V : Type*} [Field K] [NumberField K] [AddCommGroup V] [Module Complex V]
     [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)]
     [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
     (p : HeightOneSpectrum (RingOfIntegers K))
     [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
-    (n : Nat) (pi : Units (p.adicCompletion K))
+    (n R : Nat) (hR : 0 < R) (pi : Units (p.adicCompletion K))
     (hPi : Valued.v (pi : p.adicCompletion K) = finiteUniformizerValue)
     (hLt : Valued.v (pi : p.adicCompletion K) < 1) (hp : norm pi.val < 1)
     [MeasurableSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
@@ -195,6 +194,9 @@ theorem heckeLocal_compactlySupportedTest_integral_rational
     (mu : Measure (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))))
     [mu.IsHaarMeasure]
     (rho : MonoidHom (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))) (Module.End Complex V))
+    (P : HeckeLocalSubgroupAverage rho
+      (valuationPrincipalCongruenceSubgroup Valued.v n (Valued.v (pi : p.adicCompletion K) ^ R)))
+    [FiniteDimensional Complex (LinearMap.range P.proj)]
     (ell : LinearMap (RingHom.id Complex) V Complex) (u : V)
     (Phi : Matrix (Fin n) (Fin n) (p.adicCompletion K) -> Complex)
     (hLc : IsLocallyConstant Phi) (hComp : HasCompactSupport Phi) :
@@ -202,19 +204,22 @@ theorem heckeLocal_compactlySupportedTest_integral_rational
     let G := Units (Matrix (Fin n) (Fin n) L)
     let v : Valuation L (WithZero (Multiplicative Int)) := Valued.v
     let C := valuationIntegralMatrixSubgroup v n
+    let H := valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R)
+    let hRad : v pi.val ^ R < 1 := (pow_lt_one_iff_of_nonneg (zero_le : 0 <= v pi.val) hR.ne').mpr hLt
+    let alpha (i : Fin n) : Complex :=
+      ((Inv.inv (norm pi.val) : Real) : Complex) ^ ((i.val + 1) * (n - (i.val + 1)))
+    let Q := valuationUniformizerConeDenominator v n (v pi.val ^ R) hRad rho P pi hLt.le alpha
     let Z (s : Complex) := (norm pi.val : Complex) ^ s
     let F (s : Complex) (g : G) := (norm g.val.det : Complex) ^ s * (Phi g.val * ell (rho g u))
-    (forall x : V, Filter.Eventually (fun g : G => rho g x = x) (nhds 1)) ->
-    Filter.Eventually (fun g : G => forall x : V, ell (rho g x) = ell x) (nhds 1) ->
-    (forall R : Nat, FiniteDimensional Complex (heckeLocalFixedSubmodule rho
-      (valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R)))) ->
+    (forall (h : H) (x : V), ell (rho h.val x) = ell x) ->
+    (forall h : H, rho h.val u = u) ->
     mu (C : Set G) = 1 ->
-    exists m : Nat, exists sigma : Real, exists N Q : Polynomial Complex,
+    exists m : Nat, exists sigma : Real, exists N : Polynomial Complex,
       And (Q.eval 0 = 1)
         (forall s : Complex, sigma < s.re ->
           And (Integrable (F s) mu)
             (Z s ^ (m * n) * Q.eval (Z s) * integral mu (F s) = N.eval (Z s))) := by
-  intro L G v C Z F hSmooth hSmoothEll hAdmissible hNorm
+  intro L G v C H hRad alpha Q Z F hEll hU hNorm
   classical
   let _ : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
   have hRow : IsOpenEmbedding (heckeLocalMatrixUnitEntries (I := Fin n) (F := L)) :=
@@ -235,51 +240,43 @@ theorem heckeLocal_compactlySupportedTest_integral_rational
     (continuous_const.mul (continuous_matrixOf.mpr continuous_id) :
       Continuous (fun X : Fin n -> Fin n -> L => B.val * Matrix.of X))
   choose R0 hR0 using exists_uniformizer_radius_local_matrix_test p n pi hp psi hPsi
-  have hConj : Continuous (fun g : G => B * g * A) :=
-    (continuous_const.mul continuous_id).mul continuous_const
-  have hMove : Filter.Tendsto (fun g : G => B * g * A) (nhds 1) (nhds 1) := by
-    have h := hConj.tendsto (1 : G)
-    simpa only [mul_one, hBA] using h
-  have hEllEvent : Filter.Eventually (fun g : G => forall x : V, ell' (rho g x) = ell' x) (nhds 1) := by
-    refine (hMove.eventually hSmoothEll).mono ?_
-    intro g hg x
-    change ell (rho B (rho g x)) = ell (rho B x)
-    have hEq : B * g = (B * g * A) * B := by rw [mul_assoc (B * g) A B, hAB, mul_one]
-    rw [<- Module.End.mul_apply, <- map_mul, hEq, map_mul, Module.End.mul_apply]
-    exact hg (rho B x)
-  let U := Set.ofPred (fun g : G => And (rho g u = u) (forall x : V, ell' (rho g x) = ell' x))
-  have hU : Membership.mem (nhds 1) U := (hSmooth u).and hEllEvent
-  choose R hR using exists_principalCongruence_in_neighborhood p n R0 pi hp U hU
-  let H := valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R)
-  have hFixU (k : H) : rho k.val u = u := (hR.2.2 k.property).1
-  have hFixEll (k : H) (x : V) : ell' (rho k.val x) = ell' x := (hR.2.2 k.property).2 x
+  let T := max R R0
+  have hDepth : R <= T := le_max_left _ _
+  have hDepth0 : R0 <= T := le_max_right _ _
+  have hAComm (g : G) : A * g = g * A := by
+    apply Units.ext
+    apply Matrix.ext
+    intro i j
+    change (Matrix.scalar (Fin n) (pi ^ m).val * g.val) i j =
+      (g.val * Matrix.scalar (Fin n) (pi ^ m).val) i j
+    rw [Matrix.scalar_apply, Matrix.diagonal_mul, Matrix.mul_diagonal]
+    exact mul_comm _ _
+  have hBComm (g : G) : B * g = g * B := by
+    have hEq : A * (B * g) = A * (g * B) := by
+      calc
+        _ = g := by rw [<- mul_assoc, hAB, one_mul]
+        _ = _ := by rw [<- mul_assoc, hAComm g, mul_assoc, hAB, mul_one]
+    exact mul_left_cancel hEq
+  have hFixEll (k : H) (x : V) : ell' (rho k.val x) = ell' x := by
+    change ell (rho B (rho k.val x)) = ell (rho B x)
+    rw [<- Module.End.mul_apply, <- map_mul, hBComm k.val, map_mul, Module.End.mul_apply]
+    exact hEll k (rho B x)
   have hOrder : Antitone (fun r : Nat => v pi.val ^ r) := by
     apply antitone_nat_of_succ_le
     intro r
     rw [pow_succ]
     exact (mul_le_mul' le_rfl hLt.le).trans_eq (mul_one _)
   have hMod (X Y : Fin n -> Fin n -> L) (hX : forall i j, v (X i j) <= 1)
-      (hXY : forall i j, v (Y i j - X i j) <= v pi.val ^ R) : psi Y = psi X :=
-    hR0.2 X Y hX (fun i j => (hXY i j).trans (hOrder hR.2.1))
-  have hVC : IsCompact (v.integer : Set L) :=
-    isCompact_iff_compactSpace.mpr (compactSpace_heckeLocalIntegers p)
-  have hVal : v (pi ^ R).val = v pi.val ^ R := v.map_pow _ _
-  have hH : IsCompact (H : Set G) := by
-    change IsCompact (valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R) : Set G)
-    rw [<- hVal]
-    exact isCompact_valuationPrincipalCongruenceSubgroup v n (pi ^ R) hVC
-  let P := HeckeLocalSubgroupAverage.ofCompactSmooth rho H hH hSmooth
-  let _ : FiniteDimensional Complex (LinearMap.range P.proj) := by
-    rw [range_average_eq_fixedSubmodule rho H P]
-    exact hAdmissible R
+      (hXY : forall i j, v (Y i j - X i j) <= v pi.val ^ T) : psi Y = psi X :=
+    hR0.2 X Y hX (fun i j => (hXY i j).trans (hOrder hDepth0))
   let S := Set.ofPred (fun g : G => forall i j, v (g.val i j) <= 1)
   let Fs (s : Complex) (g : G) := (norm g.val.det : Complex) ^ s *
     (psi (fun i j => g.val i j) * ell' (rho g u))
-  obtain h := heckeLocal_detWeightedIntegral_integrable_rational p n R hR.1 pi hPi hLt mu
-    rho P ell' u psi hFixEll hFixU hMod hNorm
-  choose M N Q ht using h
+  obtain h := heckeLocal_detWeightedIntegral_commonDenominator p n R T hR hDepth pi hPi hLt mu
+    rho P ell' u psi hFixEll hU hMod hNorm
+  choose M N ht using h
   refine Exists.intro m (Exists.intro (Real.log M / (-Real.log (norm pi.val)))
-    (Exists.intro N (Exists.intro Q (And.intro ht.2.1 ?_))))
+    (Exists.intro N (And.intro ht.2.1 ?_)))
   intro s hs
   have hQ0 : 0 < norm pi.val := norm_pos_iff.mpr pi.ne_zero
   have hs0 : M * norm (Z s) < 1 :=
@@ -358,5 +355,71 @@ theorem heckeLocal_compactlySupportedTest_integral_rational
       rw [hEqInt]
       ac_rfl
     _ = _ := by rw [hScalar, one_mul, hPart.2]
+
+/-- For a locally constant compactly supported test and a smooth matrix
+coefficient, finite-dimensional principal congruence fixed spaces ensure
+absolute convergence of the local zeta integral on a right half-plane.
+Its value is rational in the uniformizer weight. The dilation of the test
+support contributes a monomial denominator factor. -/
+theorem heckeLocal_compactlySupportedTest_integral_rational
+    {K V : Type*} [Field K] [NumberField K] [AddCommGroup V] [Module Complex V]
+    [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    (p : HeightOneSpectrum (RingOfIntegers K))
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    (n : Nat) (pi : Units (p.adicCompletion K))
+    (hPi : Valued.v (pi : p.adicCompletion K) = finiteUniformizerValue)
+    (hLt : Valued.v (pi : p.adicCompletion K) < 1) (hp : norm pi.val < 1)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))))
+    [mu.IsHaarMeasure]
+    (rho : MonoidHom (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))) (Module.End Complex V))
+    (ell : LinearMap (RingHom.id Complex) V Complex) (u : V)
+    (Phi : Matrix (Fin n) (Fin n) (p.adicCompletion K) -> Complex)
+    (hLc : IsLocallyConstant Phi) (hComp : HasCompactSupport Phi) :
+    let L := p.adicCompletion K
+    let G := Units (Matrix (Fin n) (Fin n) L)
+    let v : Valuation L (WithZero (Multiplicative Int)) := Valued.v
+    let C := valuationIntegralMatrixSubgroup v n
+    let Z (s : Complex) := (norm pi.val : Complex) ^ s
+    let F (s : Complex) (g : G) := (norm g.val.det : Complex) ^ s * (Phi g.val * ell (rho g u))
+    (forall x : V, Filter.Eventually (fun g : G => rho g x = x) (nhds 1)) ->
+    Filter.Eventually (fun g : G => forall x : V, ell (rho g x) = ell x) (nhds 1) ->
+    (forall R : Nat, FiniteDimensional Complex (heckeLocalFixedSubmodule rho
+      (valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R)))) ->
+    mu (C : Set G) = 1 ->
+    exists m : Nat, exists sigma : Real, exists N Q : Polynomial Complex,
+      And (Q.eval 0 = 1)
+        (forall s : Complex, sigma < s.re ->
+          And (Integrable (F s) mu)
+            (Z s ^ (m * n) * Q.eval (Z s) * integral mu (F s) = N.eval (Z s))) := by
+  intro L G v C Z F hSmooth hSmoothEll hAdmissible hNorm
+  let U := Set.ofPred (fun g : G => And (rho g u = u) (forall x : V, ell (rho g x) = ell x))
+  have hU : Membership.mem (nhds 1) U := (hSmooth u).and hSmoothEll
+  choose R hR using exists_principalCongruence_in_neighborhood p n 0 pi hp U hU
+  let H := valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R)
+  have hFixU (k : H) : rho k.val u = u := (hR.2.2 k.property).1
+  have hFixEll (k : H) (x : V) : ell (rho k.val x) = ell x := (hR.2.2 k.property).2 x
+  have hVC : IsCompact (v.integer : Set L) :=
+    isCompact_iff_compactSpace.mpr (compactSpace_heckeLocalIntegers p)
+  have hVal : v (pi ^ R).val = v pi.val ^ R := v.map_pow _ _
+  have hH : IsCompact (H : Set G) := by
+    change IsCompact (valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R) : Set G)
+    rw [<- hVal]
+    exact isCompact_valuationPrincipalCongruenceSubgroup v n (pi ^ R) hVC
+  let P := HeckeLocalSubgroupAverage.ofCompactSmooth rho H hH hSmooth
+  let _ : FiniteDimensional Complex (LinearMap.range P.proj) := by
+    rw [range_average_eq_fixedSubmodule rho H P]
+    exact hAdmissible R
+  have hRad : v pi.val ^ R < 1 :=
+    (pow_lt_one_iff_of_nonneg (zero_le : 0 <= v pi.val) hR.1.ne').mpr hLt
+  let alpha (i : Fin n) : Complex :=
+    ((Inv.inv (norm pi.val) : Real) : Complex) ^ ((i.val + 1) * (n - (i.val + 1)))
+  let Q := valuationUniformizerConeDenominator v n (v pi.val ^ R) hRad rho P pi hLt.le alpha
+  have h := heckeLocal_compactlySupportedTest_commonDenominator p n R hR.1 pi hPi hLt hp mu
+    rho P ell u Phi hLc hComp hFixEll hFixU hNorm
+  choose m sigma N hN using h
+  exact Exists.intro m (Exists.intro sigma (Exists.intro N (Exists.intro Q hN)))
 
 end Robin1984.GRH
