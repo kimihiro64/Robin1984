@@ -7,6 +7,7 @@ import Robin1984.GRH.GodementJacquetCartanDoubleCosets
 import Robin1984.GRH.GodementJacquetCartanHaarVolume
 import Robin1984.GRH.GodementJacquetCartanIntegral
 import Robin1984.GRH.GodementJacquetCartanResidueMeasure
+import Robin1984.GRH.GodementJacquetCartanTestPartition
 import Robin1984.GRH.GodementJacquetCartanVolume
 import Robin1984.GRH.GodementJacquetCoordinates
 import Robin1984.GRH.GodementJacquetFiniteMatrixDenominator

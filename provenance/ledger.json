@@ -2712,6 +2712,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetCartanTestPartition.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Local constancy on compact sets, valuation congruences, and a finite partition of nonnegative exponent gaps.",
+      "formalization_note": "Shows that the finite-place matrix test depends only on finitely truncated gaps uniformly over the integral factors, and identifies each truncated-gap class with its varying offsets.",
+      "content_basis": "Constructs a uniform test radius, proves that integral multipliers preserve entrywise congruence, and gives an exact reindexing and zero-weight formula for fixed gap coordinates.",
+      "dependency_status": "Uses the Cartan decomposition of the entrywise integral matrix units and Mathlib finite-product topology and valuation bounds.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetOrderedDiagonalSeries.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Cayley-Hamilton and the rational generating series of a linear recurrence.",

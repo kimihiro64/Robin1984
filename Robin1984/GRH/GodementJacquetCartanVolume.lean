@@ -614,4 +614,135 @@ theorem mem_map_cartanLeftCosetStabilizer_uniformizerGapDiagonal_iff
       (mem_valuationIntegralMatrixSubgroup_of_valuation_det_one v n g hg.2.1 hg.1)
     exact Exists.intro k (And.intro ((hUpper k).mpr hg.2.2) rfl)
 
+/-- Integrate a right-invariant function on the normalized compact subgroup
+as a uniform average over its finite right cosets. -/
+theorem hasSum_integral_normalized_compactSubgroup_of_rightInvariant
+    {G E : Type*} [Group G] [TopologicalSpace G] [IsTopologicalGroup G]
+    [MeasurableSpace G] [OpensMeasurableSpace G] [MeasurableMul G]
+    [NormedAddCommGroup E] [NormedSpace Real E] [CompleteSpace E]
+    (mu : Measure G) [mu.IsMulLeftInvariant] (C : Subgroup G) (H : Subgroup C)
+    (hCompact : IsCompact (C : Set G)) (hMu : mu (C : Set G) = 1)
+    (f : G -> E) :
+    let U := H.map C.subtype
+    let Q := Quotient (QuotientGroup.leftRel H)
+    IsOpen (U : Set G) ->
+    (forall g, Membership.mem C g -> forall h, Membership.mem U h -> f (g * h) = f g) ->
+    HasSum (fun q : Q => HSMul.hSMul (Inv.inv (Nat.card Q : Real)) (f q.out.val))
+      (integral (mu.restrict (C : Set G)) f) := by
+  intro U Q hOpen hInv
+  let T (q : Q) := Set.preimage (fun g : G => Inv.inv q.out.val * g) (U : Set G)
+  let _ : CompactSpace C := isCompact_iff_compactSpace.mp hCompact
+  have hData := subgroup_doubleCoset_one_data C H
+  have hCo : DoubleCoset.doubleCoset (1 : G) (C : Set G) (U : Set G) = (C : Set G) := hData.1
+  have hStab : doubleCosetLeftStabilizer C U (1 : G) = H := hData.2
+  have hHopen : IsOpen (H : Set C) := by
+    rw [<- hStab]
+    exact isOpen_doubleCosetLeftStabilizer C U 1 hOpen
+  let _ : Finite Q := H.quotient_finite_of_isOpen hHopen
+  let _ : Nonempty Q := Nonempty.intro (Quotient.mk _ (1 : C))
+  have hSplit : And (Set.iUnion T = (C : Set G)) (Pairwise (fun q q' => Disjoint (T q) (T q'))) := by
+    have h := doubleCoset_leftTranslate_partition C U (1 : G)
+    dsimp only at h
+    rw [hStab, hCo] at h
+    simpa only [mul_one] using h
+  have hMeas (q : Q) : MeasurableSet (T q) :=
+    (hOpen.preimage (continuous_const.mul continuous_id)).measurableSet
+  have hConst (q : Q) (g : G) (hg : Membership.mem (T q) g) : f g = f q.out.val := by
+    let a := Inv.inv q.out.val * g
+    have ha : Membership.mem U a := hg
+    have he : q.out.val * a = g := by simp [a]
+    rw [<- he]
+    exact hInv q.out.val q.out.property a ha
+  have hSmall (q : Q) : Not (mu (T q) = Top.top) := by
+    have hLe : T q <= (C : Set G) := by
+      intro g hg
+      rw [<- hSplit.1]
+      exact Set.mem_iUnion_of_mem q hg
+    exact ne_of_lt ((measure_mono hLe).trans_lt (by rw [hMu]; exact ENNReal.one_lt_top))
+  have hInt (q : Q) : IntegrableOn f (T q) mu :=
+    (integrableOn_congr_fun (hConst q) (hMeas q)).mpr
+      (integrableOn_const (C := f q.out.val) (hSmall q))
+  have hIntUnion : IntegrableOn f (Set.iUnion T) mu :=
+    integrableOn_iUnion_of_summable_integral_norm hInt Summable.of_finite
+  have hSum := hasSum_integral_iUnion hMeas hSplit.2 hIntUnion
+  rw [hSplit.1] at hSum
+  have hMass : (Nat.card Q : Real) * (mu (U : Set G)).toReal = 1 := by
+    have h := congrArg ENNReal.toReal (measure_subgroup_eq_index_mul_subgroupMeasure mu C H hCompact hOpen)
+    simpa only [hMu, ENNReal.toReal_one, ENNReal.toReal_mul, ENNReal.toReal_natCast] using h.symm
+  have hCard : Not ((Nat.card Q : Real) = 0) := by
+    norm_cast
+    exact Nat.ne_of_gt Nat.card_pos
+  have hWeight : (mu (U : Set G)).toReal = Inv.inv (Nat.card Q : Real) := by
+    calc
+      _ = (Inv.inv (Nat.card Q : Real) * (Nat.card Q : Real)) * (mu (U : Set G)).toReal := by
+        simp [hCard]
+      _ = Inv.inv (Nat.card Q : Real) * ((Nat.card Q : Real) * (mu (U : Set G)).toReal) :=
+        mul_assoc _ _ _
+      _ = _ := by rw [hMass, mul_one]
+  have hTerm (q : Q) : integral (mu.restrict (T q)) f =
+      HSMul.hSMul (Inv.inv (Nat.card Q : Real)) (f q.out.val) := by
+    have hMassT : mu (T q) = mu (U : Set G) :=
+      (measurePreserving_mul_left mu (Inv.inv q.out.val)).measure_preimage hOpen.measurableSet.nullMeasurableSet
+    rw [setIntegral_congr_fun (hMeas q) (hConst q), setIntegral_const, Measure.real, hMassT, hWeight]
+  simpa only [hTerm] using hSum
+
+/-- A bi-invariant integrand on a Cartan double coset has integral equal to
+its volume times the finite average over both quotient variables. -/
+theorem integral_cartanDoubleCoset_eq_finite_coset_average
+    {G E : Type*} [Group G] [TopologicalSpace G] [IsTopologicalGroup G]
+    [MeasurableSpace G] [OpensMeasurableSpace G] [MeasurableMul G]
+    [NormedAddCommGroup E] [NormedSpace Real E] [CompleteSpace E]
+    (mu : Measure G) [mu.IsMulLeftInvariant] (C : Subgroup G) (H : Subgroup C)
+    (hCompact : IsCompact (C : Set G)) (hOpen : IsOpen (C : Set G))
+    (hNorm : mu (C : Set G) = 1)
+    (hNormal : forall (x k : C), Membership.mem H k -> Membership.mem H (x * k * Inv.inv x))
+    (d : G) (f : G -> E) :
+    let U := H.map C.subtype
+    let Q := Quotient (QuotientGroup.leftRel H)
+    let D := DoubleCoset.doubleCoset d (C : Set G) (C : Set G)
+    let w := Inv.inv (Nat.card Q : Real)
+    IsOpen (U : Set G) -> IntegrableOn f D mu ->
+    (forall g, Membership.mem D g -> forall h, Membership.mem U h -> f (h * g) = f g) ->
+    (forall g, Membership.mem D g -> forall h, Membership.mem U h -> f (g * h) = f g) ->
+    integral (mu.restrict D) f =
+      HSMul.hSMul ((mu D).toReal)
+        (tsum (fun l : Q => HSMul.hSMul w
+          (tsum (fun r : Q => HSMul.hSMul w (f (l.out.val * d * r.out.val)))))) := by
+  intro U Q D w hUOpen hInt hLeft hRight
+  let F (l : G) := integral (mu.restrict (C : Set G)) (fun r => f (l * d * r))
+  have hD (l r : C) : Membership.mem D (l.val * d * r.val) :=
+    DoubleCoset.mem_doubleCoset.mpr (Exists.intro l.val (And.intro l.property
+      (Exists.intro r.val (And.intro r.property rfl))))
+  have hInner (l : C) : HasSum (fun r : Q => HSMul.hSMul w (f (l.val * d * r.out.val))) (F l.val) := by
+    refine hasSum_integral_normalized_compactSubgroup_of_rightInvariant mu C H hCompact hNorm
+      (fun r => f (l.val * d * r)) hUOpen ?_
+    intro r hr h hh
+    simpa only [mul_assoc] using hRight (l.val * d * r) (hD l (Subtype.mk r hr)) h hh
+  have hOuter : HasSum (fun l : Q => HSMul.hSMul w (F l.out.val)) (integral (mu.restrict (C : Set G)) F) := by
+    refine hasSum_integral_normalized_compactSubgroup_of_rightInvariant mu C H hCompact hNorm F hUOpen ?_
+    intro l hl h hh
+    choose k hk using (Subgroup.mem_map.mp hh)
+    let l0 : C := Subtype.mk l hl
+    have hVal : k.val = h := hk.2
+    have hConj : Membership.mem U (l * h * Inv.inv l) := by
+      refine Subgroup.mem_map.mpr (Exists.intro (l0 * k * Inv.inv l0)
+        (And.intro (hNormal l0 k hk.1) ?_))
+      change l * k.val * Inv.inv l = _
+      rw [hVal]
+    change integral (mu.restrict (C : Set G)) (fun r => f ((l * h) * d * r)) =
+      integral (mu.restrict (C : Set G)) (fun r => f (l * d * r))
+    refine setIntegral_congr_fun hOpen.measurableSet (fun r hr => ?_)
+    have hEq : (l * h) * d * r = (l * h * Inv.inv l) * (l * d * r) := by simp [mul_assoc]
+    rw [hEq]
+    exact hLeft (l * d * r) (hD l0 (Subtype.mk r hr)) (l * h * Inv.inv l) hConj
+  calc
+    integral (mu.restrict D) f = HSMul.hSMul ((mu D).toReal) (integral (mu.restrict (C : Set G)) F) :=
+      integral_cartanDoubleCoset_eq_volume_smul_average mu C hCompact hOpen hNorm d f hInt
+    _ = HSMul.hSMul ((mu D).toReal) (tsum (fun l : Q => HSMul.hSMul w (F l.out.val))) := by
+      rw [hOuter.tsum_eq]
+    _ = _ := by
+      congr 1
+      refine tsum_congr (fun l => ?_)
+      rw [(hInner l.out).tsum_eq]
+
 end Robin1984.GRH
