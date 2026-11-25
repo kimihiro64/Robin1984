@@ -20,7 +20,7 @@ matrix coefficient series with a geometric Haar weight.
 
 set_option autoImplicit false
 
-open IsDedekindDomain MeasureTheory NumberField Topology
+open Filter IsDedekindDomain MeasureTheory NumberField Topology
 
 namespace Robin1984.GRH
 
@@ -520,8 +520,9 @@ private theorem finite_family_rational_series
     exists M : Real, exists N Q : Polynomial Complex,
       And (1 <= M) (And (Q.eval 0 = 1)
         (forall z : Complex, M * norm z < 1 ->
-          And (Summable (fun a => Finset.univ.sum (fun i => u i z a)))
-            (Q.eval z * tsum (fun a => Finset.univ.sum (fun i => u i z a)) = N.eval z))) := by
+          And (forall i, Summable (u i z))
+            (And (Summable (fun a => Finset.univ.sum (fun i => u i z a)))
+              (Q.eval z * tsum (fun a => Finset.univ.sum (fun i => u i z a)) = N.eval z)))) := by
   classical
   choose M N Q hQ using h
   have hR := exists_common_rational_denominator_finset Finset.univ
@@ -540,16 +541,90 @@ private theorem finite_family_rational_series
   have hSummable (i : I) (_ : Membership.mem (Finset.univ : Finset I) i) : Summable (u i z) :=
     ((hQ i).2.2 z ((mul_le_mul_of_nonneg_right ((hB i).trans (le_max_left B K))
       (norm_nonneg z)).trans_lt hz)).1
-  refine And.intro (summable_sum hSummable) ?_
+  refine And.intro (fun i => hSummable i (Finset.mem_univ i)) (And.intro (summable_sum hSummable) ?_)
   rw [Summable.tsum_finsetSum hSummable]
   exact hD.2.2 z hzK
 
+private theorem continuousOn_of_open_right_invariance
+    {G E : Type*} [Group G] [TopologicalSpace G] [IsTopologicalGroup G]
+    [TopologicalSpace E] (U : Subgroup G) (hOpen : IsOpen (U : Set G))
+    (D : Set G) (f : G -> E)
+    (hRight : forall g, Membership.mem D g -> forall h, Membership.mem U h -> f (g * h) = f g) :
+    ContinuousOn f D := by
+  intro g hg
+  apply ContinuousAt.continuousWithinAt
+  have hN := hOpen.preimage (continuous_const.mul continuous_id : Continuous (fun x : G => Inv.inv g * x))
+  have hMem : Membership.mem (Set.preimage (fun x : G => Inv.inv g * x) (U : Set G)) g := by
+    change Membership.mem U (Inv.inv g * g)
+    rw [inv_mul_cancel]
+    exact U.one_mem
+  have hE : Filter.EventuallyEq (nhds g) f (fun _ => f g) := by
+    filter_upwards [hN.mem_nhds hMem] with x hx
+    have hh : Membership.mem U (Inv.inv g * x) := hx
+    have h := hRight g hg (Inv.inv g * x) hh
+    simpa only [<- mul_assoc, mul_inv_cancel, one_mul] using h
+  exact continuousAt_const.congr_of_eventuallyEq hE
+
+private theorem integrableOn_and_integral_norm_cartanDoubleCoset
+    {G : Type*} [Group G] [TopologicalSpace G] [IsTopologicalGroup G] [T2Space G]
+    [MeasurableSpace G] [BorelSpace G] [MeasurableMul G]
+    (mu : Measure G) [mu.IsHaarMeasure] (C : Subgroup G) (H : Subgroup C)
+    (hCompact : IsCompact (C : Set G)) (hOpen : IsOpen (C : Set G)) (hNorm : mu (C : Set G) = 1)
+    (hNormal : forall (x k : C), Membership.mem H k -> Membership.mem H (x * k * Inv.inv x))
+    (d : G) (f : G -> Complex) :
+    let U := H.map C.subtype
+    let Q := Quotient (QuotientGroup.leftRel H)
+    let D := DoubleCoset.doubleCoset d (C : Set G) (C : Set G)
+    let w := Inv.inv (Nat.card Q : Real)
+    IsOpen (U : Set G) -> IsCompact D ->
+    (forall g, Membership.mem D g -> forall h, Membership.mem U h -> f (h * g) = f g) ->
+    (forall g, Membership.mem D g -> forall h, Membership.mem U h -> f (g * h) = f g) ->
+    And (IntegrableOn f D mu)
+      (integral (mu.restrict D) (fun g => norm (f g)) =
+        (mu D).toReal * tsum (fun l : Q => w *
+          tsum (fun r : Q => w * norm (f (l.out.val * d * r.out.val))))) := by
+  intro U Q D w hU hD hLeft hRight
+  have hC := continuousOn_of_open_right_invariance U hU D f hRight
+  have hInt : IntegrableOn f D mu := hC.integrableOn_compact hD
+  refine And.intro hInt ?_
+  have hAvg := integral_cartanDoubleCoset_eq_finite_coset_average mu C H hCompact hOpen hNorm
+    hNormal d (fun g => norm (f g)) hU hInt.norm
+    (fun g hg h hh => congrArg norm (hLeft g hg h hh))
+    (fun g hg h hh => congrArg norm (hRight g hg h hh))
+  simpa only [smul_eq_mul] using hAvg
+
+private theorem summable_nonneg_of_truncatedGapPartition
+    (n R : Nat) (F : (Fin n -> Nat) -> Real) (hF : forall g, 0 <= F g)
+    (h : forall pat : Fin n -> Fin (R + 1),
+      Summable (fun e : {e : Fin n -> Nat // forall i, (pat i).val < R -> e i = 0} =>
+        F (fun i => (pat i).val + e.val i))) : Summable F := by
+  let P (g : Fin n -> Nat) (i : Fin n) : Fin (R + 1) :=
+    Fin.mk (min R (g i)) (Nat.lt_succ_of_le (min_le_left _ _))
+  let E := Equiv.sigmaFiberEquiv P
+  apply E.summable_iff.mp
+  change Summable (fun x : Sigma (fun pat => {g : Fin n -> Nat // P g = pat}) => F x.2.val)
+  rw [summable_sigma_of_nonneg (fun _ => hF _)]
+  refine And.intro (fun pat => ?_) Summable.of_finite
+  let A : Equiv {g : Fin n -> Nat // P g = pat}
+      {g : Fin n -> Nat // forall i, min R (g i) = (pat i).val} :=
+    Equiv.subtypeEquivRight (fun g => by
+      constructor
+      . intro hEq i
+        exact congrArg Fin.val (congrFun hEq i)
+      . intro hEq
+        funext i
+        exact Fin.ext (hEq i))
+  let B := A.trans (gapPatternFiber_equiv_zeroInactive n R pat)
+  have hInv (e : {e : Fin n -> Nat // forall i, (pat i).val < R -> e i = 0}) :
+      (B.symm e).val = fun i => (pat i).val + e.val i := rfl
+  exact B.symm.summable_iff.mp ((h pat).congr (fun e => congrArg F (hInv e).symm))
+
 /-- For a congruence-constant test and a coefficient fixed at the same depth,
 the finite-place determinant-weighted integral on the integral matrix locus
-agrees with a rational function of the uniformizer weight wherever that
-weight is sufficiently small and the integral is integrable. The denominator
-has constant coefficient one. -/
-theorem heckeLocal_detWeightedIntegral_rational
+converges absolutely for sufficiently small uniformizer weight and equals a
+rational function of that weight. Its denominator has constant coefficient
+one. -/
+theorem heckeLocal_detWeightedIntegral_integrable_rational
     {K V : Type*} [Field K] [NumberField K] [AddCommGroup V] [Module Complex V]
     [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)]
     [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
@@ -584,8 +659,9 @@ theorem heckeLocal_detWeightedIntegral_rational
     let F (s : Complex) (g : G) := (norm g.val.det : Complex) ^ s * f g
     exists M : Real, exists N Q : Polynomial Complex,
       And (1 <= M) (And (Q.eval 0 = 1)
-        (forall s : Complex, M * norm (Z s) < 1 -> IntegrableOn (F s) S mu ->
-          Q.eval (Z s) * integral (mu.restrict S) (F s) = N.eval (Z s))) := by
+        (forall s : Complex, M * norm (Z s) < 1 ->
+          And (IntegrableOn (F s) S mu)
+            (Q.eval (Z s) * integral (mu.restrict S) (F s) = N.eval (Z s)))) := by
   classical
   intro L G v C U f hEll hU hMod hNorm S Z F
   let d (g : Fin n -> Nat) := (valuationDiagonalSection L n (valuationUniformizerGapDiagonal n pi g)).val
@@ -632,7 +708,7 @@ theorem heckeLocal_detWeightedIntegral_rational
       (Exists.intro (Q1 pat) (And.intro (hQ1 pat).1 (And.intro (hQ1 pat).2.1 ?_))))
     intro z hz
     unfold g
-    rw [mul_left_comm, ((hQ1 pat).2.2 z hz).2, Polynomial.eval_mul, Polynomial.eval_C]
+    rw [mul_left_comm, ((hQ1 pat).2.2 z hz).2.2, Polynomial.eval_mul, Polynomial.eval_C]
   have hComb := exists_common_rational_denominator_finset Finset.univ g hPat
   choose M1 N Q hQ using hComb
   let L0 := 1 + Finset.univ.sum M0
@@ -641,12 +717,100 @@ theorem heckeLocal_detWeightedIntegral_rational
       (le_add_of_nonneg_left zero_le_one)
   refine Exists.intro (max L0 M1) (Exists.intro N (Exists.intro Q
     (And.intro (hQ.1.trans (le_max_right _ _)) (And.intro hQ.2.1 ?_))))
-  intro s hs hInt
+  intro s hs
   let z := Z s
   have hz1 : M1 * norm z < 1 :=
     (mul_le_mul_of_nonneg_right (le_max_right L0 M1) (norm_nonneg z)).trans_lt hs
   have hz0 (pat : B) : M0 pat * norm z < 1 :=
     (mul_le_mul_of_nonneg_right ((hL pat).trans (le_max_left L0 M1)) (norm_nonneg z)).trans_lt hs
+  let _ : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  have hRow : IsOpenEmbedding (heckeLocalMatrixUnitEntries (I := Fin n) (F := L)) :=
+    isOpenEmbedding_heckeLocalMatrixUnitEntries
+  let _ : SecondCountableTopology G := hRow.isEmbedding.secondCountableTopology
+  have hCOpen := isOpen_valuationIntegralMatrixSubgroup v n hVO
+  have hCCompact := isCompact_valuationIntegralMatrixSubgroup v n hVC
+  have hUeq : H.map C.subtype = U :=
+    map_comap_principalCongruence_integralMatrixSubgroup v n (v pi.val ^ R)
+  have hMapOpen : IsOpen ((H.map C.subtype : Subgroup G) : Set G) := by
+    rw [hUeq]
+    exact hOpenU
+  have hCr := principalCongruence_normal_in_integralMatrixSubgroup v n (v pi.val ^ R)
+  have hUnion : Set.iUnion D = S := iUnion_heckeLocal_valuationUniformizerGapDoubleCosets p n pi hPi
+  have hSub (b : Fin n -> Nat) : D b <= S := by
+    intro x hx
+    rw [<- hUnion]
+    exact Set.mem_iUnion_of_mem b hx
+  have hDopen (b : Fin n -> Nat) : IsOpen (D b) :=
+    isOpen_valuationIntegralDiagonalDoubleCoset v n (valuationUniformizerGapDiagonal n pi b) hVO
+  have hDCompact (b : Fin n -> Nat) : IsCompact (D b) :=
+    isCompact_valuationIntegralDiagonalDoubleCoset v n (valuationUniformizerGapDiagonal n pi b) hVC
+  have hDSet (b : Fin n -> Nat) : D b = DoubleCoset.doubleCoset (d b) (C : Set G) (C : Set G) :=
+    valuationIntegralDiagonalDoubleCoset_eq_doubleCoset v n (valuationUniformizerGapDiagonal n pi b)
+  have hUnweighted (b : Fin n -> Nat) :
+      And (IntegrableOn f (D b) mu)
+        (integral (mu.restrict (D b)) (fun x => norm (f x)) =
+          (mu (D b)).toReal * tsum (fun l : Q0 =>
+            w * tsum (fun r : Q0 => w * norm (f (l.out.val * d b * r.out.val))))) := by
+    rw [hDSet b]
+    refine integrableOn_and_integral_norm_cartanDoubleCoset mu C H hCCompact hCOpen hNorm
+      hCr (d b) f hMapOpen ?_ ?_ ?_
+    . rw [<- hDSet b]
+      exact hDCompact b
+    . intro x hx k hk
+      rw [<- hDSet b] at hx
+      have hkU : Membership.mem U k := by rw [<- hUeq]; exact hk
+      exact (local_test_coefficient_biinvariant v n (v pi.val ^ R) rho ell u hEll hU phi hMod
+        x (hSub b hx) (Subtype.mk k hkU)).1
+    . intro x hx k hk
+      rw [<- hDSet b] at hx
+      have hkU : Membership.mem U k := by rw [<- hUeq]; exact hk
+      exact (local_test_coefficient_biinvariant v n (v pi.val ^ R) rho ell u hEll hU phi hMod
+        x (hSub b hx) (Subtype.mk k hkU)).2
+  have hNormPow (m : Nat) : (((norm pi.val ^ m : Real) : Complex) ^ s) = z ^ m := by
+    induction m with
+    | zero => simp
+    | succ m ih =>
+      rw [pow_succ (norm pi.val), Complex.ofReal_mul,
+        Complex.mul_cpow_ofReal_nonneg (pow_nonneg (norm_nonneg _) _) (norm_nonneg _), ih]
+      exact (pow_succ z m).symm
+  have hScaled (b : Fin n -> Nat) (x : G) (hx : Membership.mem (D b) x) :
+      F s x = z ^ E b * f x := by
+    have hh := norm_det_of_mem_heckeLocal_valuationUniformizerGapDoubleCoset p n pi b x hx
+    change (norm x.val.det : Complex) ^ s * f x = _
+    rw [hh, hNormPow]
+  have hIntD (b : Fin n -> Nat) : IntegrableOn (F s) (D b) mu :=
+    (integrableOn_congr_fun (hScaled b) (hDopen b).measurableSet).mpr
+      ((hUnweighted b).1.const_mul (z ^ E b))
+  let Tnorm (b : Fin n -> Nat) := integral (mu.restrict (D b)) (fun x => norm (F s x))
+  have hIntegralNorm (b : Fin n -> Nat) :
+      Tnorm b = w ^ 2 * Finset.univ.sum (fun q : Prod Q0 Q0 =>
+        norm (z ^ E b * ((mu (D b)).toReal : Complex) * f (q.1.out.val * d b * q.2.out.val))) := by
+    have hNormF (x : G) (hx : Membership.mem (D b) x) :
+        norm (F s x) = norm (z ^ E b) * norm (f x) := by rw [hScaled b x hx, norm_mul]
+    have hInner (l : Q0) :
+        tsum (fun r : Q0 => w * norm (f (l.out.val * d b * r.out.val))) =
+          w * Finset.univ.sum (fun r : Q0 => norm (f (l.out.val * d b * r.out.val))) := by
+      rw [tsum_fintype, Finset.mul_sum]
+    unfold Tnorm
+    rw [setIntegral_congr_fun (hDopen b).measurableSet hNormF, integral_const_mul, (hUnweighted b).2]
+    simp only [hInner, tsum_fintype, <- Finset.mul_sum, <- mul_assoc]
+    rw [<- Finset.univ_product_univ, Finset.sum_product]
+    simp only [norm_mul, Complex.norm_real, Real.norm_eq_abs,
+      abs_of_nonneg ENNReal.toReal_nonneg, <- Finset.mul_sum, pow_two]
+    ac_rfl
+  have hAbs : Summable Tnorm := by
+    refine summable_nonneg_of_truncatedGapPartition n R Tnorm (fun _ =>
+      integral_nonneg (fun _ => norm_nonneg _)) ?_
+    intro pat
+    have hEach (q : Prod Q0 Q0) : Summable (fun e : O pat => norm (term pat q z e)) :=
+      summable_norm_iff.mpr (((hQ1 pat).2.2 z (hz0 pat)).1 q)
+    have hAll : Summable (fun e : O pat => Finset.univ.sum (fun q => norm (term pat q z e))) :=
+      summable_sum (fun q _ => hEach q)
+    exact (hAll.mul_left (w ^ 2)).congr (fun e => (hIntegralNorm (Gaps pat e)).symm)
+  have hInt : IntegrableOn (F s) S mu := by
+    rw [<- hUnion]
+    exact integrableOn_iUnion_of_summable_integral_norm hIntD hAbs
+  refine And.intro hInt ?_
   have hEll0 : forall (h : valuationPrincipalCongruenceSubgroup v n (v (pi ^ R).val)) (x : V),
       ell (rho h.val x) = ell x := by rw [hVPow]; exact hEll
   have hU0 : forall (h : valuationPrincipalCongruenceSubgroup v n (v (pi ^ R).val)), rho h.val u = u := by
@@ -677,8 +841,57 @@ theorem heckeLocal_detWeightedIntegral_rational
     apply Finset.sum_congr rfl
     intro pat _
     change tsum (fun e : O pat => T (Gaps pat e)) = g pat z
-    exact (tsum_congr (hTerm pat)).trans (((hQ1 pat).2.2 z (hz0 pat)).1.tsum_mul_left _)
+    exact (tsum_congr (hTerm pat)).trans (((hQ1 pat).2.2 z (hz0 pat)).2.1.tsum_mul_left _)
   rw [hTotal]
   exact hQ.2.2 z hz1
+
+/-- For a congruence-constant test and a coefficient fixed at the same depth,
+the finite-place determinant-weighted integral on the integral matrix locus
+agrees with a rational function of the uniformizer weight wherever that
+weight is sufficiently small and the integral is integrable. The denominator
+has constant coefficient one. -/
+theorem heckeLocal_detWeightedIntegral_rational
+    {K V : Type*} [Field K] [NumberField K] [AddCommGroup V] [Module Complex V]
+    [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+    (p : HeightOneSpectrum (RingOfIntegers K))
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    (n R : Nat) (hR : 0 < R) (pi : Units (p.adicCompletion K))
+    (hPi : Valued.v (pi : p.adicCompletion K) = finiteUniformizerValue)
+    (hLt : Valued.v (pi : p.adicCompletion K) < 1)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K)))]
+    (mu : Measure (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))))
+    [mu.IsHaarMeasure]
+    (rho : MonoidHom (Units (Matrix (Fin n) (Fin n) (p.adicCompletion K))) (Module.End Complex V))
+    (P : HeckeLocalSubgroupAverage rho
+      (valuationPrincipalCongruenceSubgroup Valued.v n (Valued.v (pi : p.adicCompletion K) ^ R)))
+    [FiniteDimensional Complex (LinearMap.range P.proj)]
+    (ell : LinearMap (RingHom.id Complex) V Complex) (u : V)
+    (phi : (Fin n -> Fin n -> p.adicCompletion K) -> Complex) :
+    let L := p.adicCompletion K
+    let G := Units (Matrix (Fin n) (Fin n) L)
+    let v : Valuation L (WithZero (Multiplicative Int)) := Valued.v
+    let C := valuationIntegralMatrixSubgroup v n
+    let U := valuationPrincipalCongruenceSubgroup v n (v pi.val ^ R)
+    let f (g : G) := phi (fun i j => g.val i j) * ell (rho g u)
+    (forall (h : U) (x : V), ell (rho h.val x) = ell x) ->
+    (forall h : U, rho h.val u = u) ->
+    (forall X Y : Fin n -> Fin n -> L, (forall i j, v (X i j) <= 1) ->
+      (forall i j, v (Y i j - X i j) <= v pi.val ^ R) -> phi Y = phi X) ->
+    mu (C : Set G) = 1 ->
+    let S := Set.ofPred (fun g : G => forall i j, v (g.val i j) <= 1)
+    let Z (s : Complex) := (norm pi.val : Complex) ^ s
+    let F (s : Complex) (g : G) := (norm g.val.det : Complex) ^ s * f g
+    exists M : Real, exists N Q : Polynomial Complex,
+      And (1 <= M) (And (Q.eval 0 = 1)
+        (forall s : Complex, M * norm (Z s) < 1 -> IntegrableOn (F s) S mu ->
+          Q.eval (Z s) * integral (mu.restrict S) (F s) = N.eval (Z s))) := by
+  intro L G v C U f hEll hU hMod hNorm S Z F
+  have h := heckeLocal_detWeightedIntegral_integrable_rational p n R hR pi hPi hLt mu
+    rho P ell u phi hEll hU hMod hNorm
+  choose M N Q hQ using h
+  exact Exists.intro M (Exists.intro N (Exists.intro Q (And.intro hQ.1
+    (And.intro hQ.2.1 (fun s hs _ => (hQ.2.2 s hs).2)))))
 
 end Robin1984.GRH
