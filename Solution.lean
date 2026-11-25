@@ -93,7 +93,7 @@ theorem grandRH_iff_triangularPrimePowerBound {index : Type u} {powers : index -
     [forall pi, Countable (powers pi)]
     (family : StandardAutomorphicFamilyData index powers)
     (analytics : HasStandardAutomorphicAnalytics family) :
-    CompletedFamilyRH family.completedL <->
+    (forall (pi : index) (s : Complex), family.completedL pi s = 0 -> s.re = 1 / 2) <->
       (forall pi, StandardFamilyTriangularBound family pi) := by
   let data (pi : index) : GrandRobinEulerData (powers pi) :=
     { normPower := fun i => family.primePowerNorm pi i
@@ -295,7 +295,7 @@ theorem grandRH_iff_globalPrimePowerMultiplicityInequality
     (family : StandardMultiplicityFamilyData index powers)
     (analytics : HasStandardMultiplicityAnalytics family)
     (E J : index -> Finset Real) (order : index -> Real -> Nat)
-    (hRH : CompletedFamilyRH family.completedL) :
+    (hRH : forall pi s, family.completedL pi s = 0 -> s.re = 1 / 2) :
     (forall pi, HasPrescribedZeroOrders (family.completedL pi) (E pi) (J pi) (order pi)) <->
     (forall pi, GrandPrimePowerMultiplicityInequality (standardMultiplicityLogSignal family pi)
       (E pi) (J pi) (order pi)) := by

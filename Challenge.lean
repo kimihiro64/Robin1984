@@ -250,14 +250,6 @@ theorem dedekindERH_iff_correctedIdealRobin :
 
 /-! ## Grand RH -/
 
-/-- The completed formulation of Grand RH: every automorphic L-function
-has all of its nontrivial zeros on the critical line. The full hypothesis
-uses an index ranging over every automorphic L-function. Here the completed
-functions represent the nontrivial zeros after normalization and pole removal. -/
-def CompletedFamilyRH {Representation : Type*}
-    (completedL : Representation -> Complex -> Complex) : Prop :=
-  forall pi s, completedL pi s = 0 -> s.re = (1 : Real) / 2
-
 /-- **Grand RH and triangular prime powers.** For any family with the
 stated analytic data, all of its nontrivial zeros lie on the critical line
 exactly when each member's triangular prime-power remainder has an eventual
@@ -267,7 +259,7 @@ theorem grandRH_iff_triangularPrimePowerBound {index : Type u} {powers : index -
     [forall pi, Countable (powers pi)]
     (family : StandardAutomorphicFamilyData index powers)
     (analytics : HasStandardAutomorphicAnalytics family) :
-    CompletedFamilyRH family.completedL <->
+    (forall (pi : index) (s : Complex), family.completedL pi s = 0 -> s.re = 1 / 2) <->
       (forall pi, StandardFamilyTriangularBound family pi) := by
   sorry
 
@@ -410,8 +402,8 @@ def DedekindPrimePowerMultiplicityInequality
 
 /-- Every zero in the open critical strip of the Dedekind zeta continuation
 of this field has analytic order exactly one. -/
-def DedekindPrimeIdealSimpleZeros
-    (K : Type u) [Field K] [NumberField K] : Prop :=
+def DedekindPrimeIdealSimpleZeros.{u_1}
+    (K : Type u_1) [Field K] [NumberField K] : Prop :=
   forall zeta : Complex -> Complex, IsDedekindZetaContinuation K zeta ->
     forall s : Complex, 0 < s.re -> s.re < 1 -> zeta s = 0 ->
       analyticOrderNatAt zeta s = 1
@@ -542,7 +534,7 @@ theorem grandRH_iff_globalPrimePowerMultiplicityInequality
     (family : StandardMultiplicityFamilyData index powers)
     (analytics : HasStandardMultiplicityAnalytics family)
     (E J : index -> Finset Real) (order : index -> Real -> Nat)
-    (hRH : CompletedFamilyRH family.completedL) :
+    (hRH : forall pi s, family.completedL pi s = 0 -> s.re = 1 / 2) :
     (forall pi, HasPrescribedZeroOrders (family.completedL pi) (E pi) (J pi) (order pi)) <->
     (forall pi, GrandPrimePowerMultiplicityInequality (standardMultiplicityLogSignal family pi)
       (E pi) (J pi) (order pi)) := by
