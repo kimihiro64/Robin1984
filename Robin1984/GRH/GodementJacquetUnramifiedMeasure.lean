@@ -271,7 +271,8 @@ theorem isLocallyFiniteMeasure_heckeLocalAdditiveMeasure
   exact ENNReal.ofReal_lt_top
 
 omit [MeasurableSpace (LocalProjectionAdeles K)] [BorelSpace (LocalProjectionAdeles K)] in
-private theorem secondCountableLocalAdditiveCompletion (p : Place) :
+/-- The finite-place topology has a countable basis. -/
+theorem secondCountableLocalAdditiveCompletion (p : Place) :
     SecondCountableTopology (p.adicCompletion K) := by
   let _ : Countable K := (Module.finBasis Rat K).equivFun.injective.countable
   let L := p.adicCompletion K

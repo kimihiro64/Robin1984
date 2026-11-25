@@ -1,3 +1,4 @@
+import Mathlib.Analysis.SpecialFunctions.Pow.Continuity
 import Robin1984.GRH.GodementJacquetUnramifiedMeasure
 
 /-!
@@ -326,6 +327,50 @@ def valuationUnramifiedSphericalIntegrand
       (norm g.val.det : Complex) ^ (s + (((m : Real) - 1) / 2 : Real)) *
         valuationSphericalSection val m (valuationNormalizedInducingCharacter L m chi) g)
 
+/-- The matrix-integrality indicator is clopen, and the determinant and
+spherical section are continuous on the local general linear group. -/
+theorem continuous_valuationUnramifiedSphericalIntegrand
+    (hOpen : IsOpen (val.integer : Set L))
+    (chi : MonoidHom (Units (Fin m -> L)) Complex)
+    (hChi : forall b : TT, Membership.mem (valuationIntegralMatrixSubgroup val m) b.val ->
+      valuationNormalizedInducingCharacter L m chi b = 1)
+    (s : Complex) :
+    Continuous (valuationUnramifiedSphericalIntegrand L val m chi s) := by
+  have hClosed : IsClosed (val.integer : Set L) :=
+    val.integer.toAddSubgroup.isClosed_of_isOpen hOpen
+  let S (i j : Fin m) : Set GG :=
+    Set.preimage (fun g : GG => g.val i j) (val.integer : Set L)
+  have hVal : Continuous (fun g : GG => g.val) := Units.continuous_val
+  have hEntry (i j : Fin m) : Continuous (fun g : GG => g.val i j) :=
+    (continuous_apply j).comp ((continuous_apply i).comp hVal)
+  have hSupport : IsClopen (Set.iInter (fun i : Fin m => Set.iInter (S i))) :=
+    And.intro (isClosed_iInter (fun i => isClosed_iInter (fun j => hClosed.preimage (hEntry i j))))
+      (isOpen_iInter_of_finite (fun i => isOpen_iInter_of_finite (fun j =>
+        hOpen.preimage (hEntry i j))))
+  have hRep : {g : GG | forall i j : Fin m, Membership.mem val.integer (g.val i j)} =
+      Set.iInter (fun i : Fin m => Set.iInter (S i)) := by
+    ext g
+    simp [S]
+  have hDetNorm : Continuous (fun g : GG => (norm g.val.det : Complex)) :=
+    Complex.continuous_ofReal.comp hVal.matrix_det.norm
+  have hPow : Continuous (fun g : GG => (norm g.val.det : Complex) ^
+      (s + (((m : Real) - 1) / 2 : Real))) := by
+    rw [continuous_iff_continuousAt]
+    intro g
+    have hDet : IsUnit g.val.det := g.isUnit.map Matrix.detMonoidHom
+    have hPos : 0 < norm g.val.det := norm_pos_iff.mpr hDet.ne_zero
+    have hAt : ContinuousAt (fun z : Complex => z ^
+        (s + (((m : Real) - 1) / 2 : Real))) (norm g.val.det : Complex) :=
+      _root_.continuousAt_cpow_const (Complex.ofReal_mem_slitPlane.mpr hPos)
+    have hHere : ContinuousAt (fun x : GG => (norm x.val.det : Complex)) g :=
+      hDetNorm.continuousAt
+    exact ContinuousAt.comp (f := fun x : GG => (norm x.val.det : Complex))
+      (x := g) hAt hHere
+  rw [valuationUnramifiedSphericalIntegrand, hRep]
+  exact hSupport.continuous_indicator (hPow.mul
+    (continuous_valuationSphericalSection val m hOpen
+      (valuationNormalizedInducingCharacter L m chi) hChi))
+
 /-- The scaled unipotent box is open, since each upper entry is a
 continuous function and the local valuation ring is open. -/
 private theorem isOpen_valuationScaledUpperBox
@@ -375,10 +420,10 @@ private theorem isOpen_valuationScaledUpperBox
     rw [show A i j = _ from if_neg hij]
     exact isOpen_univ
 
-/-- Integral over the unipotent fibre of the unramified spherical kernel.
-The volume of the scaled box cancels the triangular modulus and the
-determinant shift. -/
-theorem integral_valuationUnramifiedSpherical_fibre
+/-- The unipotent fibre is integrable, and the integral of its norm equals
+the norm of its integral. The scaled box volume cancels the triangular
+modulus and the determinant shift. -/
+theorem integrableAndIntegral_valuationUnramifiedSpherical_fibre
     [MeasurableSpace U] [BorelSpace U]
     (hOpen : IsOpen (val.integer : Set L))
     (mu : Measure U) (a : Units (Fin m -> L))
@@ -391,10 +436,12 @@ theorem integral_valuationUnramifiedSpherical_fibre
         Membership.mem val.integer (a.val i * u.val.val.val i j)} =
       Finset.univ.prod (fun i : Fin m =>
         (ENNReal.ofReal (Inv.inv (norm (a.val i)))) ^ (m - (i.val + 1)))) :
-    integral mu (fun u : U =>
-      valuationUnramifiedSphericalIntegrand L val m chi s
-        (valuationDiagonalSection L m a * u.val).val) =
-      (Finset.univ.prod (fun i : Fin m => (norm (a.val i) : Complex) ^ s)) * chi a := by
+    let f := fun u : U => valuationUnramifiedSphericalIntegrand L val m chi s
+      (valuationDiagonalSection L m a * u.val).val
+    And (Integrable f mu)
+      (And (integral mu (Function.comp norm f) = norm (integral mu f))
+        (integral mu f = (Finset.univ.prod (fun i : Fin m => (norm (a.val i) : Complex) ^ s)) * chi a)) := by
+  dsimp only
   classical
   let S : Set U := {u : U | forall i j : Fin m, i < j ->
     Membership.mem val.integer (a.val i * u.val.val.val i j)}
@@ -445,20 +492,62 @@ theorem integral_valuationUnramifiedSpherical_fibre
         (norm g.val.det : Complex) ^ (s + (((m : Real) - 1) / 2 : Real)) *
           valuationSphericalSection val m w g) b.val = _
       rw [Set.indicator_of_notMem hG, Set.indicator_of_notMem hU]
-  rw [hPoint, integral_indicator_const C hS]
-  change ((mu S).toReal : Complex) * C = _
   change mu S = _ at hVolume
-  rw [hVolume]
-  dsimp [C]
-  calc
-    _ = (A0 * valuationDiagonalHalfModulus L m a *
-          ((Finset.univ.prod (fun i : Fin m =>
-            (ENNReal.ofReal (Inv.inv (norm (a.val i)))) ^ (m - (i.val + 1)))).toReal : Complex)) *
-              chi a := by ring
-    _ = _ := by rw [show A0 * valuationDiagonalHalfModulus L m a *
-          ((Finset.univ.prod (fun i : Fin m =>
-            (ENNReal.ofReal (Inv.inv (norm (a.val i)))) ^ (m - (i.val + 1)))).toReal : Complex) =
-        _ from valuationSphericalDiagonalWeight L m a s]
+  have hFinite : Not (mu S = (Top.top : ENNReal)) := by
+    rw [hVolume]
+    exact ne_of_lt (ENNReal.prod_lt_top (fun _ _ =>
+      lt_top_iff_ne_top.mpr (ENNReal.pow_ne_top ENNReal.ofReal_ne_top)))
+  refine And.intro ?_ (And.intro ?_ ?_)
+  next =>
+    rw [hPoint]
+    exact (integrable_indicator_iff hS).mpr (integrableOn_const (C := C) hFinite)
+  next =>
+    have hNormPoint : Function.comp norm (S.indicator (fun _ : U => C)) =
+        S.indicator (fun _ : U => norm C) := by
+      funext u
+      by_cases hu : Membership.mem S u
+      next => simp only [Function.comp_apply, Set.indicator_of_mem hu]
+      next => simp only [Function.comp_apply, Set.indicator_of_notMem hu, norm_zero]
+    have hNonneg : 0 <= mu.real S := ENNReal.toReal_nonneg
+    rw [hPoint, hNormPoint, integral_indicator_const _ hS, integral_indicator_const _ hS,
+      norm_smul, Real.norm_of_nonneg hNonneg, smul_eq_mul]
+  next =>
+    rw [hPoint, integral_indicator_const C hS]
+    change ((mu S).toReal : Complex) * C = _
+    rw [hVolume]
+    dsimp [C]
+    calc
+      _ = (A0 * valuationDiagonalHalfModulus L m a *
+            ((Finset.univ.prod (fun i : Fin m =>
+              (ENNReal.ofReal (Inv.inv (norm (a.val i)))) ^ (m - (i.val + 1)))).toReal : Complex)) *
+                chi a := by ring
+      _ = _ := by rw [show A0 * valuationDiagonalHalfModulus L m a *
+            ((Finset.univ.prod (fun i : Fin m =>
+              (ENNReal.ofReal (Inv.inv (norm (a.val i)))) ^ (m - (i.val + 1)))).toReal : Complex) =
+          _ from valuationSphericalDiagonalWeight L m a s]
+
+/-- Integral over the unipotent fibre of the unramified spherical kernel.
+The volume of the scaled box cancels the triangular modulus and the
+determinant shift. -/
+theorem integral_valuationUnramifiedSpherical_fibre
+    [MeasurableSpace U] [BorelSpace U]
+    (hOpen : IsOpen (val.integer : Set L))
+    (mu : Measure U) (a : Units (Fin m -> L))
+    (hDiag : forall i : Fin m, Membership.mem val.integer (a.val i))
+    (chi : MonoidHom (Units (Fin m -> L)) Complex)
+    (hChi : forall b : TT, Membership.mem (valuationIntegralMatrixSubgroup val m) b.val ->
+      valuationNormalizedInducingCharacter L m chi b = 1)
+    (s : Complex)
+    (hVolume : mu {u : U | forall i j : Fin m, i < j ->
+        Membership.mem val.integer (a.val i * u.val.val.val i j)} =
+      Finset.univ.prod (fun i : Fin m =>
+        (ENNReal.ofReal (Inv.inv (norm (a.val i)))) ^ (m - (i.val + 1)))) :
+    integral mu (fun u : U =>
+      valuationUnramifiedSphericalIntegrand L val m chi s
+        (valuationDiagonalSection L m a * u.val).val) =
+      (Finset.univ.prod (fun i : Fin m => (norm (a.val i) : Complex) ^ s)) * chi a :=
+  (integrableAndIntegral_valuationUnramifiedSpherical_fibre L val m hOpen mu a hDiag
+    chi hChi s hVolume).2.2
 
 /-- Outside the integral diagonal cone, the matrix test vanishes
 identically along the associated unipotent fibre. -/
@@ -491,6 +580,35 @@ private abbrev normalizedAdicValuation
     Valuation (p.adicCompletion K0) (WithZero (Multiplicative Int)) :=
   Valued.v
 
+/-- Absolute integrability and the integral of a finite-place unipotent
+fibre with the normalized local additive Haar measure. -/
+theorem integrableAndIntegral_heckeUnramifiedSpherical_fibre
+    (p : HeightOneSpectrum (RingOfIntegers K0))
+    [MeasurableSpace (p.adicCompletion K0)] [BorelSpace (p.adicCompletion K0)]
+    (n : Nat) (a : Units (Fin n -> p.adicCompletion K0))
+    (hDiag : forall i : Fin n, Membership.mem (p.adicCompletionIntegers K0) (a.val i))
+    (chi : MonoidHom (Units (Fin n -> p.adicCompletion K0)) Complex)
+    (hChi : forall b : valuationUpperTriangularSubgroup (p.adicCompletion K0) n,
+      Membership.mem (valuationIntegralMatrixSubgroup (normalizedAdicValuation p) n) b.val ->
+      valuationNormalizedInducingCharacter (p.adicCompletion K0) n chi b = 1)
+    (s : Complex) :
+    let mu := valuationUnitriangularProductMeasure (p.adicCompletion K0)
+      (heckeLocalAdditiveMeasure p) n
+    let f := fun u : valuationUpperUnitriangularSubgroup (p.adicCompletion K0) n =>
+      valuationUnramifiedSphericalIntegrand (p.adicCompletion K0) (normalizedAdicValuation p)
+        n chi s (valuationDiagonalSection (p.adicCompletion K0) n a * u.val).val
+    And (Integrable f mu)
+      (And (integral mu (Function.comp norm f) = norm (integral mu f))
+        (integral mu f =
+          (Finset.univ.prod (fun i : Fin n => (norm (a.val i) : Complex) ^ s)) * chi a)) := by
+  let L := p.adicCompletion K0
+  let _ : MeasurableSpace (valuationUpperUnitriangularSubgroup L n) :=
+    borel (valuationUpperUnitriangularSubgroup L n)
+  let _ : BorelSpace (valuationUpperUnitriangularSubgroup L n) := BorelSpace.mk rfl
+  exact integrableAndIntegral_valuationUnramifiedSpherical_fibre L (normalizedAdicValuation p) n
+    (Valued.isOpen_valuationSubring L) _ a hDiag chi hChi s
+    (measure_heckeLocalUnitriangular_scaledIntegral p n a)
+
 /-- The actual finite-place unipotent integral with the normalized local Haar
 measure and the unramified spherical section. -/
 theorem integral_heckeUnramifiedSpherical_fibre
@@ -508,14 +626,8 @@ theorem integral_heckeUnramifiedSpherical_fibre
       (fun u : valuationUpperUnitriangularSubgroup (p.adicCompletion K0) n =>
         valuationUnramifiedSphericalIntegrand (p.adicCompletion K0) (normalizedAdicValuation p)
           n chi s (valuationDiagonalSection (p.adicCompletion K0) n a * u.val).val) =
-      (Finset.univ.prod (fun i : Fin n => (norm (a.val i) : Complex) ^ s)) * chi a := by
-  let L := p.adicCompletion K0
-  let _ : MeasurableSpace (valuationUpperUnitriangularSubgroup L n) :=
-    borel (valuationUpperUnitriangularSubgroup L n)
-  let _ : BorelSpace (valuationUpperUnitriangularSubgroup L n) := BorelSpace.mk rfl
-  exact integral_valuationUnramifiedSpherical_fibre L (normalizedAdicValuation p) n
-    (Valued.isOpen_valuationSubring L) _ a hDiag chi hChi s
-    (measure_heckeLocalUnitriangular_scaledIntegral p n a)
+      (Finset.univ.prod (fun i : Fin n => (norm (a.val i) : Complex) ^ s)) * chi a :=
+  (integrableAndIntegral_heckeUnramifiedSpherical_fibre p n a hDiag chi hChi s).2.2
 
 end ActualFinitePlace
 

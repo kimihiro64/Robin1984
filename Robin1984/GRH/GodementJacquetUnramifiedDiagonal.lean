@@ -1,5 +1,6 @@
 import Mathlib.Algebra.Group.Pi.Units
 import Mathlib.MeasureTheory.Integral.Pi
+import Mathlib.Topology.Algebra.Group.Units
 import Robin1984.GRH.GodementJacquetUnramifiedSpherical
 
 /-!
@@ -163,6 +164,124 @@ variable [BorelSpace (Units (p.adicCompletion K))]
 
 local notation "v" => (Valued.v : Valuation L (WithZero (Multiplicative Int)))
 
+/-- The unramified spherical kernel is absolutely integrable in the
+multiplicative diagonal and additive unipotent coordinates. Its product
+integral and its iterated integral give the same Euler factor. -/
+theorem integrableAndIntegral_heckeUnramifiedSpherical_product
+    [SigmaFinite (heckeLocalHaar p)]
+    (n : Nat) (u0 : GU) (hu0 : Valued.v u0.val = finiteUniformizerValue)
+    (chi : Fin n -> MonoidHom GU Complex)
+    (hUnit : forall i x, Membership.mem (heckeLocalUnitShell p) x -> chi i x = 1)
+    (hInducing : forall b : valuationUpperTriangularSubgroup L n,
+      Membership.mem (valuationIntegralMatrixSubgroup v n) b.val ->
+        valuationNormalizedInducingCharacter L n (productDiagonalCharacter n chi) b = 1)
+    (s : Complex)
+    (hNorm : forall i, norm (unramifiedLocalWeightedCharacter (chi i) s u0) < 1) :
+    letI : MeasurableSpace (valuationUpperUnitriangularSubgroup L n) := borel _
+    let muA := Measure.pi (fun _ : Fin n => heckeLocalHaar p)
+    let muU := valuationUnitriangularProductMeasure L (heckeLocalAdditiveMeasure p) n
+    let f := fun x : Prod (Fin n -> GU) (valuationUpperUnitriangularSubgroup L n) =>
+      valuationUnramifiedSphericalIntegrand L v n (productDiagonalCharacter n chi) s
+        (valuationDiagonalSection L n (MulEquiv.piUnits.symm x.1) * x.2.val).val
+    let P := Finset.univ.prod
+      (fun i : Fin n => Inv.inv (1 - unramifiedLocalWeightedCharacter (chi i) s u0))
+    And (Integrable f (muA.prod muU))
+      (And (integral (muA.prod muU) f = P)
+        (integral muA (fun a => integral muU (fun u => f (a, u))) = P)) := by
+  classical
+  let A := Fin n -> GU
+  let U := valuationUpperUnitriangularSubgroup L n
+  let D (a : A) : Units (Fin n -> L) := MulEquiv.piUnits.symm a
+  let w (i : Fin n) : GU -> Complex :=
+    (heckeLocalIntegralUnits p).indicator (unramifiedLocalWeightedCharacter (chi i) s)
+  let _ : MeasurableSpace U := borel U
+  let _ : BorelSpace U := BorelSpace.mk rfl
+  let _ : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  let e : Homeomorph L (MulOpposite L) := MulOpposite.opHomeomorph
+  let _ : SecondCountableTopology (MulOpposite L) := e.symm.isEmbedding.secondCountableTopology
+  let hUnits : Topology.IsEmbedding (Units.embedProduct L) := Units.isEmbedding_embedProduct
+  let _ : SecondCountableTopology GU := hUnits.secondCountableTopology
+  let _ : SecondCountableTopology A := inferInstanceAs (SecondCountableTopology (Fin n -> GU))
+  let _ : SigmaFinite (heckeLocalAdditiveMeasure p) := sigmaFinite_heckeLocalAdditiveMeasure p
+  let muA := Measure.pi (fun _ : Fin n => heckeLocalHaar p)
+  let muU := valuationUnitriangularProductMeasure L (heckeLocalAdditiveMeasure p) n
+  let _ : SigmaFinite muU := sigmaFinite_valuationUnitriangularProductMeasure L
+    (heckeLocalAdditiveMeasure p) n
+  let f (x : Prod A U) : Complex :=
+    valuationUnramifiedSphericalIntegrand L v n (productDiagonalCharacter n chi) s
+      (valuationDiagonalSection L n (D x.1) * x.2.val).val
+  have hFibre (a : A) :
+      And (Integrable (fun u => f (a, u)) muU)
+        (And (integral muU (fun u => norm (f (a, u))) = norm (integral muU (fun u => f (a, u))))
+          (integral muU (fun u => f (a, u)) = Finset.univ.prod (fun i : Fin n => w i (a i)))) := by
+    by_cases hAll : forall i : Fin n, Membership.mem (heckeLocalIntegralUnits p) (a i)
+    next =>
+      have hDiag (i : Fin n) : Membership.mem (p.adicCompletionIntegers K) ((D a).val i) :=
+        (heckeLocalIntegralUnits_iff p (a i)).mp (hAll i)
+      have h := integrableAndIntegral_heckeUnramifiedSpherical_fibre p n (D a) hDiag
+        (productDiagonalCharacter n chi) hInducing s
+      refine And.intro h.1 (And.intro h.2.1 ?_)
+      change integral
+          (valuationUnitriangularProductMeasure L (heckeLocalAdditiveMeasure p) n)
+          (fun u : U => valuationUnramifiedSphericalIntegrand L v n (productDiagonalCharacter n chi)
+            s (valuationDiagonalSection L n (D a) * u.val).val) = _
+      rw [h.2.2]
+      have hChi : productDiagonalCharacter n chi (D a) =
+          Finset.univ.prod (fun i : Fin n => chi i (a i)) := by
+        change Finset.univ.prod (fun i : Fin n => chi i (MulEquiv.piUnits (D a) i)) = _
+        rw [show MulEquiv.piUnits (D a) = a from MulEquiv.apply_symm_apply _ _]
+      rw [hChi, <- Finset.prod_mul_distrib]
+      apply Finset.prod_congr rfl
+      intro i _
+      rw [show w i (a i) = unramifiedLocalWeightedCharacter (chi i) s (a i)
+        from Set.indicator_of_mem (hAll i) _]
+      rfl
+    next =>
+      have hDiag : Not (forall i : Fin n, Membership.mem (v).integer ((D a).val i)) := by
+        intro h
+        apply hAll
+        intro i
+        exact (heckeLocalIntegralUnits_iff p (a i)).mpr (h i)
+      have hZero (u : U) : f (a, u) = 0 :=
+        valuationUnramifiedSphericalIntegrand_of_nonintegral L v n (D a) u hDiag _ s
+      choose i hi using not_forall.mp hAll
+      have hProd : Finset.univ.prod (fun j : Fin n => w j (a j)) = 0 :=
+        Finset.prod_eq_zero (Finset.mem_univ i) (Set.indicator_of_notMem hi _)
+      simp [hZero, hProd]
+  have hPoint (a : A) : integral muU (fun u => f (a, u)) =
+      Finset.univ.prod (fun i : Fin n => w i (a i)) := (hFibre a).2.2
+  have hNormPoint (a : A) : integral muU (fun u => norm (f (a, u))) =
+      Finset.univ.prod (fun i : Fin n => norm (w i (a i))) := by
+    rw [(hFibre a).2.1, hPoint, norm_prod]
+  have hOuter : Integrable (fun a : A => integral muU (fun u => norm (f (a, u)))) muA := by
+    simp only [hNormPoint]
+    exact Integrable.fintype_prod (fun i =>
+      (integrableAndIntegral_unramifiedLocalWeightedCharacter p u0 hu0 (chi i) (hUnit i) s (hNorm i)).1.norm)
+  have hD : Continuous D :=
+    (ContinuousMulEquiv.piUnits (M := fun _ : Fin n => L)).symm.continuous
+  have hDiagonal : Continuous (fun x : Prod A U => valuationDiagonalSection L n (D x.1)) :=
+    (continuous_valuationDiagonalSection L n).comp (hD.comp continuous_fst)
+  have hUnipotent : Continuous (fun x : Prod A U => x.2.val) :=
+    continuous_subtype_val.comp continuous_snd
+  have hMatrix : Continuous (fun x : Prod A U =>
+      (valuationDiagonalSection L n (D x.1) * x.2.val).val) :=
+    continuous_subtype_val.comp (hDiagonal.mul hUnipotent)
+  have hMeas : AEStronglyMeasurable f (muA.prod muU) :=
+    ((continuous_valuationUnramifiedSphericalIntegrand L v n
+      (Valued.isOpen_valuationSubring L) (productDiagonalCharacter n chi) hInducing s).comp
+        hMatrix).measurable.aestronglyMeasurable
+  have hInt : Integrable f (muA.prod muU) :=
+    (integrable_prod_iff hMeas).mpr
+      (And.intro (Filter.Eventually.of_forall (fun a => (hFibre a).1)) hOuter)
+  have hIterated : integral muA (fun a => integral muU (fun u => f (a, u))) =
+      Finset.univ.prod
+        (fun i : Fin n => Inv.inv (1 - unramifiedLocalWeightedCharacter (chi i) s u0)) := by
+    simp only [hPoint]
+    rw [integral_fintype_prod_eq_prod w]
+    exact Finset.prod_congr rfl (fun i _ =>
+      integral_unramifiedLocalWeightedCharacter p u0 hu0 (chi i) (hUnit i) s (hNorm i))
+  exact And.intro hInt (And.intro ((integral_prod f hInt).trans hIterated) hIterated)
+
 /-- Integration of the finite-place spherical kernel over unipotent
 and diagonal coordinates gives the product of the scalar Euler factors. -/
 theorem integral_heckeUnramifiedSpherical_diagonal
@@ -182,61 +301,8 @@ theorem integral_heckeUnramifiedSpherical_diagonal
             valuationUnramifiedSphericalIntegrand L v n (productDiagonalCharacter n chi) s
               (valuationDiagonalSection L n (MulEquiv.piUnits.symm a) * u.val).val)) =
       Finset.univ.prod
-        (fun i : Fin n => Inv.inv (1 - unramifiedLocalWeightedCharacter (chi i) s u0)) := by
-  classical
-  let D (a : Fin n -> GU) : Units (Fin n -> L) := MulEquiv.piUnits.symm a
-  let w (i : Fin n) : GU -> Complex :=
-    (heckeLocalIntegralUnits p).indicator (unramifiedLocalWeightedCharacter (chi i) s)
-  let muU := valuationUnitriangularProductMeasure L (heckeLocalAdditiveMeasure p) n
-  have hPoint (a : Fin n -> GU) :
-      integral muU (fun u : valuationUpperUnitriangularSubgroup L n =>
-        valuationUnramifiedSphericalIntegrand L v n (productDiagonalCharacter n chi) s
-          (valuationDiagonalSection L n (D a) * u.val).val) =
-      Finset.univ.prod (fun i : Fin n => w i (a i)) := by
-    by_cases hAll : forall i : Fin n, Membership.mem (heckeLocalIntegralUnits p) (a i)
-    next =>
-      have hDiag (i : Fin n) : Membership.mem (p.adicCompletionIntegers K) ((D a).val i) :=
-        (heckeLocalIntegralUnits_iff p (a i)).mp (hAll i)
-      change integral
-          (valuationUnitriangularProductMeasure L (heckeLocalAdditiveMeasure p) n)
-          (fun u : valuationUpperUnitriangularSubgroup L n =>
-            valuationUnramifiedSphericalIntegrand L v n (productDiagonalCharacter n chi)
-              s (valuationDiagonalSection L n (D a) * u.val).val) = _
-      rw [integral_heckeUnramifiedSpherical_fibre p n (D a) hDiag
-        (productDiagonalCharacter n chi) hInducing s]
-      have hChi : productDiagonalCharacter n chi (D a) =
-          Finset.univ.prod (fun i : Fin n => chi i (a i)) := by
-        change Finset.univ.prod (fun i : Fin n => chi i (MulEquiv.piUnits (D a) i)) = _
-        rw [show MulEquiv.piUnits (D a) = a from MulEquiv.apply_symm_apply _ _]
-      rw [hChi, <- Finset.prod_mul_distrib]
-      apply Finset.prod_congr rfl
-      intro i _
-      rw [show w i (a i) = unramifiedLocalWeightedCharacter (chi i) s (a i)
-        from Set.indicator_of_mem (hAll i) _]
-      rfl
-    next =>
-      have hDiag : Not (forall i : Fin n, Membership.mem (v).integer ((D a).val i)) := by
-        intro h
-        apply hAll
-        intro i
-        exact (heckeLocalIntegralUnits_iff p (a i)).mpr (h i)
-      have hZero (u : valuationUpperUnitriangularSubgroup L n) :
-          valuationUnramifiedSphericalIntegrand L v n (productDiagonalCharacter n chi) s
-            (valuationDiagonalSection L n (D a) * u.val).val = 0 :=
-        valuationUnramifiedSphericalIntegrand_of_nonintegral L v n (D a) u hDiag _ s
-      choose i hi using not_forall.mp hAll
-      simp only [hZero, integral_zero]
-      symm
-      apply Finset.prod_eq_zero (Finset.mem_univ i)
-      exact Set.indicator_of_notMem hi _
-  change integral (Measure.pi (fun _ : Fin n => heckeLocalHaar p))
-    (fun a : Fin n -> GU => integral muU (fun u : valuationUpperUnitriangularSubgroup L n =>
-      valuationUnramifiedSphericalIntegrand L v n (productDiagonalCharacter n chi) s
-        (valuationDiagonalSection L n (D a) * u.val).val)) = _
-  simp only [hPoint]
-  rw [integral_fintype_prod_eq_prod w]
-  exact Finset.prod_congr rfl (fun i _ =>
-    integral_unramifiedLocalWeightedCharacter p u0 hu0 (chi i) (hUnit i) s (hNorm i))
+        (fun i : Fin n => Inv.inv (1 - unramifiedLocalWeightedCharacter (chi i) s u0)) :=
+  (integrableAndIntegral_heckeUnramifiedSpherical_product p n u0 hu0 chi hUnit hInducing s hNorm).2.2
 
 end ActualDiagonal
 
