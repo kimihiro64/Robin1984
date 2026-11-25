@@ -1234,6 +1234,175 @@ theorem integrableAndIntegral_heckeLocalZeta_additive (p : Place)
   rw [hEq] at hTransfer
   exact hTransfer
 
+private theorem measurePreserving_splitMatrixColumns
+    {E R I J : Type*} [MeasurableSpace E] [Fintype R] [Fintype I] [Fintype J]
+    (mu : Measure E) [SigmaFinite mu] :
+    MeasurePreserving
+      (fun X : R -> Sum I J -> E =>
+        Prod.mk (fun r i => X r (Sum.inl i)) (fun r j => X r (Sum.inr j)))
+      (Measure.pi (fun _ : R => Measure.pi (fun _ : Sum I J => mu)))
+      ((Measure.pi (fun _ : R => Measure.pi (fun _ : I => mu))).prod
+        (Measure.pi (fun _ : R => Measure.pi (fun _ : J => mu)))) := by
+  let rowI := Measure.pi (fun _ : I => mu)
+  let rowJ := Measure.pi (fun _ : J => mu)
+  let rowSum := Measure.pi (fun _ : Sum I J => mu)
+  have hSplit := measurePreserving_pi
+    (fun _ : R => rowSum) (fun _ : R => rowI.prod rowJ)
+    (fun _ => measurePreserving_sumPiEquivProdPi (fun _ : Sum I J => mu))
+  have hCollect := measurePreserving_arrowProdEquivProdArrow
+    (I -> E) (J -> E) R (fun _ => rowI) (fun _ => rowJ)
+  exact hCollect.comp hSplit
+
+private theorem measurePreserving_fourBlockSplit
+    {E I J : Type*} [MeasurableSpace E] [Fintype I] [Fintype J]
+    (mu : Measure E) [SigmaFinite mu] :
+    MeasurePreserving
+      (fun X : Sum I J -> Sum I J -> E =>
+        Prod.mk
+          (Prod.mk (fun i k => X (Sum.inl i) (Sum.inl k))
+                   (fun i l => X (Sum.inl i) (Sum.inr l)))
+          (Prod.mk (fun j k => X (Sum.inr j) (Sum.inl k))
+                   (fun j l => X (Sum.inr j) (Sum.inr l))))
+      (Measure.pi (fun _ : Sum I J => Measure.pi (fun _ : Sum I J => mu)))
+      (((Measure.pi (fun _ : I => Measure.pi (fun _ : I => mu))).prod
+         (Measure.pi (fun _ : I => Measure.pi (fun _ : J => mu)))).prod
+       ((Measure.pi (fun _ : J => Measure.pi (fun _ : I => mu))).prod
+         (Measure.pi (fun _ : J => Measure.pi (fun _ : J => mu))))) := by
+  have hRows := measurePreserving_sumPiEquivProdPi
+    (fun _ : Sum I J => Measure.pi (fun _ : Sum I J => mu))
+  have hTop := measurePreserving_splitMatrixColumns (R := I) (I := I) (J := J) mu
+  have hBottom := measurePreserving_splitMatrixColumns (R := J) (I := I) (J := J) mu
+  exact (hTop.prod hBottom).comp hRows
+
+section LocalSchurCoordinates
+
+variable {F I J : Type*} [NormedField F] [Fintype I] [Fintype J] [DecidableEq I]
+  [MeasurableSpace F] [BorelSpace F] [SecondCountableTopology F]
+
+local notation "TopRows" => Prod (I -> I -> F) (I -> J -> F)
+local notation "BelowLeft" => J -> I -> F
+local notation "BelowRight" => J -> J -> F
+local notation "SchurBase" => Prod TopRows BelowLeft
+local notation "FourBlocks" => Prod TopRows (Prod BelowLeft BelowRight)
+
+/-- The correction C A^-1 B in the trailing block of a Schur substitution. -/
+def godementJacquetSchurCorrection (P : SchurBase) : BelowRight :=
+  fun i j => (Matrix.of P.2 * Inv.inv (Matrix.of P.1.1) * Matrix.of P.1.2) i j
+
+omit [Fintype J] in
+private theorem measurable_godementJacquetSchurCorrection :
+    Measurable (godementJacquetSchurCorrection (I := I) (J := J) (F := F)) := by
+  let G := Units (Matrix I I F)
+  let : MeasurableSpace G := borel G
+  let : BorelSpace G := { measurable_eq := rfl }
+  let e : G -> I -> I -> F := heckeLocalMatrixUnitEntries
+  let v : (I -> I -> F) -> I -> I -> F :=
+    Function.extend e (fun g : G => e (Inv.inv g)) (fun _ => 0)
+  have he : MeasurableEmbedding e :=
+    isOpenEmbedding_heckeLocalMatrixUnitEntries.measurableEmbedding
+  have hv : Measurable v := he.measurable_extend
+    (he.measurable.comp continuous_inv.measurable) measurable_const
+  have hvEq (a : I -> I -> F) : Matrix.of (v a) = Inv.inv (Matrix.of a) := by
+    by_cases hA : (Matrix.of a).det = 0
+    . have hNot : Not (exists g : G, e g = a) := by
+        intro hex
+        choose g hg using hex
+        have hDet : g.val.det = 0 := by
+          change (Matrix.of (e g)).det = 0
+          rw [hg, hA]
+        exact (g.isUnit.map Matrix.detMonoidHom).ne_zero hDet
+      have hz : v a = 0 := Function.extend_apply' _ _ a hNot
+      have hUnit : Not (IsUnit (Matrix.of a).det) := by
+        rw [hA]
+        exact not_isUnit_zero
+      rw [hz, Matrix.nonsing_inv_apply_not_isUnit _ hUnit]
+      ext i j
+      rfl
+    . let g : G := Matrix.GeneralLinearGroup.mkOfDetNeZero (Matrix.of a) hA
+      have hAg : e g = a := rfl
+      rw [<- hAg, show v (e g) = e (Inv.inv g) from he.injective.extend_apply _ _ g]
+      exact Matrix.coe_units_inv g
+  have hTop (i k : I) : Measurable (fun p : SchurBase => v p.1.1 i k) :=
+    (measurable_pi_apply k).comp ((measurable_pi_apply i).comp
+      (hv.comp (measurable_fst.comp measurable_fst)))
+  have hLeft (i : J) (k : I) : Measurable (fun p : SchurBase => p.2 i k) :=
+    (measurable_pi_apply k).comp ((measurable_pi_apply i).comp measurable_snd)
+  have hRight (i : I) (j : J) : Measurable (fun p : SchurBase => p.1.2 i j) :=
+    (measurable_pi_apply j).comp ((measurable_pi_apply i).comp
+      (measurable_snd.comp measurable_fst))
+  refine measurable_pi_lambda _ (fun i => measurable_pi_lambda _ (fun j => ?_))
+  have hInner (k : I) : Measurable (fun p : SchurBase =>
+      (Matrix.of p.2 * Matrix.of (v p.1.1)) i k) := by
+    simp only [Matrix.mul_apply, Matrix.of_apply]
+    exact Finset.measurable_fun_sum _ (fun l _ => (hLeft i l).mul (hTop l k))
+  have hOuter : Measurable (fun p : SchurBase =>
+      (Matrix.of p.2 * Matrix.of (v p.1.1) * Matrix.of p.1.2) i j) := by
+    simp only [Matrix.mul_apply, Matrix.of_apply]
+    simpa only [Matrix.mul_apply, Matrix.of_apply, Pi.mul_apply] using
+      (Finset.measurable_fun_sum Finset.univ (fun l _ => (hInner l).mul (hRight l j)))
+  simpa only [godementJacquetSchurCorrection, hvEq] using hOuter
+
+private theorem measurePreserving_godementJacquetSchurShift
+    (mu : Measure F) [SigmaFinite mu] [mu.IsAddLeftInvariant] :
+    let mA := Measure.pi (fun _ : I => Measure.pi (fun _ : I => mu))
+    let mB := Measure.pi (fun _ : I => Measure.pi (fun _ : J => mu))
+    let mC := Measure.pi (fun _ : J => Measure.pi (fun _ : I => mu))
+    let mD := Measure.pi (fun _ : J => Measure.pi (fun _ : J => mu))
+    let m := (mA.prod mB).prod (mC.prod mD)
+    MeasurePreserving
+      (fun X : FourBlocks => Prod.mk X.1
+        (Prod.mk X.2.1 (X.2.2 - godementJacquetSchurCorrection (Prod.mk X.1 X.2.1))))
+      m m := by
+  intro mA mB mC mD m
+  let mLeft := (mA.prod mB).prod mC
+  let : mD.IsAddLeftInvariant := by
+    let nu := Measure.pi (fun _ : J => mu)
+    let : forall _ : J, mu.IsAddLeftInvariant := fun _ => inferInstance
+    let : nu.IsAddLeftInvariant := Measure.pi.isAddLeftInvariant (fun _ : J => mu)
+    let : forall _ : J, nu.IsAddLeftInvariant := fun _ => inferInstance
+    exact Measure.pi.isAddLeftInvariant (fun _ : J => nu)
+  let e : MeasurableEquiv (Prod SchurBase BelowRight) FourBlocks := MeasurableEquiv.prodAssoc
+  have he : MeasurePreserving e (mLeft.prod mD) m :=
+    measurePreserving_prodAssoc (mA.prod mB) mC mD
+  have heInv : MeasurePreserving e.symm m (mLeft.prod mD) := he.symm
+  let sh : Prod SchurBase BelowRight -> Prod SchurBase BelowRight :=
+    fun P => Prod.mk P.1 (P.2 - godementJacquetSchurCorrection P.1)
+  have hd : Measurable (fun P : Prod SchurBase BelowRight =>
+      P.2 - godementJacquetSchurCorrection P.1) :=
+    measurable_snd.sub (measurable_godementJacquetSchurCorrection.comp measurable_fst)
+  have hSh : MeasurePreserving sh (mLeft.prod mD) (mLeft.prod mD) := by
+    refine (MeasurePreserving.id mLeft).skew_product
+      (g := fun P D => D - godementJacquetSchurCorrection P) hd ?_
+    refine Filter.Eventually.of_forall ?_
+    intro P
+    have hMove : MeasurePreserving (fun D : BelowRight => D - godementJacquetSchurCorrection P)
+        mD mD := by
+      simpa only [sub_eq_add_neg, add_comm] using
+        measurePreserving_add_left mD (-godementJacquetSchurCorrection P)
+    exact hMove.map_eq
+  exact he.comp (hSh.comp heInv)
+
+/-- The change of entries taking the trailing block D to D - C a^-1 B
+sends the additive matrix measure to the product measure of the blocks. -/
+theorem measurePreserving_godementJacquetSchurCoordinates
+    (mu : Measure F) [SigmaFinite mu] [mu.IsAddLeftInvariant] :
+    MeasurePreserving
+      (fun X : Sum I J -> Sum I J -> F =>
+        let a := fun i k => X (Sum.inl i) (Sum.inl k)
+        let b := fun i l => X (Sum.inl i) (Sum.inr l)
+        let c := fun j k => X (Sum.inr j) (Sum.inl k)
+        let d := fun j l => X (Sum.inr j) (Sum.inr l)
+        Prod.mk (Prod.mk a b) (Prod.mk c
+          (d - godementJacquetSchurCorrection (Prod.mk (Prod.mk a b) c))))
+      (Measure.pi (fun _ : Sum I J => Measure.pi (fun _ : Sum I J => mu)))
+      (((Measure.pi (fun _ : I => Measure.pi (fun _ : I => mu))).prod
+         (Measure.pi (fun _ : I => Measure.pi (fun _ : J => mu)))).prod
+       ((Measure.pi (fun _ : J => Measure.pi (fun _ : I => mu))).prod
+         (Measure.pi (fun _ : J => Measure.pi (fun _ : J => mu))))) :=
+  (measurePreserving_godementJacquetSchurShift mu).comp (measurePreserving_fourBlockSplit mu)
+
+end LocalSchurCoordinates
+
 end LocalMatrixGroupMeasure
 
 end Robin1984.GRH
