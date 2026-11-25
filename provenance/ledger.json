@@ -2654,7 +2654,16 @@
       "mathematical_source": "Principal congruence subgroups of the general linear group over a local field.",
       "formalization_note": "Constructs compact open principal congruence subgroups and proves diagonal contraction on supported entries.",
       "content_basis": "Checks the subgroup laws using integral entries of the matrix and its inverse, obtains the compact open topology by finite coordinate intersections, and verifies diagonal contraction and the scalar Schur pivot bound.",
-      "dependency_status": "Uses the integral-subgroup topology and the existing diagonal section. Triangular factorization in all ranks and its use in the local zeta recurrence require further proofs.",
+      "dependency_status": "Uses the integral-subgroup topology and the existing diagonal section. The principal congruence factorization uses this module's contraction and Schur pivot bounds.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/ValuationPrincipalCongruenceFactorization.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Block Gaussian elimination at a unit pivot and double cosets of principal congruence subgroups.",
+      "formalization_note": "Proves upper-diagonal-lower factorization and the ordered diagonal double-coset identity at every principal congruence level below one.",
+      "content_basis": "Eliminates a unit scalar pivot while preserving the congruence level, proves inverse support using triangular multiplication, and combines opposite diagonal conjugations into the double-coset factorization.",
+      "dependency_status": "Uses principal congruence contractions and Schur pivot bounds. Supplies the double-coset identity for the local subgroup-averaging recurrence.",
       "reviewed": true
     },
     {
