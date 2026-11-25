@@ -271,6 +271,42 @@ theorem exists_countable_leftCosets_of_iwasawa
     exact Set.mem_iUnion.mpr (Exists.intro (q g) ((hMem (q g) g).mpr rfl))
   exact And.intro hCount (Exists.intro r (And.intro hDisjoint hCover))
 
+/-- A measurable right-invariant kernel is integrable on the matrix
+group exactly when its restriction is integrable on the subgroup meeting
+the Iwasawa cosets. The two Bochner integrals agree. -/
+theorem integrable_iff_and_integral_rightInvariant_of_iwasawa
+    {G : Type*} [Group G] [TopologicalSpace G] [SeparableSpace G] [ContinuousMul G]
+    [MeasurableSpace G] [MeasurableMul G] [OpensMeasurableSpace G]
+    (B K : Subgroup G) [MeasurableSpace B] [MeasurableMul B]
+    (hIncl : Measurable (fun b : B => (b : G))) (hK : IsOpen (K : Set G))
+    (hBK : forall g : G, Exists (fun b : B => Membership.mem K (Inv.inv (b : G) * g)))
+    (mu : Measure G) (nu : Measure B) [mu.IsMulLeftInvariant] [nu.IsMulLeftInvariant]
+    (hMass : mu (K : Set G) = 1) (hMassB : nu (K.comap B.subtype : Set B) = 1)
+    (f : G -> Complex) (hF : Measurable f)
+    (hRight : forall g k : G, Membership.mem K k -> f (g * k) = f g) :
+    And (Integrable f mu <-> Integrable (fun b : B => f (b : G)) nu)
+      (integral mu f = integral nu (fun b : B => f (b : G))) := by
+  have hPartition := exists_countable_leftCosets_of_iwasawa B K hK hBK
+  let _ : Countable (Quotient (QuotientGroup.leftRel K)) := hPartition.1
+  choose r hr using hPartition.2
+  have hNorm := lintegral_rightInvariant_eq_lintegral_subgroup B K hIncl mu nu
+    hK.measurableSet hMass hMassB r hr.1 hr.2 (fun g => enorm (f g))
+    (fun g k hk => congrArg enorm (hRight g k hk))
+  have hFinite : HasFiniteIntegral f mu <-> HasFiniteIntegral (fun b : B => f (b : G)) nu := by
+    change (lintegral mu (fun g => enorm (f g)) < Top.top) <->
+      (lintegral nu (fun b : B => enorm (f (b : G))) < Top.top)
+    rw [hNorm]
+  have hIff : Integrable f mu <-> Integrable (fun b : B => f (b : G)) nu :=
+    Iff.intro (fun h => And.intro (hF.comp hIncl).aestronglyMeasurable (hFinite.mp h.2))
+      (fun h => And.intro hF.aestronglyMeasurable (hFinite.mpr h.2))
+  refine And.intro hIff ?_
+  by_cases hInt : Integrable f mu
+  next =>
+    exact (integral_rightInvariant_eq_integral_subgroup B K hIncl mu nu hK.measurableSet
+      hMass hMassB r hr.1 hr.2 f hF hInt hRight).2
+  next =>
+    rw [integral_undef hInt, integral_undef (fun h => hInt (hIff.mpr h))]
+
 /-- With mu(K) = nu(B intersect K) = 1 and G = BK, a right-K-invariant
 complex integral on G equals its restriction to B with left Haar measure. -/
 theorem integral_rightInvariant_eq_integral_of_iwasawa
@@ -285,10 +321,8 @@ theorem integral_rightInvariant_eq_integral_of_iwasawa
     (hRight : forall g k : G, Membership.mem K k -> f (g * k) = f g) :
     And (Integrable (fun b : B => f (b : G)) nu)
       (integral mu f = integral nu (fun b : B => f (b : G))) := by
-  have hPartition := exists_countable_leftCosets_of_iwasawa B K hK hBK
-  let _ : Countable (Quotient (QuotientGroup.leftRel K)) := hPartition.1
-  choose r hr using hPartition.2
-  exact integral_rightInvariant_eq_integral_subgroup B K hIncl mu nu hK.measurableSet
-    hMass hMassB r hr.1 hr.2 f hF hInt hRight
+  have h := integrable_iff_and_integral_rightInvariant_of_iwasawa
+    B K hIncl hK hBK mu nu hMass hMassB f hF hRight
+  exact And.intro (h.1.mp hInt) h.2
 
 end Robin1984.GRH

@@ -306,4 +306,245 @@ theorem integral_heckeUnramifiedSpherical_diagonal
 
 end ActualDiagonal
 
+section ActualHaar
+
+variable {K : Type*} [Field K] [NumberField K]
+variable (p : HeightOneSpectrum (RingOfIntegers K))
+
+local notation "L" => p.adicCompletion K
+local notation "GU" => Units L
+local notation "v" => (Valued.v : Valuation L (WithZero (Multiplicative Int)))
+
+/-- In diagonal coordinates, the integral matrix subgroup consists of
+a local unit in every coordinate. -/
+private theorem mem_heckeDiagonalIntegral_iff_localUnitShell
+    (n : Nat) (a : Units (Fin n -> L)) :
+    Membership.mem (valuationDiagonalIntegralSubgroup L n v) a <->
+      forall i : Fin n, Membership.mem (heckeLocalUnitShell p) (MulEquiv.piUnits a i) := by
+  have hProd (i : Fin n) : (v) (a.val i) * (v) (a.inv i) = 1 := by
+    rw [<- map_mul]
+    change (v) ((a.val * a.inv) i) = 1
+    rw [a.val_inv]
+    exact map_one v
+  have hEntries (b : Fin n -> L)
+      (hb : forall i : Fin n, Membership.mem (v).integer (b i)) :
+      forall i j : Fin n, Membership.mem (v).integer (Matrix.diagonal b i j) := by
+    intro i j
+    by_cases hij : i = j
+    next =>
+      subst j
+      rw [Matrix.diagonal_apply_eq]
+      exact hb i
+    next =>
+      rw [Matrix.diagonal_apply_ne _ hij]
+      exact (v).integer.zero_mem
+  change Membership.mem (valuationIntegralMatrixSubgroup v n)
+    (valuationDiagonalSection L n a).val <-> _
+  rw [mem_valuationIntegralMatrixSubgroup_iff]
+  constructor
+  next =>
+    intro h i
+    have hv := h.1 i i
+    have hu := h.2 i i
+    change Membership.mem (v).integer (Matrix.diagonal a.val i i) at hv
+    change Membership.mem (v).integer (Matrix.diagonal a.inv i i) at hu
+    rw [Matrix.diagonal_apply_eq] at hv hu
+    change (v) (a.val i) = 1
+    have huLe : (v) (a.inv i) <= 1 := hu
+    exact le_antisymm hv ((hProd i).symm.le.trans (mul_le_of_le_one_right' huLe))
+  next =>
+    intro h
+    have hUnit (i : Fin n) : (v) (a.val i) = 1 := h i
+    have hVal (i : Fin n) : Membership.mem (v).integer (a.val i) :=
+      (hUnit i).le
+    have hInv (i : Fin n) : Membership.mem (v).integer (a.inv i) := by
+      have hP := hProd i
+      rw [hUnit i, one_mul] at hP
+      exact hP.le
+    exact And.intro (hEntries a.val hVal) (hEntries a.inv hInv)
+
+/-- The spherical kernel is invariant under right multiplication by
+an integral matrix unit. -/
+private theorem heckeUnramifiedSphericalIntegrand_rightInvariant
+    (n : Nat) (chi : MonoidHom (Units (Fin n -> L)) Complex)
+    (hChi : forall b : valuationUpperTriangularSubgroup L n,
+      Membership.mem (valuationIntegralMatrixSubgroup v n) b.val ->
+        valuationNormalizedInducingCharacter L n chi b = 1)
+    (s : Complex) (g k : Units (Matrix (Fin n) (Fin n) L))
+    (hk : Membership.mem (valuationIntegralMatrixSubgroup v n) k) :
+    valuationUnramifiedSphericalIntegrand L v n chi s (g * k) =
+      valuationUnramifiedSphericalIntegrand L v n chi s g := by
+  let G := Units (Matrix (Fin n) (Fin n) L)
+  let R := (v).integer
+  let S : Set G := {x : G | forall i j : Fin n, Membership.mem R (x.val i j)}
+  have hKeep (x y : G) (hy : Membership.mem (valuationIntegralMatrixSubgroup v n) y)
+      (hx : Membership.mem S x) : Membership.mem S (x * y) := by
+    change Membership.mem R.matrix (x.val * y.val)
+    exact R.matrix.mul_mem hx ((mem_valuationIntegralMatrixSubgroup_iff v n y).mp hy).1
+  have hMem : Membership.mem S (g * k) <-> Membership.mem S g := by
+    refine Iff.intro ?_ (hKeep g k hk)
+    intro h
+    have h' := hKeep (g * k) (Inv.inv k) ((valuationIntegralMatrixSubgroup v n).inv_mem hk) h
+    rwa [mul_assoc, mul_inv_cancel, mul_one] at h'
+  have hDetMem (A : Matrix (Fin n) (Fin n) L)
+      (hA : forall i j, Membership.mem R (A i j)) : Membership.mem R A.det := by
+    let A0 : Matrix (Fin n) (Fin n) R := Matrix.of (fun i j => Subtype.mk (A i j) (hA i j))
+    have hMap : R.subtype.mapMatrix A0 = A := by ext i j; rfl
+    rw [<- hMap, <- RingHom.map_det]
+    exact A0.det.property
+  have hkEntries := (mem_valuationIntegralMatrixSubgroup_iff v n k).mp hk
+  have hNorm (x : L) : Membership.mem R x <-> norm x <= 1 :=
+    heckeLocal_mem_integers_iff_norm_le_one p x
+  have hLeft := (hNorm k.val.det).mp (hDetMem k.val hkEntries.1)
+  have hRight := (hNorm k.inv.det).mp (hDetMem k.inv hkEntries.2)
+  have hDetProd : norm k.val.det * norm k.inv.det = 1 := by
+    rw [<- norm_mul, <- Matrix.det_mul, k.val_inv, Matrix.det_one, norm_one]
+  have hDet : norm k.val.det = 1 :=
+    le_antisymm hLeft (hDetProd.symm.le.trans (mul_le_of_le_one_right (norm_nonneg _) hRight))
+  let w := valuationNormalizedInducingCharacter L n chi
+  change S.indicator (fun x : G => (norm x.val.det : Complex) ^
+      (s + (((n : Real) - 1) / 2 : Real)) * valuationSphericalSection v n w x) (g * k) =
+    S.indicator (fun x : G => (norm x.val.det : Complex) ^
+      (s + (((n : Real) - 1) / 2 : Real)) * valuationSphericalSection v n w x) g
+  by_cases h : Membership.mem S g
+  next =>
+    rw [Set.indicator_of_mem (hMem.mpr h), Set.indicator_of_mem h]
+    rw [show (g * k).val.det = g.val.det * k.val.det from Matrix.det_mul _ _,
+      norm_mul, hDet, mul_one, valuationSphericalSection_mul_integral v n w hChi g k hk]
+  next =>
+    rw [Set.indicator_of_notMem (fun hh => h (hMem.mp hh)), Set.indicator_of_notMem h]
+
+private def measurableMul_of_continuousBorel (H : Type*) [Mul H] [TopologicalSpace H]
+    [ContinuousMul H] [MeasurableSpace H] [BorelSpace H] : MeasurableMul H :=
+  { measurable_const_mul := fun x => (continuous_const_mul x).measurable
+    measurable_mul_const := fun x => (continuous_mul_const x).measurable }
+
+variable [MeasurableSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+variable [BorelSpace (FiniteAdeleRing (RingOfIntegers K) K)]
+variable [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+variable [MeasurableSpace (Units (p.adicCompletion K))]
+variable [BorelSpace (Units (p.adicCompletion K))]
+
+/-- The full local Godement-Jacquet spherical integral converges absolutely
+and gives the Euler factor for the normalized Haar measure on the matrix
+group. Each diagonal character is trivial on the local unit shell. -/
+theorem integrableAndIntegral_heckeUnramifiedSpherical_haar
+    [SigmaFinite (heckeLocalHaar p)]
+    (n : Nat) (u0 : GU) (hu0 : Valued.v u0.val = finiteUniformizerValue)
+    [MeasurableSpace (Units (Matrix (Fin n) (Fin n) L))]
+    [BorelSpace (Units (Matrix (Fin n) (Fin n) L))]
+    (muG : Measure (Units (Matrix (Fin n) (Fin n) L))) [muG.IsMulLeftInvariant]
+    (hMassG : muG (valuationIntegralMatrixSubgroup v n : Set (Units (Matrix (Fin n) (Fin n) L))) = 1)
+    (chi : Fin n -> MonoidHom GU Complex)
+    (hUnit : forall i x, Membership.mem (heckeLocalUnitShell p) x -> chi i x = 1)
+    (s : Complex)
+    (hNorm : forall i, norm (unramifiedLocalWeightedCharacter (chi i) s u0) < 1) :
+    let f := valuationUnramifiedSphericalIntegrand L v n (productDiagonalCharacter n chi) s
+    And (Integrable f muG) (integral muG f = Finset.univ.prod
+      (fun i : Fin n => Inv.inv (1 - unramifiedLocalWeightedCharacter (chi i) s u0))) := by
+  classical
+  let G := Units (Matrix (Fin n) (Fin n) L)
+  let A := Units (Fin n -> L)
+  let T := Fin n -> GU
+  let B := valuationUpperTriangularSubgroup L n
+  let U := valuationUpperUnitriangularSubgroup L n
+  let _ : MeasurableSpace A := borel A
+  let _ : BorelSpace A := BorelSpace.mk rfl
+  let _ : MeasurableSpace B := borel B
+  let _ : BorelSpace B := BorelSpace.mk rfl
+  let _ : MeasurableSpace U := borel U
+  let _ : BorelSpace U := BorelSpace.mk rfl
+  let _ : MeasurableMul A := measurableMul_of_continuousBorel A
+  let _ : MeasurableMul B := measurableMul_of_continuousBorel B
+  let _ : MeasurableMul U := measurableMul_of_continuousBorel U
+  let _ : MeasurableMul G := measurableMul_of_continuousBorel G
+  let _ : MeasurableMul GU := measurableMul_of_continuousBorel GU
+  let _ : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  let op : Homeomorph L (MulOpposite L) := MulOpposite.opHomeomorph
+  let _ : SecondCountableTopology (MulOpposite L) := op.symm.isEmbedding.secondCountableTopology
+  have hUnits : Topology.IsEmbedding (Units.embedProduct L) := Units.isEmbedding_embedProduct
+  let _ : SecondCountableTopology GU := hUnits.secondCountableTopology
+  let _ : SecondCountableTopology T := inferInstanceAs (SecondCountableTopology (Fin n -> GU))
+  let D : ContinuousMulEquiv A T := ContinuousMulEquiv.piUnits
+  let _ : SecondCountableTopology A := D.toHomeomorph.isEmbedding.secondCountableTopology
+  let nu := heckeLocalHaar p
+  let muT := Measure.pi (fun _ : Fin n => nu)
+  let muA := Measure.map D.symm muT
+  let muU := valuationUnitriangularProductMeasure L (heckeLocalAdditiveMeasure p) n
+  let _ : SigmaFinite (heckeLocalAdditiveMeasure p) := sigmaFinite_heckeLocalAdditiveMeasure p
+  let _ : (heckeLocalAdditiveMeasure p).IsAddLeftInvariant := isAddLeftInvariant_heckeLocalAdditiveMeasure p
+  let _ : SigmaFinite muU :=
+    sigmaFinite_valuationUnitriangularProductMeasure L (heckeLocalAdditiveMeasure p) n
+  let _ : muU.IsMulLeftInvariant :=
+    isMulLeftInvariant_valuationUnitriangularProductMeasure L (heckeLocalAdditiveMeasure p) n
+  have hMuT : muT.IsMulLeftInvariant := by
+    constructor
+    intro t
+    exact (measurePreserving_pi (fun _ : Fin n => nu) (fun _ : Fin n => nu)
+      (fun i => measurePreserving_mul_left nu (t i))).map_eq
+  let _ := hMuT
+  have hD : Measurable (D.symm : T -> A) := D.symm.continuous.measurable
+  let _ : muA.IsMulLeftInvariant :=
+    isMulLeftInvariant_map D.symm.toMulEquiv.toMulHom hD D.symm.surjective
+  let _ : SigmaFinite muA := D.symm.toHomeomorph.measurableEmbedding.sigmaFinite_map
+  have hOpen := Valued.isOpen_valuationSubring L
+  have hDiagMeas : MeasurableSet (valuationDiagonalIntegralSubgroup L n v : Set A) :=
+    ((isOpen_valuationIntegralMatrixSubgroup v n hOpen).preimage
+      (continuous_subtype_val.comp (continuous_valuationDiagonalSection L n))).measurableSet
+  have hRect : Set.preimage D.symm (valuationDiagonalIntegralSubgroup L n v : Set A) =
+      Set.pi Set.univ (fun _ : Fin n => heckeLocalUnitShell p) := by
+    ext t
+    change Membership.mem (valuationDiagonalIntegralSubgroup L n v) (D.symm t) <-> _
+    rw [mem_heckeDiagonalIntegral_iff_localUnitShell]
+    have hDT : MulEquiv.piUnits (D.symm t) = t := D.apply_symm_apply t
+    rw [hDT]
+    exact Iff.intro (fun h i _ => h i) (fun h i => h i (Set.mem_univ i))
+  have hMassA : muA (valuationDiagonalIntegralSubgroup L n v : Set A) = 1 := by
+    change Measure.map D.symm muT _ = _
+    rw [Measure.map_apply hD hDiagMeas, hRect]
+    change Measure.pi (fun _ : Fin n => nu) _ = _
+    rw [Measure.pi_pi]
+    simp only [nu, heckeLocalHaar_unitShell, Finset.prod_const_one]
+  have hMassU : muU (valuationUnitriangularIntegralSubgroup L n v : Set U) = 1 :=
+    measure_valuationUnitriangularProduct_integral L v (heckeLocalAdditiveMeasure p)
+      (heckeLocalAdditiveMeasure_integral p) n
+  have hChiDiag (a : A) (ha : Membership.mem (valuationDiagonalIntegralSubgroup L n v) a) :
+      productDiagonalCharacter n chi a = 1 := by
+    have hLocal := (mem_heckeDiagonalIntegral_iff_localUnitShell p n a).mp ha
+    change Finset.univ.prod (fun i : Fin n => chi i (MulEquiv.piUnits a i)) = 1
+    have h1 (i : Fin n) : chi i (MulEquiv.piUnits a i) = 1 := hUnit i _ (hLocal i)
+    simp only [h1, Finset.prod_const_one]
+  have hInducing (b : B) (hb : Membership.mem (valuationIntegralMatrixSubgroup v n) b.val) :
+      valuationNormalizedInducingCharacter L n (productDiagonalCharacter n chi) b = 1 :=
+    valuationNormalizedInducingCharacter_eq_one L v (heckeLocal_mem_integers_iff_norm_le_one p)
+      n _ hChiDiag b hb
+  let f := valuationUnramifiedSphericalIntegrand L v n (productDiagonalCharacter n chi) s
+  have hF : Continuous f :=
+    continuous_valuationUnramifiedSphericalIntegrand L v n hOpen _ hInducing s
+  let E := valuationTriangularHomeomorph L n
+  let fA (z : Prod A U) := f (E.symm z).val
+  have hFA : Measurable fA :=
+    (hF.comp (continuous_subtype_val.comp E.symm.continuous)).measurable
+  let phi : Prod T U -> Prod A U := Prod.map D.symm id
+  have hPhi : Measurable phi := hD.prodMap measurable_id
+  have hMap : Measure.map phi (muT.prod muU) = muA.prod muU := by
+    change Measure.map (Prod.map D.symm id) (muT.prod muU) =
+      (Measure.map D.symm muT).prod muU
+    rw [<- Measure.map_prod_map muT muU hD measurable_id, Measure.map_id]
+  have hProduct := integrableAndIntegral_heckeUnramifiedSpherical_product p n u0 hu0 chi
+    hUnit hInducing s hNorm
+  have hIntA : Integrable fA (muA.prod muU) := by
+    rw [<- hMap]
+    exact (integrable_map_measure hFA.aestronglyMeasurable hPhi.aemeasurable).mpr hProduct.1
+  have hIA : integral (muA.prod muU) fA = Finset.univ.prod
+      (fun i : Fin n => Inv.inv (1 - unramifiedLocalWeightedCharacter (chi i) s u0)) := by
+    rw [<- hMap, integral_map hPhi.aemeasurable hFA.aestronglyMeasurable]
+    exact hProduct.2.1
+  have hCompare := integrable_iff_and_integral_valuationIwasawa_in_product_coordinates L n v hOpen
+    muG muA muU hMassG hMassA hMassU f hF.measurable
+    (heckeUnramifiedSphericalIntegrand_rightInvariant p n _ hInducing s)
+  exact And.intro (hCompare.1.mpr hIntA) (hCompare.2.trans hIA)
+
+end ActualHaar
+
 end Robin1984.GRH

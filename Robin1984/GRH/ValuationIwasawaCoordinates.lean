@@ -306,9 +306,10 @@ theorem preimage_valuationTriangularHomeomorph_integral
     exact K.mul_mem hp.1 hp.2
 
 open MeasureTheory in
-/-- Normalized diagonal and unitriangular Haar measures compute the integral
-of a right-integral-invariant kernel on the full matrix group. -/
-theorem integral_valuationIwasawa_in_product_coordinates
+/-- For a right-integral-invariant kernel, normalized Haar integrability
+on the full matrix group is equivalent to that in the product coordinates.
+The two Bochner integrals agree. -/
+theorem integrable_iff_and_integral_valuationIwasawa_in_product_coordinates
     [SecondCountableTopology F] {V : Type*} [LinearOrderedCommGroupWithZero V]
     (v : Valuation F V) (hOpen : IsOpen (v.integer : Set F))
     [MeasurableSpace (Units M)] [BorelSpace (Units M)] [MeasurableMul (Units M)]
@@ -321,11 +322,11 @@ theorem integral_valuationIwasawa_in_product_coordinates
     (hG : muG (valuationIntegralMatrixSubgroup v n : Set (Units M)) = 1)
     (hA : muA (valuationDiagonalIntegralSubgroup F n v : Set A) = 1)
     (hU : muU (valuationUnitriangularIntegralSubgroup F n v : Set U) = 1)
-    (f : Units M -> Complex) (hF : Measurable f) (hInt : Integrable f muG)
+    (f : Units M -> Complex) (hF : Measurable f)
     (hRight : forall g k : Units M, Membership.mem (valuationIntegralMatrixSubgroup v n) k ->
       f (g * k) = f g) :
     let E := valuationTriangularHomeomorph F n
-    And (Integrable (fun p => f (E.symm p).val) (muA.prod muU))
+    And (Integrable f muG <-> Integrable (fun p => f (E.symm p).val) (muA.prod muU))
       (integral muG f = integral (muA.prod muU) (fun p => f (E.symm p).val)) := by
   let K := valuationIntegralMatrixSubgroup v n
   let E := valuationTriangularHomeomorph F n
@@ -350,11 +351,39 @@ theorem integral_valuationIwasawa_in_product_coordinates
     change Measure.map E.symm (muA.prod muU) _ = _
     rw [Measure.map_apply hE hKBm, hPre]
     exact (@Measure.prod_prod A U _ _ muA muU _ _ _).trans (by rw [hA, hU, mul_one])
-  have hRestrict := integral_rightInvariant_eq_integral_of_iwasawa
+  have hRestrict := integrable_iff_and_integral_rightInvariant_of_iwasawa
     (valuationUpperTriangularSubgroup F n) K hIncl hOpenK
-    (valuationIwasawaSubgroupFactorization v n) muG muB hG hB f hF hInt hRight
-  exact And.intro (hRestrict.1.comp_measurable hE)
-    (hRestrict.2.trans (integral_map hE.aemeasurable hRestrict.1.aestronglyMeasurable))
+    (valuationIwasawaSubgroupFactorization v n) muG muB hG hB f hF hRight
+  have hMeas : AEStronglyMeasurable (fun b : B => f (b : Units M)) muB :=
+    (hF.comp hIncl).aestronglyMeasurable
+  exact And.intro (hRestrict.1.trans (integrable_map_measure hMeas hE.aemeasurable))
+    (hRestrict.2.trans (integral_map hE.aemeasurable hMeas))
+
+open MeasureTheory in
+/-- Normalized diagonal and unitriangular Haar measures compute the integral
+of a right-integral-invariant kernel on the full matrix group. -/
+theorem integral_valuationIwasawa_in_product_coordinates
+    [SecondCountableTopology F] {V : Type*} [LinearOrderedCommGroupWithZero V]
+    (v : Valuation F V) (hOpen : IsOpen (v.integer : Set F))
+    [MeasurableSpace (Units M)] [BorelSpace (Units M)] [MeasurableMul (Units M)]
+    [MeasurableSpace B] [BorelSpace B] [MeasurableMul B]
+    [MeasurableSpace A] [BorelSpace A] [MeasurableMul A]
+    [MeasurableSpace U] [BorelSpace U] [MeasurableMul U] [BorelSpace (Prod A U)]
+    (muG : Measure (Units M)) (muA : Measure A) (muU : Measure U)
+    [muG.IsMulLeftInvariant] [muA.IsMulLeftInvariant] [muU.IsMulLeftInvariant]
+    [SFinite muA] [SFinite muU]
+    (hG : muG (valuationIntegralMatrixSubgroup v n : Set (Units M)) = 1)
+    (hA : muA (valuationDiagonalIntegralSubgroup F n v : Set A) = 1)
+    (hU : muU (valuationUnitriangularIntegralSubgroup F n v : Set U) = 1)
+    (f : Units M -> Complex) (hF : Measurable f) (hInt : Integrable f muG)
+    (hRight : forall g k : Units M, Membership.mem (valuationIntegralMatrixSubgroup v n) k ->
+      f (g * k) = f g) :
+    let E := valuationTriangularHomeomorph F n
+    And (Integrable (fun p => f (E.symm p).val) (muA.prod muU))
+      (integral muG f = integral (muA.prod muU) (fun p => f (E.symm p).val)) := by
+  have h := integrable_iff_and_integral_valuationIwasawa_in_product_coordinates F n v hOpen
+    muG muA muU hG hA hU f hF hRight
+  exact And.intro (h.1.mp hInt) h.2
 
 end
 
