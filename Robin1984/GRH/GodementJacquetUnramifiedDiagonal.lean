@@ -1,4 +1,5 @@
 import Mathlib.Algebra.Group.Pi.Units
+import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.MeasureTheory.Integral.Pi
 import Mathlib.Topology.Algebra.Group.Units
 import Mathlib.Topology.LocallyConstant.Algebra
@@ -1669,6 +1670,127 @@ theorem exists_heckeLocalZetaTest_matrixCoefficientLaurentNormalization
       (norm g.val.det : Complex) ^ z * (Phi g.val * c g)) = 1 := hz.2
   rw [hUnitIntegral, mul_one] at hSum
   simpa only [hEq] using hSum
+
+section SmoothDual
+
+variable {G : Type*} [Group G] [TopologicalSpace G] [ContinuousMul G]
+variable {V : Type*} [AddCommGroup V] [Module Complex V]
+
+local notation "SmoothDualLinearMap" => LinearMap (RingHom.id Complex) V Complex
+
+/-- The smooth dual consists of linear functionals fixed under precomposition
+by the action on some neighborhood of the identity. -/
+def heckeLocalSmoothDual (rho : MonoidHom G (Module.End Complex V)) :
+    Submodule Complex SmoothDualLinearMap where
+  carrier := {d | Filter.Eventually (fun g => d.comp (rho g) = d) (nhds (1 : G))}
+  zero_mem' := Filter.Eventually.of_forall (fun g => by
+    ext x
+    rfl)
+  add_mem' := fun {a b} ha hb => (ha.and hb).mono (fun g h => by
+    ext x
+    change a (rho g x) + b (rho g x) = a x + b x
+    have ha' : a (rho g x) = a x := DFunLike.congr_fun h.1 x
+    have hb' : b (rho g x) = b x := DFunLike.congr_fun h.2 x
+    rw [ha', hb'])
+  smul_mem' := fun r {d} hd => hd.mono (fun g h => by
+    ext x
+    exact congrArg (fun value : Complex => r * value) (DFunLike.congr_fun h x))
+
+/-- Precomposition by a group element preserves the smooth dual. -/
+theorem heckeLocalSmoothDual_comp_mem
+    (rho : MonoidHom G (Module.End Complex V)) (A : G) (d : SmoothDualLinearMap)
+    (hd : Membership.mem (heckeLocalSmoothDual rho) d) :
+    Membership.mem (heckeLocalSmoothDual rho) (d.comp (rho A)) := by
+  change Filter.Eventually (fun g => d.comp (rho g) = d) (nhds (1 : G)) at hd
+  change Filter.Eventually (fun g => (d.comp (rho A)).comp (rho g) = d.comp (rho A))
+    (nhds (1 : G))
+  have hContinuous : Continuous (fun g : G => A * g * Inv.inv A) :=
+    (continuous_const.mul continuous_id).mul continuous_const
+  have hTendsto : Filter.Tendsto (fun g : G => A * g * Inv.inv A)
+      (nhds (1 : G)) (nhds (1 : G)) := by
+    simpa only [mul_one, mul_inv_cancel] using hContinuous.tendsto (1 : G)
+  refine (hTendsto.eventually hd).mono ?_
+  intro g hg
+  ext x
+  change d (rho A (rho g x)) = d (rho A x)
+  have hCancel : (A * g * Inv.inv A) * A = A * g := by
+    rw [mul_assoc, inv_mul_cancel, mul_one]
+  calc
+    d (rho A (rho g x)) = d (rho (A * g) x) :=
+      (congrArg (fun T : Module.End Complex V => d (T x)) (map_mul rho A g)).symm
+    _ = d (rho ((A * g * Inv.inv A) * A) x) :=
+      congrArg (fun k : G => d (rho k x)) hCancel.symm
+    _ = d (rho (A * g * Inv.inv A) (rho A x)) :=
+      congrArg (fun T : Module.End Complex V => d (T x))
+        (map_mul rho (A * g * Inv.inv A) A)
+    _ = d (rho A x) := DFunLike.congr_fun hg (rho A x)
+
+end SmoothDual
+
+section UnitaryDual
+
+variable {G : Type*} [Group G] [TopologicalSpace G]
+variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace Complex V]
+
+/-- For an inner-product-preserving representation, a nonzero vector fixed
+near the identity admits a smooth dual vector pairing to one. -/
+theorem exists_heckeLocalSmoothDual_pairing_one
+    (rho : MonoidHom G (Module.End Complex V)) (vec : V) (hvec : Not (vec = 0))
+    (hUnitary : forall g x y, innerSL Complex (rho g x) (rho g y) = innerSL Complex x y)
+    (hFixed : Filter.Eventually (fun g => rho g vec = vec) (nhds (1 : G))) :
+    Exists (fun ell : LinearMap (RingHom.id Complex) V Complex =>
+      And (Membership.mem (heckeLocalSmoothDual rho) ell) (ell vec = 1)) := by
+  let c := innerSL Complex vec vec
+  have hC : Not (c = 0) := by
+    change Not (innerSL Complex vec vec = 0)
+    rw [innerSL_apply_apply]
+    exact inner_self_ne_zero.mpr hvec
+  let ell := SMul.smul (Inv.inv c) (innerSL Complex vec).toLinearMap
+  refine Exists.intro ell (And.intro ?_ ?_)
+  next =>
+    change Filter.Eventually (fun g => ell.comp (rho g) = ell) (nhds (1 : G))
+    refine hFixed.mono ?_
+    intro g hg
+    ext x
+    change Inv.inv c * innerSL Complex vec (rho g x) = Inv.inv c * innerSL Complex vec x
+    have h := hUnitary g vec x
+    rw [hg] at h
+    rw [h]
+  next =>
+    change Inv.inv c * c = 1
+    field_simp [hC]
+
+end UnitaryDual
+
+/-- A nonzero smooth vector in a unitary representation supplies compact
+local tests and smooth dual vectors whose integrals realize every Laurent
+polynomial in the prime-norm multiplier. The pairing normalization and
+absolute convergence hold for every complex exponent. -/
+theorem exists_heckeLocalZetaTest_unitaryLaurentNormalization
+    (n : Nat) [MeasurableSpace (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L))]
+    [BorelSpace (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L))]
+    (mu : Measure (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L))) [mu.IsHaarMeasure]
+    (u : Units L) (hu : Valued.v u.val = finiteUniformizerValue)
+    (V : Type*) [NormedAddCommGroup V] [InnerProductSpace Complex V]
+    (rho : MonoidHom (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L)) (Module.End Complex V))
+    (vec : V) (hvec : Not (vec = 0))
+    (hUnitary : forall g x y, innerSL Complex (rho g x) (rho g y) = innerSL Complex x y)
+    (hFixed : Filter.Eventually (fun g => rho g vec = vec)
+      (nhds (1 : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L)))) :
+    Exists (fun Psi : Int -> LocallyConstant (Matrix (Fin (n + 1)) (Fin (n + 1)) L) Complex =>
+      Exists (fun ellShift : Int -> LinearMap (RingHom.id Complex) V Complex =>
+        And (forall m, And (HasCompactSupport (fun X => Psi m X))
+          (Membership.mem (heckeLocalSmoothDual rho) (ellShift m)))
+          (forall (S : Finset Int) (a : Int -> Complex) (z : Complex),
+            let F := fun g : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L) =>
+              S.sum (fun m => a m * ((norm g.val.det : Complex) ^ z *
+                (Psi m g.val * ellShift m (rho g vec))))
+            And (Integrable F mu)
+              (integral mu F = S.sum (fun m =>
+                a m * ((dedekindPrimeNorm K p : Complex) ^ z) ^ m))))) := by
+  choose ell hEll using exists_heckeLocalSmoothDual_pairing_one rho vec hvec hUnitary hFixed
+  exact exists_heckeLocalZetaTest_matrixCoefficientLaurentNormalization p n mu u hu V rho
+    (heckeLocalSmoothDual rho) (heckeLocalSmoothDual_comp_mem rho) ell hEll.1 vec hEll.2 hFixed
 
 end LocalUnitZetaTest
 
