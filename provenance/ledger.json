@@ -1695,6 +1695,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetFiniteAdelicTestRectangles.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The compact-open subgroup topology of finite adeles and finite coset decompositions of compactly supported locally constant functions.",
+      "formalization_note": "Constructs a common nonzero integral modulus for finite adelic neighborhoods and expands compact locally constant tests into disjoint principal rectangles.",
+      "content_basis": "Uses finite-place valuation bounds, product neighborhoods, a finite coset cover, and the principal-rectangle representation.",
+      "dependency_status": "Uses Mathlib finite adeles and the existing principal rectangle and additive coset constructions.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetFiniteMatrixDenominator.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Finite idele norms and adjugate matrices in the Godement--Jacquet construction.",

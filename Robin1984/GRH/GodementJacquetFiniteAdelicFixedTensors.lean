@@ -175,6 +175,40 @@ theorem finiteAdeleMatrixRestrictedZetaIntegrand_fixedTensorExpansion
   rw [integral_finsetSum Finset.univ (fun c _ => hWeighted c)]
   simp only [integral_const_mul]
 
+/-- Realize any finite set of local translates by one finite adelic matrix
+unit. The product coefficient at the translated matrix agrees with the
+product of the chosen local translates. -/
+theorem exists_finiteAdeleMatrixUnit_translateRestrictedCoefficient
+    (n : Nat) (E : Finset P) [DecidablePred (fun p : P => Membership.mem E p)]
+    (T : forall p : Subtype (fun p : P => Membership.mem E p), localMatrixGroup K n p.val)
+    (c : forall p : P, localMatrixGroup K n p -> Complex) :
+    let G := Units (Matrix (Fin n) (Fin n) (FiniteAdeleRing (RingOfIntegers K) K))
+    let ev (p : P) : MonoidHom G (localMatrixGroup K n p) :=
+      Units.map (finiteAdeleMatrixEval K n p).toMonoidHom
+    let t (p : P) : localMatrixGroup K n p :=
+      if hp : Membership.mem E p then T (Subtype.mk p hp) else 1
+    exists A : G,
+      And (forall p : P, ev p A = t p)
+        (forall g : G,
+          finiteAdeleMatrixRestrictedZetaIntegrand K n c (A * g) =
+          finiteAdeleMatrixRestrictedZetaIntegrand K n
+            (fun p y => c p (t p * y)) g) := by
+  intro G ev t
+  let x : FiniteAdeleMatrixHaarChart K n E := Prod.mk T (fun _ => 1)
+  let A : G := finiteAdeleMatrixHaarChartEmbedding K n E x
+  have hEval (p : P) : ev p A = t p := by
+    by_cases hp : Membership.mem E p
+    . simp only [t, dif_pos hp]
+      exact finiteAdeleMatrixHaarChartEval_of_mem K n E x (Subtype.mk p hp)
+    . simp only [t, dif_neg hp]
+      exact finiteAdeleMatrixHaarChartEval_of_notMem K n E x (Subtype.mk p hp)
+  refine Exists.intro A (And.intro hEval (fun g => ?_))
+  change finprod (fun p : P => c p (ev p (A * g))) =
+    finprod (fun p : P => c p (t p * ev p g))
+  apply congrArg finprod
+  funext p
+  rw [map_mul, hEval p]
+
 end
 
 end Robin1984.GRH

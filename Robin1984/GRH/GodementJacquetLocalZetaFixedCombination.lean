@@ -142,6 +142,60 @@ theorem exists_heckeLocalZeta_fixedReciprocalCombination
     (Exists.intro tau ?_)))))
   exact And.intro h.1 (fun s hs => (h.2 s hs).2)
 
+/-- Index the supported terms of a fixed local test combination by a single
+finite type, with their translated test, weight and integrability retained. -/
+theorem exists_heckeLocalZeta_finiteFixedReciprocalCombination
+    [MeasurableSpace G] [MeasurableMul G]
+    (mu : Measure G) [mu.IsMulLeftInvariant]
+    (u : Units L) (hu : Valued.v u.val = finiteUniformizerValue)
+    (D : Polynomial Complex) (c : G -> Complex)
+    (hGen : HasHeckeLocalZetaInverseCombination mu
+      (fun s : Complex => (norm u.val : Complex) ^ s) D c) :
+    exists (m : Nat) (U : Fin m -> G) (Phi : Fin m -> Test)
+        (a : Fin m -> Complex) (tau : Real),
+      And (forall i, HasCompactSupport (fun X => Phi i X))
+        (forall s : Complex, tau < s.re ->
+          let f (i : Fin m) (g : G) :=
+            (norm g.val.det : Complex) ^ s * (Phi i g.val * c (U i * g))
+          And (forall i, Integrable (f i) mu)
+            (And (Integrable (fun g : G => Finset.univ.sum (fun i => a i * f i g)) mu)
+              (integral mu (fun g : G => Finset.univ.sum (fun i => a i * f i g)) =
+                Inv.inv (D.eval ((norm u.val : Complex) ^ s))))) := by
+  classical
+  choose m U Phi S a tau h using exists_heckeLocalZeta_fixedReciprocalCombination_termwise
+    p n mu u hu D c hGen
+  let I := Sigma (fun i : Fin m => {j : Int // Membership.mem (S i) j})
+  let e := Fintype.equivFin I
+  let r := Fintype.card I
+  let U' (i : Fin r) := U (e.symm i).1 ^ (e.symm i).2.val
+  let Phi' (i : Fin r) := Phi (e.symm i).1 (e.symm i).2.val
+  let a' (i : Fin r) := a (e.symm i).1 (e.symm i).2.val
+  refine Exists.intro r (Exists.intro U' (Exists.intro Phi' (Exists.intro a'
+    (Exists.intro tau (And.intro (fun i => h.1 (e.symm i).1 (e.symm i).2.val) ?_)))))
+  intro s hs f
+  have hEq : (fun g : G => Finset.univ.sum (fun i => a' i * f i g)) =
+      (fun g : G => Finset.univ.sum (fun i : Fin m =>
+        (S i).sum (fun j => a i j * ((norm g.val.det : Complex) ^ s *
+          (Phi i j g.val * c (U i ^ j * g)))))) := by
+    funext g
+    let T (i : Fin m) (j : Int) := a i j * ((norm g.val.det : Complex) ^ s *
+      (Phi i j g.val * c (U i ^ j * g)))
+    change (Finset.univ.sum (fun i : Fin r => T (e.symm i).1 (e.symm i).2.val)) =
+      Finset.univ.sum (fun i : Fin m => (S i).sum (T i))
+    calc
+      _ = Finset.univ.sum (fun i : I => T i.1 i.2.val) :=
+        (Fintype.sum_equiv e _ _ (fun i =>
+          (congrArg (fun j : I => T j.1 j.2.val) (e.symm_apply_apply i)).symm)).symm
+      _ = _ := by
+        rw [Fintype.sum_sigma]
+        apply Finset.sum_congr rfl
+        intro i _
+        exact (Finset.sum_subtype (p := fun j : Int => Membership.mem (S i) j)
+          (S i) (fun _ => Iff.rfl) (T i)).symm
+  refine And.intro (fun i => (h.2 s hs).1 (e.symm i).1 (e.symm i).2.val) ?_
+  rw [hEq]
+  exact (h.2 s hs).2
+
 end
 
 end Robin1984.GRH
