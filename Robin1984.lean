@@ -33,6 +33,7 @@ import Robin1984.GRH.GodementJacquetThetaLatticeDecay
 import Robin1984.GRH.GodementJacquetThetaMellin
 import Robin1984.GRH.GodementJacquetThetaWeightedCancellation
 import Robin1984.GRH.GodementJacquetUnfolding
+import Robin1984.GRH.GodementJacquetUnramifiedDiagonal
 import Robin1984.GRH.GodementJacquetUnramifiedMeasure
 import Robin1984.GRH.GodementJacquetUnramifiedSpherical
 import Robin1984.GRH.GodementJacquetVectorPoisson

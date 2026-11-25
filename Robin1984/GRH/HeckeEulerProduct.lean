@@ -790,7 +790,7 @@ private theorem integral_on_geometric_shells {X : Type*} [MeasurableSpace X]
 
 /-- A multiplicative local weight trivial on the unit shell integrates to
 its Euler factor over the union of the uniformizer shells. -/
-private theorem integral_unramified_uniformizerShells
+theorem integral_unramified_uniformizerShells
     {G : Type*} [Group G] [MeasurableSpace G] [MeasurableMul G]
     (M : Measure G) [Measure.IsMulLeftInvariant M] (unitShell : Set G)
     (hMeas : MeasurableSet unitShell) (hMass : M unitShell = 1)

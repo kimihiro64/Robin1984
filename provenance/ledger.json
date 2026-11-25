@@ -1938,6 +1938,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetUnramifiedDiagonal.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The diagonal integration in the unramified Godement-Jacquet local calculation, Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
+      "formalization_note": "Combines the unipotent fibre integral with multiplicative unit shells and finite product integration in diagonal coordinates.",
+      "content_basis": "Checked the integral valuation cone, the normalized scalar Haar integral, and the product of local factors under its geometric convergence conditions.",
+      "dependency_status": "Uses the Tate unit-shell calculation and the normalized finite-place unipotent integral. Compact averaging and the group integral are separate steps.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetUnramifiedMeasure.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The normalized additive measure and upper-unitriangular volumes in the unramified local Godement-Jacquet integral.",
