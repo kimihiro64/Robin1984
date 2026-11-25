@@ -6,7 +6,7 @@ import Robin1984.GRH.ValuationPrincipalCongruenceFactorization
 
 - Classification: **Standard mathematical formalization**.
 - Mathematical source: Cayley-Hamilton and the rational generating series of a linear recurrence.
-- Formalization note: Proves multiplicativity of compression on ordered diagonal units and an affine-ray generating series with a denominator fixed by the direction operator.
+- Formalization note: Proves multiplicativity of compression on ordered diagonal units and gives common denominators for affine rays and finitely generated weighted cones.
 - PROVENANCE-END
 -/
 
@@ -15,8 +15,9 @@ import Robin1984.GRH.ValuationPrincipalCongruenceFactorization
 
 On the principal congruence-fixed range, the two-element double-coset
 identity makes the compressed diagonal action multiplicative. The
-reversed characteristic polynomial of one direction then gives a
-common denominator for its translates in the ordered diagonal monoid.
+reversed characteristic polynomial gives a common denominator for
+each direction. Their weight-dilated product controls the sum over a
+finite family of directions.
 -/
 
 set_option autoImplicit false
@@ -68,6 +69,55 @@ def HeckeLocalSubgroupAverage.orderedDiagonalOperators
       ((valuationDiagonalSection F rank b.val).val)
       (exists_valuationPrincipalCongruence_doubleCoset_factor_of_ordered
         vf rank r hr a.val b.val a.property b.property)).symm
+
+private theorem mul_tsum_reversed_recurrence
+    (a c : Nat -> Complex) (d : Nat)
+    (hRec : forall n : Nat, (Finset.range (d + 1)).sum (fun j => c j * a (n + j)) = 0)
+    (z : Complex) (hz : Summable (fun n : Nat => a n * z ^ n)) :
+    ((Finset.range (d + 1)).sum (fun j => c j * z ^ (d - j))) *
+        tsum (fun n : Nat => a n * z ^ n) =
+      (Finset.range (d + 1)).sum
+        (fun j => (c j * z ^ (d - j)) * (Finset.range j).sum (fun n => a n * z ^ n)) := by
+  have hTail (j : Nat) : Summable (fun n : Nat => a (n + j) * z ^ (n + j)) :=
+    (summable_nat_add_iff j).mpr hz
+  have hRecWeighted (n : Nat) :
+      (Finset.range (d + 1)).sum
+        (fun j => (c j * z ^ (d - j)) * (a (n + j) * z ^ (n + j))) = 0 := by
+    calc
+      _ = (Finset.range (d + 1)).sum (fun j => z ^ (n + d) * (c j * a (n + j))) := by
+        apply Finset.sum_congr rfl
+        intro j hj
+        have hjd : j <= d := Nat.le_of_lt_succ (Finset.mem_range.mp hj)
+        have hExp : d - j + (n + j) = n + d := by omega
+        calc
+          _ = (z ^ (d - j) * z ^ (n + j)) * (c j * a (n + j)) := by ac_rfl
+          _ = _ := by rw [<- pow_add, hExp]
+      _ = 0 := by rw [<- Finset.mul_sum, hRec n, mul_zero]
+  have hCancel : (Finset.range (d + 1)).sum
+      (fun j => (c j * z ^ (d - j)) * tsum (fun n : Nat => a (n + j) * z ^ (n + j))) = 0 := by
+    have hSummable (j : Nat) (_ : Membership.mem (Finset.range (d + 1)) j) :
+        Summable (fun n : Nat => (c j * z ^ (d - j)) * (a (n + j) * z ^ (n + j))) :=
+      (hTail j).mul_left _
+    have hWeightedZero : (fun n : Nat => (Finset.range (d + 1)).sum
+        (fun j => (c j * z ^ (d - j)) * (a (n + j) * z ^ (n + j)))) = fun _ => 0 :=
+      funext hRecWeighted
+    calc
+      _ = tsum (fun n : Nat => (Finset.range (d + 1)).sum
+          (fun j => (c j * z ^ (d - j)) * (a (n + j) * z ^ (n + j)))) := by
+        rw [Summable.tsum_finsetSum hSummable]
+        apply Finset.sum_congr rfl
+        intro j _
+        exact ((hTail j).tsum_mul_left (c j * z ^ (d - j))).symm
+      _ = 0 := by rw [hWeightedZero, tsum_zero]
+  rw [Finset.sum_mul]
+  calc
+    _ = (Finset.range (d + 1)).sum (fun j => (c j * z ^ (d - j)) *
+        ((Finset.range j).sum (fun n => a n * z ^ n) +
+          tsum (fun n : Nat => a (n + j) * z ^ (n + j)))) := by
+      apply Finset.sum_congr rfl
+      intro j _
+      exact congrArg (fun x => (c j * z ^ (d - j)) * x) (hz.sum_add_tsum_nat_add j).symm
+    _ = _ := by simp only [mul_add, Finset.sum_add_distrib, hCancel, add_zero]
 
 private theorem exists_polynomial_relation_of_monic_recurrence
     (a c : Nat -> Complex) (d : Nat) (hc : c d = 1)
@@ -121,46 +171,8 @@ private theorem exists_polynomial_relation_of_monic_recurrence
       exact False.elim (h (Finset.mem_range.mpr (Nat.lt_succ_self d)))
   next =>
     intro z hz
-    have hTail (j : Nat) : Summable (fun n : Nat => a (n + j) * z ^ (n + j)) :=
-      (summable_nat_add_iff j).mpr hz
-    have hRecWeighted (n : Nat) :
-        (Finset.range (d + 1)).sum
-          (fun j => (c j * z ^ (d - j)) * (a (n + j) * z ^ (n + j))) = 0 := by
-      calc
-        _ = (Finset.range (d + 1)).sum (fun j => z ^ (n + d) * (c j * a (n + j))) := by
-          apply Finset.sum_congr rfl
-          intro j hj
-          have hjd : j <= d := Nat.le_of_lt_succ (Finset.mem_range.mp hj)
-          have hExp : d - j + (n + j) = n + d := by omega
-          calc
-            _ = (z ^ (d - j) * z ^ (n + j)) * (c j * a (n + j)) := by ac_rfl
-            _ = _ := by rw [<- pow_add, hExp]
-        _ = 0 := by rw [<- Finset.mul_sum, hRec n, mul_zero]
-    have hCancel : (Finset.range (d + 1)).sum
-        (fun j => (c j * z ^ (d - j)) * tsum (fun n : Nat => a (n + j) * z ^ (n + j))) = 0 := by
-      have hSummable (j : Nat) (_ : Membership.mem (Finset.range (d + 1)) j) :
-          Summable (fun n : Nat => (c j * z ^ (d - j)) * (a (n + j) * z ^ (n + j))) :=
-        (hTail j).mul_left _
-      have hWeightedZero : (fun n : Nat => (Finset.range (d + 1)).sum
-          (fun j => (c j * z ^ (d - j)) * (a (n + j) * z ^ (n + j)))) = fun _ => 0 :=
-        funext hRecWeighted
-      calc
-        _ = tsum (fun n : Nat => (Finset.range (d + 1)).sum
-            (fun j => (c j * z ^ (d - j)) * (a (n + j) * z ^ (n + j)))) := by
-          rw [Summable.tsum_finsetSum hSummable]
-          apply Finset.sum_congr rfl
-          intro j _
-          exact ((hTail j).tsum_mul_left (c j * z ^ (d - j))).symm
-        _ = 0 := by rw [hWeightedZero, tsum_zero]
-    rw [hq, hp, Finset.sum_mul]
-    calc
-      _ = (Finset.range (d + 1)).sum (fun j => (c j * z ^ (d - j)) *
-          ((Finset.range j).sum (fun n => a n * z ^ n) +
-            tsum (fun n : Nat => a (n + j) * z ^ (n + j)))) := by
-        apply Finset.sum_congr rfl
-        intro j _
-        exact congrArg (fun x => (c j * z ^ (d - j)) * x) (hz.sum_add_tsum_nat_add j).symm
-      _ = _ := by simp only [mul_add, Finset.sum_add_distrib, hCancel, add_zero]
+    rw [hq, hp]
+    exact mul_tsum_reversed_recurrence a c d hRec z hz
 
 /-- Every affine ray in the ordered diagonal monoid has a rational
 matrix-coefficient series. Its denominator is the reversed characteristic
@@ -215,5 +227,290 @@ theorem valuationPrincipalCongruence_affineDiagonalRay_series
       exact P.pairing_proj ell hEll _
     simpa only [hTerm] using h
   exact exists_polynomial_relation_of_monic_recurrence aseq q.coeff d hLead hRec
+
+private def weightedConeExponent {n : Nat} (w e : Fin n -> Nat) : Nat :=
+  Finset.univ.sum (fun i => w i * e i)
+
+private def weightedRecurrencePolynomial (w d : Nat) (c : Nat -> Complex) :
+    Polynomial Complex :=
+  (Finset.range (d + 1)).sum (fun j => Polynomial.C (c j) * Polynomial.X ^ (w * (d - j)))
+
+private theorem eval_weightedRecurrencePolynomial (w d : Nat) (c : Nat -> Complex)
+    (z : Complex) :
+    (weightedRecurrencePolynomial w d c).eval z =
+      (Finset.range (d + 1)).sum (fun j => c j * (z ^ w) ^ (d - j)) := by
+  change Polynomial.evalRingHom z ((Finset.range (d + 1)).sum
+    (fun j => Polynomial.C (c j) * Polynomial.X ^ (w * (d - j)))) = _
+  rw [map_sum]
+  apply Finset.sum_congr rfl
+  intro j _
+  simp [pow_mul]
+
+private def weightedConeNumerator :
+    (n : Nat) -> (Fin n -> Nat) -> (Fin n -> Nat) ->
+      (Fin n -> Nat -> Complex) -> ((Fin n -> Nat) -> Complex) -> Polynomial Complex
+  | 0, _, _, _, f => Polynomial.C (f (fun i => Fin.elim0 i))
+  | n + 1, w, d, c, f =>
+    (Finset.range (d 0 + 1)).sum (fun j =>
+      (Polynomial.C (c 0 j) * Polynomial.X ^ (w 0 * (d 0 - j))) *
+        (Finset.range j).sum (fun m =>
+          weightedConeNumerator n (fun i => w i.succ) (fun i => d i.succ)
+            (fun i => c i.succ) (fun t => f (Fin.cons m t)) *
+          Polynomial.X ^ (w 0 * m)))
+
+private theorem update_finCons_zero {n : Nat} (m j : Nat) (t : Fin n -> Nat) :
+    Function.update (Fin.cons m t : Fin (n + 1) -> Nat) 0 j = Fin.cons j t := by
+  funext i
+  refine Fin.cases ?_ (fun i => ?_) i
+  next => simp
+  next => simp
+
+private theorem update_finCons_succ {n : Nat} (m j : Nat) (t : Fin n -> Nat) (i : Fin n) :
+    Function.update (Fin.cons m t : Fin (n + 1) -> Nat) i.succ j =
+      Fin.cons m (Function.update t i j) := by
+  funext a
+  refine Fin.cases ?_ (fun a => ?_) a
+  next => simp [Function.update_of_ne (Fin.succ_ne_zero i).symm]
+  next =>
+    by_cases h : a = i
+    next => subst a; simp
+    next =>
+      have h' : Not (a.succ = i.succ) := fun he => h (Fin.succ_inj.mp he)
+      simp [Function.update_of_ne h', Function.update_of_ne h]
+
+private theorem weightedConeSummable_at_zero
+    (n : Nat) (w : Fin n -> Nat) (hW : forall i, 0 < w i) (f : (Fin n -> Nat) -> Complex) :
+    Summable (fun t => f t * (0 : Complex) ^ weightedConeExponent w t) := by
+  classical
+  let o : Fin n -> Nat := fun _ => 0
+  apply summable_of_ne_finset_zero (s := {o})
+  intro t ht
+  have hne : Not (t = o) := fun h => ht (Finset.mem_singleton.mpr h)
+  choose i hi using Function.ne_iff.mp hne
+  have hi0 : Not (t i = 0) := hi
+  have hPos : 0 < weightedConeExponent w t :=
+    (Nat.mul_pos (hW i) (Nat.pos_of_ne_zero hi0)).trans_le
+      (Finset.single_le_sum (fun j _ => Nat.zero_le (w j * t j)) (Finset.mem_univ i))
+  rw [zero_pow hPos.ne', mul_zero]
+
+/-- Independent recurrences in the coordinates of an exponent cone
+give a product denominator for its weighted sum. The numerator is obtained
+by retaining only the finite initial segments in each coordinate. -/
+private theorem weightedCone_tsum_polynomial
+    (n : Nat) (w d : Fin n -> Nat) (c : Fin n -> Nat -> Complex)
+    (f : (Fin n -> Nat) -> Complex) (hW : forall i, 0 < w i)
+    (hRec : forall (i : Fin n) (t : Fin n -> Nat),
+      (Finset.range (d i + 1)).sum (fun j => c i j * f (Function.update t i (t i + j))) = 0) :
+    forall z : Complex, Summable (fun t => f t * z ^ weightedConeExponent w t) ->
+      (Finset.univ.prod (fun i => weightedRecurrencePolynomial (w i) (d i) (c i))).eval z *
+        tsum (fun t => f t * z ^ weightedConeExponent w t) =
+          (weightedConeNumerator n w d c f).eval z := by
+  induction n with
+  | zero =>
+    intro z _
+    let _ : Unique (Fin 0 -> Nat) :=
+      { default := fun i => Fin.elim0 i, uniq := fun _ => funext (fun i => Fin.elim0 i) }
+    let _ : Fintype (Fin 0 -> Nat) := Fintype.ofFinite _
+    simp [weightedConeExponent, weightedConeNumerator, tsum_fintype]
+    exact congrArg f (Subsingleton.elim _ _)
+  | succ n ih =>
+    intro z hz
+    let wt : Fin n -> Nat := fun i => w i.succ
+    let dt : Fin n -> Nat := fun i => d i.succ
+    let ct : Fin n -> Nat -> Complex := fun i => c i.succ
+    let row (m : Nat) (t : Fin n -> Nat) := f (Fin.cons m t)
+    let B (m : Nat) (t : Fin n -> Nat) := row m t * z ^ weightedConeExponent wt t
+    let Z := z ^ w 0
+    let T (p : Prod (Fin n -> Nat) Nat) := B p.2 p.1 * Z ^ p.2
+    let ix : Equiv (Prod (Fin n -> Nat) Nat) (Fin (n + 1) -> Nat) :=
+      (Equiv.prodComm (Fin n -> Nat) Nat).trans (Fin.consEquiv (fun _ => Nat))
+    have hTerm (p : Prod (Fin n -> Nat) Nat) :
+        f (ix p) * z ^ weightedConeExponent w (ix p) = T p := by
+      change f (Fin.cons p.2 p.1) *
+        z ^ Finset.univ.sum (fun i => w i * (Fin.cons p.2 p.1 : Fin (n + 1) -> Nat) i) = _
+      rw [Fin.sum_univ_succ, Fin.cons_zero, pow_add, pow_mul]
+      simp only [Fin.cons_succ, T, B, row, Z, weightedConeExponent, wt]
+      ac_rfl
+    have hProd : Summable T := ((ix.summable_iff).mpr hz).congr hTerm
+    have hTsum : tsum (fun t => f t * z ^ weightedConeExponent w t) =
+        tsum (fun t : Fin n -> Nat => tsum (fun m : Nat => T (t,m))) := by
+      rw [<- hProd.tsum_prod]
+      exact (ix.tsum_eq (fun t => f t * z ^ weightedConeExponent w t)).symm.trans (tsum_congr hTerm)
+    have hB (m : Nat) : Summable (B m) := by
+      by_cases hz0 : z = 0
+      next =>
+        subst z
+        exact weightedConeSummable_at_zero n wt (fun i => hW i.succ) (row m)
+      next =>
+        have hZ : Not (Z ^ m = 0) := pow_ne_zero _ (pow_ne_zero _ hz0)
+        refine (((hProd.prod_symm.prod_factor m).mul_right (Inv.inv (Z ^ m))).congr ?_)
+        intro t
+        change (B m t * Z ^ m) * Inv.inv (Z ^ m) = B m t
+        rw [mul_assoc]
+        simp [hZ]
+    have hRowRec (m : Nat) (i : Fin n) (t : Fin n -> Nat) :
+        (Finset.range (dt i + 1)).sum (fun j => ct i j *
+          row m (Function.update t i (t i + j))) = 0 := by
+      simpa only [dt, ct, row, Fin.cons_succ, update_finCons_succ] using
+        hRec i.succ (Fin.cons m t)
+    let term (j : Nat) := c 0 j * Z ^ (d 0 - j)
+    let headDen := (Finset.range (d 0 + 1)).sum term
+    have hFirst (t : Fin n -> Nat) :
+        headDen * tsum (fun m : Nat => T (t,m)) =
+          (Finset.range (d 0 + 1)).sum (fun j => term j *
+            (Finset.range j).sum (fun m => B m t * Z ^ m)) := by
+      have hRecHead (m : Nat) :
+          (Finset.range (d 0 + 1)).sum (fun j => c 0 j * B (m + j) t) = 0 := by
+        have h := hRec 0 (Fin.cons m t)
+        simp only [Fin.cons_zero, update_finCons_zero] at h
+        simp only [B, row, <- mul_assoc, <- Finset.sum_mul, h, zero_mul]
+      exact mul_tsum_reversed_recurrence (fun m => B m t) (c 0) (d 0) hRecHead Z
+        (hProd.prod_factor t)
+    have hHeadSum : headDen * tsum (fun t => f t * z ^ weightedConeExponent w t) =
+        (Finset.range (d 0 + 1)).sum (fun j => term j *
+          (Finset.range j).sum (fun m => tsum (B m) * Z ^ m)) := by
+      have hFinite (j : Nat) : Summable (fun t : Fin n -> Nat =>
+          (Finset.range j).sum (fun m => B m t * Z ^ m)) :=
+        summable_sum (fun m _ => (hB m).mul_right _)
+      rw [hTsum, <- (hProd.prod.tsum_mul_left headDen)]
+      rw [tsum_congr hFirst]
+      rw [Summable.tsum_finsetSum (fun j _ => (hFinite j).mul_left (term j))]
+      apply Finset.sum_congr rfl
+      intro j _
+      rw [(hFinite j).tsum_mul_left, Summable.tsum_finsetSum (fun m _ => (hB m).mul_right _)]
+      congr 1
+      apply Finset.sum_congr rfl
+      intro m _
+      exact (hB m).tsum_mul_right _
+    let Q := Finset.univ.prod (fun i => weightedRecurrencePolynomial (wt i) (dt i) (ct i))
+    have hEvalD : (Finset.univ.prod (fun i =>
+        weightedRecurrencePolynomial (w i) (d i) (c i))).eval z = headDen * Q.eval z := by
+      rw [Fin.prod_univ_succ, Polynomial.eval_mul, eval_weightedRecurrencePolynomial]
+    have hSmall (m : Nat) : Q.eval z * tsum (B m) =
+        (weightedConeNumerator n wt dt ct (row m)).eval z :=
+      ih wt dt ct (row m) (fun i => hW i.succ) (hRowRec m) z (hB m)
+    have hEvalN : (weightedConeNumerator (n + 1) w d c f).eval z =
+        (Finset.range (d 0 + 1)).sum (fun j => term j *
+          (Finset.range j).sum (fun m =>
+            (weightedConeNumerator n wt dt ct (row m)).eval z * Z ^ m)) := by
+      rw [weightedConeNumerator]
+      change Polynomial.evalRingHom z ((Finset.range (d 0 + 1)).sum _) = _
+      rw [map_sum]
+      apply Finset.sum_congr rfl
+      intro j _
+      rw [map_mul, map_sum]
+      have hTermEval : Polynomial.evalRingHom z
+          (Polynomial.C (c 0 j) * Polynomial.X ^ (w 0 * (d 0 - j))) = term j := by
+        simp [term, Z, pow_mul]
+      rw [hTermEval]
+      congr 1
+      apply Finset.sum_congr rfl
+      intro m _
+      rw [map_mul]
+      have hPower : Polynomial.evalRingHom z (Polynomial.X ^ (w 0 * m)) = Z ^ m := by
+        simp [Z, pow_mul]
+      rw [hPower]
+      rfl
+    rw [hEvalD, mul_comm headDen (Q.eval z), mul_assoc, hHeadSum, hEvalN, Finset.mul_sum]
+    apply Finset.sum_congr rfl
+    intro j _
+    rw [mul_left_comm, Finset.mul_sum]
+    congr 1
+    apply Finset.sum_congr rfl
+    intro m _
+    rw [<- mul_assoc, hSmall]
+
+/-- The weighted sum over any finite family of ordered diagonal directions
+has the product of their reversed, weight-dilated characteristic polynomials
+as a denominator. This denominator is fixed by the directions and the weights. -/
+theorem valuationPrincipalCongruence_diagonalCone_series
+    {F W V : Type*} [Field F] [LinearOrderedCommGroupWithZero W]
+    [AddCommGroup V] [Module Complex V]
+    (vf : Valuation F W) (rank : Nat) (r : W) (hr : r < 1)
+    (rho : MonoidHom (Units (Matrix (Fin rank) (Fin rank) F)) (Module.End Complex V))
+    (P : HeckeLocalSubgroupAverage rho (valuationPrincipalCongruenceSubgroup vf rank r))
+    [FiniteDimensional Complex (LinearMap.range P.proj)]
+    (n : Nat) (a : Fin n -> valuationOrderedDiagonalSubmonoid vf rank)
+    (w : Fin n -> Nat) (hW : forall i, 0 < w i) :
+    let op := P.orderedDiagonalOperators vf rank r hr rho
+    let d := Module.finrank Complex (LinearMap.range P.proj)
+    let c (i : Fin n) := (op (a i)).charpoly.coeff
+    let denominator : Polynomial Complex := Finset.univ.prod (fun i =>
+      (Finset.range (d + 1)).sum (fun j => Polynomial.C (c i j) *
+        Polynomial.X ^ (w i * (d - j))))
+    forall (b : valuationOrderedDiagonalSubmonoid vf rank)
+      (ell : LinearMap (RingHom.id Complex) V Complex),
+      (forall (k : valuationPrincipalCongruenceSubgroup vf rank r) (u : V),
+        ell (rho k.val u) = ell u) ->
+      forall (u : V),
+      (forall k : valuationPrincipalCongruenceSubgroup vf rank r, rho k.val u = u) ->
+      let aseq (e : Fin n -> Nat) :=
+        ell (rho ((valuationDiagonalSection F rank
+          (b * Finset.univ.prod (fun i => a i ^ e i)).val).val) u)
+      exists numerator : Polynomial Complex,
+        And (denominator.eval 0 = 1)
+          (forall z : Complex,
+            Summable (fun e : Fin n -> Nat => aseq e * z ^ Finset.univ.sum (fun i => w i * e i)) ->
+            denominator.eval z *
+              tsum (fun e : Fin n -> Nat => aseq e * z ^ Finset.univ.sum (fun i => w i * e i)) =
+              numerator.eval z) := by
+  intro op d c denominator b ell hEll u hU aseq
+  have hDeg (i : Fin n) : (op (a i)).charpoly.natDegree = d :=
+    LinearMap.charpoly_natDegree (op (a i))
+  have hLead (i : Fin n) : c i d = 1 := by
+    change (op (a i)).charpoly.coeff d = 1
+    rw [<- hDeg i]
+    exact LinearMap.charpoly_monic _
+  have hDen : denominator.eval 0 = 1 := by
+    change Polynomial.evalRingHom 0
+      (Finset.univ.prod (fun i => weightedRecurrencePolynomial (w i) d (c i))) = 1
+    rw [map_prod]
+    apply Finset.prod_eq_one
+    intro i _
+    change (weightedRecurrencePolynomial (w i) d (c i)).eval 0 = 1
+    rw [eval_weightedRecurrencePolynomial, zero_pow (hW i).ne', Finset.sum_eq_single d]
+    next => simp [hLead]
+    next =>
+      intro j hj hne
+      have hjd : j <= d := Nat.le_of_lt_succ (Finset.mem_range.mp hj)
+      have hsub : Not (d - j = 0) := Nat.ne_of_gt (Nat.sub_pos_of_lt (lt_of_le_of_ne hjd hne))
+      rw [zero_pow hsub, mul_zero]
+    next =>
+      intro h
+      exact False.elim (h (Finset.mem_range.mpr (Nat.lt_succ_self d)))
+  let fixed : LinearMap.range P.proj := Subtype.mk u (Exists.intro u (P.proj_eq_of_fixed u hU))
+  have hRec (i : Fin n) (e : Fin n -> Nat) :
+      (Finset.range (d + 1)).sum (fun j => c i j * aseq (Function.update e i (e i + j))) = 0 := by
+    let A := op (a i)
+    let rest := (Finset.univ.erase i).prod (fun k => a k ^ e k)
+    let ellW := (ell.comp (LinearMap.range P.proj).subtype).comp (op (b * rest))
+    have hOp : (Finset.range (d + 1)).sum (fun j => HSMul.hSMul (c i j) (A ^ j)) = 0 := by
+      change (Finset.range (d + 1)).sum
+        (fun j => HSMul.hSMul (A.charpoly.coeff j) (A ^ j)) = 0
+      rw [<- hDeg i, <- Polynomial.aeval_eq_sum_range (p := A.charpoly) A]
+      exact LinearMap.aeval_self_charpoly A
+    have h := congrArg (fun T : Module.End Complex (LinearMap.range P.proj) =>
+      ellW (T ((A ^ e i) fixed))) hOp
+    simp only [LinearMap.sum_apply, LinearMap.smul_apply, LinearMap.zero_apply, map_sum,
+      map_smul, smul_eq_mul, map_zero] at h
+    have hTerm (j : Nat) :
+        ellW ((A ^ j) ((A ^ e i) fixed)) = aseq (Function.update e i (e i + j)) := by
+      have hSplit : Finset.univ.prod (fun k => a k ^ Function.update e i (e i + j) k) =
+          rest * a i ^ (e i + j) := by
+        rw [<- Finset.prod_erase_mul Finset.univ
+          (fun k => a k ^ Function.update e i (e i + j) k) (Finset.mem_univ i)]
+        rw [Function.update_self]
+        congr 1
+        apply Finset.prod_congr rfl
+        intro k hk
+        rw [Function.update_of_ne (Finset.ne_of_mem_erase hk)]
+      change (ell.comp (LinearMap.range P.proj).subtype)
+        (op (b * rest) ((((op (a i)) ^ j) * ((op (a i)) ^ e i)) fixed)) = _
+      rw [<- pow_add, Nat.add_comm j (e i), <- map_pow, <- Module.End.mul_apply, <- map_mul]
+      rw [mul_assoc, <- hSplit]
+      exact P.pairing_proj ell hEll _
+    simpa only [hTerm] using h
+  exact Exists.intro (weightedConeNumerator n w (fun _ => d) c aseq)
+    (And.intro hDen (weightedCone_tsum_polynomial n w (fun _ => d) c aseq hW hRec))
 
 end Robin1984.GRH
