@@ -2676,6 +2676,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetCartanHaarVolume.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Cartan double cosets over nonarchimedean local fields, Haar normalization, and finite sums over the coordinates of a diagonal matrix.",
+      "formalization_note": "Computes normalized Cartan double-coset volume from the finite residue-class masses and expresses the sum of the entry exponents as a weighted gap sum.",
+      "content_basis": "Uses the determinant-weighted comparison with additive Haar measure, reduction modulo the maximal ideal, and a count of coordinate pairs separated by each gap.",
+      "dependency_status": "Uses the finite-place Cartan stabilizer and residue-rectangle measures. Assumes the multiplicative Haar measure is normalized on the integral matrix subgroup.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetCartanIntegral.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Cartan double cosets of a general linear group over a nonarchimedean local field and countable additivity of the Bochner integral.",

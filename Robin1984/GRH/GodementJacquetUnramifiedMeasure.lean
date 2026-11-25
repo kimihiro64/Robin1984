@@ -769,7 +769,8 @@ def heckeLocalMatrixUnitEntries {I F : Type*} [Fintype I] [DecidableEq I] [Semir
     (g : Units (Matrix I I F)) : I -> I -> F :=
   fun i j => g.val i j
 
-private theorem isOpenEmbedding_heckeLocalMatrixUnitEntries
+/-- Row coordinates give an open embedding of the local matrix units. -/
+theorem isOpenEmbedding_heckeLocalMatrixUnitEntries
     {I F : Type*} [Fintype I] [DecidableEq I] [NormedField F] :
     IsOpenEmbedding (heckeLocalMatrixUnitEntries (I := I) (F := F)) := by
   let M := Matrix I I F

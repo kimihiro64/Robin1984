@@ -4,6 +4,7 @@ import Robin1984.GRH.DirichletMultiplicity
 import Robin1984.GRH.DirichletMultiplicityArithmetic
 import Robin1984.GRH.GodementJacquetAdelicMatrixBounds
 import Robin1984.GRH.GodementJacquetCartanDoubleCosets
+import Robin1984.GRH.GodementJacquetCartanHaarVolume
 import Robin1984.GRH.GodementJacquetCartanIntegral
 import Robin1984.GRH.GodementJacquetCartanResidueMeasure
 import Robin1984.GRH.GodementJacquetCartanVolume
