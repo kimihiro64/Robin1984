@@ -1514,6 +1514,107 @@ theorem exists_heckeLocalZetaTest_primeNormTranslate
   rw [<- hPow]
   exact (hPsi.2 z).2
 
+private def heckeLocalDeterminantWeight (n : Nat) (z : Complex) :
+    MonoidHom (Units (Matrix (Fin n) (Fin n) L)) Complex where
+  toFun g := (norm g.val.det : Complex) ^ z
+  map_one' := by
+    change (norm (1 : Matrix (Fin n) (Fin n) L).det : Complex) ^ z = 1
+    rw [Matrix.det_one, norm_one, Complex.ofReal_one, Complex.one_cpow]
+  map_mul' A B := by
+    change (norm (A.val * B.val).det : Complex) ^ z =
+      (norm A.val.det : Complex) ^ z * (norm B.val.det : Complex) ^ z
+    rw [Matrix.det_mul, norm_mul, Complex.ofReal_mul,
+      Complex.mul_cpow_ofReal_nonneg (norm_nonneg _) (norm_nonneg _) z]
+
+/-- Powers of one matrix with uniformizer determinant give every integer
+power of the prime-norm multiplier. Each translate preserves absolute
+integrability at every complex exponent. -/
+theorem exists_heckeLocalZetaTest_primeNormIntegerTranslate
+    (n : Nat) [MeasurableSpace (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L))]
+    [MeasurableMul (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L))]
+    (mu : Measure (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L))) [mu.IsMulLeftInvariant]
+    (u : Units L) (hu : Valued.v u.val = finiteUniformizerValue)
+    (Phi : LocallyConstant (Matrix (Fin (n + 1)) (Fin (n + 1)) L) Complex)
+    (hPhi : HasCompactSupport (fun X => Phi X))
+    (c : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L) -> Complex) :
+    Exists (fun A : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L) =>
+      And (A.val.det = u.val) (forall m : Int,
+        Exists (fun Psi : LocallyConstant (Matrix (Fin (n + 1)) (Fin (n + 1)) L) Complex =>
+          And (HasCompactSupport (fun X => Psi X)) (forall z : Complex,
+            And (Iff
+              (Integrable (fun g => (norm g.val.det : Complex) ^ z * (Psi g.val * c (A ^ m * g))) mu)
+              (Integrable (fun g => (norm g.val.det : Complex) ^ z * (Phi g.val * c g)) mu))
+              (integral mu (fun g => (norm g.val.det : Complex) ^ z * (Psi g.val * c (A ^ m * g))) =
+                ((dedekindPrimeNorm K p : Complex) ^ z) ^ m *
+                  integral mu (fun g => (norm g.val.det : Complex) ^ z * (Phi g.val * c g))))))) := by
+  choose A hA using exists_heckeLocalZetaTest_primeNormTranslate p n mu u hu Phi hPhi c
+  refine Exists.intro A (And.intro hA.1 ?_)
+  intro m
+  choose Psi hPsi using exists_heckeLocalZetaTest_leftTranslate p (n + 1) mu (A ^ m) Phi hPhi c
+  refine Exists.intro Psi (And.intro hPsi.1 ?_)
+  intro z
+  refine And.intro (hPsi.2 z).1 ?_
+  have hNorm := norm_eq_inv_of_valuation_finiteUniformizer p u.val hu
+  have hPowA : heckeLocalDeterminantWeight p (n + 1) (-z) A = (dedekindPrimeNorm K p : Complex) ^ z := by
+    change (norm A.val.det : Complex) ^ (-z) = _
+    rw [hA.1, hNorm, Complex.ofReal_inv,
+      Complex.inv_cpow_ofReal_nonneg (Nat.cast_nonneg _) (-z),
+      Complex.cpow_neg, inv_inv, Complex.ofReal_natCast]
+  have hPow : (norm (A ^ m).val.det : Complex) ^ (-z) =
+      ((dedekindPrimeNorm K p : Complex) ^ z) ^ m := by
+    change heckeLocalDeterminantWeight p (n + 1) (-z) (A ^ m) = _
+    rw [map_zpow, hPowA]
+  rw [<- hPow]
+  exact (hPsi.2 z).2
+
+/-- Multiplying an absolutely convergent local zeta integral by any
+Laurent polynomial in the prime-norm multiplier is realized by a finite
+linear combination of translated compact locally constant tests and their
+translated coefficients. The tests are chosen independently of the
+polynomial and the complex exponent. -/
+theorem exists_heckeLocalZetaTest_primeNormLaurentTranslate
+    (n : Nat) [MeasurableSpace (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L))]
+    [MeasurableMul (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L))]
+    (mu : Measure (Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L))) [mu.IsMulLeftInvariant]
+    (u : Units L) (hu : Valued.v u.val = finiteUniformizerValue)
+    (Phi : LocallyConstant (Matrix (Fin (n + 1)) (Fin (n + 1)) L) Complex)
+    (hPhi : HasCompactSupport (fun X => Phi X))
+    (c : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L) -> Complex) :
+    Exists (fun A : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L) =>
+      And (A.val.det = u.val)
+        (Exists (fun Psi : Int -> LocallyConstant (Matrix (Fin (n + 1)) (Fin (n + 1)) L)
+            Complex =>
+          And (forall m, HasCompactSupport (fun X => Psi m X))
+            (forall (S : Finset Int) (a : Int -> Complex) (z : Complex),
+              let f := fun g : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L) =>
+                (norm g.val.det : Complex) ^ z * (Phi g.val * c g)
+              let F := fun g : Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L) =>
+                S.sum (fun m => a m * ((norm g.val.det : Complex) ^ z *
+                  (Psi m g.val * c (A ^ m * g))))
+              Integrable f mu ->
+                And (Integrable F mu)
+                  (integral mu F = S.sum (fun m =>
+                    a m * ((dedekindPrimeNorm K p : Complex) ^ z) ^ m) * integral mu f))))) := by
+  choose A hA using exists_heckeLocalZetaTest_primeNormIntegerTranslate p n mu u hu Phi hPhi c
+  have hTrans := hA.2
+  choose Psi hPsi using hTrans
+  refine Exists.intro A (And.intro hA.1 (Exists.intro Psi (And.intro (fun m => (hPsi m).1) ?_)))
+  intro S a z f F hf
+  let G := Units (Matrix (Fin (n + 1)) (Fin (n + 1)) L)
+  let fShift (m : Int) (g : G) :=
+    (norm g.val.det : Complex) ^ z * (Psi m g.val * c (A ^ m * g))
+  have hInt (m : Int) : Integrable (fun g => a m * fShift m g) mu :=
+    (((hPsi m).2 z).1.mpr hf).const_mul (a m)
+  have hF : Integrable F mu := integrable_finsetSum S (fun m _ => hInt m)
+  refine And.intro hF ?_
+  change integral mu (fun g : G => S.sum (fun m => a m * fShift m g)) =
+    S.sum (fun m => a m * ((dedekindPrimeNorm K p : Complex) ^ z) ^ m) * integral mu f
+  rw [integral_finsetSum S (fun m _ => hInt m), Finset.sum_mul]
+  apply Finset.sum_congr rfl
+  intro m _
+  rw [integral_const_mul, show integral mu (fShift m) =
+    ((dedekindPrimeNorm K p : Complex) ^ z) ^ m * integral mu f from ((hPsi m).2 z).2, mul_assoc]
+
 end LocalUnitZetaTest
 
 section FiniteAdelicEulerProduct
