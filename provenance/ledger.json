@@ -1938,6 +1938,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetUnramifiedMeasure.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The normalized additive measure and upper-unitriangular volumes in the unramified local Godement-Jacquet integral.",
+      "formalization_note": "Constructs the finite-place additive measure and proves the exact inverse-norm box volume in every rank.",
+      "content_basis": "Restricts normalized finite-adele Haar measure to the open subgroup integral away from a place. The single-place idele computes the scalar volume, and row product measure counts one inverse norm per strictly upper entry.",
+      "dependency_status": "Uses the finite-adele additive dilation theorem and the normalized unitriangular product measure. The spherical integral is a separate application.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetVectorPoisson.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Poisson summation on the additive adelic matrix space in Godement and Jacquet, Zeta Functions of Simple Algebras.",
