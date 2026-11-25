@@ -1403,6 +1403,175 @@ theorem measurePreserving_godementJacquetSchurCoordinates
 
 end LocalSchurCoordinates
 
+section SchurIntegral
+
+variable {F I J : Type*} [NormedField F] [Fintype I] [Fintype J] [DecidableEq I]
+  [MeasurableSpace F] [BorelSpace F] [SecondCountableTopology F]
+
+local notation "TopRows" => Prod (I -> I -> F) (I -> J -> F)
+local notation "FourBlocks" => Prod TopRows (Prod (J -> I -> F) (J -> J -> F))
+local notation "Entries" => Sum I J -> Sum I J -> F
+
+/-- Recover the original matrix entries by adding C A^-1 B to the trailing block. -/
+def godementJacquetSchurAssemble (p : FourBlocks) : Entries :=
+  fun i j => Sum.elim
+    (fun a => Sum.elim (p.1.1 a) (p.1.2 a) j)
+    (fun a => Sum.elim (p.2.1 a)
+      ((p.2.2 + godementJacquetSchurCorrection (Prod.mk p.1 p.2.1)) a) j) i
+
+/-- The explicit Schur coordinate substitution preserves integrals and absolute integrability. -/
+theorem integrableAndIntegral_godementJacquetSchurCoordinates
+    (mu : Measure F) [SigmaFinite mu] [mu.IsAddLeftInvariant]
+    (f : Entries -> Complex) :
+    let mA := Measure.pi (fun _ : I => Measure.pi (fun _ : I => mu))
+    let mB := Measure.pi (fun _ : I => Measure.pi (fun _ : J => mu))
+    let mC := Measure.pi (fun _ : J => Measure.pi (fun _ : I => mu))
+    let mD := Measure.pi (fun _ : J => Measure.pi (fun _ : J => mu))
+    let m := (mA.prod mB).prod (mC.prod mD)
+    let base := Measure.pi (fun _ : Sum I J => Measure.pi (fun _ : Sum I J => mu))
+    And (Integrable f base <->
+        Integrable (fun p => f (godementJacquetSchurAssemble p)) m)
+      (integral base f = integral m (fun p => f (godementJacquetSchurAssemble p))) := by
+  intro mA mB mC mD m base
+  let entries (x : Entries) : FourBlocks :=
+    let a := fun i k => x (Sum.inl i) (Sum.inl k)
+    let b := fun i l => x (Sum.inl i) (Sum.inr l)
+    let c := fun j k => x (Sum.inr j) (Sum.inl k)
+    let d := fun j l => x (Sum.inr j) (Sum.inr l)
+    Prod.mk (Prod.mk a b) (Prod.mk c
+      (d - godementJacquetSchurCorrection (Prod.mk (Prod.mk a b) c)))
+  have hEntries : MeasurePreserving entries base m :=
+    measurePreserving_godementJacquetSchurCoordinates mu
+  let restore : FourBlocks -> Entries := godementJacquetSchurAssemble
+  have hLeft : Function.LeftInverse restore entries := by
+    intro x
+    funext i j
+    cases i with
+    | inl i => cases j <;> rfl
+    | inr i =>
+      cases j with
+      | inl j => rfl
+      | inr j =>
+        change (x (Sum.inr i) (Sum.inr j) - _) + _ = _
+        exact sub_add_cancel _ _
+  have hRight : Function.RightInverse restore entries := by
+    intro p
+    apply Prod.ext
+    . rfl
+    . apply Prod.ext
+      . rfl
+      . change (p.2.2 + godementJacquetSchurCorrection (Prod.mk p.1 p.2.1)) -
+            godementJacquetSchurCorrection (Prod.mk p.1 p.2.1) = _
+        exact add_sub_cancel_right _ _
+  have hRestore : Measurable restore := by
+    have hCorrection : Measurable (fun p : FourBlocks =>
+        godementJacquetSchurCorrection (Prod.mk p.1 p.2.1)) :=
+      measurable_godementJacquetSchurCorrection.comp
+        (measurable_fst.prodMk (measurable_fst.comp measurable_snd))
+    have hTrailing : Measurable (fun p : FourBlocks =>
+        p.2.2 + godementJacquetSchurCorrection (Prod.mk p.1 p.2.1)) :=
+      (measurable_snd.comp measurable_snd).add hCorrection
+    refine measurable_pi_lambda _ (fun i => measurable_pi_lambda _ (fun j => ?_))
+    cases i with
+    | inl i =>
+      cases j with
+      | inl j =>
+        exact (measurable_pi_apply j).comp ((measurable_pi_apply i).comp
+          (measurable_fst.comp measurable_fst))
+      | inr j =>
+        exact (measurable_pi_apply j).comp ((measurable_pi_apply i).comp
+          (measurable_snd.comp measurable_fst))
+    | inr i =>
+      cases j with
+      | inl j =>
+        exact (measurable_pi_apply j).comp ((measurable_pi_apply i).comp
+          (measurable_fst.comp measurable_snd))
+      | inr j =>
+        exact (measurable_pi_apply j).comp ((measurable_pi_apply i).comp hTrailing)
+  let e : MeasurableEquiv Entries FourBlocks :=
+    { toFun := entries
+      invFun := restore
+      left_inv := hLeft
+      right_inv := hRight
+      measurable_toFun := hEntries.measurable
+      measurable_invFun := hRestore }
+  have he : MeasurePreserving e base m := hEntries
+  have hInv : MeasurePreserving e.symm m base := he.symm
+  constructor
+  . rw [<- hInv.map_eq, e.symm.measurableEmbedding.integrable_map_iff]
+    rfl
+  . exact (hInv.integral_comp' f).symm
+
+end SchurIntegral
+
+omit [MeasurableSpace A] [BorelSpace A] in
+/-- At invertible matrices the additive integrand is given by the shifted exponent. -/
+theorem heckeLocalZetaAdditiveIntegrand_apply_entries (p : Place)
+    {I : Type*} [Fintype I] [DecidableEq I]
+    (Phi : Matrix I I (p.adicCompletion K) -> Complex)
+    (c : Units (Matrix I I (p.adicCompletion K)) -> Complex) (z : Complex)
+    (g : Units (Matrix I I (p.adicCompletion K))) :
+    heckeLocalZetaAdditiveIntegrand p Phi c z (heckeLocalMatrixUnitEntries g) =
+      (norm g.val.det : Complex) ^ (z - (Fintype.card I : Complex)) * (Phi g.val * c g) := by
+  unfold heckeLocalZetaAdditiveIntegrand
+  exact isOpenEmbedding_heckeLocalMatrixUnitEntries.injective.extend_apply _ _ g
+
+omit [MeasurableSpace A] [BorelSpace A] in
+/-- The additive integrand vanishes on every singular matrix. -/
+theorem heckeLocalZetaAdditiveIntegrand_eq_zero_of_det_eq_zero (p : Place)
+    {I : Type*} [Fintype I] [DecidableEq I]
+    (Phi : Matrix I I (p.adicCompletion K) -> Complex)
+    (c : Units (Matrix I I (p.adicCompletion K)) -> Complex) (z : Complex)
+    (x : I -> I -> p.adicCompletion K) (hx : (Matrix.of x).det = 0) :
+    heckeLocalZetaAdditiveIntegrand p Phi c z x = 0 := by
+  have hNot : Not (exists g : Units (Matrix I I (p.adicCompletion K)),
+      heckeLocalMatrixUnitEntries g = x) := by
+    intro h
+    choose g hg using h
+    have hDet : g.val.det = 0 := by
+      change (Matrix.of (heckeLocalMatrixUnitEntries g)).det = 0
+      rw [hg, hx]
+    exact (g.isUnit.map Matrix.detMonoidHom).ne_zero hDet
+  exact Function.extend_apply' _ _ x hNot
+
+/-- For a finite-place local zeta integral, Schur block coordinates preserve
+absolute integrability and give the same additive normalizing factor
+as the original Haar-to-additive comparison. -/
+theorem integrableAndIntegral_heckeLocalZeta_schur (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I J : Type*} [Fintype I] [Fintype J] [DecidableEq I] [DecidableEq J]
+    [MeasurableSpace (Units (Matrix (Sum I J) (Sum I J) (p.adicCompletion K)))]
+    [BorelSpace (Units (Matrix (Sum I J) (Sum I J) (p.adicCompletion K)))]
+    (mu : Measure (Units (Matrix (Sum I J) (Sum I J) (p.adicCompletion K)))) [mu.IsHaarMeasure]
+    (C : Set (Units (Matrix (Sum I J) (Sum I J) (p.adicCompletion K)))) (hC : MeasurableSet C)
+    (hMu : mu C = 1) (hDet : forall g, Membership.mem C g -> norm g.val.det = 1)
+    (Phi : Matrix (Sum I J) (Sum I J) (p.adicCompletion K) -> Complex) (hPhi : Continuous Phi)
+    (c : Units (Matrix (Sum I J) (Sum I J) (p.adicCompletion K)) -> Complex) (hc : Measurable c)
+    (z : Complex) :
+    let f := fun g : Units (Matrix (Sum I J) (Sum I J) (p.adicCompletion K)) =>
+      (norm g.val.det : Complex) ^ z * (Phi g.val * c g)
+    let nu := heckeLocalAdditiveMeasure p
+    let base := Measure.pi (fun _ : Sum I J => Measure.pi (fun _ : Sum I J => nu))
+    let volume := (base (Set.image heckeLocalMatrixUnitEntries C)).toNNReal
+    let mA := Measure.pi (fun _ : I => Measure.pi (fun _ : I => nu))
+    let mB := Measure.pi (fun _ : I => Measure.pi (fun _ : J => nu))
+    let mC := Measure.pi (fun _ : J => Measure.pi (fun _ : I => nu))
+    let mD := Measure.pi (fun _ : J => Measure.pi (fun _ : J => nu))
+    let blocks := (mA.prod mB).prod (mC.prod mD)
+    let g := fun x =>
+      heckeLocalZetaAdditiveIntegrand p Phi c z (godementJacquetSchurAssemble x)
+    Integrable f mu ->
+      And (Integrable g blocks) (integral blocks g = HSMul.hSMul volume (integral mu f)) := by
+  intro f nu base volume mA mB mC mD blocks g hInt
+  let : SecondCountableTopology (p.adicCompletion K) := secondCountableLocalAdditiveCompletion p
+  let : SigmaFinite nu := sigmaFinite_heckeLocalAdditiveMeasure p
+  let : nu.IsAddLeftInvariant := isAddLeftInvariant_heckeLocalAdditiveMeasure p
+  have hAdd := integrableAndIntegral_heckeLocalZeta_additive p mu C hC hMu hDet
+    Phi hPhi c hc z hInt
+  have hSchur := integrableAndIntegral_godementJacquetSchurCoordinates (I := I) (J := J)
+    nu (heckeLocalZetaAdditiveIntegrand p Phi c z)
+  exact And.intro (hSchur.1.mp hAdd.1) (hSchur.2.symm.trans hAdd.2)
+
 end LocalMatrixGroupMeasure
 
 end Robin1984.GRH
