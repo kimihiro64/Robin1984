@@ -2004,8 +2004,8 @@
       "path": "Robin1984/GRH/GodementJacquetThetaWeightedCancellation.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and absolute convergence for cuspidal cancellation.",
-      "formalization_note": "Proves cancellation of the singular theta terms for a Schwartz rectangle and its self-dual Fourier transform under the explicit weighted L1 hypotheses.",
-      "content_basis": "Factors the absolute theta majorant into a constant in the determinant parameter and one polynomial weight for each quotient variable. Applies product integrability and the singular cancellation identity.",
+      "formalization_note": "Derives integrability and singular cancellation for both theta integrals from shared weighted quotient estimates, then obtains entire Mellin continuation and the functional equation for finite sums of Schwartz rectangles.",
+      "content_basis": "Uses product majorants for the full and invertible rational matrix sums, establishes the required quotient integrability, and supplies termwise cancellation and decay for the finite-sum Mellin theorem.",
       "dependency_status": "Uses the checked full theta growth bound, joint measurability, finite Fourier expansion, and vanishing unipotent periods. The four weighted integrability assumptions remain explicit.",
       "reviewed": true
     },

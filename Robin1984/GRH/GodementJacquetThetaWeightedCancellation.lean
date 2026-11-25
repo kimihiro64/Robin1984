@@ -1,12 +1,12 @@
+import Robin1984.GRH.GodementJacquetFiniteThetaContinuation
 import Robin1984.GRH.GodementJacquetFullThetaGrowth
-import Robin1984.GRH.GodementJacquetThetaAnalyticContinuation
 
 /-!
 ## Provenance
 
 - Classification: **Standard mathematical formalization**.
 - Mathematical source: Godement and Jacquet, Zeta Functions of Simple Algebras, and absolute convergence for cuspidal cancellation.
-- Formalization note: Proves cancellation of the singular theta terms for a Schwartz rectangle and its self-dual Fourier transform under the explicit weighted L1 hypotheses.
+- Formalization note: Derives integrability and singular cancellation for both theta integrals from shared weighted quotient estimates, then obtains entire Mellin continuation and the functional equation for finite sums of Schwartz rectangles.
 - PROVENANCE-END
 -/
 
@@ -92,10 +92,9 @@ private theorem measurable_thetaTimeSection {G : Type*} [MeasurableSpace G]
   hF.comp (measurable_const.prodMk measurable_id)
 
 set_option maxHeartbeats 1500000 in
-/-- A product bound on the absolute rational theta series and integrability
-of the two weighted cusp functions give all the summability and integrability
-conditions of singular cancellation. -/
-theorem godementJacquetDoubleThetaIntegral_eq_invertible_of_productMajorant
+/-- A product majorant proves integrability of the invertible quotient
+integrand and gives cancellation of the singular terms. -/
+theorem godementJacquetDoubleThetaIntegral_eq_invertible_and_integrable_of_productMajorant
     (K : Type*) [Field K] [NumberField K] (n : Nat) (hn : 0 < n)
     [MeasurableSpace (ThetaWeightedGroup K n)] [BorelSpace (ThetaWeightedGroup K n)]
     [MeasurableSpace (ThetaWeightedMatrix K n)] [BorelSpace (ThetaWeightedMatrix K n)]
@@ -116,8 +115,11 @@ theorem godementJacquetDoubleThetaIntegral_eq_invertible_of_productMajorant
     (hMajorant : forall s A B,
       tsum (fun P => enorm (godementJacquetDoubleThetaTerm K n Phi s A B P)) <=
         ENNReal.ofReal (C s * H A * J B)) :
-    godementJacquetDoubleThetaIntegral K n (mu.restrict D) Phi c b t =
-      godementJacquetInvertibleDoubleThetaIntegral K n (mu.restrict D) Phi c b t := by
+    And (godementJacquetDoubleThetaIntegral K n (mu.restrict D) Phi c b t =
+      godementJacquetInvertibleDoubleThetaIntegral K n (mu.restrict D) Phi c b t)
+      (Integrable (fun q : Prod (ThetaWeightedGroup K n) (ThetaWeightedGroup K n) =>
+        godementJacquetInvertibleDoubleThetaSeries K n Phi t q.1 q.2 * (c q.1 * b q.2))
+        ((mu.restrict D).prod (mu.restrict D))) := by
   let G := ThetaWeightedGroup K n
   let R := Matrix (Fin n) (Fin n) K
   let V := Matrix.GeneralLinearGroup (Fin n) K
@@ -181,9 +183,39 @@ theorem godementJacquetDoubleThetaIntegral_eq_invertible_of_productMajorant
     change Integrable (fun q : Prod G G => (tsum (fun P : V => T t P.val q)) * (c q.1 * b q.2)) _
     exact integrable_mul_of_thetaProductMajorant nu c b hc hb (C t) hC H J hH0 hJ hcH hbJ
       _ hMeasInv (fun q => (enorm_tsum_le_tsum_enorm (f := fun P : V => T t P.val q)).trans (hInvBound t q))
-  exact godementJacquetDoubleThetaIntegral_eq_invertible K n mu D hD hUnique hn t
-    Phi hPhi c b hc hInvariant hPeriods hcInt hMean (fun A B => hS t (Prod.mk A B))
-    (Filter.Eventually.of_forall hAbs) hFullInt hInvInt
+  exact And.intro
+    (godementJacquetDoubleThetaIntegral_eq_invertible K n mu D hD hUnique hn t
+      Phi hPhi c b hc hInvariant hPeriods hcInt hMean (fun A B => hS t (Prod.mk A B))
+      (Filter.Eventually.of_forall hAbs) hFullInt hInvInt) hInvInt
+
+/-- A product majorant and the vanishing cuspidal periods remove the
+singular terms from the theta integral. -/
+theorem godementJacquetDoubleThetaIntegral_eq_invertible_of_productMajorant
+    (K : Type*) [Field K] [NumberField K] (n : Nat) (hn : 0 < n)
+    [MeasurableSpace (ThetaWeightedGroup K n)] [BorelSpace (ThetaWeightedGroup K n)]
+    [MeasurableSpace (ThetaWeightedMatrix K n)] [BorelSpace (ThetaWeightedMatrix K n)]
+    (mu : Measure (ThetaWeightedGroup K n)) [SFinite mu] [mu.IsMulLeftInvariant]
+    (D : Set (ThetaWeightedGroup K n)) (hD : MeasurableSet D)
+    (hUnique : forall A : ThetaWeightedGroup K n, ExistsUnique
+      (fun gamma : (adelicPrincipalDeterminantOne K n).range => Membership.mem D (gamma.val * A)))
+    (t : Real) (Phi : ThetaWeightedMatrix K n -> Complex) (hPhi : Measurable Phi)
+    (c b : ThetaWeightedGroup K n -> Complex) (hc : Measurable c) (hb : Measurable b)
+    (hInvariant : forall gamma : (adelicPrincipalDeterminantOne K n).range, forall A,
+      c (gamma.val * A) = c A)
+    (hPeriods : HasGodementJacquetVanishingUnipotentPeriods c)
+    (hMean : integral (mu.restrict D) c = 0)
+    (C : Real -> Real) (hC : 0 <= C t) (H J : ThetaWeightedGroup K n -> Real)
+    (hH : forall A, 1 <= H A) (hJ : forall B, 0 <= J B)
+    (hcH : IntegrableOn (fun A => norm (c A) * H A) D mu)
+    (hbJ : IntegrableOn (fun B => norm (b B) * J B) D mu)
+    (hMajorant : forall s A B,
+      tsum (fun P => enorm (godementJacquetDoubleThetaTerm K n Phi s A B P)) <=
+        ENNReal.ofReal (C s * H A * J B)) :
+    godementJacquetDoubleThetaIntegral K n (mu.restrict D) Phi c b t =
+      godementJacquetInvertibleDoubleThetaIntegral K n (mu.restrict D) Phi c b t := by
+  exact (godementJacquetDoubleThetaIntegral_eq_invertible_and_integrable_of_productMajorant
+    K n hn mu D hD hUnique t Phi hPhi c b hc hb hInvariant hPeriods hMean C hC H J hH hJ
+    hcH hbJ hMajorant).1
 
 private abbrev RectangleWeightFinite (K : Type*) [Field K] [NumberField K] :=
   FiniteAdeleRing (RingOfIntegers K) K
@@ -311,9 +343,100 @@ theorem godementJacquetDoubleThetaTerm_productMajorant_finset_rectangles
       simp only [ct, Finset.sum_mul]
 
 set_option maxHeartbeats 1200000 in
-/-- Weighted integrability of both cusp functions gives singular
-cancellation for a Schwartz rectangle and its actual self-dual Fourier
-transform. The same two quotient weights serve both tests. -/
+/-- Weighted quotient integrability gives cancellation and absolute
+integrability for both a Schwartz rectangle and its self-dual Fourier
+transform. -/
+theorem godementJacquetDoubleThetaIntegrals_eq_invertible_and_integrable_of_weightedRectangles
+    (K : Type*) [Field K] [NumberField K] (n : Nat) (hn : 0 < n)
+    [MeasurableSpace (InfiniteAdeleRing K)] [BorelSpace (InfiniteAdeleRing K)]
+    [MeasurableSpace (RectangleWeightFinite K)] [BorelSpace (RectangleWeightFinite K)]
+    [MeasurableSpace (ThetaWeightedGroup K n)] [BorelSpace (ThetaWeightedGroup K n)]
+    [MeasurableSpace (ThetaWeightedMatrix K n)] [BorelSpace (ThetaWeightedMatrix K n)]
+    (mu : Measure (ThetaWeightedGroup K n)) [SFinite mu] [mu.IsMulLeftInvariant]
+    (D : Set (ThetaWeightedGroup K n)) (hD : MeasurableSet D)
+    (hUnique : forall A : ThetaWeightedGroup K n, ExistsUnique
+      (fun gamma : (adelicPrincipalDeterminantOne K n).range => Membership.mem D (gamma.val * A)))
+    (a : RectangleWeightIndex n -> RectangleWeightFinite K) (d : RingOfIntegers K)
+    (hd : Not (d = 0))
+    (f : SchwartzMap (PiLp 2 (fun _ : RectangleWeightIndex n => DedekindZeta.Theta.minkowskiSpace K)) Complex)
+    (c b : ThetaWeightedGroup K n -> Complex) (hc : Measurable c) (hb : Measurable b)
+    (hInvariantC : forall gamma : (adelicPrincipalDeterminantOne K n).range, forall A,
+      c (gamma.val * A) = c A)
+    (hInvariantB : forall gamma : (adelicPrincipalDeterminantOne K n).range, forall A,
+      b (gamma.val * A) = b A)
+    (hPeriodsC : HasGodementJacquetVanishingUnipotentPeriods c)
+    (hPeriodsB : HasGodementJacquetVanishingUnipotentPeriods b)
+    (hMeanC : integral (mu.restrict D) c = 0) (hMeanB : integral (mu.restrict D) b = 0)
+    (m : Nat) (hm : Module.finrank Real
+      (PiLp 2 (fun _ : RectangleWeightIndex n => DedekindZeta.Theta.minkowskiSpace K)) < m)
+    (dLeft dRight : ThetaWeightedGroup K n -> RectangleWeightDenom K)
+    (hLeft : forall A i j, Membership.mem (heckeIntegralFiniteAdeles (K := K))
+      ((algebraMap K (RectangleWeightFinite K)).comp (algebraMap (RingOfIntegers K) K)
+        (dLeft A).val * (A.val.val i j).2))
+    (hRight : forall B i j, Membership.mem (heckeIntegralFiniteAdeles (K := K))
+      ((algebraMap K (RectangleWeightFinite K)).comp (algebraMap (RingOfIntegers K) K)
+        (dRight B).val * (B.val.inv i j).2)) :
+    let s (e : RectangleWeightDenom K) :=
+      godementJacquetFullTheta_principalScalarMatrixUnit K n e.val e.property
+    let H := godementJacquetFullTheta_archimedeanHeight K n
+    let L (A : ThetaWeightedGroup K n) := H (s (dLeft A) * A.val) 1 ^ m
+    let R (B : ThetaWeightedGroup K n) := H 1 (Inv.inv B.val * s (dRight B)) ^ m
+    let Phi := godementJacquetMatrixRectangle K a d f
+    let Psi := godementJacquetSelfDualMatrixFourier K Phi
+    IntegrableOn (fun A => norm (c A) * L A) D mu ->
+    IntegrableOn (fun B => norm (b B) * R B) D mu ->
+    IntegrableOn (fun A => norm (b A) * L A) D mu ->
+    IntegrableOn (fun B => norm (c B) * R B) D mu ->
+    forall t : Real, And
+      (And (godementJacquetDoubleThetaIntegral K n (mu.restrict D) Phi c b t =
+        godementJacquetInvertibleDoubleThetaIntegral K n (mu.restrict D) Phi c b t)
+        (Integrable (fun q : Prod (ThetaWeightedGroup K n) (ThetaWeightedGroup K n) =>
+          godementJacquetInvertibleDoubleThetaSeries K n Phi t q.1 q.2 * (c q.1 * b q.2))
+          ((mu.restrict D).prod (mu.restrict D))))
+      (And (godementJacquetDoubleThetaIntegral K n (mu.restrict D) Psi b c t =
+        godementJacquetInvertibleDoubleThetaIntegral K n (mu.restrict D) Psi b c t)
+        (Integrable (fun q : Prod (ThetaWeightedGroup K n) (ThetaWeightedGroup K n) =>
+          godementJacquetInvertibleDoubleThetaSeries K n Psi t q.1 q.2 * (b q.1 * c q.2))
+          ((mu.restrict D).prod (mu.restrict D)))) := by
+  intro s H L R Phi Psi hcL hbR hbL hcR
+  let G := ThetaWeightedGroup K n
+  have hL (A : G) : 1 <= L A := by
+    change 1 <= H (s (dLeft A) * A.val) 1 ^ m
+    calc
+      (1 : Real) = 1 ^ m := (one_pow m).symm
+      _ <= _ := by
+        gcongr
+        exact le_max_left _ _
+  have hR (B : G) : 0 <= R B := pow_nonneg (zero_le_one.trans (le_max_left _ _)) _
+  have hPhi : Measurable Phi :=
+    (continuous_godementJacquetMatrixRectangle K (n := n) a d hd f).measurable
+  have hPsi : Measurable Psi :=
+    (continuous_godementJacquetSelfDualMatrixFourier_rectangle K n a d hd f).measurable
+  choose C hC using godementJacquetDoubleThetaTerm_productMajorant_rectangle K n a d f m hm
+    dLeft dRight hLeft hRight
+  choose d' hd' using exists_godementJacquetSelfDualMatrixFourier_rectangle_eq_sum K n a d hd f
+  choose S hS using hd'.2
+  choose a' ha' using hS
+  choose f' hf' using ha'
+  let Q : ThetaWeightedMatrix K n -> Complex :=
+    fun Y => S.sum (fun j => godementJacquetMatrixRectangle K (a' j) d' (f' j) Y)
+  have hDual : Psi = Q := funext hf'
+  choose C' hC' using godementJacquetDoubleThetaTerm_productMajorant_finset_rectangles K n
+    (Set (RectangleWeightIndex n -> RectangleWeightFinite K)) S a' d' f' m hm dLeft dRight hLeft hRight
+  have hDualMajorant (t : Real) (A B : G) :
+      tsum (fun P => enorm (godementJacquetDoubleThetaTerm K n Psi t A B P)) <=
+        ENNReal.ofReal (C' t * L A * R B) := by
+    rw [hDual]
+    exact hC'.2 t A B
+  intro t
+  exact And.intro
+    (godementJacquetDoubleThetaIntegral_eq_invertible_and_integrable_of_productMajorant K n hn mu D hD hUnique
+      t Phi hPhi c b hc hb hInvariantC hPeriodsC hMeanC C (hC.1 t) L R hL hR hcL hbR hC.2)
+    (godementJacquetDoubleThetaIntegral_eq_invertible_and_integrable_of_productMajorant K n hn mu D hD hUnique
+      t Psi hPsi b c hb hc hInvariantB hPeriodsB hMeanB C' (hC'.1 t) L R hL hR hbL hcR hDualMajorant)
+
+/-- Weighted quotient integrability gives cancellation for a rectangle and
+its self-dual Fourier transform. -/
 theorem godementJacquetDoubleThetaIntegrals_eq_invertible_of_weightedRectangles
     (K : Type*) [Field K] [NumberField K] (n : Nat) (hn : 0 < n)
     [MeasurableSpace (InfiniteAdeleRing K)] [BorelSpace (InfiniteAdeleRing K)]
@@ -360,41 +483,95 @@ theorem godementJacquetDoubleThetaIntegrals_eq_invertible_of_weightedRectangles
         godementJacquetInvertibleDoubleThetaIntegral K n (mu.restrict D) Phi c b t)
       (godementJacquetDoubleThetaIntegral K n (mu.restrict D) Psi b c t =
         godementJacquetInvertibleDoubleThetaIntegral K n (mu.restrict D) Psi b c t) := by
-  intro s H L R Phi Psi hcL hbR hbL hcR
-  let G := ThetaWeightedGroup K n
-  have hL (A : G) : 1 <= L A := by
-    change 1 <= H (s (dLeft A) * A.val) 1 ^ m
-    calc
-      (1 : Real) = 1 ^ m := (one_pow m).symm
-      _ <= _ := by
-        gcongr
-        exact le_max_left _ _
-  have hR (B : G) : 0 <= R B := pow_nonneg (zero_le_one.trans (le_max_left _ _)) _
-  have hPhi : Measurable Phi :=
-    (continuous_godementJacquetMatrixRectangle K (n := n) a d hd f).measurable
-  have hPsi : Measurable Psi :=
-    (continuous_godementJacquetSelfDualMatrixFourier_rectangle K n a d hd f).measurable
-  choose C hC using godementJacquetDoubleThetaTerm_productMajorant_rectangle K n a d f m hm
-    dLeft dRight hLeft hRight
-  choose d' hd' using exists_godementJacquetSelfDualMatrixFourier_rectangle_eq_sum K n a d hd f
-  choose S hS using hd'.2
-  choose a' ha' using hS
-  choose f' hf' using ha'
-  let Q : ThetaWeightedMatrix K n -> Complex :=
-    fun Y => S.sum (fun j => godementJacquetMatrixRectangle K (a' j) d' (f' j) Y)
-  have hDual : Psi = Q := funext hf'
-  choose C' hC' using godementJacquetDoubleThetaTerm_productMajorant_finset_rectangles K n
-    (Set (RectangleWeightIndex n -> RectangleWeightFinite K)) S a' d' f' m hm dLeft dRight hLeft hRight
-  have hDualMajorant (t : Real) (A B : G) :
-      tsum (fun P => enorm (godementJacquetDoubleThetaTerm K n Psi t A B P)) <=
-        ENNReal.ofReal (C' t * L A * R B) := by
-    rw [hDual]
-    exact hC'.2 t A B
-  intro t
-  exact And.intro
-    (godementJacquetDoubleThetaIntegral_eq_invertible_of_productMajorant K n hn mu D hD hUnique
-      t Phi hPhi c b hc hb hInvariantC hPeriodsC hMeanC C (hC.1 t) L R hL hR hcL hbR hC.2)
-    (godementJacquetDoubleThetaIntegral_eq_invertible_of_productMajorant K n hn mu D hD hUnique
-      t Psi hPsi b c hb hc hInvariantB hPeriodsB hMeanB C' (hC'.1 t) L R hL hR hbL hcR hDualMajorant)
+  intro s H L R Phi Psi hcL hbR hbL hcR t
+  have h := godementJacquetDoubleThetaIntegrals_eq_invertible_and_integrable_of_weightedRectangles
+    K n hn mu D hD hUnique a d hd f c b hc hb hInvariantC hInvariantB hPeriodsC hPeriodsB
+    hMeanC hMeanB m hm dLeft dRight hLeft hRight hcL hbR hbL hcR t
+  exact And.intro h.1.1 h.2.1
+
+set_option maxHeartbeats 1600000 in
+/-- Shared weighted quotient integrability, cusp periods, and square
+integrability give the entire Mellin transform and functional equation
+for a finite sum of Schwartz rectangles. -/
+theorem godementJacquetInvertibleThetaMellin_entire_and_reflection_of_weightedFinsetRectangles
+    (K : Type*) [Field K] [NumberField K] (n : Nat)
+    [T2Space (AdelicGeneralLinearGroup K (n + 1))]
+    [MeasurableSpace (AdelicGeneralLinearGroup K (n + 1))]
+    [BorelSpace (AdelicGeneralLinearGroup K (n + 1))]
+    [MeasurableMul (AdelicGeneralLinearGroup K (n + 1))]
+    [MeasurableSpace (ThetaWeightedGroup K (n + 1))]
+    [BorelSpace (ThetaWeightedGroup K (n + 1))]
+    [MeasurableMul (ThetaWeightedGroup K (n + 1))]
+    [MeasurableInv (ThetaWeightedGroup K (n + 1))]
+    [MeasurableSpace (InfiniteAdeleRing K)] [BorelSpace (InfiniteAdeleRing K)]
+    [MeasurableSpace (RectangleWeightFinite K)] [BorelSpace (RectangleWeightFinite K)]
+    [MeasurableSpace (ThetaWeightedMatrix K (n + 1))]
+    [BorelSpace (ThetaWeightedMatrix K (n + 1))]
+    (mu : Measure (ThetaWeightedGroup K (n + 1))) [mu.IsHaarMeasure]
+    [SFinite mu] [mu.IsMulRightInvariant]
+    (D : Set (ThetaWeightedGroup K (n + 1))) (hD : MeasurableSet D)
+    (hUnique : forall A : ThetaWeightedGroup K (n + 1), ExistsUnique
+      (fun gamma : (adelicPrincipalDeterminantOne K (n + 1)).range => Membership.mem D (gamma.val * A)))
+    (hMul : Measurable (fun p : Prod (ThetaWeightedGroup K (n + 1))
+      (ThetaWeightedGroup K (n + 1)) => p.1 * p.2))
+    {I : Type*} (S : Finset I)
+    (a : I -> RectangleWeightIndex (n + 1) -> RectangleWeightFinite K)
+    (d : RingOfIntegers K) (hd : Not (d = 0))
+    (f : I -> SchwartzMap
+      (PiLp 2 (fun _ : RectangleWeightIndex (n + 1) => DedekindZeta.Theta.minkowskiSpace K)) Complex)
+    (c b : ThetaWeightedGroup K (n + 1) -> Complex) (hc : Measurable c) (hb : Measurable b)
+    (hInvariantC : forall gamma : (adelicPrincipalDeterminantOne K (n + 1)).range, forall A,
+      c (gamma.val * A) = c A)
+    (hInvariantB : forall gamma : (adelicPrincipalDeterminantOne K (n + 1)).range, forall B,
+      b (gamma.val * B) = b B)
+    (hPeriodsC : HasGodementJacquetVanishingUnipotentPeriods c)
+    (hPeriodsB : HasGodementJacquetVanishingUnipotentPeriods b)
+    (hMeanC : integral (mu.restrict D) c = 0) (hMeanB : integral (mu.restrict D) b = 0)
+    (hcI : lintegral (mu.restrict D) (fun x => ENNReal.ofReal (norm (c x) ^ 2)) < (Top.top : ENNReal))
+    (hbI : lintegral (mu.restrict D) (fun x => ENNReal.ofReal (norm (b x) ^ 2)) < (Top.top : ENNReal))
+    (m : Nat) (hm : Module.finrank Real
+      (PiLp 2 (fun _ : RectangleWeightIndex (n + 1) => DedekindZeta.Theta.minkowskiSpace K)) < m)
+    (dLeft dRight : ThetaWeightedGroup K (n + 1) -> RectangleWeightDenom K)
+    (hLeft : forall A i j, Membership.mem (heckeIntegralFiniteAdeles (K := K))
+      ((algebraMap K (RectangleWeightFinite K)).comp (algebraMap (RingOfIntegers K) K)
+        (dLeft A).val * (A.val.val i j).2))
+    (hRight : forall B i j, Membership.mem (heckeIntegralFiniteAdeles (K := K))
+      ((algebraMap K (RectangleWeightFinite K)).comp (algebraMap (RingOfIntegers K) K)
+        (dRight B).val * (B.val.inv i j).2)) :
+    let s (e : RectangleWeightDenom K) :=
+      godementJacquetFullTheta_principalScalarMatrixUnit K (n + 1) e.val e.property
+    let H := godementJacquetFullTheta_archimedeanHeight K (n + 1)
+    let L (A : ThetaWeightedGroup K (n + 1)) := H (s (dLeft A) * A.val) 1 ^ m
+    let R (B : ThetaWeightedGroup K (n + 1)) := H 1 (Inv.inv B.val * s (dRight B)) ^ m
+    IntegrableOn (fun A => norm (c A) * L A) D mu ->
+    IntegrableOn (fun B => norm (b B) * R B) D mu ->
+    IntegrableOn (fun A => norm (b A) * L A) D mu ->
+    IntegrableOn (fun B => norm (c B) * R B) D mu ->
+    let Phi (X : ThetaWeightedMatrix K (n + 1)) :=
+      S.sum (fun i => godementJacquetMatrixRectangle K (a i) d (f i) X)
+    let Psi := godementJacquetSelfDualMatrixFourier K Phi
+    let F t := godementJacquetInvertibleDoubleThetaIntegral K (n + 1) (mu.restrict D) Phi c b t
+    let G t := godementJacquetInvertibleDoubleThetaIntegral K (n + 1) (mu.restrict D) Psi b c t
+    And (Differentiable Complex (godementJacquetLogMellin (n + 1) F))
+      (forall z : Complex, godementJacquetLogMellin (n + 1) F z =
+        godementJacquetLogMellin (n + 1) G (1 - z)) := by
+  intro s H L R hcL hbR hbL hcR Phi Psi F G
+  have hData (i : I) (t : Real) :=
+    godementJacquetDoubleThetaIntegrals_eq_invertible_and_integrable_of_weightedRectangles
+      K (n + 1) (Nat.zero_lt_succ n) mu D hD hUnique (a i) d hd (f i) c b hc hb
+      hInvariantC hInvariantB hPeriodsC hPeriodsB hMeanC hMeanB m hm dLeft dRight
+      hLeft hRight hcL hbR hbL hcR t
+  apply godementJacquetInvertibleThetaMellin_entire_and_reflection_finsetRectangles
+    K (n + 1) (Nat.zero_lt_succ n) S (mu.restrict D) a d hd f c b hc hb
+    (fun i _ t => (hData i t).1.1) (fun i _ t => (hData i t).2.1)
+    (fun i _ t => (hData i t).1.2) (fun i _ t => (hData i t).2.2)
+  . intro i beta _
+    simpa only [neg_mul] using
+      exists_godementJacquetInvertibleDoubleThetaIntegral_decay_of_squareIntegrable K n
+        mu D hD hUnique hMul (a i) d hd (f i) c b hc hb hInvariantB hcI hbI beta
+  . intro i beta _
+    simpa only [neg_mul] using
+      exists_godementJacquetInvertibleDoubleThetaIntegral_decay_of_selfDualFourier_of_squareIntegrable K n
+        mu D hD hUnique hMul (a i) d hd (f i) b c hb hc hInvariantC hbI hcI beta
 
 end Robin1984.GRH
