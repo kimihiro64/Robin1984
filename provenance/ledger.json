@@ -2577,6 +2577,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/ValuationIwasawaSubgroups.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Local Iwasawa integration over GL in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
+      "formalization_note": "Constructs the two normalized Haar measures for upper-triangular restriction of right-integral-invariant matrix integrals.",
+      "content_basis": "Identifies integral units by matrix and inverse entries, proves the compact-open and closed subgroup properties, and combines algebraic Iwasawa decomposition with countable-coset integration.",
+      "dependency_status": "Uses ValuationIwasawa, LocalIwasawaMeasure and Mathlib Haar measures. The separate spherical zeta integral and its Euler factor are not computed here.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/ZeroSeriesSymmetry.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Pairing conjugate zeros in the canonical explicit formula.",
