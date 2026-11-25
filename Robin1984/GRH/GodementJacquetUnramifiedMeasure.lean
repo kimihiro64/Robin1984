@@ -1,3 +1,5 @@
+import Mathlib.Analysis.SpecialFunctions.Pow.Complex
+import Mathlib.MeasureTheory.Integral.Bochner.ContinuousLinearMap
 import Mathlib.MeasureTheory.Measure.Haar.Unique
 import Mathlib.MeasureTheory.Measure.WithDensity
 import Mathlib.Topology.Algebra.Group.Units
@@ -1032,6 +1034,205 @@ theorem smul_map_heckeLocalMatrixHaar_eq_determinantWeightedMeasure (p : Place)
   rw [<- Measure.map_smul c,
     <- heckeLocalMatrixUnitWeightedMeasure_eq_smul_haar p mu C hC hMu hDet,
     map_heckeLocalMatrixUnitWeightedMeasure]
+
+/-- The additive measure at a finite place is Haar measure normalized on
+the integral ball. -/
+theorem isAddHaarMeasure_heckeLocalAdditiveMeasure (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)] :
+    (heckeLocalAdditiveMeasure p).IsAddHaarMeasure := by
+  let L := p.adicCompletion K
+  let O : Set L := p.adicCompletionIntegers K
+  have hOpen : IsOpen O := Valued.isOpen_valuationSubring L
+  have hCompact : IsCompact O := isCompact_iff_compactSpace.mpr (compactSpace_heckeLocalIntegers p)
+  let P : PositiveCompacts L :=
+    { toCompacts := { carrier := O, isCompact' := hCompact }
+      interior_nonempty' := by
+        rw [hOpen.interior_eq]
+        exact Exists.intro 0 (p.adicCompletionIntegers K).zero_mem }
+  let : LocallyCompactSpace L := P.locallyCompactSpace_of_addGroup
+  let : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  let mu := heckeLocalAdditiveMeasure p
+  let eta : Measure L := Measure.addHaarMeasure P
+  let : eta.IsAddHaarMeasure := inferInstanceAs ((Measure.addHaarMeasure P).IsAddHaarMeasure)
+  let : mu.IsAddLeftInvariant := isAddLeftInvariant_heckeLocalAdditiveMeasure p
+  let : IsLocallyFiniteMeasure mu := isLocallyFiniteMeasure_heckeLocalAdditiveMeasure p
+  let c := mu.addHaarScalarFactor eta
+  have hScale : mu = HSMul.hSMul c eta := Measure.isAddLeftInvariant_eq_smul mu eta
+  have hEta : eta O = 1 := Measure.addHaarMeasure_self
+  have hMu : mu O = 1 := heckeLocalAdditiveMeasure_integral p
+  have hc : (c : ENNReal) = 1 := by
+    have h := congrArg (fun m : Measure L => m O) hScale
+    rw [hMu, Measure.coe_nnreal_smul_apply, hEta, mul_one] at h
+    exact h.symm
+  change mu.IsAddHaarMeasure
+  rw [hScale, ENNReal.coe_eq_one.mp hc, one_smul]
+  infer_instance
+
+/-- A nonempty compact open normalizing set has positive finite additive
+volume in matrix coordinates. -/
+theorem heckeLocalMatrixHaar_additiveNormalization_pos (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I]
+    (C : Set (Units (Matrix I I (p.adicCompletion K))))
+    (hCOpen : IsOpen C) (hCCompact : IsCompact C) (hCN : C.Nonempty) :
+    let base := Measure.pi (fun _ : I => Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p))
+    0 < (base (Set.image heckeLocalMatrixUnitEntries C)).toNNReal := by
+  intro base
+  let L := p.adicCompletion K
+  let mu := heckeLocalAdditiveMeasure p
+  let : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  let : SigmaFinite mu := sigmaFinite_heckeLocalAdditiveMeasure p
+  let : mu.IsAddHaarMeasure := isAddHaarMeasure_heckeLocalAdditiveMeasure p
+  let : base.IsOpenPosMeasure := inferInstance
+  let : IsFiniteMeasureOnCompacts base := inferInstance
+  have he : IsOpenEmbedding (heckeLocalMatrixUnitEntries (I := I) (F := L)) :=
+    isOpenEmbedding_heckeLocalMatrixUnitEntries
+  have hPos := (he.isOpenMap _ hCOpen).measure_pos base (hCN.image _)
+  have hFin : base (Set.image heckeLocalMatrixUnitEntries C) < Top.top :=
+    (hCCompact.image he.continuous).measure_lt_top
+  exact ENNReal.toNNReal_pos (ne_of_gt hPos) (ne_of_lt hFin)
+
+/-- The determinant density transfers a measurable integrable function
+on the matrix group to the product additive measure in row coordinates. -/
+theorem integrableAndIntegral_heckeLocalMatrixHaar_additive (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I]
+    [MeasurableSpace (Units (Matrix I I (p.adicCompletion K)))]
+    [BorelSpace (Units (Matrix I I (p.adicCompletion K)))]
+    (mu : Measure (Units (Matrix I I (p.adicCompletion K)))) [mu.IsHaarMeasure]
+    (C : Set (Units (Matrix I I (p.adicCompletion K)))) (hC : MeasurableSet C)
+    (hMu : mu C = 1) (hDet : forall g, Membership.mem C g -> norm g.val.det = 1)
+    (f : Units (Matrix I I (p.adicCompletion K)) -> Complex)
+    (hf : Measurable f) (hInt : Integrable f mu) :
+    let e := heckeLocalMatrixUnitEntries (I := I) (F := p.adicCompletion K)
+    let base := Measure.pi (fun _ : I => Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p))
+    let c := (base (Set.image e C)).toNNReal
+    let F := Function.extend e f (fun _ => (0 : Complex))
+    let T := fun X => HSMul.hSMul (heckeLocalInverseNorm p (Matrix.of X).det ^ Fintype.card I) (F X)
+    And (Integrable T base) (integral base T = HSMul.hSMul c (integral mu f)) := by
+  intro e base c F T
+  let L := p.adicCompletion K
+  let W (X : I -> I -> L) := heckeLocalInverseNorm p (Matrix.of X).det ^ Fintype.card I
+  let : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  have he : MeasurableEmbedding e := isOpenEmbedding_heckeLocalMatrixUnitEntries.measurableEmbedding
+  have hF : Measurable F := he.measurable_extend hf measurable_const
+  have hEntry (g : Units (Matrix I I L)) : F (e g) = f g :=
+    he.injective.extend_apply f (fun _ => 0) g
+  have hMatrix : Continuous (fun X : I -> I -> L => Matrix.of X) :=
+    continuous_matrixOf.mpr continuous_id
+  have hInv : Measurable (fun X : I -> I -> L => Inv.inv (norm (Matrix.of X).det)) :=
+    hMatrix.matrix_det.norm.measurable.inv
+  have hToNNReal : Continuous Real.toNNReal :=
+    (continuous_id.max continuous_const).subtype_mk (fun y : Real => le_max_right y 0)
+  have hW : Measurable W := (hToNNReal.measurable.comp hInv).pow_const _
+  have hScale : HSMul.hSMul c (Measure.map e mu) =
+      base.withDensity (fun X => (W X : ENNReal)) :=
+    smul_map_heckeLocalMatrixHaar_eq_determinantWeightedMeasure p mu C hC hMu hDet
+  have hMap : Integrable F (Measure.map e mu) := he.integrable_map_iff.mpr (by
+    rw [show Function.comp F e = f from funext hEntry]
+    exact hInt)
+  have hScaled : Integrable F (base.withDensity (fun X => (W X : ENNReal))) := by
+    rw [<- hScale]
+    exact hMap.smul_measure (c := (c : ENNReal)) ENNReal.coe_ne_top
+  constructor
+  . refine And.intro (hW.smul hF).aestronglyMeasurable ?_
+    have hFinite := (hasFiniteIntegral_iff_norm F).mp hScaled.2
+    have hWM : Measurable (fun X : I -> I -> L => (W X : ENNReal)) :=
+      measurable_coe_nnreal_ennreal.comp hW
+    have hFN : Measurable (fun X : I -> I -> L => ENNReal.ofReal (norm (F X))) :=
+      ENNReal.continuous_ofReal.measurable.comp hF.norm
+    rw [lintegral_withDensity_eq_lintegral_mul base hWM hFN] at hFinite
+    apply (hasFiniteIntegral_iff_norm T).mpr
+    have hNorm (X : I -> I -> L) : ENNReal.ofReal (norm (T X)) =
+        (W X : ENNReal) * ENNReal.ofReal (norm (F X)) := by
+      change ENNReal.ofReal (norm (HSMul.hSMul (W X : Real) (F X))) = _
+      have hNonneg : 0 <= (W X : Real) := (W X).2
+      have hScalarNorm : norm (W X : Real) = (W X : Real) := by
+        rw [Real.norm_eq_abs, abs_of_nonneg hNonneg]
+      rw [norm_smul, hScalarNorm, ENNReal.ofReal_mul hNonneg, ENNReal.ofReal_coe_nnreal]
+    simp only [hNorm]
+    exact hFinite
+  . change integral base (fun X => HSMul.hSMul (W X) (F X)) = _
+    rw [<- integral_withDensity_eq_integral_smul hW, <- hScale,
+      integral_smul_nnreal_measure, he.integral_map]
+    simp only [hEntry]
+
+/-- The local zeta integrand with its determinant density absorbed and
+extended by zero on singular matrices. -/
+def heckeLocalZetaAdditiveIntegrand (p : Place)
+    {I : Type*} [Fintype I] [DecidableEq I]
+    (Phi : Matrix I I (p.adicCompletion K) -> Complex)
+    (c : Units (Matrix I I (p.adicCompletion K)) -> Complex) (z : Complex) :
+    (I -> I -> p.adicCompletion K) -> Complex :=
+  Function.extend heckeLocalMatrixUnitEntries
+    (fun g => (norm g.val.det : Complex) ^ (z - (Fintype.card I : Complex)) * (Phi g.val * c g))
+    (fun _ => 0)
+
+/-- Additive coordinates replace the determinant exponent z by z minus
+the matrix dimension and scale the Haar integral by the additive
+normalizing volume. Absolute integrability transfers to these coordinates. -/
+theorem integrableAndIntegral_heckeLocalZeta_additive (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I]
+    [MeasurableSpace (Units (Matrix I I (p.adicCompletion K)))]
+    [BorelSpace (Units (Matrix I I (p.adicCompletion K)))]
+    (mu : Measure (Units (Matrix I I (p.adicCompletion K)))) [mu.IsHaarMeasure]
+    (C : Set (Units (Matrix I I (p.adicCompletion K)))) (hC : MeasurableSet C)
+    (hMu : mu C = 1) (hDet : forall g, Membership.mem C g -> norm g.val.det = 1)
+    (Phi : Matrix I I (p.adicCompletion K) -> Complex) (hPhi : Continuous Phi)
+    (c : Units (Matrix I I (p.adicCompletion K)) -> Complex) (hc : Measurable c)
+    (z : Complex) :
+    let f := fun g : Units (Matrix I I (p.adicCompletion K)) =>
+      (norm g.val.det : Complex) ^ z * (Phi g.val * c g)
+    let base := Measure.pi (fun _ : I => Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p))
+    let m := (base (Set.image heckeLocalMatrixUnitEntries C)).toNNReal
+    Integrable f mu ->
+      And (Integrable (heckeLocalZetaAdditiveIntegrand p Phi c z) base)
+        (integral base (heckeLocalZetaAdditiveIntegrand p Phi c z) =
+          HSMul.hSMul m (integral mu f)) := by
+  intro f base m hInt
+  let L := p.adicCompletion K
+  let G := Units (Matrix I I L)
+  let e : G -> I -> I -> L := heckeLocalMatrixUnitEntries
+  have hVal : Continuous (fun g : G => g.val) := Units.continuous_val
+  have hBase : Continuous (fun g : G => (norm g.val.det : Complex)) :=
+    Complex.continuous_ofReal.comp hVal.matrix_det.norm
+  have hPow : Continuous (fun g : G => (norm g.val.det : Complex) ^ z) :=
+    hBase.cpow continuous_const (fun g => Complex.ofReal_mem_slitPlane.mpr
+      (norm_pos_iff.mpr (g.isUnit.map Matrix.detMonoidHom).ne_zero))
+  have hf : Measurable f := hPow.measurable.mul ((hPhi.comp hVal).measurable.mul hc)
+  have hTransfer := integrableAndIntegral_heckeLocalMatrixHaar_additive p mu C hC hMu hDet f hf hInt
+  let F := Function.extend e f (fun _ => (0 : Complex))
+  let T := fun X => HSMul.hSMul (heckeLocalInverseNorm p (Matrix.of X).det ^ Fintype.card I) (F X)
+  have he : Function.Injective e := isOpenEmbedding_heckeLocalMatrixUnitEntries.injective
+  have hEq : T = heckeLocalZetaAdditiveIntegrand p Phi c z := by
+    funext X
+    by_cases h : exists g : G, e g = X
+    . choose g hg using h
+      rw [<- hg]
+      have hX : (Matrix.of (e g)).det = g.val.det := rfl
+      have hF : F (e g) = f g := he.extend_apply f (fun _ => 0) g
+      change HSMul.hSMul (heckeLocalInverseNorm p (Matrix.of (e g)).det ^ Fintype.card I)
+        (F (e g)) = _
+      rw [hX, hF, heckeLocalZetaAdditiveIntegrand, he.extend_apply]
+      let r := norm g.val.det
+      have hr : Not ((r : Complex) = 0) :=
+        Complex.ofReal_ne_zero.mpr (norm_ne_zero_iff.mpr (g.isUnit.map Matrix.detMonoidHom).ne_zero)
+      change HSMul.hSMul
+          ((Real.toNNReal (Inv.inv r) ^ Fintype.card I : NNReal) : Real)
+          ((r : Complex) ^ z * (Phi g.val * c g)) =
+        (r : Complex) ^ (z - (Fintype.card I : Complex)) * (Phi g.val * c g)
+      rw [Complex.real_smul, NNReal.coe_pow,
+        Real.coe_toNNReal _ (inv_nonneg.mpr (norm_nonneg _)), Complex.ofReal_pow,
+        Complex.ofReal_inv, inv_pow, Complex.cpow_sub z _ hr, Complex.cpow_natCast,
+        div_eq_mul_inv]
+      ac_rfl
+    . have hF : F X = 0 := Function.extend_apply' _ _ X h
+      change HSMul.hSMul (heckeLocalInverseNorm p (Matrix.of X).det ^ Fintype.card I) (F X) = _
+      rw [hF, smul_zero, heckeLocalZetaAdditiveIntegrand, Function.extend_apply' _ _ X h]
+  change And (Integrable T base) (integral base T = HSMul.hSMul m (integral mu f)) at hTransfer
+  rw [hEq] at hTransfer
+  exact hTransfer
 
 end LocalMatrixGroupMeasure
 
