@@ -1,3 +1,4 @@
+import Mathlib.MeasureTheory.Measure.WithDensity
 import Robin1984.GRH.GodementJacquetMatrixMeasure
 import Robin1984.GRH.HeckeFiniteHaarDilation
 import Robin1984.GRH.ValuationUnitriangularMeasure
@@ -409,6 +410,47 @@ private theorem heckeMatrixProduct_smul_const {J E : Type*} [Fintype J] [Measura
     Finset.univ.prod (fun j => (c : ENNReal) * mu (s j))
   rw [Finset.prod_mul_distrib, Finset.prod_const, Finset.card_univ, ENNReal.coe_pow]
 
+private def heckeLocalRightMatrix (p : Place)
+    {I : Type*} [Fintype I] [DecidableEq I] (M : Matrix I I (p.adicCompletion K))
+    (X : I -> I -> p.adicCompletion K) : I -> I -> p.adicCompletion K :=
+  @Mul.mul (Matrix I I (p.adicCompletion K)) inferInstance (Matrix.of X) M
+
+omit [MeasurableSpace (LocalProjectionAdeles K)] [BorelSpace (LocalProjectionAdeles K)] in
+private theorem measurable_heckeLocalMatrixTranspose_mulVec (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] (M : Matrix I I (p.adicCompletion K)) :
+    Measurable M.transpose.mulVec := by
+  let L := p.adicCompletion K
+  let : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
+  refine measurable_pi_lambda _ (fun i => ?_)
+  change Measurable (fun y : I -> L => Finset.univ.sum (fun j => M.transpose i j * y j))
+  have hc : Continuous (fun y : I -> L => Finset.univ.sum (fun j => M.transpose i j * y j)) :=
+    continuous_finsetSum _ (fun j _ => continuous_const.mul (continuous_apply j))
+  exact hc.measurable
+
+omit [MeasurableSpace (LocalProjectionAdeles K)] [BorelSpace (LocalProjectionAdeles K)] in
+private theorem heckeLocalRightMatrix_rows (p : Place)
+    {I : Type*} [Fintype I] [DecidableEq I] (M : Matrix I I (p.adicCompletion K)) :
+    heckeLocalRightMatrix p M =
+      (fun X : I -> I -> p.adicCompletion K => fun i => M.transpose.mulVec (X i)) := by
+  funext X i j
+  change ((Matrix.of X) * M) i j = M.transpose.mulVec (X i) j
+  rw [Matrix.mul_apply]
+  unfold Matrix.mulVec dotProduct
+  apply Finset.sum_congr rfl
+  intro k _
+  change X i k * M k j = M k j * X i k
+  exact mul_comm _ _
+
+omit [MeasurableSpace (LocalProjectionAdeles K)] [BorelSpace (LocalProjectionAdeles K)] in
+private theorem measurable_heckeLocalRightMatrix (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I] (M : Matrix I I (p.adicCompletion K)) :
+    Measurable (heckeLocalRightMatrix p M) := by
+  rw [heckeLocalRightMatrix_rows]
+  exact measurable_pi_lambda _ (fun i =>
+    (measurable_heckeLocalMatrixTranspose_mulVec p M).comp (measurable_pi_apply i))
+
 /-- Right multiplication by an invertible matrix scales the product
 additive measure on its row coordinates by one inverse determinant norm
 per row. -/
@@ -424,7 +466,6 @@ theorem map_heckeLocalAdditiveMeasure_matrix_mul_right
   let L := p.adicCompletion K
   let mu := heckeLocalAdditiveMeasure p
   let nu := Measure.pi (fun _ : I => mu)
-  let : SecondCountableTopology L := secondCountableLocalAdditiveCompletion p
   let : SigmaFinite mu := sigmaFinite_heckeLocalAdditiveMeasure p
   have hMT : IsUnit M.transpose := by
     apply (Matrix.isUnit_iff_isUnit_det M.transpose).mpr
@@ -433,31 +474,110 @@ theorem map_heckeLocalAdditiveMeasure_matrix_mul_right
   have hscale : Measure.map M.transpose.mulVec nu =
       HSMul.hSMul (heckeLocalInverseNorm p M.det) nu := by
     simpa only [Matrix.det_transpose] using map_heckeLocalAdditiveMeasure_mulVec_det p M.transpose hMT
-  have hmeas : Measurable M.transpose.mulVec := by
-    refine measurable_pi_lambda _ (fun i => ?_)
-    change Measurable (fun y : I -> L => Finset.univ.sum (fun j => M.transpose i j * y j))
-    have hcont : Continuous (fun y : I -> L => Finset.univ.sum (fun j => M.transpose i j * y j)) :=
-      continuous_finsetSum _ (fun j _ => continuous_const.mul (continuous_apply j))
-    exact hcont.measurable
-  have hmul : (fun X : I -> I -> L => @Mul.mul (Matrix I I L) inferInstance (Matrix.of X) M) =
-      (fun X : I -> I -> L => fun i => M.transpose.mulVec (X i)) := by
-    funext X i j
-    change ((Matrix.of X) * M) i j = M.transpose.mulVec (X i) j
-    rw [Matrix.mul_apply]
-    unfold Matrix.mulVec dotProduct
-    apply Finset.sum_congr rfl
-    intro k _
-    change X i k * M k j = M k j * X i k
-    exact mul_comm _ _
+  have hmeas := measurable_heckeLocalMatrixTranspose_mulVec p M
   let : SigmaFinite (Measure.map M.transpose.mulVec nu) := by
     rw [hscale]
     infer_instance
-  rw [hmul]
+  change Measure.map (heckeLocalRightMatrix p M)
+      (Measure.pi (fun _ : I => nu)) = _
+  rw [heckeLocalRightMatrix_rows]
   change Measure.map (fun X : I -> I -> L => fun i => M.transpose.mulVec (X i))
       (Measure.pi (fun _ : I => nu)) = _
   rw [Measure.pi_map_pi (fun _ => hmeas.aemeasurable)]
   simp only [hscale]
   exact heckeMatrixProduct_smul_const nu (heckeLocalInverseNorm p M.det)
+
+private theorem map_withDensity_eq_of_scaling
+    {E : Type*} [MeasurableSpace E] (e : MeasurableEquiv E E)
+    (mu : Measure E) (w : E -> ENNReal) (a : NNReal)
+    (hMap : Measure.map e mu = HSMul.hSMul (a : ENNReal) mu)
+    (hWeight : forall x : E, w (e x) = (a : ENNReal) * w x) :
+    Measure.map e (mu.withDensity w) = mu.withDensity w := by
+  let wInv := Function.comp w e.symm
+  have hPush : Measure.map e (mu.withDensity w) =
+      (Measure.map e mu).withDensity wInv := by
+    apply Measure.ext
+    intro s hs
+    rw [Measure.map_apply e.measurable hs, withDensity_apply _ (hs.preimage e.measurable),
+      withDensity_apply _ hs, Measure.restrict_map e.measurable hs, lintegral_map_equiv]
+    simp only [wInv, Function.comp_apply, e.symm_apply_apply]
+  have hDensity : HSMul.hSMul (a : ENNReal) wInv = w := by
+    funext x
+    change (a : ENNReal) * w (e.symm x) = w x
+    simpa only [e.apply_symm_apply] using (hWeight (e.symm x)).symm
+  rw [hPush, hMap, withDensity_smul_measure, <- withDensity_smul' (a : ENNReal) wInv ENNReal.coe_ne_top, hDensity]
+
+private def heckeLocalRightMatrixEquiv (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I]
+    (m : Units (Matrix I I (p.adicCompletion K))) :
+    MeasurableEquiv (I -> I -> p.adicCompletion K) (I -> I -> p.adicCompletion K) where
+  toFun := heckeLocalRightMatrix p m.val
+  invFun := heckeLocalRightMatrix p m.inv
+  left_inv := fun X => by
+    change (Matrix.of X * m.val) * m.inv = Matrix.of X
+    rw [mul_assoc, m.val_inv, mul_one]
+  right_inv := fun X => by
+    change (Matrix.of X * m.inv) * m.val = Matrix.of X
+    rw [mul_assoc, m.inv_val, mul_one]
+  measurable_toFun := measurable_heckeLocalRightMatrix p m.val
+  measurable_invFun := measurable_heckeLocalRightMatrix p m.inv
+
+/-- The determinant weight on a matrix, equal to the inverse determinant
+norm raised to the number of rows when the matrix is invertible. -/
+def heckeLocalMatrixDeterminantWeight (p : Place)
+    {I : Type*} [Fintype I] [DecidableEq I]
+    (X : I -> I -> p.adicCompletion K) : ENNReal :=
+  ((heckeLocalInverseNorm p (Matrix.of X).det ^ Fintype.card I : NNReal) : ENNReal)
+
+/-- The determinant-weighted additive measure on local matrix coordinates. -/
+def heckeLocalDeterminantWeightedMeasure (p : Place) (I : Type*)
+    [Fintype I] [DecidableEq I] [MeasurableSpace (p.adicCompletion K)] :
+    Measure (I -> I -> p.adicCompletion K) :=
+  (Measure.pi (fun _ : I => Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p))).withDensity
+    (heckeLocalMatrixDeterminantWeight p)
+
+/-- Right multiplication by an invertible matrix preserves the
+determinant-weighted additive measure on local matrix coordinates. -/
+theorem map_heckeLocalDeterminantWeightedMeasure_mul_right (p : Place)
+    [MeasurableSpace (p.adicCompletion K)] [BorelSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I]
+    (m : Units (Matrix I I (p.adicCompletion K))) :
+    Measure.map (heckeLocalRightMatrix p m.val) (heckeLocalDeterminantWeightedMeasure p I) =
+      heckeLocalDeterminantWeightedMeasure p I := by
+  let mu := Measure.pi (fun _ : I => Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p))
+  let e := heckeLocalRightMatrixEquiv p m
+  let c := heckeLocalInverseNorm p m.val.det ^ Fintype.card I
+  change Measure.map e (mu.withDensity (heckeLocalMatrixDeterminantWeight p)) =
+    mu.withDensity (heckeLocalMatrixDeterminantWeight p)
+  apply map_withDensity_eq_of_scaling e mu (heckeLocalMatrixDeterminantWeight p) c
+  . exact map_heckeLocalAdditiveMeasure_matrix_mul_right p m.val m.isUnit
+  . intro X
+    have hd : (Matrix.of (e X)).det = (Matrix.of X).det * m.val.det := by
+      change (Matrix.of X * m.val).det = _
+      exact Matrix.det_mul _ _
+    unfold heckeLocalMatrixDeterminantWeight
+    rw [hd, map_mul, mul_pow, ENNReal.coe_mul, mul_comm]
+
+/-- On measurable sets of unit determinant norm, the determinant-weighted
+measure is the normalized product additive measure. -/
+theorem heckeLocalDeterminantWeightedMeasure_apply_of_detNorm_one (p : Place)
+    [MeasurableSpace (p.adicCompletion K)]
+    {I : Type*} [Fintype I] [DecidableEq I]
+    (S : Set (I -> I -> p.adicCompletion K)) (hS : MeasurableSet S)
+    (hDet : forall X, Membership.mem S X -> norm (Matrix.of X).det = 1) :
+    heckeLocalDeterminantWeightedMeasure p I S =
+      (Measure.pi (fun _ : I => Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p))) S := by
+  let mu := Measure.pi (fun _ : I => Measure.pi (fun _ : I => heckeLocalAdditiveMeasure p))
+  rw [heckeLocalDeterminantWeightedMeasure, withDensity_apply _ hS]
+  change lintegral (mu.restrict S) (heckeLocalMatrixDeterminantWeight p) = mu S
+  have hOne : Filter.EventuallyEq (ae (mu.restrict S)) (heckeLocalMatrixDeterminantWeight p)
+      (fun _ : I -> I -> p.adicCompletion K => (1 : ENNReal)) := by
+    filter_upwards [ae_restrict_mem hS] with X hX
+    change ((Real.toNNReal (Inv.inv (norm (Matrix.of X).det)) ^ Fintype.card I : NNReal) :
+      ENNReal) = 1
+    rw [hDet X hX, inv_one, Real.toNNReal_one, one_pow, ENNReal.coe_one]
+  rw [lintegral_congr_ae hOne, lintegral_const, Measure.restrict_apply_univ, one_mul]
 
 /-- The normalized standard local measure gives one inverse norm for
 each scaled entry strictly above the diagonal of a unitriangular matrix. -/
