@@ -155,11 +155,13 @@ private theorem transvection_product_one_row {R : Type*} [CommRing R]
           _ = _ := by
             rw [hrest.1 _ _ htj, hrest.2 b, add_assoc, add_comm _ (t.c * M t.j b)]
 
-private theorem exists_adeleMatrix_unitPivot (r : Nat)
-    (M : Matrix (Sum (Fin r) Unit) (Sum (Fin r) Unit) (AdeleRing (RingOfIntegers K) K))
+private theorem exists_matrix_unitPivot {R : Type*} [CommRing R]
+    (hPivot : forall a b c d : R, c * a + d * b = 1 -> exists x : R, IsUnit (a + x * b))
+    (r : Nat)
+    (M : Matrix (Sum (Fin r) Unit) (Sum (Fin r) Unit) R)
     (hM : IsUnit M) :
     exists L : List (Matrix.TransvectionStruct (Sum (Fin r) Unit)
-        (AdeleRing (RingOfIntegers K) K)),
+        R),
       IsUnit (((L.map Matrix.TransvectionStruct.toMatrix).prod * M) (Sum.inr ()) (Sum.inr ())) := by
   classical
   let j : Sum (Fin r) Unit := Sum.inr ()
@@ -168,18 +170,18 @@ private theorem exists_adeleMatrix_unitPivot (r : Nat)
     rw [<- hM.unit_spec]
     exact hM.unit.inv_val
   let B := Finset.univ.sum (fun i : Fin r => N j (Sum.inl i) * M (Sum.inl i) j)
-  have he : N j j * M j j + (1 : AdeleRing (RingOfIntegers K) K) * B = 1 := by
+  have he : N j j * M j j + (1 : R) * B = 1 := by
     have heval := congrArg (fun Q : Matrix _ _ _ => Q j j) hNM
     change (N * M) j j = (1 : Matrix _ _ _) j j at heval
     rw [Matrix.mul_apply, Fintype.sum_sum_type, Matrix.one_apply_eq] at heval
     simpa [B, j, add_comm] using heval
-  choose x hx using exists_adele_unitPivot K (M j j) B (N j j) 1 he
+  choose x hx using hPivot (M j j) B (N j j) 1 he
   let op (i : Fin r) : Matrix.TransvectionStruct (Sum (Fin r) Unit)
-      (AdeleRing (RingOfIntegers K) K) :=
+      R :=
     { i := j, j := Sum.inl i, hij := by simp [j], c := x * N j (Sum.inl i) }
   let L := List.ofFn op
   have hL (t : Matrix.TransvectionStruct (Sum (Fin r) Unit)
-      (AdeleRing (RingOfIntegers K) K)) (ht : List.Mem t L) : t.i = j := by
+      R) (ht : List.Mem t L) : t.i = j := by
     obtain h := List.mem_ofFn.mp ht
     choose i hi using h
     rw [<- hi]
@@ -554,22 +556,19 @@ private theorem map_mulVec_from_reindex {I J R : Type*}
       rw [Measure.map_map hM E.measurable, Measure.map_map E.measurable hM', hc]
     _ = _ := by rw [h, Measure.map_smul c, he.map_eq]
 
-section AdelecMeasure
+section MatrixMeasure
 
-variable {F : Type*} [Field F] [NumberField F]
+variable {R : Type*} [CommRing R] [MeasurableSpace R] [MeasurableAdd R]
 
-private abbrev Adeles := AdeleRing (RingOfIntegers F) F
-
-variable [MeasurableSpace (Adeles (F := F))] [MeasurableAdd (Adeles (F := F))]
-
-private theorem map_adeleMatrix_mulVec_det_fin
-    (mu : Measure (Adeles (F := F))) [SigmaFinite mu] [mu.IsAddLeftInvariant]
-    (delta : MonoidHom (Adeles (F := F)) NNReal)
-    (hadd : Measurable (fun p : Prod (Adeles (F := F)) (Adeles (F := F)) => p.1 + p.2))
-    (hmul : forall a : Adeles (F := F), Measurable (fun x : Adeles (F := F) => a * x))
-    (hscale : forall u : Units (Adeles (F := F)),
-      Measure.map (fun x : Adeles (F := F) => u.val * x) mu = HSMul.hSMul (delta u.val) mu)
-    (n : Nat) (M : Matrix (Fin n) (Fin n) (Adeles (F := F))) (hM : IsUnit M) :
+private theorem map_matrix_mulVec_det_fin
+    (hPivot : forall a b c d : R, c * a + d * b = 1 -> exists x : R, IsUnit (a + x * b))
+    (mu : Measure R) [SigmaFinite mu] [mu.IsAddLeftInvariant]
+    (delta : MonoidHom R NNReal)
+    (hadd : Measurable (fun p : Prod R R => p.1 + p.2))
+    (hmul : forall a : R, Measurable (fun x : R => a * x))
+    (hscale : forall u : Units R,
+      Measure.map (fun x : R => u.val * x) mu = HSMul.hSMul (delta u.val) mu)
+    (n : Nat) (M : Matrix (Fin n) (Fin n) R) (hM : IsUnit M) :
     Measure.map M.mulVec (Measure.pi (fun _ : Fin n => mu)) =
       HSMul.hSMul (delta M.det) (Measure.pi (fun _ : Fin n => mu)) := by
   induction n with
@@ -593,7 +592,7 @@ private theorem map_adeleMatrix_mulVec_det_fin
       apply map_mulVec_from_reindex mu hadd hmul e M
       change Measure.map M'.mulVec nu = HSMul.hSMul (delta M.det) nu
       rw [<- hdetM']
-      choose ops hpivot using exists_adeleMatrix_unitPivot F n M' hM'
+      choose ops hpivot using exists_matrix_unitPivot hPivot n M' hM'
       let P := (ops.map Matrix.TransvectionStruct.toMatrix).prod
       let N := P * M'
       let A := N.submatrix Sum.inl Sum.inl
@@ -603,8 +602,8 @@ private theorem map_adeleMatrix_mulVec_det_fin
       let D := Matrix.diagonal (fun _ : Unit => u.val)
       let V := Matrix.diagonal (fun _ : Unit => u.inv)
       let S := A - B * V * C
-      let L : Matrix J J (Adeles (F := F)) := Matrix.fromBlocks 1 (-(B * V)) 0 1
-      let Q : Matrix J J (Adeles (F := F)) := Matrix.fromBlocks 1 0 (-(V * C)) 1
+      let L : Matrix J J R := Matrix.fromBlocks 1 (-(B * V)) 0 1
+      let Q : Matrix J J R := Matrix.fromBlocks 1 0 (-(V * C)) 1
       have hN : N = Matrix.fromBlocks A B C D := by
         ext i j
         cases i with
@@ -634,15 +633,15 @@ private theorem map_adeleMatrix_mulVec_det_fin
         exact map_fromBlocks_diagonal_mulVec mu S D (measurable_matrix_mulVec hadd hmul S)
           (measurable_matrix_mulVec hadd hmul D) _ _ (ih S hS) hD
       have hAddVec (T : Type) :
-          Measurable (fun p : Prod (T -> Adeles (F := F)) (T -> Adeles (F := F)) =>
+          Measurable (fun p : Prod (T -> R) (T -> R) =>
             p.1 + p.2) := by
         refine measurable_pi_lambda _ (fun i => ?_)
-        change Measurable (fun p : Prod (T -> Adeles (F := F)) (T -> Adeles (F := F)) =>
+        change Measurable (fun p : Prod (T -> R) (T -> R) =>
           p.1 i + p.2 i)
-        have hp : Measurable (fun y : T -> Adeles (F := F) => y i) := measurable_pi_apply i
-        have hfst : Measurable (fun p : Prod (T -> Adeles (F := F)) (T -> Adeles (F := F)) =>
+        have hp : Measurable (fun y : T -> R => y i) := measurable_pi_apply i
+        have hfst : Measurable (fun p : Prod (T -> R) (T -> R) =>
             p.1 i) := hp.comp measurable_fst
-        have hsnd : Measurable (fun p : Prod (T -> Adeles (F := F)) (T -> Adeles (F := F)) =>
+        have hsnd : Measurable (fun p : Prod (T -> R) (T -> R) =>
             p.2 i) := hp.comp measurable_snd
         exact hadd.comp (hfst.prodMk hsnd)
       have hLp : MeasurePreserving L.mulVec nu nu :=
@@ -651,24 +650,74 @@ private theorem map_adeleMatrix_mulVec_det_fin
       have hQp : MeasurePreserving Q.mulVec nu nu :=
         measurePreserving_fromBlocks_lower_mulVec mu (hAddVec Unit) _
           (measurable_matrix_mulVec hadd hmul _)
-      have hm (P : Matrix J J (Adeles (F := F))) : Measurable P.mulVec :=
+      have hm (P : Matrix J J R) : Measurable P.mulVec :=
         measurable_matrix_mulVec hadd hmul P
       have hLdet : L.det = 1 := by
-        change (Matrix.fromBlocks (1 : Matrix (Fin n) (Fin n) (Adeles (F := F)))
-          (-(B * V)) 0 (1 : Matrix Unit Unit (Adeles (F := F)))).det = 1
+        change (Matrix.fromBlocks (1 : Matrix (Fin n) (Fin n) R)
+          (-(B * V)) 0 (1 : Matrix Unit Unit R)).det = 1
         simp
       have hL : IsUnit L := (Matrix.isUnit_iff_isUnit_det L).mpr (by rw [hLdet]; exact isUnit_one)
       have hMapN := (map_mulVec_smul_iff_of_two_shears nu L N Q hL hm hLp hQp _).mp hSplit
       have hPp : MeasurePreserving P.mulVec nu nu :=
         measurePreserving_transvectionList_mulVec mu hadd hmul ops
       have hP : IsUnit P := (Matrix.isUnit_iff_isUnit_det P).mpr (by rw [hPdet]; exact isUnit_one)
-      have hid : Matrix.mulVec (1 : Matrix J J (Adeles (F := F))) = id :=
+      have hid : Matrix.mulVec (1 : Matrix J J R) = id :=
         funext Matrix.one_mulVec
-      have h1 : MeasurePreserving (Matrix.mulVec (1 : Matrix J J (Adeles (F := F)))) nu nu := by
+      have h1 : MeasurePreserving (Matrix.mulVec (1 : Matrix J J R)) nu nu := by
         rw [hid]
         exact MeasurePreserving.id nu
       apply (map_mulVec_smul_iff_of_two_shears nu P M' 1 hP hm hPp h1 _).mp
       simpa only [Matrix.mul_one] using hMapN
+
+private theorem map_matrix_mulVec_det
+    (hPivot : forall a b c d : R, c * a + d * b = 1 -> exists x : R, IsUnit (a + x * b))
+    (mu : Measure R) [SigmaFinite mu] [mu.IsAddLeftInvariant]
+    (delta : MonoidHom R NNReal)
+    (hadd : Measurable (fun p : Prod R R => p.1 + p.2))
+    (hmul : forall a : R, Measurable (fun x : R => a * x))
+    (hscale : forall u : Units R,
+      Measure.map (fun x : R => u.val * x) mu = HSMul.hSMul (delta u.val) mu)
+    {I : Type*} [Fintype I] [DecidableEq I] (M : Matrix I I R) (hM : IsUnit M) :
+    Measure.map M.mulVec (Measure.pi (fun _ : I => mu)) =
+      HSMul.hSMul (delta M.det) (Measure.pi (fun _ : I => mu)) := by
+  let e := (Fintype.equivFin I).symm
+  let N := M.submatrix e e
+  have hdet : N.det = M.det := Matrix.det_submatrix_equiv_self e M
+  have hN : IsUnit N := (Matrix.isUnit_iff_isUnit_det N).mpr (by
+    rw [hdet]
+    exact (Matrix.isUnit_iff_isUnit_det M).mp hM)
+  apply map_mulVec_from_reindex mu hadd hmul e M
+  rw [<- hdet]
+  exact map_matrix_mulVec_det_fin hPivot mu delta hadd hmul hscale _ N hN
+
+/-- On a finite vector space over a commutative local ring, an invertible
+matrix scales the product additive measure by the scalar multiplier of
+its determinant. -/
+theorem map_localRing_matrix_mulVec_det [IsLocalRing R]
+    (mu : Measure R) [SigmaFinite mu] [mu.IsAddLeftInvariant]
+    (delta : MonoidHom R NNReal)
+    (hadd : Measurable (fun p : Prod R R => p.1 + p.2))
+    (hmul : forall a : R, Measurable (fun x : R => a * x))
+    (hscale : forall u : Units R,
+      Measure.map (fun x : R => u.val * x) mu = HSMul.hSMul (delta u.val) mu)
+    {I : Type*} [Fintype I] [DecidableEq I] (M : Matrix I I R) (hM : IsUnit M) :
+    Measure.map M.mulVec (Measure.pi (fun _ : I => mu)) =
+      HSMul.hSMul (delta M.det) (Measure.pi (fun _ : I => mu)) := by
+  apply map_matrix_mulVec_det _ mu delta hadd hmul hscale M hM
+  intro a b c d h
+  obtain hp := localRing_unitPivot a b c d h
+  choose x hx using hp
+  exact Exists.intro x hx.2
+
+end MatrixMeasure
+
+section AdelecMeasure
+
+variable {F : Type*} [Field F] [NumberField F]
+
+private abbrev Adeles := AdeleRing (RingOfIntegers F) F
+
+variable [MeasurableSpace (Adeles (F := F))] [MeasurableAdd (Adeles (F := F))]
 
 /-- On a finite vector space over the adeles, the pushforward along an
 invertible matrix is the product additive measure scaled by the rank-one
@@ -682,16 +731,8 @@ theorem map_adeleMatrix_mulVec_det
       Measure.map (fun x : Adeles (F := F) => u.val * x) mu = HSMul.hSMul (delta u.val) mu)
     {I : Type*} [Fintype I] [DecidableEq I] (M : Matrix I I (Adeles (F := F))) (hM : IsUnit M) :
     Measure.map M.mulVec (Measure.pi (fun _ : I => mu)) =
-      HSMul.hSMul (delta M.det) (Measure.pi (fun _ : I => mu)) := by
-  let e := (Fintype.equivFin I).symm
-  let N := M.submatrix e e
-  have hdet : N.det = M.det := Matrix.det_submatrix_equiv_self e M
-  have hN : IsUnit N := (Matrix.isUnit_iff_isUnit_det N).mpr (by
-    rw [hdet]
-    exact (Matrix.isUnit_iff_isUnit_det M).mp hM)
-  apply map_mulVec_from_reindex mu hadd hmul e M
-  rw [<- hdet]
-  exact map_adeleMatrix_mulVec_det_fin mu delta hadd hmul hscale _ N hN
+      HSMul.hSMul (delta M.det) (Measure.pi (fun _ : I => mu)) :=
+  map_matrix_mulVec_det (exists_adele_unitPivot F) mu delta hadd hmul hscale M hM
 
 end AdelecMeasure
 
