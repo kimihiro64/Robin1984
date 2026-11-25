@@ -3147,15 +3147,67 @@ before the complex-valued integral is rearranged. These steps are
 verified in \path{GodementJacquetMellinAbsolute.lean} for measurable
 test data and pointwise summable theta series.
 
+\paragraph{Local Iwasawa integration.}
+Let \(F\) be a second-countable nonarchimedean local field with compact
+open valuation ring \(\mathcal O\). Write \(G=\mathrm{GL}_n(F)\),
+\(K=\mathrm{GL}_n(\mathcal O)\), and \(B=AU\) for the upper-triangular
+subgroup with diagonal group \(A\) and upper-unitriangular group \(U\).
+For a measurable right-\(K\)-invariant kernel \(\Psi\in L^1(G,dg)\),
+\[
+ \int_G \Psi(g)\,dg = \int_{A\times U}\Psi(au)\,d^\times a\,du ,
+ \qquad
+ \operatorname{vol}_G(K)=\operatorname{vol}_A(A\cap K)
+ =\operatorname{vol}_U(U\cap K)=1.
+\]
+The product kernel is integrable. This is the Iwasawa integration
+step in the local unramified calculation
+\cite[Section~2.4]{GoldfeldJacquet2021}.
+
+For the algebraic factorization, choose an entry of maximal valuation
+in the last row. Ratios of other row entries to that nonzero entry
+lie in \(\mathcal O\). Integral column operations and a permutation
+move the pivot to the final column and clear the rest of the row.
+The remaining upper-left block is invertible, so induction gives
+\(G=BK\). The map \(g\mapsto(g,g^{-1})\) identifies \(G\) with a
+closed subspace of \(M_n(F)\times M_n(F)\). The preimage of
+\(M_n(\mathcal O)\times M_n(\mathcal O)\) is \(K\), hence \(K\) is
+compact and open. The equations below the diagonal make \(B\)
+closed, so \(B\cap K\) is compact and open in \(B\).
+
+The open left cosets of \(K\) form a countable partition of \(G\).
+Choose their representatives in \(B\). The same representatives
+partition \(B\) into cosets of \(B\cap K\). Under the left Haar
+measures normalized on the respective subgroups, every corresponding
+coset has mass one and \(\Psi\) takes the same constant value on it.
+Applying this argument to \(|\Psi|\) first gives integrability on
+\(B\) and justifies the complex-valued sum of coset integrals.
+
+The map \((a,u)\mapsto au\) is a homeomorphism \(A\times U\to B\).
+Left translation by \(a_0u_0\) is
+\[
+ (a,u)\longmapsto (a_0a,(a^{-1}u_0a)u).
+\]
+For each fixed \(a\), the second component is a left translation of
+\(U\). Fubini gives left invariance of the product measure. If
+\(b\in B\cap K\), the diagonal entries of \(b\) and of \(b^{-1}\)
+are integral, so its diagonal factor belongs to \(A\cap K\).
+The remaining factor then belongs to \(U\cap K\). Conversely the
+product of these two subgroups lies in \(B\cap K\). This gives mass
+one for \(B\cap K\) under the product measure. The formal proofs are
+in \path{ValuationIwasawa.lean}, \path{LocalIwasawaMeasure.lean},
+\path{ValuationIwasawaSubgroups.lean}, and
+\path{ValuationIwasawaCoordinates.lean}.
+
 On the closed strip $-2\le\Re s\le3$, the two exponential moments
 bound each Mellin transform uniformly in the imaginary direction.
-Together with the Euler identification and Gamma estimates on the
+Together with its Euler identification and Gamma estimates on the
 right and norm reflection on the left, this gives order at most
-one for the paired completion in \path{GodementJacquetMellinGrowth.lean}.
-The higher-rank instantiation still needs reduction covers and
-weighted bounds for actual cuspidal data, the original kernel's
-right-half-plane absolute convergence, and the local and global
-standard Euler identifications. \cite{GodementJacquet1972}
+one for each pole-free completion in
+\path{GodementJacquetMellinGrowth.lean}. The higher-rank instantiation
+still needs reduction covers and weighted bounds for actual cuspidal
+data, right-half-plane absolute convergence of the original kernel,
+and evaluation and assembly of the standard local factors.
+\cite{GodementJacquet1972}
 
 The three classical equivalence declarations have the
 mathematical types
@@ -4275,6 +4327,13 @@ Ann. of Math. (2) \textbf{48} (1947), no.~2, 502--514.
 R. Godement and H. Jacquet, \emph{Zeta Functions of Simple Algebras},
 Lecture Notes in Mathematics, vol.~260, Springer, 1972.
 \href{https://doi.org/10.1007/BFb0070263}{doi:10.1007/BFb0070263}.
+
+\bibitem{GoldfeldJacquet2021}
+D. Goldfeld and H. Jacquet, \emph{Automorphic representations and
+\(L\)-functions for \(\mathrm{GL}(n)\)}, in J. Mueller and F. Shahidi
+(eds.), \emph{The Genesis of the Langlands Program},
+Cambridge University Press, 2021, pp.~215--274.
+\url{https://doi.org/10.1017/9781108591218.019}.
 
 \bibitem{JacquetShalika1981}
 H. Jacquet and J. A. Shalika, \emph{On Euler products and the

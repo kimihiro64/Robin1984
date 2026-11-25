@@ -200,6 +200,23 @@ cover and cusp bounds for actual automorphic data, absolute convergence
 on a right half-plane, and identification with the standard Euler
 product.
 [Absolute Mellin identity](Robin1984/GRH/GodementJacquetMellinAbsolute.lean)
+
+For the local unramified calculation, let $F$ be a nonarchimedean local
+field with ring of integers $\mathcal O$, and write $G=\mathrm{GL}_n(F)$,
+$K=\mathrm{GL}_n(\mathcal O)$, $A$ for the diagonal group and $U$ for the
+upper-unitriangular group. Lean proves the factorization $g=auk$ for every $g\in G$, with
+$a\in A$, $u\in U$, and $k\in K$. It constructs Haar measures on $G$
+and $AU$, normalized on $K$ and $AU\cap K$. For a measurable
+right-$K$-invariant $f$ integrable on $G$, it proves
+$$
+\int_G f(g)\,dg=\int_{A\times U} f(au)\,d^\times a\,du.
+$$
+Here $K$, $A\cap K$, and $U\cap K$ have mass one in their respective
+measures. The spherical integrand must still be evaluated in these
+coordinates to identify its Euler factor.
+[Matrix factorization](Robin1984/GRH/ValuationIwasawa.lean)
+[Normalized Haar measures](Robin1984/GRH/ValuationIwasawaSubgroups.lean)
+[Product integral](Robin1984/GRH/ValuationIwasawaCoordinates.lean)
 [Generalized criteria](docs/GRH.md)
 
 ## Critical-line zeros and multiplicity
@@ -488,8 +505,8 @@ audits the Solution proof bodies against the three permitted standard axioms,
 and replays the export through Lean's default kernel. The configuration has no
 definition holes and requires a second replay through the independent NanoDa
 kernel. Linux CI passes the completed root `.lake/build` tree from its build job
-to the documentation and Comparator jobs, avoiding redundant concurrent cold
-builds while retaining the same checks on fresh standalone verifiers.
+to the Comparator job, avoiding a redundant cold build while retaining
+the same checks on fresh standalone verifiers.
 It pins the upstream `leanprover/lean4export` v4.33.0 source commit and compiles
 that source unmodified with this repository's exact Lean v4.33.1 toolchain via
 `ELAN_TOOLCHAIN`. This keeps the exporter compatible with the project's
