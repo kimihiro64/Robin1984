@@ -2676,6 +2676,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetCartanIntegral.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Cartan double cosets of a general linear group over a nonarchimedean local field and countable additivity of the Bochner integral.",
+      "formalization_note": "Specializes the integral matrix partition to finite places and decomposes a determinant-weighted integral into its uniformizer gap coefficient series.",
+      "content_basis": "Uses discrete integral valuation powers, compact and open translates of the integral subgroup, and the determinant norm on each coset. Applies countable additivity to the disjoint open partition.",
+      "dependency_status": "Uses the uniformizer gap partition and Mathlib Bochner integration. The weighted sum assumes integrability on the entrywise integral matrix locus.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetOrderedDiagonalSeries.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Cayley-Hamilton and the rational generating series of a linear recurrence.",
