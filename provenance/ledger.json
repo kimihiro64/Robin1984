@@ -2694,6 +2694,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetCartanResidueMeasure.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Reduction modulo the maximal ideal, normalized additive local Haar measure, and finite product measures.",
+      "formalization_note": "Evaluates the additive mass of the finite-place Cartan stabilizer by its admissible invertible residue matrices and uniformizer-power rectangles.",
+      "content_basis": "Identifies determinant valuation one with invertible reduction, lifts admissible residues, evaluates translated coordinate balls, and sums the disjoint residue fibers of the ambient stabilizer.",
+      "dependency_status": "Uses the Cartan stabilizer entry bounds, the finite-completion residue field, the normalized local additive Haar measure, and Mathlib product measures.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetOrderedDiagonalSeries.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Cayley-Hamilton and the rational generating series of a linear recurrence.",
