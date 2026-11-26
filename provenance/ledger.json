@@ -2010,6 +2010,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetProductTestMellinContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Absolute convergence of Godement-Jacquet theta series for adelic Schwartz functions and global zeta unfolding.",
+      "formalization_note": "Obtains the product-test measurability, pointwise summability and weighted integrability hypotheses from the finite rectangle decomposition and the local absolute integrals.",
+      "content_basis": "Finite-denominator bounds give a summable series of absolute norms for each rectangle. The finite expansion and the adelic determinant Haar formula give the required inputs for the product test.",
+      "dependency_status": "Uses the proved full theta growth estimate, the determinant-weighted product integral, and the weighted Euler-Mellin continuation theorem.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetReductionContinuation.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and finite-covolume quotients of locally compact groups.",

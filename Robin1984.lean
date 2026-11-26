@@ -53,6 +53,7 @@ import Robin1984.GRH.GodementJacquetMellinGrowth
 import Robin1984.GRH.GodementJacquetMellinIdentification
 import Robin1984.GRH.GodementJacquetOrderedDiagonalSeries
 import Robin1984.GRH.GodementJacquetProductLattice
+import Robin1984.GRH.GodementJacquetProductTestMellinContinuation
 import Robin1984.GRH.GodementJacquetReductionContinuation
 import Robin1984.GRH.GodementJacquetReductionWeights
 import Robin1984.GRH.GodementJacquetSchwartzDilation
