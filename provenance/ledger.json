@@ -1716,8 +1716,8 @@
       "path": "Robin1984/GRH/GodementJacquetArchimedeanIwasawaProduct.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Archimedean Iwasawa integration and Gaussian change of variables.",
-      "formalization_note": "Splits the triangular Haar measure into its diagonal and unitriangular measures, then evaluates the Gaussian over the upper entries.",
-      "content_basis": "Restricts the existing triangular homeomorphism to the positive diagonal, proves product Haar invariance by a shear, and evaluates the scaled row integrals using the additive Haar scaling rule and the scalar Gaussian integral.",
+      "formalization_note": "Splits triangular Haar measure and computes upper-entry masses under diagonal scaling.",
+      "content_basis": "Restricts the existing triangular homeomorphism to the positive diagonal, proves product Haar invariance by a shear, and evaluates the scaled row integrals using the additive Haar scaling rule and the scalar Gaussian integral. Applies the entrywise scaling formula to the indicator of a compact set to compute the measure of the conjugated upper-entry box.",
       "dependency_status": "Uses the matrix Iwasawa Haar formula, the unitriangular coordinate measure, and Mathlib Gaussian and product integration.",
       "reviewed": true
     },
@@ -1728,6 +1728,15 @@
       "formalization_note": "Realizes its product over the infinite places as a Schwartz function in the global Minkowski matrix coordinates.",
       "content_basis": "Applies Schwartz decay on the Euclidean matrix space and factors the squared weighted Minkowski norm into the real and complex entry sums.",
       "dependency_status": "Uses the shared Schwartz Gaussian construction, the verified Minkowski norm formula, and the infinite adele coordinate map.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanSiegelVolume.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The classical archimedean Iwasawa volume calculation for Siegel sets.",
+      "formalization_note": "Proves finite Haar volume for bounded conjugated upper entries, a bounded determinant log, and lower-bounded consecutive diagonal gaps.",
+      "content_basis": "Counts the strict upper entries crossing each consecutive diagonal gap, integrates the product of root exponentials, and transfers the section volumes through the local Iwasawa chart.",
+      "dependency_status": "Uses the logarithmic Iwasawa Haar chart, the conjugated unitriangular box formula, and Mathlib integration and finite-dimensional Haar measure.",
       "reviewed": true
     },
     {

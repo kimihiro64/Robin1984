@@ -9,7 +9,7 @@ import Robin1984.GRH.ValuationUnitriangularMeasure
 
 - Classification: **Standard mathematical formalization**.
 - Mathematical source: Archimedean Iwasawa integration and Gaussian change of variables.
-- Formalization note: Splits the triangular Haar measure into its diagonal and unitriangular measures, then evaluates the Gaussian over the upper entries.
+- Formalization note: Splits triangular Haar measure and computes upper-entry masses under diagonal scaling.
 - PROVENANCE-END
 -/
 
@@ -471,5 +471,238 @@ theorem integrable_integral_archUnipotentGaussian
   exact hi
 
 end Gaussian
+
+section SiegelUnipotent
+
+variable (F : Type*) [NormedField F] [NormedSpace Real F]
+
+local notation "N" n => valuationUpperUnitriangularSubgroup F n
+
+/-- Sum of the upper-entry log ratios, indexed by matrix rank. -/
+def archUpperLogRatioSum : (n : Nat) -> (Fin n -> Real) -> Real
+  | 0, _ => 0
+  | n + 1, x => archUpperLogRatioSum n (fun i => x i.succ) +
+    Finset.univ.sum (fun j : Fin n => x 0 - x j.succ)
+
+/-- Test each upper unipotent entry after conjugation by the positive
+diagonal with entries `exp (x i)`. -/
+noncomputable def archUnipotentLogRatioKernel (f : F -> Real) :
+    (n : Nat) -> (Fin n -> Real) -> (N n) -> Real
+  | 0, _, _ => 1
+  | n + 1, x, u =>
+    let p := valuationUnitriangularFirstRowHomeomorph F n u
+    (archUnipotentLogRatioKernel f n (fun i => x i.succ) p.2) *
+      Finset.univ.prod (fun j : Fin n =>
+        f (HSMul.hSMul (Real.exp (x 0 - x j.succ)) (p.1 j)))
+
+variable [SecondCountableTopology F] [MeasurableSpace F] [BorelSpace F]
+  [FiniteDimensional Real F]
+
+local instance siegelUnipotentMeasurableSpace (n : Nat) : MeasurableSpace (N n) := borel (N n)
+local instance siegelUnipotentBorelSpace (n : Nat) : BorelSpace (N n) := BorelSpace.mk rfl
+
+set_option maxHeartbeats 750000 in
+/-- The upper-entry Haar integral for a scalar product test after diagonal
+conjugation. Each ratio contributes the negative real dimension in
+the Jacobian, and there is one scalar integral per strict upper entry. -/
+theorem integrable_integral_archUnipotentLogRatioKernel
+    (mu : Measure F) [SigmaFinite mu] [mu.IsAddHaarMeasure]
+    (f : F -> Real) (hf : Integrable f mu) (n : Nat) (x : Fin n -> Real) :
+    let k := archUnipotentLogRatioKernel F f n x
+    let d := (Module.finrank Real F : Real)
+    let v := valuationUnitriangularProductMeasure F mu n
+    And (Integrable k v) (integral v k =
+      Real.exp (-d * archUpperLogRatioSum n x) * (integral mu f) ^ Nat.choose n 2) := by
+  induction n with
+  | zero =>
+    change And (Integrable (fun _ : N 0 => (1 : Real)) (Measure.dirac 1))
+      (integral (Measure.dirac (1 : N 0)) (fun _ => (1 : Real)) =
+        Real.exp (-(Module.finrank Real F : Real) * 0) * (integral mu f) ^ Nat.choose 0 2)
+    exact And.intro (integrable_const _) (by simp)
+  | succ n ih =>
+    let _ : SecondCountableTopology (N n) := archUnipotent_secondCountable F n
+    let _ : SecondCountableTopology (N (n + 1)) := archUnipotent_secondCountable F (n + 1)
+    let _ := sigmaFinite_valuationUnitriangularProductMeasure F mu n
+    let J := valuationUnitriangularFirstRowHomeomorph F n
+    let E : Homeomorph (Prod (N n) (Fin n -> F)) (N (n + 1)) :=
+      (Homeomorph.prodComm (N n) (Fin n -> F)).trans J.symm
+    let tail := archUnipotentLogRatioKernel F f n (fun i => x i.succ)
+    let w (j : Fin n) := x 0 - x j.succ
+    let row (p : Fin n -> F) := Finset.univ.prod
+      (fun j : Fin n => f (HSMul.hSMul (Real.exp (w j)) (p j)))
+    let d := (Module.finrank Real F : Real)
+    let Z := integral mu f
+    let A := archUpperLogRatioSum n (fun i => x i.succ)
+    let B := Finset.univ.sum w
+    have hE : MeasurePreserving E ((valuationUnitriangularProductMeasure F mu n).prod
+        (Measure.pi (fun _ : Fin n => mu))) (valuationUnitriangularProductMeasure F mu (n + 1)) :=
+      measurePreserving_archUnipotentRow F mu n
+    have hFun (p : Prod (N n) (Fin n -> F)) :
+        archUnipotentLogRatioKernel F f (n + 1) x (E p) = tail p.1 * row p.2 := by
+      have hPair : J (E p) = Prod.mk p.2 p.1 := J.apply_symm_apply _
+      change tail (J (E p)).2 * row (J (E p)).1 = _
+      rw [hPair]
+    have hTail := ih (fun i => x i.succ)
+    have hRowI : Integrable row (Measure.pi (fun _ : Fin n => mu)) :=
+      Integrable.fin_nat_prod (fun j : Fin n => hf.comp_smul (Real.exp_pos (w j)).ne')
+    change And (Integrable (archUnipotentLogRatioKernel F f (n + 1) x)
+      (valuationUnitriangularProductMeasure F mu (n + 1)))
+      (integral (valuationUnitriangularProductMeasure F mu (n + 1))
+        (archUnipotentLogRatioKernel F f (n + 1) x) =
+        Real.exp (-d * (A + B)) * Z ^ Nat.choose (n + 1) 2)
+    constructor
+    . apply (hE.integrable_comp_emb E.measurableEmbedding).mp
+      simp only [Function.comp_def, hFun]
+      exact hTail.1.mul_prod hRowI
+    . have hj (j : Fin n) :
+          integral mu (fun u : F => f (HSMul.hSMul (Real.exp (w j)) u)) =
+            Real.exp (-d * w j) * Z := by
+        calc
+          _ = Inv.inv ((Real.exp (w j)) ^ Module.finrank Real F) * Z := by
+            simpa only [smul_eq_mul] using Measure.integral_comp_smul_of_nonneg
+              mu f (Real.exp (w j)) (hR := (Real.exp_pos (w j)).le)
+          _ = _ := by rw [<- Real.exp_nat_mul, neg_mul, Real.exp_neg]
+      have hRow : integral (Measure.pi (fun _ : Fin n => mu)) row = Real.exp (-d * B) * Z ^ n := by
+        unfold row
+        rw [@integral_fin_nat_prod_eq_prod Real _ n (fun _ => F) _ (fun _ => mu) _
+          (fun (j : Fin n) (u : F) => f (HSMul.hSMul (Real.exp (w j)) u))]
+        simp_rw [hj]
+        rw [Finset.prod_mul_distrib, Finset.prod_const, Finset.card_univ, Fintype.card_fin,
+          <- Real.exp_sum, <- Finset.mul_sum]
+      have hPow : Nat.choose (n + 1) 2 = Nat.choose n 2 + n := by
+        rw [show 2 = 1 + 1 from rfl, Nat.choose_succ_succ, Nat.choose_one_right, add_comm]
+      rw [<- hE.integral_comp E.measurableEmbedding]
+      simp_rw [hFun]
+      rw [integral_prod_mul, show integral (valuationUnitriangularProductMeasure F mu n) tail =
+        Real.exp (-d * A) * Z ^ Nat.choose n 2 from hTail.2, hRow, hPow, pow_add]
+      rw [show -d * (A + B) = -d * A + -d * B by ring, Real.exp_add]
+      ring
+
+
+/-- The unipotent coordinates whose upper entries remain in B after
+conjugation by the log diagonal x. -/
+def archUnipotentLogRatioBox (n : Nat) (x : Fin n -> Real) (B : Set F) :
+    Set (N n) :=
+  {u | forall i j : Fin n, i < j ->
+    B.Mem (HSMul.hSMul (Real.exp (x i - x j)) (u.val.val.val i j))}
+
+omit [SecondCountableTopology F] [MeasurableSpace F] [BorelSpace F] [FiniteDimensional Real F] in
+/-- Closed entry constraints give a closed set in the diagonal and
+unipotent chart, including the dependence on the diagonal coordinates. -/
+theorem isClosed_archUnipotentLogRatioBox (n : Nat) (B : Set F) (hB : IsClosed B) :
+    IsClosed {p : Prod (Fin n -> Real) (N n) |
+      (archUnipotentLogRatioBox F n p.1 B).Mem p.2} := by
+  have hV : Continuous (fun u : N n => u.val.val.val) :=
+    (Units.continuous_val.comp continuous_subtype_val).comp continuous_subtype_val
+  have h (i j : Fin n) : Continuous (fun p : Prod (Fin n -> Real) (N n) =>
+      HSMul.hSMul (Real.exp (p.1 i - p.1 j)) (p.2.val.val.val i j)) :=
+    (Real.continuous_exp.comp (((continuous_apply i).comp continuous_fst).sub
+      ((continuous_apply j).comp continuous_fst))).smul ((hV.matrix_elem i j).comp continuous_snd)
+  change IsClosed {p : Prod (Fin n -> Real) (N n) | forall i j : Fin n, i < j ->
+    B.Mem (HSMul.hSMul (Real.exp (p.1 i - p.1 j)) (p.2.val.val.val i j))}
+  simp only [Set.ofPred_forall]
+  exact isClosed_iInter (fun i => isClosed_iInter (fun j => isClosed_iInter (fun _ =>
+    hB.preimage (h i j))))
+
+omit [SecondCountableTopology F] [MeasurableSpace F] [BorelSpace F] [FiniteDimensional Real F] in
+private theorem mem_archUnipotentLogRatioBox_succ (n : Nat)
+    (x : Fin (n + 1) -> Real) (B : Set F) (u : N (n + 1)) :
+    let p := valuationUnitriangularFirstRowHomeomorph F n u
+    (archUnipotentLogRatioBox F (n + 1) x B).Mem u <->
+      And ((archUnipotentLogRatioBox F n (fun i => x i.succ) B).Mem p.2)
+        (forall j : Fin n, B.Mem (HSMul.hSMul (Real.exp (x 0 - x j.succ)) (p.1 j))) := by
+  intro p
+  constructor
+  . intro h
+    exact And.intro (fun i j hij => h i.succ j.succ (Fin.succ_lt_succ_iff.mpr hij))
+      (fun j => h 0 j.succ (Fin.succ_pos j))
+  . intro h i j hij
+    cases i using Fin.cases with
+    | zero =>
+      cases j using Fin.cases with
+      | zero => exact (lt_irrefl _ hij).elim
+      | succ j => exact h.2 j
+    | succ i =>
+      cases j using Fin.cases with
+      | zero => exact (Fin.not_lt_zero _ hij).elim
+      | succ j => exact h.1 i j (Fin.succ_lt_succ_iff.mp hij)
+
+omit [SecondCountableTopology F] [MeasurableSpace F] [BorelSpace F] [FiniteDimensional Real F] in
+/-- Testing the scalar indicator of B in each upper entry gives the
+indicator of the entire conjugated unipotent box. -/
+theorem archUnipotentLogRatioKernel_indicator (B : Set F) (n : Nat)
+    (x : Fin n -> Real) (u : N n) :
+    archUnipotentLogRatioKernel F (B.indicator (fun _ => (1 : Real))) n x u =
+      (archUnipotentLogRatioBox F n x B).indicator (fun _ => 1) u := by
+  induction n with
+  | zero =>
+    symm
+    apply Set.indicator_of_mem
+    intro i
+    exact Fin.elim0 i
+  | succ n ih =>
+    let p := valuationUnitriangularFirstRowHomeomorph F n u
+    let tail := archUnipotentLogRatioBox F n (fun i => x i.succ) B
+    let w (j : Fin n) := HSMul.hSMul (Real.exp (x 0 - x j.succ)) (p.1 j)
+    let b := archUnipotentLogRatioBox F (n + 1) x B
+    have hs : b.Mem u <-> And (tail.Mem p.2) (forall j, B.Mem (w j)) :=
+      mem_archUnipotentLogRatioBox_succ F n x B u
+    change archUnipotentLogRatioKernel F (B.indicator (fun _ => (1 : Real))) n
+      (fun i => x i.succ) p.2 *
+        Finset.univ.prod (fun j => B.indicator (fun _ => (1 : Real)) (w j)) =
+      b.indicator (fun _ => 1) u
+    rw [ih]
+    by_cases ht : tail.Mem p.2
+    . rw [Set.indicator_of_mem ht, one_mul]
+      by_cases hr : forall j, B.Mem (w j)
+      . rw [Set.indicator_of_mem (hs.mpr (And.intro ht hr))]
+        simp only [Set.indicator_of_mem (hr _), Finset.prod_const_one]
+      . rw [Set.indicator_of_notMem (fun h => hr (hs.mp h).2)]
+        choose j hj using not_forall.mp hr
+        exact Finset.prod_eq_zero (Finset.mem_univ j) (Set.indicator_of_notMem hj _)
+    . rw [Set.indicator_of_notMem ht, zero_mul,
+        Set.indicator_of_notMem (fun h => ht (hs.mp h).1)]
+
+
+/-- The Haar measure of the strict upper-entry box at a fixed log diagonal.
+The diagonal scales its volume by the product of the inverse entry Jacobians. -/
+theorem measure_archUnipotentLogRatioBox
+    (mu : Measure F) [SigmaFinite mu] [mu.IsAddHaarMeasure]
+    (B : Set F) (hB : IsCompact B) (n : Nat) (x : Fin n -> Real) :
+    valuationUnitriangularProductMeasure F mu n (archUnipotentLogRatioBox F n x B) =
+      ENNReal.ofReal (Real.exp (-(Module.finrank Real F : Real) * archUpperLogRatioSum n x)) *
+        (mu B) ^ Nat.choose n 2 := by
+  let f := B.indicator (fun _ => (1 : Real))
+  let v := valuationUnitriangularProductMeasure F mu n
+  let b := archUnipotentLogRatioBox F n x B
+  let d := (Module.finrank Real F : Real)
+  let _ : SecondCountableTopology (N n) := archUnipotent_secondCountable F n
+  have hBFin : mu B < Top.top := hB.measure_lt_top
+  have hBm : MeasurableSet B := hB.isClosed.measurableSet
+  have hbm : MeasurableSet b :=
+    (isClosed_archUnipotentLogRatioBox F n B hB.isClosed).measurableSet.preimage
+      (measurable_const.prodMk measurable_id)
+  have hF : Integrable f mu :=
+    (integrable_indicator_iff hBm).mpr (integrableOn_const hBFin.ne)
+  have hk : archUnipotentLogRatioKernel F f n x = b.indicator (fun _ => 1) :=
+    funext (archUnipotentLogRatioKernel_indicator F B n x)
+  have h := integrable_integral_archUnipotentLogRatioKernel F mu f hF n x
+  change And (Integrable (archUnipotentLogRatioKernel F f n x) v)
+    (integral v (archUnipotentLogRatioKernel F f n x) =
+      Real.exp (-d * archUpperLogRatioSum n x) * (integral mu f) ^ Nat.choose n 2) at h
+  rw [hk] at h
+  have hOn := (integrable_indicator_iff hbm).mp h.1
+  have hbFin : v b < Top.top := by
+    simpa using (integrableOn_const_iff (C := (1 : Real))).mp hOn
+  have hi := h.2
+  change integral v (b.indicator 1) =
+    Real.exp (-d * archUpperLogRatioSum n x) * (integral mu (B.indicator 1)) ^ Nat.choose n 2 at hi
+  rw [integral_indicator_one hbm, integral_indicator_one hBm] at hi
+  change v b = _
+  rw [<- ENNReal.ofReal_toReal hbFin.ne, <- show v.real b = (v b).toReal from rfl, hi,
+    ENNReal.ofReal_mul (Real.exp_pos _).le, show mu.real B = (mu B).toReal from rfl,
+    ENNReal.ofReal_pow ENNReal.toReal_nonneg, ENNReal.ofReal_toReal hBFin.ne]
+
+end SiegelUnipotent
 
 end Robin1984.GRH
