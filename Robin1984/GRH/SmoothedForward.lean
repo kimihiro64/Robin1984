@@ -25,7 +25,9 @@ namespace Robin1984.GRH
 noncomputable def realMellinIntegrand (u : Real -> Real) (s : Complex) (x : Real) : Complex :=
   (u x : Complex) * (x : Complex) ^ (-s - 1)
 
-private theorem pointwise_sqrtBound_of_ae {R : Real -> Real} {C : Real}
+/-- A continuous real function satisfies a square-root bound everywhere on
+an open tail if it satisfies the bound almost everywhere there. -/
+theorem pointwise_sqrtBound_of_ae {R : Real -> Real} {C : Real}
     (hContinuity : ContinuousOn R (Ioi 1))
     (hAE : Filter.Eventually (fun x => R x <= C * Real.sqrt x)
       (ae (volume.restrict (Ioi (1 : Real))))) {x : Real} (hx : 1 < x) :
@@ -49,14 +51,12 @@ private theorem pointwise_sqrtBound_of_ae {R : Real -> Real} {C : Real}
       (Set.nonempty_of_mem (Metric.mem_ball_self heps.1))
   exact hBall (measure_mono_null heps.2 hNull)
 
-/-- An exact canonical zero expansion of the Mellin transform, with a
-real zero sum and a controlled residual term, implies the triangular
-square-root bound. -/
-theorem triangularSquareRootBound_of_canonicalMellin
+/-- Mellin inversion recovers the exact triangular zero expansion almost everywhere
+on the positive tail, before taking absolute values of its zero terms. -/
+theorem ae_eq_triangularZeroSeries_of_canonicalMellin
     {iota : Type*} [Countable iota] (rho : iota -> Complex) (e : Equiv iota iota)
     (hConj : forall i, rho (e i) = (starRingEnd Complex) (rho i))
     {R E : Real -> Real} (hRMeas : Measurable R) (hEMeas : Measurable E)
-    (hRCont : ContinuousOn R (Ioi 1))
     (hRho : forall i, (rho i).re <= 1 / 2)
     (hRho0 : forall i, Not (rho i = 0)) (hRho1 : forall i, Not (rho i + 1 = 0))
     (hSummable : Summable (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int)))
@@ -68,10 +68,8 @@ theorem triangularSquareRootBound_of_canonicalMellin
       integral (volume.restrict (Ioi (1 : Real))) (realMellinIntegrand R s) =
         integral (volume.restrict (Ioi (1 : Real))) (realMellinIntegrand E s) +
           tsum (fun i => 1 / (s - rho i) + 1 / rho i) / (s * (s + 1)))
-    {C : Real} (hEBound : forall x : Real, 1 < x -> E x <= C * Real.sqrt x)
-    {x : Real} (hx : 1 < x) :
-    R x <= (C + 2 * tsum (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int))) *
-      Real.sqrt x := by
+    : Filter.EventuallyEq (ae (volume.restrict (Ioi (1 : Real)))) R
+      (fun x => E x + (tsum (fun i => triangularZeroTerm (rho i) x)).re) := by
   let mu := volume.restrict (Ioi (1 : Real))
   let S := fun x : Real => tsum (fun i => triangularZeroTerm (rho i) x)
   let U : Real -> Real := fun x => R x - E x - (S x).re
@@ -139,11 +137,43 @@ theorem triangularSquareRootBound_of_canonicalMellin
     rw [hExponent]
     exact (hUAll s hs).2
   have hAE := ae_zero_of_verticalMellin_eq_zero hUMeas 2 hWeight hVertical
+  filter_upwards [hAE] with y hy
+  change R y - E y - (S y).re = 0 at hy
+  change R y = E y + (S y).re
+  linarith only [hy]
+
+/-- An exact canonical zero expansion of the Mellin transform, with a
+real zero sum and a controlled residual term, implies the triangular
+square-root bound. -/
+theorem triangularSquareRootBound_of_canonicalMellin
+    {iota : Type*} [Countable iota] (rho : iota -> Complex) (e : Equiv iota iota)
+    (hConj : forall i, rho (e i) = (starRingEnd Complex) (rho i))
+    {R E : Real -> Real} (hRMeas : Measurable R) (hEMeas : Measurable E)
+    (hRCont : ContinuousOn R (Ioi 1))
+    (hRho : forall i, (rho i).re <= 1 / 2)
+    (hRho0 : forall i, Not (rho i = 0)) (hRho1 : forall i, Not (rho i + 1 = 0))
+    (hSummable : Summable (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int)))
+    (hRInt : forall s : Complex, 1 < s.re -> Integrable (realMellinIntegrand R s)
+      (volume.restrict (Ioi (1 : Real))))
+    (hEInt : forall s : Complex, 1 < s.re -> Integrable (realMellinIntegrand E s)
+      (volume.restrict (Ioi (1 : Real))))
+    (hEq : forall s : Complex, 1 < s.re ->
+      integral (volume.restrict (Ioi (1 : Real))) (realMellinIntegrand R s) =
+        integral (volume.restrict (Ioi (1 : Real))) (realMellinIntegrand E s) +
+          tsum (fun i => 1 / (s - rho i) + 1 / rho i) / (s * (s + 1)))
+    {C : Real} (hEBound : forall x : Real, 1 < x -> E x <= C * Real.sqrt x)
+    {x : Real} (hx : 1 < x) :
+    R x <= (C + 2 * tsum (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int))) *
+      Real.sqrt x := by
+  let mu := volume.restrict (Ioi (1 : Real))
+  let S := fun x : Real => tsum (fun i => triangularZeroTerm (rho i) x)
+  have hAE := ae_eq_triangularZeroSeries_of_canonicalMellin rho e hConj hRMeas hEMeas
+    hRho hRho0 hRho1 hSummable hRInt hEInt hEq
   have hTail : Filter.Eventually (fun x : Real => 1 < x) (ae mu) :=
     ae_restrict_mem measurableSet_Ioi
   apply pointwise_sqrtBound_of_ae hRCont _ hx
   filter_upwards [hAE, hTail] with y hy hyTail
-  change R y - E y - (S y).re = 0 at hy
+  change R y = E y + (S y).re at hy
   have hNorm : norm (S y) <= (2 * Real.sqrt y) *
       tsum (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int)) :=
     norm_tsum_triangularZeroTerm_le rho hRho hSummable hyTail.le
@@ -155,5 +185,80 @@ theorem triangularSquareRootBound_of_canonicalMellin
   rw [hStep] at hNorm
   rw [add_mul]
   linarith only [hy, hNorm, hReal, hE]
+
+/-- The integrand for the Mellin transform of a complex function at s. -/
+noncomputable def complexMellinIntegrand (f : Real -> Complex) (s : Complex) (x : Real) :
+    Complex :=
+  f x * (x : Complex) ^ (-s - 1)
+
+/-- The inverse triangular zero expansion for a complex, unpaired Euler product. -/
+theorem ae_eq_complex_triangularZeroSeries_of_canonicalMellin
+    {iota : Type*} [Countable iota] (rho : iota -> Complex)
+    {R E : Real -> Complex} (hRMeas : Measurable R) (hEMeas : Measurable E)
+    (hRho : forall i, (rho i).re <= 1 / 2)
+    (hRho0 : forall i, Not (rho i = 0)) (hRho1 : forall i, Not (rho i + 1 = 0))
+    (hSummable : Summable (fun i => (norm (rho i * (rho i + 1))) ^ (-1 : Int)))
+    (hRInt : forall s : Complex, 1 < s.re -> Integrable (complexMellinIntegrand R s)
+      (volume.restrict (Ioi (1 : Real))))
+    (hEInt : forall s : Complex, 1 < s.re -> Integrable (complexMellinIntegrand E s)
+      (volume.restrict (Ioi (1 : Real))))
+    (hEq : forall s : Complex, 1 < s.re ->
+      integral (volume.restrict (Ioi (1 : Real))) (complexMellinIntegrand R s) =
+        integral (volume.restrict (Ioi (1 : Real))) (complexMellinIntegrand E s) +
+          tsum (fun i => 1 / (s - rho i) + 1 / rho i) / (s * (s + 1))) :
+    Filter.EventuallyEq (ae (volume.restrict (Ioi (1 : Real)))) R
+      (fun x => E x + tsum (fun i => triangularZeroTerm (rho i) x)) := by
+  let mu := volume.restrict (Ioi (1 : Real))
+  let S (x : Real) := tsum (fun i => triangularZeroTerm (rho i) x)
+  let U (x : Real) := R x - E x - S x
+  have hSMeas : Measurable S := measurable_triangularZeroSum rho
+  have hUMeas : Measurable U := (hRMeas.sub hEMeas).sub hSMeas
+  have hUAll (s : Complex) (hs : 1 < s.re) :
+      And (Integrable (complexMellinIntegrand U s) mu)
+        (integral mu (complexMellinIntegrand U s) = 0) := by
+    have hS := triangularZeroSeries_mellin rho hRho hRho0 hRho1 hSummable s hs
+    have hSplit : complexMellinIntegrand U s =
+      fun x => complexMellinIntegrand R s x - complexMellinIntegrand E s x -
+        complexMellinIntegrand S s x := by
+      funext x
+      simp only [complexMellinIntegrand, U, sub_mul]
+    have hSInt : Integrable (complexMellinIntegrand S s) mu := hS.1
+    have hSValue : integral mu (complexMellinIntegrand S s) =
+        tsum (fun i => 1 / (s - rho i) + 1 / rho i) / (s * (s + 1)) := hS.2
+    rw [hSplit]
+    refine And.intro (((hRInt s hs).sub (hEInt s hs)).sub hSInt) ?_
+    calc
+      _ = integral mu (fun x => complexMellinIntegrand R s x - complexMellinIntegrand E s x) -
+          integral mu (complexMellinIntegrand S s) :=
+        integral_sub ((hRInt s hs).sub (hEInt s hs)) hSInt
+      _ = integral mu (complexMellinIntegrand R s) - integral mu (complexMellinIntegrand E s) -
+          integral mu (complexMellinIntegrand S s) := by
+        rw [integral_sub (hRInt s hs) (hEInt s hs)]
+      _ = 0 := by
+        have hEqMu : integral mu (complexMellinIntegrand R s) =
+            integral mu (complexMellinIntegrand E s) +
+              tsum (fun i => 1 / (s - rho i) + 1 / rho i) / (s * (s + 1)) := hEq s hs
+        rw [hEqMu, hSValue]
+        ring
+  have hZero := ae_zero_of_complex_verticalMellin_eq_zero_at hUMeas 2 (by
+    intro t
+    let s := (2 : Complex) - (t : Complex) * Complex.I
+    have hs : 1 < s.re := by
+      norm_num [s, Complex.sub_re, Complex.mul_re]
+    have hExp : -(2 : Complex) - 1 + (t : Complex) * Complex.I = -s - 1 := by
+      unfold s
+      ring
+    let W (x : Real) := (x : Complex) ^ (-(2 : Complex) - 1 + (t : Complex) * Complex.I) * U x
+    have hW : W = complexMellinIntegrand U s := by
+      funext x
+      unfold W complexMellinIntegrand
+      rw [hExp, mul_comm]
+    change And (Integrable W mu) (integral mu W = 0)
+    rw [hW]
+    exact hUAll s hs)
+  filter_upwards [hZero] with x hx
+  change R x - E x - S x = 0 at hx
+  change R x = E x + S x
+  exact sub_eq_zero.mp (by rw [<- sub_sub]; exact hx)
 
 end Robin1984.GRH

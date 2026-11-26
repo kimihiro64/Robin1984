@@ -223,11 +223,12 @@ part of the resulting test. Standard automorphic GRH by itself supplies
 no general tensor-product transfer for that factor.
 [Soundararajan and Thorner, with an appendix by Brumley](https://arxiv.org/abs/1804.03654)
 
-## A one-sided prime-power criterion for grand RH
+## A one-sided prime-power criterion for the standard automorphic family
 
-One can keep a one-sided inequality for standard automorphic
-$L$-functions without the local positivity assumption by testing a
-smoothed prime-power sum instead of optimizing over ideals.
+Grand RH says that the nontrivial zeros of every automorphic
+$L$-function lie on the critical line. For standard cuspidal
+$L$-functions, a smoothed prime-power sum gives a one-sided
+criterion for this critical-line condition without local positivity.
 For a normalized unitary cuspidal $L(s,\pi)$ over a number field $K$,
 use $Z=L(s,\pi)L(s,\tilde\pi)$. For a pure imaginary norm power, use
 $Z=\zeta_K$, since a vertical translation preserves the zero condition.
@@ -247,29 +248,140 @@ R_Z(x)\le C_Z\sqrt{x}.
 \tag{7}
 $$
 
-For the forward direction use Perron's kernel $1/[s(s+1)]$. The
-functional equation and the usual local archimedean bounds for unitary
-cuspidal $L$-functions place the trivial zeros strictly to the left of
-$1/2$. Under RH, shifting to a fixed line between them and $1/2$
-leaves the zero sum
-$\sum_\rho x^\rho/[\rho(\rho+1)]$ in $R_Z$, besides a lower-order
-error. This sum is $O_Z(\sqrt{x})$ by the zero count. For the converse,
-the Mellin transform of $R_Z$ against $x^{-s-1}dx$ on $x\ge1$ is
+Let $F(s)=(s-1)^mZ(s)$ be the pole-cleared uncompleted function. The
+Mellin transform against $x^{-s-1}\,dx$ on $x>1$ is
 $$
-\frac{m}{2(s-1)}+\frac{Z'(s)}{s(s+1)Z(s)} .
+\int_1^\infty R_Z(x)x^{-s-1}\,dx
+=\frac{m}{2(s-1)}+\frac{Z'(s)}{s(s+1)Z(s)}
+=\frac{F'(s)/F(s)+m(s+2)/2}{s(s+1)}
+\qquad (\operatorname{Re}s>1).
 $$
-Again the apparent pole at 1 cancels. A real zero $\beta>1/2$ of
-multiplicity $j$ has residue $j/[\beta(\beta+1)]$ here, hence a
-negative residue for the transform of $C_Z\sqrt{x}-R_Z(x)$. The same
-Landau argument proves there are no zeros to the right of $1/2$,
-including nonreal zeros, and the functional equations give the other
-half. The conjugate pair detects the zeros of both factors, which have
-no poles in the open strip.
+The cancellation at $s=1$ leaves the logarithmic derivative of $F$.
+The eventual upper bound in (7), by Landau's theorem, gives nonvanishing
+of $F$ for $\operatorname{Re}s>1/2$.
 
-Quantifying (7) over all number fields and all normalized unitary
-cuspidal standard $L$-functions gives grand RH in the standard automorphic
-sense. The Lean Challenge states this criterion for a family of paired analytic
-data. The automorphic instantiation is in progress.
+For the forward direction, use the genus-one zero expansion of $F$.
+Write $b$ for its constant logarithmic-derivative term and $m_0,m_{-1}$
+for the multiplicities at $0,-1$. Matching the Mellin transforms gives the following identity for almost every $x>1$.
+$$
+R_Z(x)=\operatorname{Re}\left[
+ b(1-x^{-1})+m(1-\tfrac12x^{-1})
+ +m_0(\log x-1+x^{-1})-m_{-1}x^{-1}\log x
+ +\sum_{\substack{\rho:\,F(\rho)=0\\\rho\notin\{0,-1\}}}
+  \frac{x^\rho-x^{-1}}{\rho(\rho+1)}
+ \right].
+$$
+The sum counts multiplicities. Under right-half-plane nonvanishing, every
+zero in the sum satisfies $\operatorname{Re}\rho\le1/2$. The
+summability of $1/|\rho(\rho+1)|$ and the elementary terms give an
+almost-everywhere square-root bound. Continuity of $R_Z$ gives (7)
+pointwise.
+
+The completed zero condition concerns the pole-cleared completed
+standard $L$-functions. On $\operatorname{Re}s>1/2$, the nonvanishing
+completion factors transfer nonvanishing between the completed pair and
+$F$. The completed functional equation transfers a zero at $s$ to
+a zero of the dual at $1-s$. This argument allows trivial
+zeros of the uncompleted function with real part below $1/2$.
+[Lagarias, §6](https://aif.centre-mersenne.org/item/10.5802/aif.2311.pdf)
+
+Lean proves the completed-zero formulation as `grandRobinCompletedCriterion`.
+The theorem `grandRobinCompletedCriterion_of_entireOrder` derives its
+Hadamard expansion and zero-weight summability from entire order at most
+one. It uses the indexed zeros with their multiplicities and treats the
+zeros at $0$ and $-1$ separately. In `AutomorphicCompletion.lean`,
+`grandRobinCompletedCriterion_of_standardCompletion` starts from the
+order-one bound for the pole-cleared completed functions. Lean proves
+the order-one bound for the reciprocal Gamma factors, the resulting
+growth bound for the pole-cleared ordinary function, and the
+nonvanishing of the completion factor to the right of $1/2$.
+In `AutomorphicEulerLog.lean`, the theorem
+`grandRobinCompletedCriterion_of_eulerProduct` derives right-half-plane
+nonvanishing and the logarithmic derivative from the absolutely convergent
+exponential Euler product. The log series divides each logarithmic
+derivative coefficient at an ideal power by the logarithm of that power's
+norm.
+
+## The rank-one Hecke criterion
+
+`HeckeEulerProduct.lean` defines a unitary Hecke character as a continuous
+circle-valued character of the ideles that is trivial on the principal
+ideles. For an unramified prime ideal, the local parameter
+$\alpha_\chi(\mathfrak p)$ is the character value at a uniformizer in that
+local component. At a ramified prime ideal, the parameter is zero. Lean
+proves independence of the uniformizer, the Euler product for
+$\operatorname{Re}s>1$, and the paired logarithmic coefficient
+$$
+c_\chi(\mathfrak p,j)
+=2\operatorname{Re}\bigl(\alpha_\chi(\mathfrak p)^j\bigr)
+  \log N\mathfrak p,\qquad j\ge1.
+$$
+The triangular sum uses the prime-ideal powers $(N\mathfrak p)^j<x$.
+The finite local Tate integral uses Haar measure of mass one on the unit
+subgroup and equals the Euler factor for $\operatorname{Re}s>0$.
+For every real $t$, the actual unitary character $\chi_t=|\cdot|^{it}$
+has $L(s,\chi_t)=\zeta_K(s+it)$. Lean verifies the Euler product identity
+on $\operatorname{Re}s>1$ and gives the continuation away from $1-it$.
+Theorems `heckeNormTwistRH_iff_correctedIdealRobin` and
+`heckeNormTwistRH_iff_dedekindTriangularRobin` prove both equivalences
+for zeros in the open critical strip of the translated function.
+`HeckeConductor.lean` constructs the conductor ideal from the least local
+exponents and proves that the inverse character has the same conductor.
+`HeckeArchimedean.lean` constructs the local Gamma shifts from the real and
+complex components and proves their radial Gaussian Mellin identities.
+
+The principal diagonal is discrete and the additive quotient $\mathbb A_K/K$
+is compact. The canonical character $\psi$ constructed in
+`HeckeAdeleCharacter.lean` is continuous and trivial on $K$. If $x\in K$
+matches the finite coordinates of an adele $u$ modulo the local integer
+rings, then $\psi(u)=\exp(2\pi i\operatorname{Tr}_{\infty}(u_\infty-x))$.
+
+For $a\in\mathbb A_{K,f}$, $0\ne d\in\mathcal O_K$, and a Schwartz function
+$f$ on the weighted Minkowski space, the theorem
+`tsum_finiteAdelePrincipalCoset_eq_adelicFourier` proves
+$$
+\sum_{\substack{x\in K\\x_f\in a+d\widehat{\mathcal O}_K}} f(e_K(x))
+=\frac{1}{N((d))\sqrt{|D_K|}}\sum_{\xi\in(d)^\vee}
+  \psi_f(-a\xi)\widehat f(c_K(e_K(\xi))).
+$$
+Here $e_K$ weights the complex coordinates by $\sqrt{2}$, $c_K$ conjugates
+those coordinates, and $(d)^\vee$ is the trace-dual ideal. The finite
+additive Haar measure $\mu_f$ gives $\widehat{\mathcal O}_K$ mass one and
+satisfies $N((d))\mu_f(d\widehat{\mathcal O}_K)=1$.
+
+The standard completed Hecke family is constructed in
+`HeckeTateFunctionalEquation.lean`. For a character nontrivial on
+the norm-one idele classes, put $Q_\chi=|D_K|N\mathfrak f_\chi$.
+The entire function $\Lambda_\chi(s)$ agrees on $\operatorname{Re}s>1$
+with $Q_\chi^{s/2}$ times the local Gamma factors and $L(s,\chi)$. Lean
+proves $\Lambda_{\chi^{-1}}(1-s)=\epsilon_\chi\Lambda_\chi(s)$ with
+$|\epsilon_\chi|=1$. The positive Mellin moments supply the middle-strip
+bound, and the paired completion has order at most one.
+
+For $x\ge1$ the pole-free remainder is
+$$
+R_\chi(x)=-\sum_{\substack{\mathfrak p\text{ prime},\ j\ge1\\
+                     (N\mathfrak p)^j<x}}
+       c_\chi(\mathfrak p,j)\left(1-\frac{(N\mathfrak p)^j}{x}\right).
+$$
+Each character has its own cutoff and constant in $R_\chi(x)\le C\sqrt{x}$.
+Characters trivial on norm-one classes are exactly the norm twists.
+Their pole-cleared completions are the entire Dedekind completion
+translated by $s\mapsto s+it$. The theorem
+`exists_heckeStandardCompletedFamily_triangularCriterion` verifies
+that all these degree-one completions have zeros on the critical line
+exactly when the Dedekind triangular bound and every pole-free paired
+bound hold.
+
+The Challenge states the critical-line condition directly for every
+pole-cleared completed L-function in the supplied family. The Solution
+proves the triangular equivalence from the analytic data for that family.
+The specialization to every standard automorphic L-function still requires
+formal proofs of the analytic data for actual representations in every
+rank and number field. The published proof archive contains independent
+Hecke L-functions and their functional equations.
+[Hecke L-functions](https://github.com/leanprover-community/riemann-hypothesis/blob/40e56bab026552e089d7afcfeff08d2defb9c005/src/GroundTheory/GlobalFields/TateThesis/HeckeLFunction.lean)
+[Hecke functional equation](https://github.com/leanprover-community/riemann-hypothesis/blob/40e56bab026552e089d7afcfeff08d2defb9c005/src/GroundTheory/GlobalFields/TateThesis/HeckeTheoremFE.lean)
 For the trivial Hecke character of a field $K$, use $Z=\zeta_K$ and
 $m=1$. Its logarithmic Euler coefficient at $(N\mathfrak p)^j$ is
 $\log N\mathfrak p$. Thus, for $x\ge1$,
@@ -279,11 +391,34 @@ R_{\zeta_K}(x)
 =\frac1{2x}-\frac1x\int_1^x(\psi_K(t)-t)\,dt .
 $$
 The first equality integrates the indicator of $t\ge (N\mathfrak p)^j$
-over $[1,x]$ in the finite prime-power sum. The triangular and corrected
-ideal criteria both test Dedekind RH in this specialization. The ideal
-criterion uses the Mertens sum built from the same prime powers, with
+over $[1,x]$ in the finite prime-power sum. The theorem
+`dedekindRH_iff_dedekindTriangularRobin` proves both directions for the
+actual prime-ideal powers of each number field.
+`dedekindTriangularRobin_iff_correctedIdealRobin` connects the two
+inequalities for the same field. The ideal criterion uses the Mertens sum
+built from the same prime powers, with
 weights $1/[j(N\mathfrak p)^j]$ and a comparison of positive divisor
 products. Over the cyclotomic fields the shared Dedekind zero condition
 gives Dirichlet GRH. The triangular sum also accepts signed coefficients,
 which allows the higher-rank standard automorphic specialization.
 [Lagarias, Li coefficients and automorphic zero criteria](https://www.numdam.org/articles/10.5802/aif.2311/)
+
+## Dedekind ERH and simple zeros
+
+For a number field $K$, assume Dedekind RH for $K$. Form
+$A_K(t)=e^{-t/2}R_{\zeta_K}(e^t)$ for $t\ge0$ and extend it by zero
+for $t<0$. For $a=1,2$, define
+$$
+k_a(v)=\left(\frac{v^2}{4a^2}-\frac{v}{a}+\frac34-\frac1{2a}\right)
+       \frac{e^{-v^2/(4a)}}{\sqrt{4\pi a}},
+\qquad H_a(t)=\int_{\mathbb R}k_a(v)A_K(t-v)\,dv.
+$$
+Then all nontrivial zeros of $\zeta_K$ are simple if and only if
+$$
+\limsup_{T\to\infty}\frac1T\int_0^T |H_1(t)|^2\,dt
+\le \limsup_{t\to\infty}\Re H_2(t).
+$$
+The proof uses the actual pole-cleared zeta function $(s-1)\zeta_K(s)$.
+Its analytic order at every zero in the open critical strip agrees with
+that of $\zeta_K$. The arithmetic input is defined by the prime-ideal
+powers of $K$.

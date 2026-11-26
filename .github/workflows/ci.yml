@@ -92,16 +92,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9
-        with:
-          build: false
-      - name: Fetch the pinned project dependencies
-        run: |
-          lake resolve-deps
-          git diff --exit-code -- lean-toolchain lakefile.lean lake-manifest.json
-      - name: Check the Lean build archive licensing bundle
+      - name: Check the Lean-build archive licensing bundle
         shell: pwsh
-        run: ./test/release_licensing_test.ps1 -ReleaseOnly
+        run: ./test/release_licensing_test.ps1
 
   submission-link:
     name: Check where the README sends a submitter
@@ -259,6 +252,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+
   comparator:
     name: Check statement against solution
     needs: build
@@ -367,7 +361,7 @@ jobs:
         with:
           name: robin1984-linux-build
           path: release-inputs/linux-build
-      - name: Validate and package the two release assets
+      - name: Validate and package the release assets
         if: steps.release_state.outputs.complete != 'true'
         shell: bash
         run: |

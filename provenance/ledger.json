@@ -993,6 +993,249 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/DirichletMultiplicity.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The global arithmetic multiplicity criterion applied to every Dirichlet L-function.",
+      "formalization_note": "Under Dirichlet GRH this proves equivalence of the complex prime-power inequality and simplicity in the open critical strip.",
+      "content_basis": "Reviewed reuse of the exact ordinary L-function, zero orders, and the complex arithmetic spectrum.",
+      "dependency_status": "Mathlib Dirichlet L-functions and Robin1984 arithmetic multiplicity providers.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DirichletMultiplicityArithmetic.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Hurwitz theta functional equations and the explicit Euler series for ordinary Dirichlet L-functions.",
+      "formalization_note": "The split Hurwitz Mellin tails give order one for the actual pole-cleared functions, including imprimitive characters.",
+      "content_basis": "Reviewed the even and odd Mellin tails, the gamma and pole factors, and the exact twisted von Mangoldt logarithmic derivative.",
+      "dependency_status": "Mathlib Hurwitz zeta and Dirichlet-series libraries plus Robin1984 order-one bounds.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetIntegralMatrixInverse.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The adjugate identity and the norm of multiplication by an integral element.",
+      "formalization_note": "Clears all matrix inverses with bounded nonzero determinant norm using a single factorial denominator and proves compactness from separate bounds on matrices and inverses.",
+      "content_basis": "Applies an adjugate to the coordinate vector of one to prove norm divisibility. Uses the matrix adjugate and factorial divisibility for a uniform denominator, then takes a preimage of compact matrix bounds through the closed units graph.",
+      "dependency_status": "Uses Mathlib norms, adjugates, factorial divisibility, and the embedding of units into the product of values and inverses.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetShortFieldLatticeRows.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Minkowski's convex body theorem, Gram-Schmidt orthogonalization, and restriction of scalars.",
+      "formalization_note": "Selects short field-independent rows with integral preimages and bounds their length product by the real lattice covolume.",
+      "content_basis": "Constructs successive shortest lattice vectors, scales the adapted orthonormal coordinates, and applies Minkowski's theorem. Counts candidates in field-degree blocks so that the chosen rows retain the same product bound.",
+      "dependency_status": "Uses Mathlib discrete lattices, Gram-Schmidt coordinates, determinant change of variables, and finite-dimensional linear algebra.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeIdeleClassCompactness.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Compactness of norm-one idele classes via Dirichlet's unit theorem and finiteness of the ideal class group, as in Tate's thesis.",
+      "formalization_note": "Constructs compact representatives for the quotient of norm-one ideles by principal ideles.",
+      "content_basis": "Checked bounds on the unit logarithm fundamental domain, the compact finite unit kernel, and the finite cover indexed by ideal classes.",
+      "dependency_status": "Uses Mathlib's unit and class group theorems and the project's finite idele ideal correspondence and adelic product formula.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeIdeleClassCoordinates.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The logarithmic-norm splitting of the idele group and the idele class group in Tate's thesis.",
+      "formalization_note": "Uses the explicit positive archimedean section and principal multiplication to construct the two homeomorphisms and verify their coordinate laws.",
+      "content_basis": "Checked the exponential section, principal invariance, both inverse maps, continuity, and compatibility with multiplication.",
+      "dependency_status": "Uses the idelic product formula, compact norm-one class construction, and the explicit archimedean scaling section.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckePoleFreeMultiplicity.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Tate's completion of a unitary Hecke L-function and the Gaussian prime-power criterion for prescribed zero orders.",
+      "formalization_note": "Instantiates the individual standard multiplicity theorem for every pole-free unitary Hecke character over a number field.",
+      "content_basis": "Uses the actual Hecke prime-power coefficients and obtains order one for each completed L-function from its Euler product, strip bound, and functional equation.",
+      "dependency_status": "Uses the verified rank-one Tate continuation, the individual Euler logarithmic derivative, and the standard exceptional multiplicity criterion.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeStandardRankOne.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Tate's standard unitary Hecke completions and the individual and paired prime-power criteria.",
+      "formalization_note": "States the critical-line and prescribed-order equivalences for the full standard rank-one family over a number field.",
+      "content_basis": "Uses a single standard completed family and treats the norm characters by translation of the pole-cleared Dedekind completion.",
+      "dependency_status": "Uses the standard rank-one Tate completion, the individual Hecke multiplicity theorem, and the proved Dedekind norm-twist order transport.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateAdelicEuler.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's global zeta integral and its product of local zeta integrals.",
+      "formalization_note": "Evaluates the actual idelic test in the normalized archimedean and finite product coordinates for real part greater than one.",
+      "content_basis": "Splits the idelic character and norm across the two components and applies the independently proved Haar integral evaluations.",
+      "dependency_status": "Uses the actual Tate weight and canonical test, and Fubini on the specified product of normalized measures.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateClassPoisson.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's adelic Poisson summation on the idele class group.",
+      "formalization_note": "Transports the mixed Schwartz and finite Fourier tests to logarithmic norm coordinates and retains both values at zero.",
+      "content_basis": "Uses the project adelic Poisson formula, absolute lattice summability, compact support of the finite dual, and quotient invariance.",
+      "dependency_status": "Applies to actual unitary Hecke characters and the canonically normalized finite Fourier transform.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's analytic continuation of completed Hecke L-functions.",
+      "formalization_note": "Splits the class theta integral by logarithmic norm and constructs the entire completion for characters nontrivial on the norm-one idele classes.",
+      "content_basis": "Reflects the negative half by Poisson summation and cancels both zero terms by Haar character orthogonality.",
+      "dependency_status": "Uses the proved Euler integral, class Poisson formula, and absolute moments of the positive Mellin tails.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateDualSupport.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's finite additive Fourier transform, duality of an integral modulus, and the restricted product of local fields.",
+      "formalization_note": "Bounds the Fourier transform of the finite Hecke test by the mass of the finite integral adeles and gives it a compact support.",
+      "content_basis": "Checks Haar translation, principal approximation, fractional trace-dual denominators, and local constancy of both finite tests.",
+      "dependency_status": "Uses the project's additive character, trace dual, conductor modulus, and uniform theta decay.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateFiniteEuler.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The finite Euler product in Tate's thesis.",
+      "formalization_note": "The normalized finite Tate integral converges absolutely and equals the Hecke Euler product for real part greater than one.",
+      "content_basis": "Local valuation shells give the Euler weights. The Dedekind ideal series bounds their absolute sum.",
+      "dependency_status": "Uses the actual finite Tate density and the normalized counting measure on fractional ideals.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateFiniteIntegral.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's finite local tests and multiplicative Haar measure on integral-unit cosets.",
+      "formalization_note": "Under absolute convergence, the actual finite Tate density integrates as a sum over the nonzero fractional ideals.",
+      "content_basis": "Finite-unit character covariance and the counting pushforward of Haar measure with unit-subgroup mass one.",
+      "dependency_status": "Uses the actual finite Tate test, finite norm, and the ideal homomorphism.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateFundamentalDomain.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Fundamental domains for discrete principal ideles in Tate's quotient integration.",
+      "formalization_note": "Selects one Borel representative per norm-one class from a finite cover of the compact quotient and proves finite mass on the selected domain.",
+      "content_basis": "Checked the compact Borel section, the action of the countable principal subgroup, and the measure obtained by pushing forward the restricted domain.",
+      "dependency_status": "Uses the closed norm-one subgroup, local covering maps for discrete subgroup quotients, and Mathlib's fundamental-domain measure theory.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateThetaDecay.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Uniform decay of adelic theta sums on compact idele representatives in Tate's thesis.",
+      "formalization_note": "Combines a common denominator on compact finite supports with archimedean Schwartz decay and summability over one lattice.",
+      "content_basis": "Checked the denominator cover, the uniform inverse norm, the real scaling section, the lattice reindexing, and the specialization to unitary Hecke tests.",
+      "dependency_status": "Uses the norm-one idele class compactness theorem, the finite Tate test, Mathlib's Schwartz seminorms, and lattice power-law summability.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateThetaQuotient.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Tate theta sum over nonzero principal adeles and its descent to the norm-one idele class quotient.",
+      "formalization_note": "Reindexes the principal sum under multiplication by a field unit and transfers uniform bounds to the quotient.",
+      "content_basis": "Checked termwise invariance, the sum reindexing, the multiplicative quotient relation, and the compact-representative estimate.",
+      "dependency_status": "Uses the norm-one compactness and uniform theta estimates and the compact support of the finite Fourier dual.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateInfiniteEuler.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's archimedean zeta integrals for real and complex local characters.",
+      "formalization_note": "Evaluates the character-weighted polynomial Gaussian under the normalized multiplicative Haar measure.",
+      "content_basis": "The polynomial cancels the local parity and angular character. The remaining radial powers give the shifted standard Gamma factors.",
+      "dependency_status": "Uses the actual local character parameters, the idelic norm, and the archimedean Haar normalization.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateFiniteFourier.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The finite local Fourier transforms in Tate's thesis.",
+      "formalization_note": "Identifies the finite Tate Fourier transform with the inverse-character test scaled by the different and conductor.",
+      "content_basis": "Computes the conductor exponents and the arithmetic norm, proves the trace-dual lattice and exact Fourier support, and evaluates the transform by unit covariance.",
+      "dependency_status": "Uses the established Tate test, the additive finite Haar measure, the number-field trace pairing, and the standard fractional ideal norm.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateFunctionalEquation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's thesis on Hecke L-functions and the Dedekind zeta specialization.",
+      "formalization_note": "Constructs the standard rank-one completions and proves their familywise triangular criterion, including all imaginary norm twists.",
+      "content_basis": "Constructs the completed Hecke family from the canonical Tate theta averages, verifies the unit root factor and strip bound, and handles norm twists by vertical translation.",
+      "dependency_status": "Uses the proved Tate Euler integral, the conductor-shifted Poisson and Mellin identities, the paired triangular criterion, and the proved Dedekind completion.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateInfiniteFourier.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The real and complex local Fourier transforms in Tate's thesis.",
+      "formalization_note": "Identifies the canonical archimedean trace Fourier test with the test for the inverse character and an explicit unit phase.",
+      "content_basis": "Separates Fourier transforms over finite Euclidean products, computes the complex coordinate Jacobian, and transports the real parity and complex angular weights.",
+      "dependency_status": "Uses the proved local polynomial-Gaussian Fourier transforms and the actual mixed-space trace normalization.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateMellin.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's thesis, the positive-norm adelic theta integral.",
+      "formalization_note": "Uses local uniform convergence and exponential bounds on the norm-one idele class quotient to prove absolute Mellin integrability.",
+      "content_basis": "Checked continuity on the quotient and convergence of all real exponential moments for the original and Fourier-dual finite tests.",
+      "dependency_status": "Uses the norm-one theta quotient, shared principal-term majorant, and Mathlib exponential integral and product-measure theory.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateMellinReflection.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's thesis, the Mellin transform of the adelic Poisson formula.",
+      "formalization_note": "Constructs the conductor-shifted reflection and conjugation of the canonical norm-one theta averages and identifies their full Mellin integrals with the two tails.",
+      "content_basis": "Combines the finite Fourier dilation and the archimedean phase with translation invariance, character orthogonality, and Bochner integral change of variables.",
+      "dependency_status": "Uses the proved finite and archimedean Fourier identities, norm-one Poisson summation, and absolute Mellin moments.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateQuotientIntegration.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's unfolding of the multiplicative idele integral over principal ideles and the logarithmic norm.",
+      "formalization_note": "Transports the product of Lebesgue measure and the norm-one measure, proves the quotient measure identity, and applies unfolding over the full principal subgroup.",
+      "content_basis": "Checked translation invariance, the full fundamental domain, the pushforward product measure, and the resulting equality of complex integrals.",
+      "dependency_status": "Uses the true idele class coordinates, Borel fundamental domains, and Mathlib's unfolding theorem.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeTateZetaUnfolding.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's unfolding of an idelic zeta integral into a principal-idele theta sum.",
+      "formalization_note": "Identifies the weighted physical orbit sum with the theta series and unfolds the integral in the logarithmic norm coordinates.",
+      "content_basis": "Checks the diagonal principal embedding, the two reindexings, the full unitary character weight, joint continuity, and the conditional integral identity.",
+      "dependency_status": "Uses the actual principal quotient measure and the norm-one theta bounds. The integral identity takes integrability of the original test as a hypothesis.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/LocalIwasawaMeasure.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The normalized local Haar integral in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
+      "formalization_note": "Transfers integrability and the integral of a right-invariant complex kernel from G = BK to B with normalized left Haar measures.",
+      "content_basis": "Representatives in B partition G into countably many open K cosets. The same representatives partition B by the intersection subgroup, and both measures assign mass one to each corresponding coset.",
+      "dependency_status": "Mathlib quotient, topology and measure theory. The Iwasawa factorization, compact-open matrix subgroup and spherical measure computation are supplied separately.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/MultiplicityArithmetic.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Gaussian smoothing of the triangular explicit formula and positive Fourier spectra.",
+      "formalization_note": "The exact complex prime-power remainder has the repeated critical-line spectrum and the global Gaussian inequality detects its repetitions.",
+      "content_basis": "Reviewed Mellin inversion, pointwise logarithmic normalization, and the Gaussian mean-square comparison.",
+      "dependency_status": "Robin1984 Hadamard, Mellin, and Fourier series proofs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/Helpers/Event.lean",
       "classification": "Primarily project-original",
       "mathematical_source": "No external theorem is directly formalized; published inputs retain their attribution in the imported modules and project bibliography.",
@@ -1035,6 +1278,24 @@
       "formalization_note": "This module states the headline equivalences and proves the continuation uniqueness and Dirichlet level reductions.",
       "content_basis": "Reviewed the ideal sum and correction, uniqueness of the continuation, the primitive-character factor identity, correction nonvanishing, and the conditional cyclotomic reduction.",
       "dependency_status": "Mathlib definitions of ideals, norms, Dedekind zeta Dirichlet series, cyclotomic fields, and Dirichlet L-functions.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/AutomorphicCompletion.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Euler's product for the reciprocal Gamma function, the standard automorphic completion, and the completed-family triangular criterion.",
+      "formalization_note": "Proves order at most one for the reciprocal Gamma factors, removes the archimedean factors, and applies the completed-family equivalence to paired Euler data.",
+      "content_basis": "Reviewed the Euler product limit and growth bound, the finite products of Gamma factors, the identity theorem and growth transfer, and the exact completed-family consumer.",
+      "dependency_status": "Uses Mathlib's Gamma sequence, the pinned entire-order predicate and the Robin1984 completed-family criterion.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/AutomorphicEulerLog.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The absolutely convergent logarithmic Euler product and its derivative on the right half-plane.",
+      "formalization_note": "Differentiates the log sum termwise and proves nonvanishing and the logarithmic derivative needed by the completed-family criterion.",
+      "content_basis": "Reviewed the coefficient normalization by the prime-power norm logarithm, the locally uniform majorant, and the completed-family consumer.",
+      "dependency_status": "Uses Mathlib's locally uniform differentiation and the Robin1984 standard completion theorem.",
       "reviewed": true
     },
     {
@@ -1191,6 +1452,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/DedekindMultiplicity.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The additive holomorphic order formula and the Gaussian prime-power multiplicity comparison.",
+      "formalization_note": "Under Dedekind ERH each factor has only critical-line zeros in the open strip; the weighted gap detects all excess orders.",
+      "content_basis": "Holomorphic product, positive integer exponents, signed Euler logarithms, and Gaussian frequency spectra.",
+      "dependency_status": "The actual Dedekind zeta continuation and the supplied positive holomorphic factorization.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/DedekindPrimeIdealTheorem.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The Wiener-Ikehara proof of the prime ideal theorem.",
@@ -1233,6 +1503,15 @@
       "formalization_note": "Scaling the fractional-ideal theta kernel.",
       "content_basis": "Reviewed the exact declaration bodies and imported interfaces of DedekindThetaDilation.",
       "dependency_status": "Uses the pinned Dedekind theta-Mellin source port and Mathlib.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/DedekindTriangular.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Triangular prime-power smoothing and the primitive-tail bound for the Dedekind Chebyshev error.",
+      "formalization_note": "The two directions use the existing Landau converse and integration by parts on the actual prime-ideal coefficients.",
+      "content_basis": "Reviewed the finite prime-power smoothing integral, the primitive-tail estimate, and both implications for an arbitrary number field.",
+      "dependency_status": "The checked Dedekind continuation, prime-ideal logarithmic derivative and spectral primitive-tail bound.",
       "reviewed": true
     },
     {
@@ -1407,6 +1686,672 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeAdeleCharacter.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The additive character of the adeles that is trivial on the principal field, as used in Tate's thesis.",
+      "formalization_note": "Constructs the character using finite strong approximation, the trace at the infinite places, and the integer trace of an algebraic integer.",
+      "content_basis": "Reviewed independence of the finite representative, the character laws, continuity, principal triviality, and the formula on integral finite coordinates.",
+      "dependency_status": "Uses pinned Mathlib trace and circle APIs and the finite approximation theorem in HeckeAdeleLattice.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetAdelicMatrixBounds.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Finite determinant norms, adjugate bounds, and compact covering arguments in the Godement--Jacquet setting.",
+      "formalization_note": "Bounds finite inverse denominators and archimedean inverse entries by the archimedean radius and supplies compact matrix sets and finite dyadic covers.",
+      "content_basis": "Uses the factorization of the determinant norm, finite integrality, bounds for minors, compactness of the value and inverse images, and iteration of a half-radius cover.",
+      "dependency_status": "Uses verified finite denominator and theta norm estimates with Mathlib compactness and matrix algebra. The assembled Haar volume bound is separate.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetAdelicProductMeasure.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The archimedean and finite factorization of the adelic general linear group and uniqueness of Haar measure.",
+      "formalization_note": "Splits the actual adelic matrix group, determinant weight, and global Haar integral into archimedean and finite parts, with a positive normalization scalar for determinant coordinates.",
+      "content_basis": "Uses the matrix ring product, the topological equivalence of units, functoriality of determinants, product integration, and Haar uniqueness.",
+      "dependency_status": "Uses Mathlib ring and measure equivalences together with the existing idelic norm and determinant-coordinate Haar measure.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetGlobalZetaProduct.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Godement-Jacquet global zeta integral and its tensor factorization over the places.",
+      "formalization_note": "Assembles the archimedean test and the fixed finite adelic zeta tensors into the weighted global zeta integral.",
+      "content_basis": "Factors the determinant weight in the product Haar measure, matches the two matrix vector projections, and transports the fixed finite sum to the Euler product.",
+      "dependency_status": "Uses the adelic product Haar measure and the matrix test coordinates. Local integrability and factorization of the matrix coefficients are stated hypotheses.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanExponentialHaar.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The exponential chart for positive real units and archimedean Iwasawa integration.",
+      "formalization_note": "Identifies positive diagonal Haar measure with Lebesgue measure in logarithmic coordinates.",
+      "content_basis": "Exponentiates each real coordinate, transfers additive Haar measure through the homeomorphism, and substitutes it into the triangular and unitary product chart.",
+      "dependency_status": "Uses the archimedean Iwasawa product measure formula and Mathlib Haar measure.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanIwasawa.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Gram-Schmidt orthonormalization and archimedean Iwasawa factorization for general linear groups over the real or complex field.",
+      "formalization_note": "Factors an invertible matrix into a positive-diagonal upper-triangular matrix and a unitary matrix, and proves uniqueness.",
+      "content_basis": "Computes the diagonal of the triangular coefficient matrix using the Gram-Schmidt residuals, reverses the adjoint factorization, and uses triangularity of inverses for uniqueness.",
+      "dependency_status": "Uses Mathlib orthonormal bases, Gram-Schmidt orthonormalization, and matrix group operations.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanIwasawaHaar.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Archimedean Iwasawa coordinates and uniqueness of Haar measure.",
+      "formalization_note": "Transfers Haar measure to triangular and compact unitary factors.",
+      "content_basis": "Proves closedness of the positive upper-triangular subgroup, compactness of the unitary group, and triviality of the Haar modular character on that compact subgroup.",
+      "dependency_status": "Uses the positive triangular factorization and Mathlib group topology, product measure, and Haar uniqueness.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanIwasawaProduct.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Archimedean Iwasawa integration and Gaussian change of variables.",
+      "formalization_note": "Splits triangular Haar measure and computes upper-entry masses under diagonal scaling.",
+      "content_basis": "Restricts the existing triangular homeomorphism to the positive diagonal, proves product Haar invariance by a shear, and evaluates the scaled row integrals using the additive Haar scaling rule and the scalar Gaussian integral. Applies the entrywise scaling formula to the indicator of a compact set to compute the measure of the conjugated upper-entry box.",
+      "dependency_status": "Uses the matrix Iwasawa Haar formula, the unitriangular coordinate measure, and Mathlib Gaussian and product integration.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanSchwartz.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The archimedean Gaussian in the Godement-Jacquet zeta integral.",
+      "formalization_note": "Realizes its product over the infinite places as a Schwartz function in the global Minkowski matrix coordinates.",
+      "content_basis": "Applies Schwartz decay on the Euclidean matrix space and factors the squared weighted Minkowski norm into the real and complex entry sums.",
+      "dependency_status": "Uses the shared Schwartz Gaussian construction, the verified Minkowski norm formula, and the infinite adele coordinate map.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanSiegelVolume.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The classical archimedean Iwasawa volume calculation for Siegel sets.",
+      "formalization_note": "Proves finite Haar volume for bounded conjugated upper entries, a bounded determinant log, and lower-bounded consecutive diagonal gaps.",
+      "content_basis": "Counts the strict upper entries crossing each consecutive diagonal gap, integrates the product of root exponentials, and transfers the section volumes through the local Iwasawa chart.",
+      "dependency_status": "Uses the logarithmic Iwasawa Haar chart, the conjugated unitriangular box formula, and Mathlib integration and finite-dimensional Haar measure.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanSphericalGaussian.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Archimedean spherical Gaussian zeta integrals, exponential substitution, and the Gamma integral.",
+      "formalization_note": "Splits the original matrix Gaussian into diagonal and upper-entry factors and computes the weighted Gaussian integral in logarithmic coordinates.",
+      "content_basis": "Proves unitary invariance and the determinant formula, cancels the row scale factors, and uses one-dimensional Gamma integrals with absolute convergence on the specified half-plane.",
+      "dependency_status": "Uses the archimedean upper-entry Gaussian calculation, Mathlib Mellin transforms, the real exponential Jacobian, and product measure.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanSphericalLocal.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The spherical archimedean case of the Godement-Jacquet local zeta integral.",
+      "formalization_note": "Evaluates the normalized Gaussian integral for a spherical inducing section and its compact-group average.",
+      "content_basis": "Transfers the weighted Gaussian through logarithmic Iwasawa coordinates, checks the determinant and inducing exponents, and identifies the real and complex radial factors.",
+      "dependency_status": "Uses the proved Iwasawa Haar and spherical Gaussian formulas. The inducing section is given by its normalized spherical Iwasawa values.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetCuspidalProductTestContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and theta cancellation for Schwartz-Bruhat test functions.",
+      "formalization_note": "Proves the entire theta Mellin continuation and reflection for the product test on a fixed fundamental domain, and applies it to the Euler product identity.",
+      "content_basis": "Choose common denominators on the reduction set. Restrict the resulting weighted integrals to the same fundamental domain, apply finite-rectangle continuation to the product test, and substitute the theta Mellin into the Euler expression.",
+      "dependency_status": "Uses the finite rectangle expansion, the weighted cuspidal cancellation and the product-test Euler-Mellin identity.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetDeterminantWeightedTests.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Absolute convergence of determinant-weighted Gaussian and finite compact tensor tests.",
+      "formalization_note": "Proves the archimedean and finite integral bounds and combines them in the adelic Mellin coordinates.",
+      "content_basis": "The constant spherical section has zero inducing exponents. At finite places a zeta Euler product bounds the absolute integral outside the exceptional set, and compact tests are integrable within it.",
+      "dependency_status": "Uses the normalized spherical archimedean integral, the finite Euler majorant, and the adelic product Haar formula.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetEulerMellinContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Godement-Jacquet global zeta unfolding and Euler product realization by test vectors.",
+      "formalization_note": "Constructs an entire continuation of a half-plane Euler product by the fixed weighted sum of theta Mellin transforms.",
+      "content_basis": "Matches termwise global zeta integrals with the theta Mellins using the quotient L2 theorem and removes the common positive Haar normalization.",
+      "dependency_status": "Uses the project zeta tensor product identity and square-integrable Mellin unfolding. The resulting continuation assumes entire theta Mellins and the specified local integrals.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetCoordinates.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the determinant-norm coordinates in the global zeta integral.",
+      "formalization_note": "Splits the adelic general linear group by its positive determinant norm and rewrites the global zeta integral as a logarithmic Mellin integral.",
+      "content_basis": "Uses the group of unit adelic matrices, the product formula, the central logarithmic section, and the invariant product measure to rewrite the Godement-Jacquet integral.",
+      "dependency_status": "Uses pinned Mathlib general linear group, Haar and Fubini APIs and the verified principal adele and idele norm theorems.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetFiniteAdelicCanonicalFactors.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the restricted product factorization of finite adelic zeta integrals.",
+      "formalization_note": "Chooses a common half-plane for the finite ramified set and inserts the shifted inverse-denominator witnesses into the spherical restricted product.",
+      "content_basis": "Proves that the resulting finite adelic function is integrable and that its Haar integral is the product of the spherical and ramified Euler factors.",
+      "dependency_status": "Uses the canonical local zeta integral witnesses and the finite adelic spherical integral with finitely many replacement factors.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetFiniteAdelicCanonicalTensors.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement-Jacquet finite adelic zeta integrals and factorization over the places.",
+      "formalization_note": "Realizes the finite Euler product with canonical ramified factors by a fixed finite sum of integrals of pure local tensors.",
+      "content_basis": "Chooses compact translated tests at the ramified places, bounds their thresholds uniformly, and commutes the finite tensor expansion with integration.",
+      "dependency_status": "Uses the existing spherical integral formula, the finite adelic Haar chart factorization, and the local inverse-denominator test combinations.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetFiniteAdelicReduction.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Strong approximation for the special linear group using elementary matrices and compactness of the norm-one idele class group.",
+      "formalization_note": "Constructs integral representatives in the determinant-one finite matrix group and a compact set of finite projections meeting every rational orbit of the determinant-norm-one adelic group.",
+      "content_basis": "Additive approximation along principal moduli approximates transvections. Finite-place charts and local generation place finite-support matrices in the closure of the rational determinant-one group. Compact idele representatives bound the determinant before finite matrix reduction.",
+      "dependency_status": "Uses the finite adelic modulus basis, finite matrix product charts, elementary row operations and the compact norm-one idele class group.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetFiniteAdelicTensorTests.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement-Jacquet restricted tensor tests, idelic absolute values, and the finite-place spherical integral.",
+      "formalization_note": "Identifies the actual compact finite adelic test and restricted coefficient in each canonical finite tensor integral.",
+      "content_basis": "Factors the finite determinant weight, matches local matrix tests through Matrix.vec, and uses the integral subgroup normalization of the spherical coefficient.",
+      "dependency_status": "Uses the project compact finite product tests and restricted tensor integrands, including the normalized unramified spherical function.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetFiniteAdelicFixedTensors.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Finite multilinearity of restricted products and the normalized finite adelic matrix-unit charts.",
+      "formalization_note": "Expands the finite ramified sums as fixed tensor selections and transports the identity through the Haar chart cover and the integral.",
+      "content_basis": "Splits the restricted product at the ramified set, expands the finite product of sums, and uses termwise integrability for the integral identity.",
+      "dependency_status": "Uses the finite adelic chart cover and the finite translated local test space.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetAdelicProductTest.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The restricted product topology of finite adeles and the finite coset decomposition of compactly supported locally constant tests.",
+      "formalization_note": "Builds the finite adelic restricted product test from finitely many local factors and expands its product with a joint archimedean Schwartz test in principal matrix rectangles.",
+      "content_basis": "Uses a clopen subgroup for the outside integrality conditions, compact local support bounds, and the existing principal rectangle expansion.",
+      "dependency_status": "Uses Mathlib locally constant functions and the project finite adelic rectangle and matrix Poisson constructions.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetFiniteAdelicTestRectangles.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The compact-open subgroup topology of finite adeles and finite coset decompositions of compactly supported locally constant functions.",
+      "formalization_note": "Constructs a common nonzero integral modulus for finite adelic neighborhoods and expands compact locally constant tests into disjoint principal rectangles.",
+      "content_basis": "Uses finite-place valuation bounds, product neighborhoods, a finite coset cover, and the principal-rectangle representation.",
+      "dependency_status": "Uses Mathlib finite adeles and the existing principal rectangle and additive coset constructions.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetFiniteMatrixDenominator.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Finite idele norms and adjugate matrices in the Godement--Jacquet construction.",
+      "formalization_note": "Proves that the reciprocal finite determinant norm of an integral finite adelic matrix is a positive integer and clears the inverse matrix at every finite place.",
+      "content_basis": "Writes the finite idele norm as a product of local prime ideal norms, uses membership of the ideal norm in the ideal, and applies the adjugate identity to integral matrices.",
+      "dependency_status": "Uses Mathlib's discrete valuation and ideal norm identities and the verified integral finite matrix denominator sets.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetFiniteMatrixVolume.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Integral local matrix subgroups and finite adelic approximation in the Godement--Jacquet construction.",
+      "formalization_note": "Bounds the Haar measure of integral finite adelic matrices whose inverses have a fixed denominator by the number of residue matrices times the mass of the integral matrix subgroup.",
+      "content_basis": "Uses simultaneous approximation at the finite places, reduction of integral basis coordinates, the matrix identity for congruence with scaled inverses, and finite subadditivity of Haar measure.",
+      "dependency_status": "Uses the verified rank-one finite adele approximation theorem and Mathlib integral bases, compactness, and left Haar invariance. The inverse denominator is a stated positive integer.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetFiniteRectangleDilation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Schwartz-Bruhat test functions and matrix dilations in Godement and Jacquet, Zeta Functions of Simple Algebras.",
+      "formalization_note": "Proves that the inverse image of a finite adelic principal rectangle under an invertible matrix is a finite disjoint union of principal rectangles.",
+      "content_basis": "Clears matrix denominators at all finite places and partitions the compact inverse image into cosets of one open principal vector subgroup.",
+      "dependency_status": "Uses the verified rank-one finite adele denominator theorem and Mathlib product topology, compactness, and matrix multiplication.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetFiniteRectangleFourier.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Fourier transforms of compact open cosets in Tate's thesis and in Godement and Jacquet, Zeta Functions of Simple Algebras.",
+      "formalization_note": "Proves compact support and a uniform Haar mass bound on the Fourier transform of a principal finite adelic coset.",
+      "content_basis": "Translates the test by its additive subgroup, applies the trace annihilator of the integral finite adeles, and bounds the restricted integral by the Haar mass.",
+      "dependency_status": "Uses the proved finite trace duality, translation criterion, compactness of integral finite adeles, and Mathlib integration bounds.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetFourier.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Fourier inversion for the adelic matrix trace pairing.",
+      "formalization_note": "Proves Fourier covariance of left and right matrix dilation, including the inverse trace-dual action and its exact determinant-norm factor.",
+      "content_basis": "Combines Kronecker vectorization, trace cyclicity, and the normalized matrix Haar pushforward to change variables in the adelic Fourier integral.",
+      "dependency_status": "Uses the pinned Mathlib Kronecker and Bochner integral theorems and the verified normalization of the additive adelic measure.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetFullThetaGrowth.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and lattice point bounds for adelic Schwartz functions.",
+      "formalization_note": "Supplies a polynomial majorant for the full rational theta series by clearing finite denominators and controlling the archimedean action separately in each variable.",
+      "content_basis": "Clears denominators of the left and inverse right matrices separately and uses the compact support of the finite test factor. Bounds the integral lattice sum by the three archimedean operator norms.",
+      "dependency_status": "Uses the verified finite rectangle support, principal vector lattice summability and archimedean matrix dilation. The resulting bound includes singular matrices.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetFundamentalDomain.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Borel fundamental domains for discrete subgroups of second-countable groups and the determinant-one quotient in the Godement-Jacquet zeta integral.",
+      "formalization_note": "Constructs a measurable fundamental domain for rational left translation on the determinant-norm-one adelic general linear group.",
+      "content_basis": "Uses a countable cover by injective local sheets, chooses the first sheet meeting each orbit, and proves discreteness of the rational subgroup coordinatewise.",
+      "dependency_status": "Uses the verified principal adele discreteness and determinant coordinates together with pinned Mathlib group, Lindelof, and fundamental domain APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetHaarNormalization.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's adelic Fourier analysis and the additive determinant modulus in the Godement-Jacquet zeta integral.",
+      "formalization_note": "Normalizes the additive adelic measure at the finite integral subgroup and the archimedean trace coordinates, then proves the inverse idelic determinant scaling law.",
+      "content_basis": "Transports Euclidean Lebesgue measure through the trace coordinates and combines the archimedean and finite Haar scaling laws before applying the matrix theorem.",
+      "dependency_status": "Uses the verified finite idelic norm, the Minkowski determinant calculation, and the normalized matrix change of variables.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetHaarUnimodularity.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Haar measure, the modular character, and finite-covolume quotients of locally compact groups.",
+      "formalization_note": "Proves right invariance of left Haar measure from a measurable left fundamental domain of positive finite mass.",
+      "content_basis": "Compares the Haar masses of a fundamental domain and its right translate, then cancels that mass in the defining identity of the modular character.",
+      "dependency_status": "Uses Mathlib's modular character, exact fundamental representatives, and equality of fundamental-domain measures.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetHaarVolume.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Haar measure on adelic general linear groups and the determinant coordinates in Godement and Jacquet, Zeta Functions of Simple Algebras.",
+      "formalization_note": "Proves dyadic Haar volume bounds on the ambient adelic matrix group and on the norm-one group over a finite rectangle.",
+      "content_basis": "Combines the finite inverse-denominator cover, the archimedean cover and inverse estimates, compact subsets of the unit group, and logarithmic determinant coordinates.",
+      "dependency_status": "Uses the verified matrix and determinant bounds, finite residue covers, and Mathlib Haar measure and compactness.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetLocalZetaCoefficientOrbit.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement-Jacquet local zeta integrals and the two-sided action on matrix coefficients.",
+      "formalization_note": "Transfers the reduced denominator of one coefficient to the vector and dual orbit spans by normalized Haar invariance and integer determinant weights.",
+      "content_basis": "Proves both Haar translations, polynomial denominator stability under finite linear combinations, and the matrix coefficient orbit theorem.",
+      "dependency_status": "Uses the verified finite-place reduced denominator and the determinant-density comparison with normalized Haar measure.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetLocalZetaFixedCombination.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement-Jacquet local zeta integrals and the determinant change of variables under matrix translation.",
+      "formalization_note": "Replaces exponent-dependent polynomial weights by constant coefficients on a finite family of translated compact tests.",
+      "content_basis": "Uses finite support of polynomials, the local uniformizer norm, and the Laurent translation identity for zeta integrals.",
+      "dependency_status": "Uses the canonical local reciprocal combination and the negative-integer determinant translations.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetLocalZetaRationality.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement-Jacquet local zeta integrals, compact support, and smooth admissible representations.",
+      "formalization_note": "Uses scalar dilation and a common congruence depth to deduce right-half-plane convergence and rationality for compactly supported locally constant matrix tests.",
+      "content_basis": "Proves the principal congruence neighborhood basis, a compact support cutoff, the scalar change of variables, and the right-half-plane identity.",
+      "dependency_status": "Uses finite-place Cartan integral rationality and normalized Haar measure on the local general linear group.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetMatrixMeasure.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the determinant change of variables for additive Haar measure on adelic matrices.",
+      "formalization_note": "Derives matrix Haar dilation from the rank-one multiplier by constructing unit pivots and proving measure preservation of adelic block shears.",
+      "content_basis": "Uses local unit pivots, block elimination, and product measure invariance to prove the determinant scaling law from scalar dilation.",
+      "dependency_status": "Uses the pinned Mathlib restricted product, matrix determinant and product measure APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetMatrixPoisson.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Poisson summation on the additive adelic matrix space in Godement and Jacquet, Zeta Functions of Simple Algebras.",
+      "formalization_note": "Identifies the Fourier coefficients for Schwartz rectangles with the actual adelic trace-pairing integral and proves Poisson summation on rational matrices.",
+      "content_basis": "Splits the product measure into archimedean and finite parts, matches the scalar trace pairing, and transports the rectangular Poisson sum to matrices using the transpose at the frequency.",
+      "dependency_status": "Uses the verified adelic rectangle Poisson theorem, the matrix trace Fourier transform, and Mathlib product integration.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetMellinAbsolute.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Tonelli disintegration over a fundamental domain.",
+      "formalization_note": "Transforms the original nonnegative zeta kernel into its periodized determinant-coordinate integral, then derives absolute integrability of the theta Mellin kernel.",
+      "content_basis": "A Haar substitution and Tonelli's theorem, followed by the triangle inequality for the rational-matrix sum.",
+      "dependency_status": "Uses the checked Mellin identification and joint theta measurability. Absolute convergence of the original zeta kernel and pointwise summability of the test series are hypotheses.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetMellinFromSquareIntegrability.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The Godement-Jacquet unfolding and square integrability of the matrix-coefficient vectors on the norm-one quotient.",
+      "formalization_note": "Uses quotient right-translation invariance to supply the absolute double integrability required by the theta Mellin identity.",
+      "content_basis": "Bounds the absolute quotient integral by the sum of the two squared L2 norms independently of the outer matrix, then applies Tonelli to the weighted test.",
+      "dependency_status": "Uses the project norm-one quotient right-translation result and the measurable absolute Mellin unfolding.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetMellinGrowth.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and absolute bounds for Mellin transforms on vertical strips.",
+      "formalization_note": "Derives a uniform vertical-strip bound from the two-sided exponential moments and uses it in the order-one proof for a paired standard completion.",
+      "content_basis": "The modulus of the kernel depends on the real part of the Mellin variable. The strip bound for a product follows from the two individual transforms.",
+      "dependency_status": "Uses the checked Mellin reflection and moment estimates and the Euler-product order-one theorem. The Mellin identification, right-half-plane Euler identity, gamma bounds and norm reflection are explicit hypotheses.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetMellinIdentification.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and integration over a measurable fundamental domain.",
+      "formalization_note": "Identifies the adelic matrix-coefficient zeta integral with the logarithmic Mellin transform of the invertible double theta integral.",
+      "content_basis": "Reindexing the rational principal range and applying Fubini give the exact determinant-coordinate kernel.",
+      "dependency_status": "Uses the checked determinant-norm disintegration. The original and theta kernels are assumed absolutely integrable.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetProductLattice.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Poisson summation for full-rank Euclidean lattices and the matrix lattice in the Godement-Jacquet zeta integral.",
+      "formalization_note": "Identifies the product lattice, its dual, and its covolume, then applies shifted Poisson summation to an arbitrary Schwartz function on the product.",
+      "content_basis": "Uses coordinate embeddings of lattices, the Euclidean product measure, rectangular fundamental domains, and the existing Schwartz periodisation identity.",
+      "dependency_status": "Uses the verified DedekindZeta lattice Poisson theorem and pinned Mathlib product measure, lattice and inner-product-space API.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetProductTestMellinContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Absolute convergence of Godement-Jacquet theta series for adelic Schwartz functions and global zeta unfolding.",
+      "formalization_note": "Obtains the product-test measurability, pointwise summability and weighted integrability hypotheses from the finite rectangle decomposition and the local absolute integrals.",
+      "content_basis": "Finite-denominator bounds give a summable series of absolute norms for each rectangle. The finite expansion and the adelic determinant Haar formula give the required inputs for the product test.",
+      "dependency_status": "Uses the proved full theta growth estimate, the determinant-weighted product integral, and the weighted Euler-Mellin continuation theorem.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetReductionContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and finite-covolume quotients of locally compact groups.",
+      "formalization_note": "Derives square integrability and right Haar invariance for representatives inside a finite-measure reduction cover and applies the checked theta cancellation and Mellin continuation.",
+      "content_basis": "The height weights are at least one, so the weighted bounds give bounded quotient functions. Finite positive covolume gives unimodularity.",
+      "dependency_status": "Uses the checked reduction-set cancellation and Mellin reflection. The finite-measure cover and the bounded cusp values on the cover are explicit inputs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetReductionWeights.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and integration over a measurable fundamental domain.",
+      "formalization_note": "Restricts a fundamental domain to a measurable orbit cover. Proves the denominator and integrability inputs for simultaneous cancellation of singular terms in the primal and dual theta integrals.",
+      "content_basis": "A first-translate selection, finite denominators on compact sets, and a bounded-integrand estimate on a finite-measure set.",
+      "dependency_status": "Uses the checked full theta growth bound and weighted cancellations. The reduction cover and weighted cusp bounds are explicit hypotheses.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetSchwartzDilation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Schwartz-Bruhat test functions and the Fourier transformation of the theta kernel in Godement and Jacquet, Zeta Functions of Simple Algebras.",
+      "formalization_note": "Decomposes an invertible adelic matrix pullback of a Schwartz rectangle into finitely many rectangles and proves the trace-dual transformation with reversed determinant time.",
+      "content_basis": "Conjugates real linear matrix dilation into joint Minkowski coordinates, uses the disjoint partition of the finite inverse image, and normalizes Fourier dilation by the discriminant scalar.",
+      "dependency_status": "Uses the verified finite rectangle partition, matrix Poisson transform, and pinned Mathlib Schwartz pullback and matrix linear-map APIs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetSingularOrbits.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the rank decomposition of the singular-matrix terms.",
+      "formalization_note": "Identifies the upper unipotent stabilizers of rank projections and transports them to singular rational matrices after scalar extension.",
+      "content_basis": "Uses the matrix rank normal form, determinant-one block matrices, and conjugation to transport the singular stabilizers across rational orbits and scalar extensions.",
+      "dependency_status": "Uses pinned Mathlib matrix rank normal form, block matrices, determinants, and the unit group of the matrix ring.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetSubgroupAveraging.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Compact-open averaging and the positive torus in Casselman's notes on representations of p-adic groups, Section 4, and the Cayley-Hamilton theorem.",
+      "formalization_note": "Constructs averaging for smooth representations on compact subgroups and proves a matrix coefficient recurrence using double-coset multiplication.",
+      "content_basis": "Constructs normalized averages by finite quotient refinement and proves the compressed product, powers, and monic matrix coefficient recurrence.",
+      "dependency_status": "Averaging applies to smooth representations on compact subgroups. The recurrence also needs finite-dimensional fixed vectors and the double-coset condition, whose principal congruence specialization is a separate step.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetFiniteThetaContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and linearity of absolutely integrable theta sums.",
+      "formalization_note": "Transfers the invertible theta reflection and Mellin continuation from Schwartz rectangles to finite sums of rectangles and their actual self-dual Fourier transforms.",
+      "content_basis": "Interchanges finite sums with the rational matrix series and quotient integrals, and sums the positive-time exponential decay estimates.",
+      "dependency_status": "Uses the existing matrix Fourier, theta reflection, and logarithmic Mellin lemmas with termwise cancellation and integrability hypotheses.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetThetaAnalyticContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Mellin transforms of exponentially decaying theta integrals.",
+      "formalization_note": "Proves continuity of the dual rectangle, measurability of the theta curve, and entire Mellin continuation with reflection under the two theta cancellation identities.",
+      "content_basis": "Uses countable partial sums and joint continuity of the matrix argument for measurability, then combines Poisson reflection with the primal and dual positive-time bounds.",
+      "dependency_status": "Uses the checked Fourier closure, Haar theta estimates, Poisson identity and exponential-moment theorem. The full-to-invertible cancellation identities are hypotheses of the last declaration.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetThetaDecay.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Schwartz decay of the adelic matrix theta kernel.",
+      "formalization_note": "Bounds archimedean and finite determinant norms and derives uniform weighted decay for each invertible term of a Schwartz rectangle.",
+      "content_basis": "Uses the determinant expansion at every place, compact finite support and a common denominator, the determinant norm of the normalized theta argument, and the Schwartz seminorm bounds.",
+      "dependency_status": "Uses verified determinant coordinates, finite principal rectangles, adelic Minkowski coordinates, and pinned Mathlib norm and Schwartz seminorm estimates.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetThetaDualDecay.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Fourier closure of adelic Schwartz functions and the positive-time theta estimates in Godement and Jacquet, Zeta Functions of Simple Algebras.",
+      "formalization_note": "Proves that the self-dual Fourier transform of a Schwartz rectangle is a finite sum of such rectangles and gives rapid positive-time decay of its invertible theta integral.",
+      "content_basis": "Factors the Fourier transform at every adelic matrix, expands the periodic finite coefficient on disjoint rectangles, and sums the square-integrable theta bounds.",
+      "dependency_status": "Uses the proved matrix Fourier identity, finite Fourier expansion, archimedean Schwartz closure, and Haar volume estimates for the invertible theta kernel.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetThetaKernel.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, together with Tonelli's theorem and geometric-series estimates.",
+      "formalization_note": "Unfolds the nonnegative time-zero theta kernel into a convolution and controls the integral by square-integrability on the quotient and a dyadic volume bound for the group weight.",
+      "content_basis": "Uses fundamental domains, invariance under right translation, the quadratic bound on a product, rational lattice summability, and dyadic reciprocal-power estimates.",
+      "dependency_status": "Uses the verified time-zero lattice and unfolding results. The dyadic Haar volume bound and the square-integrability of the quotient functions are stated hypotheses.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetThetaL2Decay.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the square-integrability bound on the unfolded quotient integral.",
+      "formalization_note": "Proves rapid positive-time decay of the invertible theta integral for a Schwartz rectangle and square-integrable quotient functions.",
+      "content_basis": "Combines the norm-one Haar volume estimate with dyadic integration of the reciprocal power, the time-zero lattice bound, and the unfolded quotient convolution.",
+      "dependency_status": "Uses the verified volume and convolution bounds. The stated quotient hypotheses include bi-invariant Haar measure and square-integrability of the functions.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetThetaLatticeDecay.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and inverse-power sums over shifted Euclidean lattices.",
+      "formalization_note": "Bounds the positive-time invertible theta curve using the time-zero lattice weight and proves summability of that weight at each pair of quotient representatives.",
+      "content_basis": "Combines the exact central scaling, finite principal-rectangle pullbacks, shifted product-lattice summability, and a norm bound for the inverse archimedean matrix dilation.",
+      "dependency_status": "Uses the verified theta determinant and weighted Schwartz estimates and Mathlib shifted lattice and integral estimates. The quotient integral uses a stated integrable time-zero weight.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetThetaMellin.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and Mellin reflection of the adelic matrix theta integral.",
+      "formalization_note": "Integrates the matrix Poisson reflection over the two quotient variables and proves the standard Mellin reflection after cuspidal cancellation.",
+      "content_basis": "Uses Fubini for the singular cancellation, swaps the two factors of the quotient measure, and changes the sign of the real determinant coordinate with the normalized Mellin exponent.",
+      "dependency_status": "Uses the verified adelic matrix Schwartz Poisson reflection and the verified cuspidal theta cancellation over the principal quotient.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetThetaWeightedCancellation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and absolute convergence for cuspidal cancellation.",
+      "formalization_note": "Derives integrability and singular cancellation for both theta integrals from shared weighted quotient estimates, then obtains entire Mellin continuation and the functional equation for finite sums of Schwartz rectangles.",
+      "content_basis": "Uses product majorants for the full and invertible rational matrix sums, establishes the required quotient integrability, and supplies termwise cancellation and decay for the finite-sum Mellin theorem.",
+      "dependency_status": "Uses the checked full theta growth bound, joint measurability, finite Fourier expansion, and vanishing unipotent periods. The four weighted integrability assumptions remain explicit.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetUnfolding.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and the global matrix-coefficient zeta integral.",
+      "formalization_note": "Unfolds the weighted adelic integral into the double theta integral over determinant-one fundamental domains under absolute integrability.",
+      "content_basis": "Proves the identity by integrating the countable principal matrix sum over a fundamental domain, applying determinant coordinates, and changing variables in the matrix coefficient integral.",
+      "dependency_status": "Uses the verified determinant-norm product measure and the pinned Mathlib fundamental-domain and integration theorems.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetUnramifiedDiagonal.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The diagonal integration in the unramified Godement-Jacquet local calculation, Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
+      "formalization_note": "Combines the unipotent fibre integral with multiplicative unit shells and finite product integration in diagonal coordinates.",
+      "content_basis": "Checked the integral valuation cone, the normalized scalar Haar integral, and the product of local factors under its geometric convergence conditions.",
+      "dependency_status": "Uses the Tate unit-shell calculation and the normalized finite-place unipotent integral. Compact averaging and the group integral are separate steps.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetUnramifiedMeasure.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The normalized additive measure and upper-unitriangular volumes in the unramified local Godement-Jacquet integral.",
+      "formalization_note": "Constructs the finite-place additive measure and proves the exact inverse-norm box volume in every rank.",
+      "content_basis": "Restricts normalized finite-adele Haar measure to the open subgroup integral away from a place. The single-place idele computes the scalar volume, and row product measure counts one inverse norm per strictly upper entry.",
+      "dependency_status": "Uses the finite-adele additive dilation theorem and the normalized unitriangular product measure. The spherical integral is a separate application.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetUnramifiedSpherical.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The unramified spherical section and unipotent integration in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
+      "formalization_note": "Evaluates the unipotent fibre of the actual finite-place spherical kernel in every rank using the normalized additive-product measure.",
+      "content_basis": "Checked the upper-entry box test, constancy of the inducing section on each fibre, and cancellation of Haar volume, half modulus, and the determinant shift.",
+      "dependency_status": "Uses the normalized finite-place additive measure and triangular-integral factorization. Diagonal integration and compact subgroup averaging are separate steps.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetVectorPoisson.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Poisson summation on the additive adelic matrix space in Godement and Jacquet, Zeta Functions of Simple Algebras.",
+      "formalization_note": "Proves Poisson summation for finite adelic rectangles and arbitrary archimedean Schwartz functions, with the trace-dual ideal and the exact discriminant normalization.",
+      "content_basis": "Transports the principal coset to an ideal lattice at each coordinate and combines the shifted product-lattice formula with the finite Haar character integrals.",
+      "dependency_status": "Uses the verified product-lattice Poisson theorem and the finite adelic trace-dual and Haar integration results.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeAdeleHaar.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Additive Haar measure and Fourier integration over the compact open integral finite adeles.",
+      "formalization_note": "Normalizes finite additive Haar measure on the integral subgroup and evaluates its principal-frequency Fourier integral through the trace-dual ideal.",
+      "content_basis": "Reviewed local compactness, normalized additive Haar measure, the character integral, and the partition of the integral subgroup by principal ideal quotient classes.",
+      "dependency_status": "Uses pinned Mathlib additive Haar theory and the verified trace duality for number-field adeles.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeAdeleLattice.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The additive strong approximation and lattice theorem for number-field adeles in Tate's thesis.",
+      "formalization_note": "Uses the product formula, local finite residue arithmetic, the Chinese remainder theorem, and the archimedean integer lattice to prove discreteness and compactness of the additive adelic quotient.",
+      "content_basis": "Reviewed the open neighborhood at zero, finite valuation approximation, compact product of local integer rings, archimedean reduction, and compactness of the image in the quotient.",
+      "dependency_status": "Uses pinned Mathlib adeles, quotients, and the mixed embedding, with the verified local arithmetic and idelic product formula in HeckeEulerProduct.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeAdelePoisson.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Poisson summation for a Schwartz function on the archimedean adeles and one finite adelic coset.",
+      "formalization_note": "Identifies the principal points of the coset with an ideal lattice and uses the actual finite adelic character in the trace-dual sum.",
+      "content_basis": "Reviewed finite strong approximation, the translated lattice sum, the trace dual and covolume, and the negative-frequency phase in the finite character.",
+      "dependency_status": "Uses the vendored DedekindZeta lattice Poisson theorem and the verified Robin1984 finite trace-duality bridge.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeAdeleTraceDual.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The trace pairing and annihilators of compact open finite adelic subgroups in Tate's thesis.",
+      "formalization_note": "Matches the finite character annihilator with the principal trace-dual ideal and aligns the actual infinite adele trace with the existing Minkowski pairing.",
+      "content_basis": "Reviewed the integer kernel of the exponential character, the finite representative formula, the simultaneous approximation argument for the annihilator, and weak approximation for the archimedean pairing.",
+      "dependency_status": "Uses the verified adelic character and finite approximation in Robin1984 and the vendored DedekindZeta trace-dual theorem.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeAdelicFourier.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's adelic zeta integrals and Poisson summation in Algebraic Number Theory (1967).",
+      "formalization_note": "Combines archimedean and finite Fourier scaling with Poisson summation for actual translated Hecke test functions.",
+      "content_basis": "Checked the embedding norm, the inverse-adjoint trace frequency and the complete translated Poisson identity.",
+      "dependency_status": "Reuses the Minkowski change of variables, finite Haar scaling and Poisson summation for the finite Tate test.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeArchimedean.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The unitary characters of the real and complex local multiplicative groups and their archimedean Gamma factors in Tate's thesis.",
+      "formalization_note": "Proves both local character formulas, obtains the archimedean shifts from the actual ideles, evaluates the radial Gaussian Mellin integrals, and applies the completed Hecke criterion with these shifts and the conductor.",
+      "content_basis": "Reviewed the continuous-character differential equation, the angular and radial decompositions, the local completion maps, the Gaussian substitutions, and the triangular criterion with character parameters.",
+      "dependency_status": "Uses pinned Mathlib analysis and infinite adeles, the Hecke conductor ideal and the project-local completed Hecke criterion.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeConductor.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The conductor of a continuous unitary character of the idele class group over a number field.",
+      "formalization_note": "Proves finite ramification and existence of the least local conductor exponents. Constructs the conductor ideal and proves positivity and invariance of the arithmetic conductor.",
+      "content_basis": "Reviewed the product topology on integral ideles, the local valuation balls, the elementary geometric-sum argument for the circle, and the finite ideal product.",
+      "dependency_status": "Uses pinned Mathlib topology, adeles and ideal norms, and the project definition of a unitary Hecke character.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeEulerProduct.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The unitary Hecke character on the idele class group and the Euler product of its finite local factors.",
+      "formalization_note": "Constructs the finite factors from pinned Mathlib adeles, proves absolute convergence and the paired logarithmic identity, and applies the triangular criterion when given the analytic completions.",
+      "content_basis": "Reviewed the local ideles, normalized valuations and uniformizer invariance, the local power series, global prime-power summability, and the Hecke criterion.",
+      "dependency_status": "Uses pinned Mathlib adeles and valuations, the established Dedekind prime-power convergence, and the Robin1984 standard completion criterion.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeFiniteHaarDilation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Distributive Haar characters for additive Haar measure and normalized local valuations of number fields.",
+      "formalization_note": "Proves Fourier scaling on the finite adeles and computes the additive Haar modulus from integral principal residue classes and local uniformizers.",
+      "content_basis": "Checked the change of variables, principal approximation, residue-class volumes, and the valuation criterion for the single-place uniformizer.",
+      "dependency_status": "Reuses Mathlib's distributive Haar character, the chosen finite additive Haar measure, and the standard local uniformizer normalization.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeFiniteIdealClass.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The finite idele description of the ideal class group and normalized valuations in a number field.",
+      "formalization_note": "Constructs the surjective ideal homomorphism and proves the compactness of its integral unit kernel.",
+      "content_basis": "Checked local valuation exponents, the finite prime factorization, compatibility with principal ideals, and the class group quotient.",
+      "dependency_status": "Uses Mathlib's fractional ideal factorization and class group, and the finite idele component and local valuation maps.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/HeckeFiniteTateTest.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Tate's finite test functions, local conductor congruences, and adelic Poisson summation.",
+      "formalization_note": "Extends the local Tate densities to the additive fields, expands the finite test and its idele translates through principal cosets, and proves Poisson summation for them.",
+      "content_basis": "Reviewed the additive local densities, conductor congruences, finite residue-class expansion, denominator clearing for finite ideles, finite Haar integrability, and application of the rectangle Poisson formula.",
+      "dependency_status": "Reuses the proved local Euler-factor tests, conductor ideal, finite adele Haar normalization, and adelic Poisson summation for finite sums of rectangles.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/IdealDivisorEuler.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The finite Euler factors of the divisor-sum function in a Dedekind domain.",
@@ -1467,6 +2412,69 @@
       "formalization_note": "The signed integrable Mellin density is split into positive and negative measures, and the logarithmic pushforward is inverted on the positive tail.",
       "content_basis": "Reviewed the finite signed-density decomposition, characteristic function, and reversal of the log pushforward.",
       "dependency_status": "Mathlib measure extensionality and Fourier uniqueness of finite measures.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/MultiplicityDivisor.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Repeated Hadamard divisors and restriction of the zero series to the critical line.",
+      "formalization_note": "The occurrence index retains analytic orders, so injectivity of its ordinate map detects simple zeros.",
+      "content_basis": "Reviewed the divisor order, restriction to the critical line, and summability of the Gaussian weights.",
+      "dependency_status": "Mathlib analytic orders and Robin1984 Hadamard zero series.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/MultiplicityExceptions.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Gaussian filtering of the repeated prime-power spectrum and finite-frequency subtraction.",
+      "formalization_note": "An arithmetic mean extracts the order at each prescribed ordinate and the energy inequality detects simple zeros outside the exceptions.",
+      "content_basis": "The repeated Hadamard divisor, Cesaro orthogonality, and Gaussian smoothing.",
+      "dependency_status": "The signed Euler logarithm and entire order-one factor.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/MultiplicityExpansion.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Mellin inversion and the canonical triangular zero expansion on the positive real axis.",
+      "formalization_note": "The logarithmic rescaling isolates the critical-line frequencies, and continuity upgrades the almost-everywhere triangular expansion to pointwise equality.",
+      "content_basis": "Reviewed the scaled triangular zero term, summable domination of the remaining terms, and the continuous representative on the open tail.",
+      "dependency_status": "Mathlib dominated convergence for absolutely summable series and Robin1984 Mellin inversion.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/MultiplicityGaussian.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Fourier transform of a Gaussian and its derivatives.",
+      "formalization_note": "The explicit kernel is integrable, its multiplier cancels the triangular denominator, and convolution preserves the vanishing error.",
+      "content_basis": "Reviewed the Gaussian normalization, Fourier differentiation, and convolution under summable triangular denominators.",
+      "dependency_status": "Mathlib Gaussian Fourier transform and Robin1984 Fourier series and convolution.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/RiemannMultiplicity.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The Gaussian-smoothed global multiplicity test for the classical von Mangoldt remainder.",
+      "formalization_note": "Under RH the arithmetic remainder has the critical-line occurrence spectrum, and the mean-square inequality detects simple zeta zeros.",
+      "content_basis": "Reviewed the pointwise arithmetic expansion and transport of analytic orders from the pole-cleared factor.",
+      "dependency_status": "Mathlib Riemann zeta and Robin1984 complex Mellin, Hadamard and Gaussian Fourier proofs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/RiemannMultiplicityArithmetic.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The completed Riemann xi function, Gamma recurrence, and the logarithmic derivative of the zeta Euler product.",
+      "formalization_note": "The pole-cleared ordinary factor is entire of order at most one, preserves the orders of zeta in the strip, and supplies the von Mangoldt coefficients.",
+      "content_basis": "Reviewed denominator removal, order transport, and absolute summability of the von Mangoldt series.",
+      "dependency_status": "Mathlib Dirichlet series, the pinned xi growth theorem, and Robin1984 reciprocal Gamma bounds.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/MultiplicityFourierSeries.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Cesaro means and simultaneous phase recurrence for absolutely convergent Fourier series.",
+      "formalization_note": "Complex orthogonality gives the squared mean, compactness supplies recurrence for the upper limit, and the convolution lemmas connect these identities to the arithmetic signal.",
+      "content_basis": "Reviewed the squared-mean identity, phase recurrence, positive weighted multiplicity comparison, and integrable kernel action.",
+      "dependency_status": "Mathlib compactness, convergent series, and Bochner integration.",
       "reviewed": true
     },
     {
@@ -1767,6 +2775,42 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/StandardAutomorphicFamily.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "The Euler product and completion data used by the triangular prime-power equivalent of the critical-line property.",
+      "formalization_note": "Defines the completed standard family and its analytic input using the same Mathlib expressions as the independent Challenge.",
+      "content_basis": "Reviewed the exact finite Gamma factors, logarithmic Euler series, order-one condition, and triangular remainder collected in the Challenge and Solution.",
+      "dependency_status": "Uses the Robin1984 Euler-product and completion criterion in the Solution.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/SchwartzGaussian.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Schwartz decay of an exponential with temperate exponent and a negative quadratic upper bound.",
+      "formalization_note": "Shared proof for the archimedean Tate and Godement-Jacquet Gaussian tests.",
+      "content_basis": "Factors every iterated derivative of the exponential into the exponential times a temperate function, then controls the polynomial factor by Gaussian decay.",
+      "dependency_status": "Uses Mathlib temperate-growth, derivative and Schwartz-space lemmas.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/StandardAutomorphicMultiplicity.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Standard automorphic Gamma completion and the Gaussian criterion for prescribed analytic orders.",
+      "formalization_note": "Reduces the completed zero-order comparison for an individual supplied family to its signed prime-power series.",
+      "content_basis": "The Gamma completion preserves analytic order on the critical line and yields the ordinary order-one bound.",
+      "dependency_status": "The supplied standard Euler and archimedean data and the critical-line hypothesis for the family.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/StandardEulerSummability.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Rankin--Selberg logarithmic coefficients and absolute convergence of the Dedekind zeta logarithmic derivative.",
+      "formalization_note": "Derives individual and paired logarithmic-derivative summability from the unramified Rankin--Selberg bound and a local parameter bound at finitely many ramified primes.",
+      "content_basis": "The inequality 2*x <= 1 + x^2 gives a Dedekind and Rankin--Selberg majorant. Each ramified prime gives a geometric series.",
+      "dependency_status": "Uses the checked Dedekind logarithmic derivative. The unramified Rankin--Selberg summability and the ramified local parameter bounds remain explicit inputs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/SupportingLine.lean",
       "classification": "Primarily project-original",
       "mathematical_source": "The supporting-line comparison in the project's corrected ideal Robin criterion and its weighted Hecke extension.",
@@ -1791,6 +2835,24 @@
       "formalization_note": "The initial transform identity continues to the common domain and supplies the real comparison at the convergence boundary.",
       "content_basis": "Reviewed continuation of the transform identity on the overlap, nonvanishing from the extended logarithmic derivative, and the negative residue at every candidate boundary.",
       "dependency_status": "The checked Landau frontier and real residue obstructions, with Mathlib analytic uniqueness.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/TriangularHadamard.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Mellin inversion of the triangular kernel applied to the genus-one logarithmic derivative.",
+      "formalization_note": "The zeros at zero and minus one are integrated separately, with a complex Mellin uniqueness argument for the remaining expansion.",
+      "content_basis": "Reviewed the exact exceptional-zero transforms, local Mellin equality, and transfer of the square-root estimate to the pointwise remainder.",
+      "dependency_status": "The checked triangular kernel, the logarithmic Mellin transform, and Mellin uniqueness.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/TriangularContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Cauchy primitives, exponential integration of a logarithmic derivative, and bounds for Mellin transforms of the triangular remainder.",
+      "formalization_note": "A uniform square-root bound constructs a holomorphic nonvanishing continuation on the right half-plane without assuming prior continuation of the starting function.",
+      "content_basis": "Reviewed the compatible normalized primitives on nested balls, the residue subtraction in the Mellin identity, and the absolute-convergence hypotheses for the initial function.",
+      "dependency_status": "Mathlib complex analysis and Mellin transforms; the triangular remainder and its Mellin identity.",
       "reviewed": true
     },
     {
@@ -1827,6 +2889,186 @@
       "formalization_note": "The power term and its normalization are bounded together, with no requirement that all contributing zeros have equal real part.",
       "content_basis": "Reviewed the individual Mellin terms, their summable L1 majorant, and the exact zero-series transform.",
       "dependency_status": "Mathlib complex power estimates and local sum-integral interchange.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/UniversalRH.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The condition that the full zero set of a complex function is contained in a vertical line.",
+      "formalization_note": "Defines URH for continuous functions with infinitely many isolated zeros and proves the critical line and finite triangular equivalences.",
+      "content_basis": "Checked continuity, isolation and infinite distinct zeros at the URH boundary, reflection of the zero strip, and the finite triangular bound for arbitrary maps.",
+      "dependency_status": "Mathlib complex numbers and elementary logic.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/UniversalRHDisk.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The support of a finite exponential sum is determined by its exponential growth under real translations.",
+      "formalization_note": "Shows that compact pieces of an admissible zero set are finite and proves the whole-disk triangular equivalence for Universal RH.",
+      "content_basis": "Checked compactness and isolation, separation by a positive argument shift, nonzero triangular weights at zeros, and the two real scale directions.",
+      "dependency_status": "Mathlib compactness, discrete subsets, complex exponentials, and the finite triangular bound for Universal RH.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/ValuationIwasawa.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The algebraic Iwasawa decomposition for the local unramified calculation in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
+      "formalization_note": "Proves the upper-triangular factorization by integral column elimination and extracts the diagonal and upper unitriangular factors.",
+      "content_basis": "A maximal valuation row entry gives integral column operations. The remaining upper-left corner is invertible, allowing induction on the dimension.",
+      "dependency_status": "Mathlib matrix identities and valuation-ring arithmetic. The Haar integral and spherical matrix coefficient calculation are separate steps.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/ValuationIwasawaCoordinates.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The diagonal and unipotent local integration in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
+      "formalization_note": "Proves the diagonal and upper-unitriangular homeomorphism and the normalized product-measure Iwasawa integral formula.",
+      "content_basis": "The diagonal retraction splits the upper-triangular group. Left translation is a measurable shear followed by left translation in the diagonal group. Integral upper-triangular matrices split into the product of the two integral subgroups.",
+      "dependency_status": "Uses the verified local subgroup Iwasawa integration and Mathlib product measures. Normalizations of the two coordinate measures are explicit; the spherical zeta evaluation is a separate step.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/ValuationPrincipalCongruence.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Principal congruence subgroups of the general linear group over a local field.",
+      "formalization_note": "Constructs compact open principal congruence subgroups and proves diagonal contraction on supported entries.",
+      "content_basis": "Checks the subgroup laws using integral entries of the matrix and its inverse, obtains the compact open topology by finite coordinate intersections, and verifies diagonal contraction and the scalar Schur pivot bound.",
+      "dependency_status": "Uses the integral-subgroup topology and the existing diagonal section. The principal congruence factorization uses this module's contraction and Schur pivot bounds.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetUniformizerCone.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Ordered diagonal exponent gaps and determinant multiplicativity.",
+      "formalization_note": "Identifies ordered exponents with uniformizer prefix directions and proves the corresponding rational matrix-coefficient series with the complex determinant weight.",
+      "content_basis": "Recovers the gap vector from an ordered exponent family, evaluates prefix uniformizer products and their determinants, and converts the cone generating series to the complex determinant weight.",
+      "dependency_status": "Uses the weighted ordered diagonal cone theorem. The matrix-coefficient sum is assumed summable at the evaluation point.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanSphericalProduct.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The spherical archimedean factors of the standard Godement-Jacquet zeta integral.",
+      "formalization_note": "Transports the local spherical evaluations and constructs a global Schwartz test giving the exact product of Gamma factors.",
+      "content_basis": "Uses the real and complex completion isometries, adjusts the local radial constants, and normalizes the global Gaussian by the product of local constants and the Haar scalar.",
+      "dependency_status": "Depends on the verified local Gaussian and archimedean product integrals. The global coefficient must factor into the supplied spherical coefficients.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanZetaProduct.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The archimedean product of Godement-Jacquet zeta integrals.",
+      "formalization_note": "Factors a Gaussian zeta integral over the infinite completions with one positive Haar constant.",
+      "content_basis": "Splits the matrix-unit group and determinant entrywise, matches the Minkowski Gaussian at every place, and applies finite-product Haar integration.",
+      "dependency_status": "Uses the infinite idelic norm and the proved Schwartz Gaussian. Local absolute integrability and coefficient factorization are explicit inputs.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetCanonicalPrimePower.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The logarithmic derivative of a local Euler factor and the geometric series for its reciprocal linear factors.",
+      "formalization_note": "Recovers the multiplicity-preserving prime-power coefficients of a normalized local denominator and obtains a common right half-plane for the finite collection of roots.",
+      "content_basis": "Uses polynomial splitting over the complex numbers, derivatives of finite products, and the geometric series to derive the local prime-power identity.",
+      "dependency_status": "Uses the canonical local factor normalization and the uniformizer norm formula.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetCartanDoubleCosets.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Cartan decomposition over valuation rings and finite ordinal comparison.",
+      "formalization_note": "Proves the uniqueness of ordered diagonal valuations and partitions entrywise integral invertible matrices into uniformizer double cosets.",
+      "content_basis": "Uses the determinant expansion to find a valuation-one permutation and a finite order comparison to recover the ordered diagonal values. Integral diagonal units remove the residual scalar units from the Cartan representatives.",
+      "dependency_status": "Uses the Cartan existence theorem and uniformizer cone exponents. The union theorem assumes that nonzero integral scalar valuations are powers of a chosen uniformizer.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetCartanHaarVolume.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Cartan double cosets over nonarchimedean local fields, Haar normalization, and finite sums over the coordinates of a diagonal matrix.",
+      "formalization_note": "Computes normalized Cartan double-coset volume from the finite residue-class masses and expresses the sum of the entry exponents as a weighted gap sum.",
+      "content_basis": "Uses the determinant-weighted comparison with additive Haar measure, reduction modulo the maximal ideal, and a count of coordinate pairs separated by each gap.",
+      "dependency_status": "Uses the finite-place Cartan stabilizer and residue-rectangle measures. Assumes the multiplicative Haar measure is normalized on the integral matrix subgroup.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetCartanIntegral.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Cartan double cosets of a general linear group over a nonarchimedean local field and countable additivity of the Bochner integral.",
+      "formalization_note": "Specializes the integral matrix partition to finite places and decomposes a determinant-weighted integral into its uniformizer gap coefficient series.",
+      "content_basis": "Uses discrete integral valuation powers, compact and open translates of the integral subgroup, and the determinant norm on each coset. Applies countable additivity to the disjoint open partition.",
+      "dependency_status": "Uses the uniformizer gap partition and Mathlib Bochner integration. The weighted sum assumes integrability on the entrywise integral matrix locus.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetCartanVolume.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Compact open subgroup double cosets, left Haar invariance, and the determinant criterion for invertible matrices.",
+      "formalization_note": "Computes Cartan double-coset volume from the Haar mass of the stabilizer and gives explicit uniformizer-power bounds for its matrix entries.",
+      "content_basis": "Counts disjoint left translates with separate compact and open factors, and compares their stabilizer index to its subgroup measure. Derives the ordered uniformizer bounds from the determinant-one and integral-entry criterion.",
+      "dependency_status": "Uses the Cartan gap partition, compactness and openness of the integral subgroup, and Mathlib quotient cosets and invariant measures.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetCartanLocalIntegral.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Cartan double cosets, principal congruence fixed spaces, and rational generating series of coordinatewise linear recurrences.",
+      "formalization_note": "Regroups the finite-place integral on the integral matrix locus into finitely many rational cone series using locally constant tests and normalized Haar volumes.",
+      "content_basis": "Proves the finite quotient expansion, the geometric shift of the Haar volumes, and a common denominator for the finitely many cone series.",
+      "dependency_status": "Uses the local Cartan decomposition, principal congruence fixed vectors and functionals, and finite-dimensional ordered diagonal compression.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetCartanResidueMeasure.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Reduction modulo the maximal ideal, normalized additive local Haar measure, and finite product measures.",
+      "formalization_note": "Evaluates the additive mass of the finite-place Cartan stabilizer by its admissible invertible residue matrices and uniformizer-power rectangles.",
+      "content_basis": "Identifies determinant valuation one with invertible reduction, lifts admissible residues, evaluates translated coordinate balls, and sums the disjoint residue fibers of the ambient stabilizer.",
+      "dependency_status": "Uses the Cartan stabilizer entry bounds, the finite-completion residue field, the normalized local additive Haar measure, and Mathlib product measures.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetCartanTestPartition.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Local constancy on compact sets, valuation congruences, and a finite partition of nonnegative exponent gaps.",
+      "formalization_note": "Shows that the finite-place matrix test depends only on finitely truncated gaps uniformly over the integral factors, and identifies each truncated-gap class with its varying offsets.",
+      "content_basis": "Constructs a uniform test radius, proves that integral multipliers preserve entrywise congruence, and gives an exact reindexing and zero-weight formula for fixed gap coordinates.",
+      "dependency_status": "Uses the Cartan decomposition of the entrywise integral matrix units and Mathlib finite-product topology and valuation bounds.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetOrderedDiagonalSeries.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Cayley-Hamilton and the rational generating series of a linear recurrence.",
+      "formalization_note": "Proves multiplicativity of compression on ordered diagonal units and gives common denominators for affine rays and finitely generated weighted cones.",
+      "content_basis": "Combines the ordered two-element double-coset law with subgroup averaging. Cayley-Hamilton gives recurrences in each direction. Iterated summation reduces the numerator to finitely many initial coefficients and multiplies the direction denominators.",
+      "dependency_status": "Uses principal congruence factorization and subgroup averaging. The equality holds wherever the weighted coefficient series is summable.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/ValuationPrincipalCongruenceFactorization.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Block Gaussian elimination at a unit pivot and double cosets of principal congruence subgroups.",
+      "formalization_note": "Proves principal congruence factorization, the ordered diagonal double-coset identity, and Cartan decomposition over a valuation ring.",
+      "content_basis": "Eliminates a unit scalar pivot to preserve congruence levels and derives the ordered diagonal double-coset law. For Cartan decomposition, maximal-value pivots preserve the valuation bound for the remaining block.",
+      "dependency_status": "Uses principal congruence contractions, Schur elimination, and integral permutation matrices. Provides the ordered double-coset law and ordered diagonal orbit representatives.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/ValuationUnitriangularMeasure.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Unipotent Haar integration in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
+      "formalization_note": "Constructs normalized unitriangular Haar coordinates and evaluates every scaled upper-entry box as a product of scalar volumes.",
+      "content_basis": "First-row coordinates split the integral box. Left translation is an additive shear in the row and left multiplication in the trailing block. Induction counts one scalar factor per strictly upper entry.",
+      "dependency_status": "Uses the verified diagonal-unipotent Iwasawa coordinates and Mathlib finite product measures. The scalar local volume is the input to the box formula.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/ValuationIwasawaSubgroups.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Local Iwasawa integration over GL in Goldfeld and Jacquet, Automorphic Representations and L-functions for GL(n), Section 2.4.",
+      "formalization_note": "Constructs the two normalized Haar measures for upper-triangular restriction of right-integral-invariant matrix integrals.",
+      "content_basis": "Identifies integral units by matrix and inverse entries, proves the compact-open and closed subgroup properties, and combines algebraic Iwasawa decomposition with countable-coset integration.",
+      "dependency_status": "Uses ValuationIwasawa, LocalIwasawaMeasure and Mathlib Haar measures. The separate spherical zeta integral and its Euler factor are not computed here.",
       "reviewed": true
     },
     {
