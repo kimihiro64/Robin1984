@@ -1056,6 +1056,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckeStandardRankOne.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Tate's standard unitary Hecke completions and the individual and paired prime-power criteria.",
+      "formalization_note": "States the critical-line and prescribed-order equivalences for the full standard rank-one family over a number field.",
+      "content_basis": "Uses a single standard completed family and treats the norm characters by translation of the pole-cleared Dedekind completion.",
+      "dependency_status": "Uses the standard rank-one Tate completion, the individual Hecke multiplicity theorem, and the proved Dedekind norm-twist order transport.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeTateAdelicEuler.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Tate's global zeta integral and its product of local zeta integrals.",
