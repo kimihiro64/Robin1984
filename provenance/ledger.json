@@ -2865,6 +2865,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanZetaProduct.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The archimedean product of Godement-Jacquet zeta integrals.",
+      "formalization_note": "Factors a Gaussian zeta integral over the infinite completions with one positive Haar constant.",
+      "content_basis": "Splits the matrix-unit group and determinant entrywise, matches the Minkowski Gaussian at every place, and applies finite-product Haar integration.",
+      "dependency_status": "Uses the infinite idelic norm and the proved Schwartz Gaussian. Local absolute integrability and coefficient factorization are explicit inputs.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetCanonicalPrimePower.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The logarithmic derivative of a local Euler factor and the geometric series for its reciprocal linear factors.",
