@@ -1011,6 +1011,24 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetIntegralMatrixInverse.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The adjugate identity and the norm of multiplication by an integral element.",
+      "formalization_note": "Clears all matrix inverses with bounded nonzero determinant norm using a single factorial denominator and proves compactness from separate bounds on matrices and inverses.",
+      "content_basis": "Applies an adjugate to the coordinate vector of one to prove norm divisibility. Uses the matrix adjugate and factorial divisibility for a uniform denominator, then takes a preimage of compact matrix bounds through the closed units graph.",
+      "dependency_status": "Uses Mathlib norms, adjugates, factorial divisibility, and the embedding of units into the product of values and inverses.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetShortFieldLatticeRows.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Minkowski's convex body theorem, Gram-Schmidt orthogonalization, and restriction of scalars.",
+      "formalization_note": "Selects short field-independent rows with integral preimages and bounds their length product by the real lattice covolume.",
+      "content_basis": "Constructs successive shortest lattice vectors, scales the adapted orthonormal coordinates, and applies Minkowski's theorem. Counts candidates in field-degree blocks so that the chosen rows retain the same product bound.",
+      "dependency_status": "Uses Mathlib discrete lattices, Gram-Schmidt coordinates, determinant change of variables, and finite-dimensional linear algebra.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeIdeleClassCompactness.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Compactness of norm-one idele classes via Dirichlet's unit theorem and finiteness of the ideal class group, as in Tate's thesis.",
