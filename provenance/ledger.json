@@ -1722,6 +1722,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanSchwartz.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The archimedean Gaussian in the Godement-Jacquet zeta integral.",
+      "formalization_note": "Realizes its product over the infinite places as a Schwartz function in the global Minkowski matrix coordinates.",
+      "content_basis": "Applies Schwartz decay on the Euclidean matrix space and factors the squared weighted Minkowski norm into the real and complex entry sums.",
+      "dependency_status": "Uses the shared Schwartz Gaussian construction, the verified Minkowski norm formula, and the infinite adele coordinate map.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetArchimedeanSphericalGaussian.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Archimedean spherical Gaussian zeta integrals, exponential substitution, and the Gamma integral.",
@@ -2691,6 +2700,15 @@
       "formalization_note": "Defines the completed standard family and its analytic input using the same Mathlib expressions as the independent Challenge.",
       "content_basis": "Reviewed the exact finite Gamma factors, logarithmic Euler series, order-one condition, and triangular remainder collected in the Challenge and Solution.",
       "dependency_status": "Uses the Robin1984 Euler-product and completion criterion in the Solution.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/SchwartzGaussian.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Schwartz decay of an exponential with temperate exponent and a negative quadratic upper bound.",
+      "formalization_note": "Shared proof for the archimedean Tate and Godement-Jacquet Gaussian tests.",
+      "content_basis": "Factors every iterated derivative of the exponential into the exponential times a temperate function, then controls the polynomial factor by Gaussian decay.",
+      "dependency_status": "Uses Mathlib temperate-growth, derivative and Schwartz-space lemmas.",
       "reviewed": true
     },
     {
