@@ -1803,6 +1803,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetFiniteAdelicReduction.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Strong approximation for the special linear group using elementary matrices and compactness of the norm-one idele class group.",
+      "formalization_note": "Constructs integral representatives in the determinant-one finite matrix group and a compact set of finite projections meeting every rational orbit of the determinant-norm-one adelic group.",
+      "content_basis": "Additive approximation along principal moduli approximates transvections. Finite-place charts and local generation place finite-support matrices in the closure of the rational determinant-one group. Compact idele representatives bound the determinant before finite matrix reduction.",
+      "dependency_status": "Uses the finite adelic modulus basis, finite matrix product charts, elementary row operations and the compact norm-one idele class group.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetFiniteAdelicTensorTests.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Godement-Jacquet restricted tensor tests, idelic absolute values, and the finite-place spherical integral.",
