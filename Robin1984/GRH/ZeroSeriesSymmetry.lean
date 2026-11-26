@@ -36,11 +36,16 @@ private theorem measurable_realBase_cpow (s : Complex) :
     (Complex.continuous_exp.measurable.comp
       ((Complex.measurable_log.comp Complex.continuous_ofReal.measurable).mul measurable_const))
 
+/-- The complex triangular zero sum is measurable. -/
+theorem measurable_triangularZeroSum {iota : Type*} [Countable iota] (rho : iota -> Complex) :
+    Measurable (fun x : Real => tsum (fun i => triangularZeroTerm (rho i) x)) :=
+  Measurable.tsum (fun i =>
+    ((measurable_realBase_cpow (rho i)).sub (measurable_realBase_cpow (-1))).div measurable_const)
+
 /-- The real part of the triangular zero sum is measurable. -/
 theorem measurable_re_triangularZeroSum {iota : Type*} [Countable iota] (rho : iota -> Complex) :
     Measurable (fun x : Real => (tsum (fun i => triangularZeroTerm (rho i) x)).re) :=
-  Complex.continuous_re.measurable.comp (Measurable.tsum (fun i =>
-    ((measurable_realBase_cpow (rho i)).sub (measurable_realBase_cpow (-1))).div measurable_const))
+  Complex.continuous_re.measurable.comp (measurable_triangularZeroSum rho)
 
 private theorem conj_triangularZeroTerm (rho : Complex) {x : Real} (hx : 0 < x) :
     (starRingEnd Complex) (triangularZeroTerm rho x) =

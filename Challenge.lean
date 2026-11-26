@@ -1,11 +1,13 @@
+import Mathlib.Analysis.Analytic.Order
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 import Mathlib.NumberTheory.ArithmeticFunction.Misc
+import Mathlib.NumberTheory.ArithmeticFunction.VonMangoldt
 import Mathlib.NumberTheory.Harmonic.EulerMascheroni
 import Mathlib.NumberTheory.LSeries.DirichletContinuation
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Mathlib.NumberTheory.NumberField.Cyclotomic.Basic
 import Mathlib.NumberTheory.NumberField.DedekindZeta
-import Mathlib.Probability.Moments.ComplexMGF
 import Mathlib.RingTheory.UniqueFactorizationDomain.Finite
 
 set_option autoImplicit false
@@ -103,91 +105,82 @@ def DirichletGRH : Prop :=
   forall (m : Nat) [NeZero m] (chi : DirichletCharacter Complex m) (s : Complex),
     0 < s.re -> s.re < 1 -> DirichletCharacter.LFunction chi s = 0 -> s.re = 1 / 2
 
-/-! ## The grand RH zero condition and analytic data -/
+/-! ## Analytic data for the completed automorphic family -/
 
+/-- The completed L-functions and paired prime-power data for a family
+of standard L-functions. The index identifies the members of the family. -/
+structure StandardAutomorphicFamilyData (index : Type u) (powers : index -> Type u) where
+  completedL : index -> Complex -> Complex
+  dual : index -> index
+  equationFactor : index -> Complex -> Complex
+  primePowerNorm : forall pi, powers pi -> Nat
+  coefficient : forall pi, powers pi -> Real
+  poleOrder : index -> Nat
+  poleRemoved : index -> Complex -> Complex
+  conductor : index -> Real
+  realFactorCount : index -> Nat
+  complexFactorCount : index -> Nat
+  realShift : forall pi, Fin (realFactorCount pi) -> Complex
+  complexShift : forall pi, Fin (complexFactorCount pi) -> Complex
 
-/-- Grand RH: every nontrivial zero of every standard automorphic L-function
-has real part one half. The index ranges over all fields, ranks, and
-normalized unitary cuspidal representations when applied to grand RH. -/
-def GrandRH {index : Type u} (automorphicL : index -> Complex -> Complex) : Prop :=
-  forall (pi : index) (s : Complex),
-    0 < s.re -> s.re < 1 -> automorphicL pi s = 0 -> s.re = 1 / 2
+/-- The signed triangular remainder for the member indexed by `pi`. -/
+noncomputable def standardFamilyTriangularRemainder {index : Type u} {powers : index -> Type u}
+    (family : StandardAutomorphicFamilyData index powers) (pi : index) (x : Real) : Real :=
+  (family.poleOrder pi : Real) / ((2 : Nat) : Real) * x -
+    tsum (fun i => (Set.Ioi (family.primePowerNorm pi i : Real)).indicator
+      (fun y => family.coefficient pi i * (1 - (family.primePowerNorm pi i : Real) / y)) x)
 
-/-- Euler coefficients, pole-removed function, and indexed zeros for a paired standard L-function.
-The constraining analytic identities are stated in `GrandRobinAdmissible`. -/
-structure GrandRobinDatum (coefficients zeros : Type u) where
-  primePower : coefficients -> Nat
-  coefficient : coefficients -> Real
-  poleOrder : Nat
-  poleRemoved : Complex -> Complex
-  zero : zeros -> Complex
-  conjugateIndex : Equiv zeros zeros
-  error : Real -> Real
+/-- The triangular remainder has a square-root upper bound above a cutoff. -/
+def StandardFamilyTriangularBound {index : Type u} {powers : index -> Type u}
+    (family : StandardAutomorphicFamilyData index powers) (pi : index) : Prop :=
+  exists cutoff C : Real, 1 <= cutoff /\
+    forall x : Real, cutoff <= x ->
+      standardFamilyTriangularRemainder family pi x <= C * Real.sqrt x
 
-/-- The one-sided triangular prime-power remainder of the analytic datum. -/
-noncomputable def triangularPrimePowerRemainder {coefficients zeros : Type u}
-    (d : GrandRobinDatum coefficients zeros) (x : Real) : Real :=
-  (d.poleOrder : Real) / 2 * x -
-    tsum (fun i => (Set.Ioi (d.primePower i : Real)).indicator
-      (fun y => d.coefficient i * (1 - (d.primePower i : Real) / y)) x)
+/-- The logarithm of the paired Euler product on its half-plane of convergence. -/
+noncomputable def standardFamilyEulerLog {index : Type u} {powers : index -> Type u}
+    (family : StandardAutomorphicFamilyData index powers) (pi : index) (s : Complex) : Complex :=
+  tsum (fun i => ((family.coefficient pi i : Complex) /
+    (Real.log (family.primePowerNorm pi i : Real) : Complex)) *
+    ((family.primePowerNorm pi i : Real) : Complex) ^ (-s))
 
-/-- The Mellin integrand of a real remainder in the triangular criterion. -/
-noncomputable def grandMellinIntegrand (r : Real -> Real) (s : Complex) (x : Real) : Complex :=
-  (r x : Complex) * (x : Complex) ^ (-s - 1)
+/-- The conductor, pole clearing at the origin, and the finite products of
+real and complex Gamma factors for the paired completion. -/
+noncomputable def standardFamilyCompletionFactor {index : Type u} {powers : index -> Type u}
+    (family : StandardAutomorphicFamilyData index powers) (pi : index) (s : Complex) : Complex :=
+  s ^ family.poleOrder pi * (family.conductor pi : Complex) ^ (s / ((2 : Nat) : Complex)) *
+    (Finset.univ.prod (fun j =>
+      (Real.pi : Complex) ^ (-(s + family.realShift pi j) / ((2 : Nat) : Complex)) *
+        Complex.Gamma ((s + family.realShift pi j) / ((2 : Nat) : Complex)))) *
+    (Finset.univ.prod (fun j =>
+      ((2 : Nat) : Complex) * (((2 : Nat) : Complex) * (Real.pi : Complex)) ^ (-(s + family.complexShift pi j)) *
+        Complex.Gamma (s + family.complexShift pi j)))
 
-/-- The analytic hypotheses for the grand RH criterion.
-They require the paired L-function's log-derivative and zero transform. -/
-structure GrandRobinAdmissible {coefficients zeros : Type u}
-    (d : GrandRobinDatum coefficients zeros) : Prop where
-  primePower_pos : forall i, 1 <= d.primePower i
-  primePowers_locallyFinite : forall t : Real,
-    Set.Finite {i : coefficients | (d.primePower i : Real) < t}
-  dirichlet_summable : forall r : Real, 1 < r ->
-    Summable (fun i => norm (d.coefficient i) * (d.primePower i : Real) ^ (-r))
-  analytic : AnalyticOnNhd Complex d.poleRemoved {s : Complex | (1 / 2 : Real) < s.re}
-  nonzero_at_two : Not (d.poleRemoved (2 : Complex) = 0)
-  logDeriv_eq : forall s : Complex, 1 < s.re ->
-    logDeriv d.poleRemoved s = (d.poleOrder : Complex) / (s - 1) -
-      tsum (fun i => (d.coefficient i : Complex) * (d.primePower i : Complex) ^ (-s))
-  zero_in_strip : forall i, And (0 < (d.zero i).re) ((d.zero i).re < 1)
-  is_zero : forall i, d.poleRemoved (d.zero i) = 0
-  conjugation : forall i, d.zero (d.conjugateIndex i) = (starRingEnd Complex) (d.zero i)
-  reflection : forall s : Complex, 0 < s.re -> s.re < 1 ->
-    d.poleRemoved s = 0 -> d.poleRemoved (1 - s) = 0
-  zero_series_summable :
-    Summable (fun i => (norm (d.zero i * (d.zero i + 1))) ^ (-1 : Int))
-  remainder_continuous : ContinuousOn (triangularPrimePowerRemainder d) (Set.Ioi 1)
-  remainder_measurable : Measurable (triangularPrimePowerRemainder d)
-  error_measurable : Measurable d.error
-  remainder_integrable : forall s : Complex, 1 < s.re ->
-    MeasureTheory.Integrable (grandMellinIntegrand (triangularPrimePowerRemainder d) s)
-      (MeasureTheory.volume.restrict (Set.Ioi (1 : Real)))
-  error_integrable : forall s : Complex, 1 < s.re ->
-    MeasureTheory.Integrable (grandMellinIntegrand d.error s)
-      (MeasureTheory.volume.restrict (Set.Ioi (1 : Real)))
-  mellin_identity : forall s : Complex, 1 < s.re ->
-    MeasureTheory.integral (MeasureTheory.volume.restrict (Set.Ioi (1 : Real)))
-        (grandMellinIntegrand (triangularPrimePowerRemainder d) s) =
-      MeasureTheory.integral (MeasureTheory.volume.restrict (Set.Ioi (1 : Real)))
-        (grandMellinIntegrand d.error s) +
-        tsum (fun i => 1 / (s - d.zero i) + 1 / d.zero i) / (s * (s + 1))
-  error_bound : exists c : Real, forall x : Real, 1 < x -> d.error x <= c * Real.sqrt x
-
-/-- The datum uses the analytic properties of the paired L-function.
-Pairing and removing a pure imaginary norm twist preserve the set of
-real parts of zeros in the open strip. -/
-structure GrandRobinRealization {coefficients zeros : Type u}
-    (L : Complex -> Complex) (d : GrandRobinDatum coefficients zeros) : Prop where
-  admissible : GrandRobinAdmissible d
-  zeroRealParts : forall r : Real, 0 < r -> r < 1 ->
-    ((exists s : Complex, And (s.re = r) (L s = 0)) <->
-      (exists s : Complex, And (s.re = r) (d.poleRemoved s = 0)))
-
-/-- The signed triangular prime-power remainder satisfies an eventual square-root bound. -/
-def GrandRobinBound {coefficients zeros : Type u}
-    (d : GrandRobinDatum coefficients zeros) : Prop :=
-  exists cutoff c : Real, 1 <= cutoff /\
-    forall x : Real, cutoff <= x -> triangularPrimePowerRemainder d x <= c * Real.sqrt x
+/-- The analytic properties used by the criterion. The Euler product and
+completion identify the paired functions, and the completed functional
+equation relates a function to its contragredient. -/
+structure HasStandardAutomorphicAnalytics {index : Type u} {powers : index -> Type u}
+    (family : StandardAutomorphicFamilyData index powers) : Prop where
+  conductor_pos : forall pi, 0 < family.conductor pi
+  real_shift : forall pi j, -(1 : Real) / 2 < (family.realShift pi j).re
+  complex_shift : forall pi j, -(1 : Real) / 2 < (family.complexShift pi j).re
+  norm_ge_two : forall pi i, (2 : Real) <= (family.primePowerNorm pi i : Real)
+  norms_locally_finite : forall pi (T : Real), Set.Finite {i : powers pi |
+    (family.primePowerNorm pi i : Real) < T}
+  log_derivative_summable : forall pi (r : Real), 1 < r ->
+    Summable (fun i => norm (family.coefficient pi i) * (family.primePowerNorm pi i : Real) ^ (-r))
+  ordinary_entire : forall pi, Differentiable Complex (family.poleRemoved pi)
+  completed_order_one : forall pi, Differentiable Complex (family.completedL pi) /\
+    forall eps : Real, 0 < eps -> exists C : Real, 0 < C /\
+      forall z : Complex, norm (family.completedL pi z) <= Real.exp (C * (1 + norm z) ^ (1 + eps))
+  euler_product : forall pi s, 1 < s.re ->
+    family.poleRemoved pi s =
+      (s - 1) ^ family.poleOrder pi * Complex.exp (standardFamilyEulerLog family pi s)
+  completion : forall pi s, (1 : Real) / 2 < s.re ->
+    family.completedL pi s * family.completedL (family.dual pi) s =
+      standardFamilyCompletionFactor family pi s * family.poleRemoved pi s
+  functional_equation : forall pi s, family.completedL (family.dual pi) (1 - s) =
+    family.equationFactor pi s * family.completedL pi s
 
 end GRH
 
@@ -257,19 +250,299 @@ theorem dedekindERH_iff_correctedIdealRobin :
 
 /-! ## Grand RH -/
 
-/-- **Grand RH.** Every nontrivial zero of every standard automorphic
-L-function has real part one half exactly when the signed triangular
-prime-power remainder has an eventual square-root upper bound for each
-function. The statement takes the family of L-functions and asks for
-its paired analytic data. The full grand RH specialization ranges over
-all number fields and all ranks. -/
-theorem grandRH_iff_triangularPrimePowerBound {index coefficients zeros : Type u}
-    [Countable coefficients] [Countable zeros]
-    (automorphicL : index -> Complex -> Complex)
-    (family : index -> GrandRobinDatum coefficients zeros)
-    (realizes : forall pi, GrandRobinRealization (automorphicL pi) (family pi)) :
-    GrandRH automorphicL <-> (forall pi, GrandRobinBound (family pi)) := by
+/-- **Grand RH for a standard family and triangular prime powers.**
+For a standard family with the stated analytic data, every nontrivial
+zero of every member lies on the critical line if and only if each
+member's triangular prime-power remainder has an eventual square-root
+upper bound. The project constructs the standard family in rank one
+over every number field. -/
+theorem grandRH_iff_triangularPrimePowerBound {index : Type u} {powers : index -> Type u}
+    [forall pi, Countable (powers pi)]
+    (family : StandardAutomorphicFamilyData index powers)
+    (analytics : HasStandardAutomorphicAnalytics family) :
+    (forall (pi : index) (s : Complex), family.completedL pi s = 0 -> s.re = 1 / 2) <->
+      (forall pi, StandardFamilyTriangularBound family pi) := by
   sorry
+
+/-! ## Classical RH and zero multiplicity -/
+
+section
+
+open MeasureTheory
+
+/-- The signed von Mangoldt remainder with triangular weights and residue one. -/
+noncomputable def riemannMultiplicityPrimePowerRemainder (x : Real) : Real :=
+  1 / (Nat.cast 2 : Real) * x - tsum (fun n : Nat =>
+    let q : Real := ((max 1 n : Nat) : Real)
+    (Set.Ioi q).indicator (fun y : Real =>
+      ArithmeticFunction.vonMangoldt n * (1 - q / y)) x)
+
+/-- The logarithmic square-root normalization of the classical arithmetic remainder. -/
+noncomputable def riemannMultiplicityLogInput (t : Real) : Complex :=
+  if t < 0 then 0 else (Real.exp (-t / (Nat.cast 2 : Real)) : Complex) *
+    (riemannMultiplicityPrimePowerRemainder (Real.exp t) : Complex)
+
+/-- The Gaussian smoothing with the two differential factors of the triangular kernel. -/
+noncomputable def riemannPrimePowerSmoothing (a t : Real) : Complex :=
+  MeasureTheory.integral MeasureTheory.volume (fun v : Real =>
+    let g := Real.exp (-(v ^ 2) / ((Nat.cast 4 : Real) * a)) / Real.sqrt ((Nat.cast 4 : Real) * Real.pi * a)
+    let k : Real := (v ^ 2 / ((Nat.cast 4 : Real) * a ^ 2) - v / a + (Nat.cast 3 : Real) / (Nat.cast 4 : Real) - 1 / ((Nat.cast 2 : Real) * a)) * g
+    (k : Complex) * riemannMultiplicityLogInput (t - v))
+
+/-- The long-time mean-square inequality for the classical prime-power remainder. -/
+def RiemannPrimePowerMultiplicityInequality : Prop :=
+  Filter.limsup (fun T : Real =>
+    (Inv.inv (T : Complex) * intervalIntegral
+      (fun t => ((norm (riemannPrimePowerSmoothing 1 t) ^ 2 : Real) : Complex))
+      0 T MeasureTheory.volume).re) Filter.atTop <=
+    Filter.limsup (fun t : Real => (riemannPrimePowerSmoothing (Nat.cast 2 : Real) t).re) Filter.atTop
+
+/-- **Classical RH and simple zeros.** Under the Riemann hypothesis,
+every nontrivial zero of the Riemann zeta function is simple exactly when
+the Gaussian-smoothed von Mangoldt remainder satisfies the global
+mean-square inequality. -/
+theorem riemannRH_iff_globalPrimePowerMultiplicityInequality
+    (hRH : RiemannHypothesis) :
+    (forall z : Complex, 0 < z.re -> z.re < 1 -> riemannZeta z = 0 ->
+      analyticOrderNatAt riemannZeta z = 1) <-> RiemannPrimePowerMultiplicityInequality := by
+  sorry
+
+end
+
+/-! ## Dirichlet GRH and zero multiplicity -/
+
+section
+
+open MeasureTheory
+open scoped Classical
+
+/-- The Gaussian smoothing of a square-root normalized prime-power signal. -/
+noncomputable def primePowerGaussianSmoothing (A : Real -> Complex) (a t : Real) : Complex :=
+  MeasureTheory.integral MeasureTheory.volume (fun v : Real =>
+    let g := Real.exp (-(v ^ 2) / ((Nat.cast 4 : Real) * a)) / Real.sqrt ((Nat.cast 4 : Real) * Real.pi * a)
+    let k : Real := (v ^ 2 / ((Nat.cast 4 : Real) * a ^ 2) - v / a + (Nat.cast 3 : Real) / (Nat.cast 4 : Real) - 1 / ((Nat.cast 2 : Real) * a)) * g
+    (k : Complex) * A (t - v))
+
+/-- The global mean-square inequality for a prime-power signal. -/
+def PrimePowerGaussianInequality (A : Real -> Complex) : Prop :=
+  Filter.limsup (fun T : Real =>
+    (Inv.inv (T : Complex) * intervalIntegral
+      (fun t => ((norm (primePowerGaussianSmoothing A 1 t) ^ 2 : Real) : Complex))
+      0 T MeasureTheory.volume).re) Filter.atTop <=
+    Filter.limsup (fun t : Real => (primePowerGaussianSmoothing A (Nat.cast 2 : Real) t).re) Filter.atTop
+
+/-- The signed triangular remainder with the twisted von Mangoldt coefficients. -/
+noncomputable def dirichletMultiplicityPrimePowerRemainder {N : Nat} [NeZero N]
+    (chi : DirichletCharacter Complex N) (x : Real) : Complex :=
+  let m : Real := if chi = 1 then 1 else 0
+  ((m / (Nat.cast 2 : Real) : Real) : Complex) * (x : Complex) -
+    tsum (fun n : Nat =>
+      let q : Real := ((max 1 n : Nat) : Real)
+      (Set.Ioi q).indicator (fun y : Real =>
+        (chi (n : ZMod N) * (ArithmeticFunction.vonMangoldt n : Complex)) *
+          (1 - (q : Complex) / (y : Complex))) x)
+
+/-- The normalized Dirichlet remainder extended by zero to negative log time. -/
+noncomputable def dirichletMultiplicityLogInput {N : Nat} [NeZero N]
+    (chi : DirichletCharacter Complex N) (t : Real) : Complex :=
+  if t < 0 then 0 else (Real.exp (-t / (Nat.cast 2 : Real)) : Complex) *
+    dirichletMultiplicityPrimePowerRemainder chi (Real.exp t)
+
+/-- The arithmetic multiplicity inequality for an individual Dirichlet L-function. -/
+def DirichletPrimePowerMultiplicityInequality {N : Nat} [NeZero N]
+    (chi : DirichletCharacter Complex N) : Prop :=
+  PrimePowerGaussianInequality (dirichletMultiplicityLogInput chi)
+
+/-- **Dirichlet GRH and simple zeros.** Under Dirichlet GRH, every
+nontrivial zero of every Dirichlet L-function is simple exactly when each
+character satisfies the global Gaussian-smoothed prime-power inequality. -/
+theorem dirichletGRH_iff_globalPrimePowerMultiplicityInequality (hGRH : DirichletGRH) :
+    (forall (N : Nat) [NeZero N] (chi : DirichletCharacter Complex N) (z : Complex),
+      0 < z.re -> z.re < 1 -> DirichletCharacter.LFunction chi z = 0 ->
+        analyticOrderNatAt (DirichletCharacter.LFunction chi) z = 1) <->
+    (forall (N : Nat) [NeZero N] (chi : DirichletCharacter Complex N),
+      DirichletPrimePowerMultiplicityInequality chi) := by
+  sorry
+
+end
+
+/-! ## Dedekind ERH and zero multiplicity -/
+
+section
+
+open IsDedekindDomain MeasureTheory NumberField
+open scoped Classical
+
+/-- The signed triangular signal on the logarithmic scale. The sum ranges
+over powers of nonzero prime ideals of the given field. -/
+noncomputable def dedekindPrimeIdealMultiplicitySignal
+    (K : Type u) [Field K] [NumberField K] (t : Real) : Complex :=
+  if t < 0 then 0 else
+    let x := Real.exp t
+    (Real.exp (-t / (Nat.cast 2 : Real)) : Complex) *
+      (((1 / (Nat.cast 2 : Real) : Real) : Complex) * (x : Complex) -
+        tsum (fun pn : Prod (HeightOneSpectrum (RingOfIntegers K)) Nat =>
+          let q := Ideal.absNorm pn.1.asIdeal
+          let a : Real := (q ^ (pn.2 + 1) : Nat)
+          (Set.Ioi a).indicator
+            (fun y : Real => (Real.log (q : Real) : Complex) *
+              (1 - (a : Complex) / (y : Complex))) x))
+
+/-- One global inequality between the squared mean at Gaussian width one
+and the upper limit at width two, using the actual prime-ideal powers. -/
+def DedekindPrimePowerMultiplicityInequality
+    (K : Type u) [Field K] [NumberField K] : Prop :=
+  Filter.limsup (fun T : Real =>
+    (Inv.inv (T : Complex) * intervalIntegral
+      (fun t => ((norm (primePowerGaussianSmoothing
+        (dedekindPrimeIdealMultiplicitySignal K) 1 t) ^ 2 : Real) : Complex))
+      0 T volume).re) Filter.atTop <=
+    Filter.limsup (fun t : Real =>
+      (primePowerGaussianSmoothing (dedekindPrimeIdealMultiplicitySignal K)
+        (Nat.cast 2 : Real) t).re) Filter.atTop
+
+/-- Every zero in the open critical strip of the Dedekind zeta continuation
+of this field has analytic order exactly one. -/
+def DedekindPrimeIdealSimpleZeros.{u_1}
+    (K : Type u_1) [Field K] [NumberField K] : Prop :=
+  forall zeta : Complex -> Complex, IsDedekindZetaContinuation K zeta ->
+    forall s : Complex, 0 < s.re -> s.re < 1 -> zeta s = 0 ->
+      analyticOrderNatAt zeta s = 1
+
+/-- **Dedekind ERH and simple zeros.** For every number field, assume
+Dedekind RH for that field. All its nontrivial Dedekind zeta zeros are
+simple if and only if its global prime-ideal multiplicity inequality holds. -/
+theorem dedekindERH_iff_globalPrimePowerMultiplicityInequality
+    (K : Type u) [Field K] [NumberField K] (hERH : DedekindRH K) :
+    DedekindPrimeIdealSimpleZeros K <-> DedekindPrimePowerMultiplicityInequality K := by
+  sorry
+
+end
+
+/-! ## Grand RH and zero multiplicity -/
+
+section
+
+open MeasureTheory
+open scoped Classical
+
+universe v
+
+/-- Individual standard L-functions and their arithmetic and archimedean data. -/
+structure StandardMultiplicityFamilyData (index : Type u) (powers : index -> Type v) where
+  completedL : index -> Complex -> Complex
+  poleRemoved : index -> Complex -> Complex
+  primePowerNorm : forall pi, powers pi -> Nat
+  coefficient : forall pi, powers pi -> Complex
+  poleOrder : index -> Nat
+  conductor : index -> Real
+  realFactorCount : index -> Nat
+  complexFactorCount : index -> Nat
+  realShift : forall pi, Fin (realFactorCount pi) -> Complex
+  complexShift : forall pi, Fin (complexFactorCount pi) -> Complex
+
+/-- The conductor, cleared pole at zero, and Gamma factors of a standard completion. -/
+noncomputable def standardMultiplicityCompletionFactor {index : Type u} {powers : index -> Type v}
+    (family : StandardMultiplicityFamilyData index powers) (pi : index) (s : Complex) : Complex :=
+  s ^ family.poleOrder pi * (family.conductor pi : Complex) ^ (s / ((2 : Nat) : Complex)) *
+    (Finset.univ.prod (fun j =>
+      (Real.pi : Complex) ^ (-(s + family.realShift pi j) / ((2 : Nat) : Complex)) *
+        Complex.Gamma ((s + family.realShift pi j) / ((2 : Nat) : Complex)))) *
+    (Finset.univ.prod (fun j =>
+      ((2 : Nat) : Complex) * (((2 : Nat) : Complex) * (Real.pi : Complex)) ^ (-(s + family.complexShift pi j)) *
+        Complex.Gamma (s + family.complexShift pi j)))
+
+/-- Standard completion, growth, and Euler logarithm for an individual family.
+The pole order refers to normalization at zero and one. -/
+structure HasStandardMultiplicityAnalytics {index : Type u} {powers : index -> Type v}
+    (family : StandardMultiplicityFamilyData index powers) : Prop where
+  conductor_pos : forall pi, 0 < family.conductor pi
+  real_shift : forall pi j, -(1 : Real) / 2 < (family.realShift pi j).re
+  complex_shift : forall pi j, -(1 : Real) / 2 < (family.complexShift pi j).re
+  norm_ge_two : forall pi i, (2 : Real) <= (family.primePowerNorm pi i : Real)
+  norms_locally_finite : forall pi (T : Real), Set.Finite {i : powers pi |
+    (family.primePowerNorm pi i : Real) < T}
+  log_derivative_summable : forall pi (r : Real), 1 < r ->
+    Summable (fun i => norm (family.coefficient pi i) * (family.primePowerNorm pi i : Real) ^ (-r))
+  ordinary_entire : forall pi, Differentiable Complex (family.poleRemoved pi)
+  completed_order_one : forall pi, Differentiable Complex (family.completedL pi) /\
+    forall eps : Real, 0 < eps -> exists C : Real, 0 < C /\
+      forall z : Complex, norm (family.completedL pi z) <= Real.exp (C * (1 + norm z) ^ (1 + eps))
+  completion : forall pi s, (1 : Real) / 2 < s.re ->
+    family.completedL pi s = standardMultiplicityCompletionFactor family pi s * family.poleRemoved pi s
+  euler_log_derivative : forall pi s, 1 < s.re ->
+    logDeriv (family.poleRemoved pi) s = (family.poleOrder pi : Complex) / (s - 1) -
+      tsum (fun n => family.coefficient pi n * ((family.primePowerNorm pi n : Real) : Complex) ^ (-s))
+
+/-- The signed triangular prime-power signal of an individual standard L-function. -/
+noncomputable def standardMultiplicityLogSignal {index : Type u} {powers : index -> Type v}
+    (family : StandardMultiplicityFamilyData index powers) (pi : index) (t : Real) : Complex :=
+  if t < 0 then 0 else
+    let x := Real.exp t
+    (Real.exp (-t / (Nat.cast 2 : Real)) : Complex) *
+      ((((family.poleOrder pi : Real) / (Nat.cast 2 : Real) : Real) : Complex) * (x : Complex) -
+        tsum (fun n : powers pi => (Set.Ioi (family.primePowerNorm pi n : Real)).indicator
+          (fun y : Real => family.coefficient pi n *
+            (1 - ((family.primePowerNorm pi n : Real) : Complex) / (y : Complex))) x))
+
+/-- The point on the critical line of a specified ordinate. -/
+noncomputable def multiplicityCriticalPoint (delta : Real) : Complex :=
+  Complex.mk (1 / (Nat.cast 2 : Real)) delta
+
+/-- Simple zeros outside the omitted ordinates and exact orders at the prescribed ones. -/
+def HasPrescribedZeroOrders (F : Complex -> Complex)
+    (E J : Finset Real) (order : Real -> Nat) : Prop :=
+  (forall delta, Not (Membership.mem E delta) ->
+    analyticOrderNatAt F (multiplicityCriticalPoint delta) <= 1) /\
+  (forall delta, Membership.mem J delta ->
+    analyticOrderNatAt F (multiplicityCriticalPoint delta) = order delta)
+
+/-- The mean Fourier coefficient extracted from the arithmetic signal. -/
+noncomputable def arithmeticMultiplicityCoefficient (H : Real -> Complex) (delta : Real) :
+    Complex :=
+  Filter.limUnder Filter.atTop (fun T : Real => Inv.inv (T : Complex) *
+    intervalIntegral
+      (fun t : Real => H t * Complex.exp (-(delta : Complex) * Complex.I * (t : Complex)))
+      0 T MeasureTheory.volume)
+
+/-- Delete the measured contribution of each exceptional ordinate. -/
+noncomputable def removeMultiplicityFrequencies (E : Finset Real) (H : Real -> Complex) (t : Real) :
+    Complex :=
+  H t - E.sum (fun delta => arithmeticMultiplicityCoefficient H delta *
+    Complex.exp ((delta : Complex) * Complex.I * (t : Complex)))
+
+/-- The global inequality after removing exceptional frequencies and adding the
+penalty for prescribed orders. -/
+def GrandPrimePowerMultiplicityInequality (A : Real -> Complex)
+    (E J : Finset Real) (order : Real -> Nat) : Prop :=
+  let H1 := primePowerGaussianSmoothing A 1
+  let H2 := primePowerGaussianSmoothing A (Nat.cast 2 : Real)
+  Filter.limsup (fun T : Real =>
+    (Inv.inv (T : Complex) * intervalIntegral
+      (fun t => ((norm (removeMultiplicityFrequencies E H1 t) ^ 2 : Real) : Complex))
+      0 T MeasureTheory.volume).re) Filter.atTop +
+    J.sum (fun delta => norm (arithmeticMultiplicityCoefficient H1 delta -
+      (order delta : Complex) * (Real.exp (-(delta ^ 2)) : Complex)) ^ 2) <=
+    Filter.limsup (fun t => (removeMultiplicityFrequencies E H2 t).re) Filter.atTop
+
+/-- **Grand RH for a standard family and prescribed zero orders.**
+Assume the stated analytic data and the critical-line hypothesis for
+the family. The zeros of each individual completion are simple outside
+its finite exceptional set and have the designated exact orders if
+and only if it satisfies its global prime-power inequality. The
+rank-one construction includes the Dedekind norm twists. -/
+theorem grandRH_iff_globalPrimePowerMultiplicityInequality
+    {index : Type u} {powers : index -> Type v} [forall pi, Countable (powers pi)]
+    (family : StandardMultiplicityFamilyData index powers)
+    (analytics : HasStandardMultiplicityAnalytics family)
+    (E J : index -> Finset Real) (order : index -> Real -> Nat)
+    (hRH : forall pi s, family.completedL pi s = 0 -> s.re = 1 / 2) :
+    (forall pi, HasPrescribedZeroOrders (family.completedL pi) (E pi) (J pi) (order pi)) <->
+    (forall pi, GrandPrimePowerMultiplicityInequality (standardMultiplicityLogSignal family pi)
+      (E pi) (J pi) (order pi)) := by
+  sorry
+
+end
 
 /-! # Supporting statements -/
 

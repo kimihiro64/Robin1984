@@ -74,6 +74,23 @@ private theorem primeExponentIdealWeight [DecidableEq P] (s : Complex) (e : Fins
   rw [Finsupp.toMultiset_map, Finsupp.prod_toMultiset, Finsupp.prod_mapDomain_index pow_zero pow_add]
   rfl
 
+/-- Absolute convergence of the prime-power products follows from the
+untwisted Dedekind ideal series. -/
+theorem summable_norm_exponentWeight_of_dedekindPrimeNorm
+    (a : P -> Complex) {s : Complex} (hs : 1 < s.re)
+    (hA : forall p, norm (a p) <= norm ((dedekindPrimeNorm K p : Complex) ^ (-s))) :
+    Summable (fun e : Finsupp P Nat => norm (exponentWeight a e)) := by
+  classical
+  let e := primeExponentIdealEquiv K
+  have hNorm := (e.summable_iff).mpr (summable_norm_dedekindIdealTerm K hs)
+  have hMajor : Summable (fun b : Finsupp P Nat => norm (exponentWeight (primeNormWeight K s) b)) :=
+    hNorm.congr (fun b => congrArg norm (primeExponentIdealWeight K s b).symm)
+  refine Summable.of_nonneg_of_le (fun _ => norm_nonneg _) (fun b => ?_) hMajor
+  simp only [exponentWeight, Finsupp.prod, norm_prod, norm_pow]
+  refine Finset.prod_le_prod (fun _ _ => pow_nonneg (norm_nonneg _) _) (fun p _ => ?_)
+  have hp : nnnorm (a p) <= nnnorm (primeNormWeight K s p) := hA p
+  exact_mod_cast pow_le_pow_left' hp (b p)
+
 /-- Mathlib's Dedekind zeta series is the convergent product of its prime-ideal
 Euler factors at every point with real part greater than one. -/
 theorem hasProd_dedekindZeta_eulerFactors {s : Complex} (hs : 1 < s.re) :

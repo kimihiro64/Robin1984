@@ -69,7 +69,7 @@ be preserved by thin compatibility declarations outside the candidate layer.
 
 The Lean toolchain and every Git dependency are pinned. Do not update a pin
 without rebuilding the complete project and reviewing the effect on
-Comparator, NanoDa and doc-gen4.
+Comparator and NanoDa.
 
 The required `PrimeNumberTheoremAnd` changes live in the public
 `kimihiro64/PrimeNumberTheoremAnd` fork. The root Lakefile pins one exact fork

@@ -155,33 +155,34 @@ theorem ae_zero_of_verticalMellin_eq_zero {u : Real -> Real} (hMeas : Measurable
   exact (ae_zero_of_logFourierIntegral_zero hvMeas hvInt hvZero).mono (fun x hx =>
     (mul_eq_zero.mp hx).resolve_right (Real.exp_pos _).ne')
 
-/-- A vanishing complex Mellin transform on the line of real part two
+/-- A vanishing complex Mellin transform on a vertical line
 forces the real part of the density to vanish almost everywhere. -/
-theorem ae_zero_re_of_verticalMellin_eq_zero {f : Real -> Complex} (hf : Measurable f)
+theorem ae_zero_re_of_verticalMellin_eq_zero_at {f : Real -> Complex}
+    (hf : Measurable f) (c : Real)
     (h : forall t : Real,
       let mu := volume.restrict (Ioi (1 : Real))
-      let g := fun x : Real => (x : Complex) ^ (-(2 : Complex) + (t : Complex) * Complex.I) * f x
+      let g := fun x : Real => (x : Complex) ^ (-(c : Complex) - 1 + (t : Complex) * Complex.I) * f x
       And (Integrable g mu) (integral mu g = 0)) :
     Filter.EventuallyEq (ae (volume.restrict (Ioi (1 : Real))))
       (fun x => (f x).re) (fun _ => 0) := by
   let mu := volume.restrict (Ioi (1 : Real))
-  let W (t x : Real) := (x : Complex) ^ (-(2 : Complex) + (t : Complex) * Complex.I)
+  let W (t x : Real) := (x : Complex) ^ (-(c : Complex) - 1 + (t : Complex) * Complex.I)
   let conj := Complex.conjLIE.toLinearIsometry
   have hAll (t : Real) :
       And (Integrable (fun x => W t x * f x) mu)
         (integral mu (fun x => W t x * f x) = 0) := h t
-  have hScale : Integrable (fun x : Real => (f x).re * x ^ (-(1 : Real) - 1)) mu := by
+  have hScale : Integrable (fun x : Real => (f x).re * x ^ (-c - 1)) mu := by
     have hh := Complex.reCLM.integrable_comp ((hAll 0).1)
     refine hh.congr ?_
     filter_upwards [ae_restrict_mem measurableSet_Ioi] with x hx
-    change (W 0 x * f x).re = (f x).re * x ^ (-(1 : Real) - 1)
+    change (W 0 x * f x).re = (f x).re * x ^ (-c - 1)
     have hx0 : (0 : Real) <= x := (zero_lt_one.trans hx).le
-    have he : W 0 x = ((x ^ (-(1 : Real) - 1) : Real) : Complex) := by
+    have he : W 0 x = ((x ^ (-c - 1) : Real) : Complex) := by
       rw [Complex.ofReal_cpow hx0]
-      norm_num [W]
+      simp [W]
     rw [he, Complex.mul_re, Complex.ofReal_im, zero_mul, sub_zero, Complex.ofReal_re, mul_comm]
   refine ae_zero_of_verticalMellin_eq_zero
-    (Complex.continuous_re.measurable.comp hf) 1 hScale ?_
+    (Complex.continuous_re.measurable.comp hf) c hScale ?_
   intro t
   have hStar : Filter.EventuallyEq (ae mu)
       (fun x => conj (W (-t) x * f x))
@@ -192,12 +193,12 @@ theorem ae_zero_re_of_verticalMellin_eq_zero {f : Real -> Complex} (hf : Measura
     rw [map_mul]
     congr 1
     unfold W
-    have hArg : (starRingEnd Complex) (-(2 : Complex) + (t : Complex) * Complex.I) =
-        -(2 : Complex) + ((-t : Real) : Complex) * Complex.I := by
-      simp only [map_add, map_neg, map_ofNat, map_mul, Complex.conj_ofReal, Complex.conj_I,
+    have hArg : (starRingEnd Complex) (-(c : Complex) - 1 + (t : Complex) * Complex.I) =
+        -(c : Complex) - 1 + ((-t : Real) : Complex) * Complex.I := by
+      simp only [map_add, map_sub, map_neg, map_one, map_mul, Complex.conj_ofReal, Complex.conj_I,
         Complex.ofReal_neg]
       ring
-    have hc := Complex.conj_cpow (x : Complex) (-(2 : Complex) + (t : Complex) * Complex.I)
+    have hc := Complex.conj_cpow (x : Complex) (-(c : Complex) - 1 + (t : Complex) * Complex.I)
       (by rw [Complex.arg_ofReal_of_nonneg hx0.le]; exact Real.pi_ne_zero.symm)
     rw [Complex.conj_ofReal, hArg] at hc
     exact hc.symm
@@ -208,7 +209,7 @@ theorem ae_zero_re_of_verticalMellin_eq_zero {f : Real -> Complex} (hf : Measura
   have hBoth : integral mu (fun x => W t x * f x + W t x * conj (f x)) = 0 := by
     rw [integral_add (hAll t).1 hConjInt, (hAll t).2, hConj, add_zero]
   have hE : (fun x : Real => ((f x).re : Complex) *
-        (x : Complex) ^ (-((1 : Real) : Complex) - 1 + (t : Complex) * Complex.I)) =
+        (x : Complex) ^ (-(c : Complex) - 1 + (t : Complex) * Complex.I)) =
       fun x => (W t x * f x + W t x * conj (f x)) / 2 := by
     funext x
     have hV : ((f x).re : Complex) = (f x + conj (f x)) / 2 := by
@@ -218,8 +219,51 @@ theorem ae_zero_re_of_verticalMellin_eq_zero {f : Real -> Complex} (hf : Measura
       ring
     rw [hV]
     unfold W
-    rw [show -((1 : Real) : Complex) - 1 = -2 by norm_num]
     ring
   rw [hE, integral_div, hBoth, zero_div]
+
+/-- On the line with weight x^(-2), vanishing of the complex Mellin transform
+implies that the real part of the integrand is zero almost everywhere. -/
+theorem ae_zero_re_of_verticalMellin_eq_zero {f : Real -> Complex} (hf : Measurable f)
+    (h : forall t : Real,
+      let mu := volume.restrict (Ioi (1 : Real))
+      let g := fun x : Real => (x : Complex) ^ (-(2 : Complex) + (t : Complex) * Complex.I) * f x
+      And (Integrable g mu) (integral mu g = 0)) :
+    Filter.EventuallyEq (ae (volume.restrict (Ioi (1 : Real))))
+      (fun x => (f x).re) (fun _ => 0) := by
+  apply ae_zero_re_of_verticalMellin_eq_zero_at hf 1
+  intro t
+  simpa only [Complex.ofReal_one, show -(1 : Complex) - 1 = -2 by norm_num] using h t
+
+/-- Fourier uniqueness applied to the real and imaginary parts of a complex Mellin integral. -/
+theorem ae_zero_of_complex_verticalMellin_eq_zero_at {f : Real -> Complex}
+    (hf : Measurable f) (c : Real)
+    (h : forall t : Real,
+      let mu := volume.restrict (Ioi (1 : Real))
+      let g := fun x : Real => (x : Complex) ^ (-(c : Complex) - 1 + (t : Complex) * Complex.I) * f x
+      And (Integrable g mu) (integral mu g = 0)) :
+    Filter.EventuallyEq (ae (volume.restrict (Ioi (1 : Real)))) f (fun _ => 0) := by
+  let mu := volume.restrict (Ioi (1 : Real))
+  let g (x : Real) : Complex := -Complex.I * f x
+  have hg : Measurable g := measurable_const.mul hf
+  have hRe := ae_zero_re_of_verticalMellin_eq_zero_at hf c h
+  have hIm := ae_zero_re_of_verticalMellin_eq_zero_at hg c (by
+    intro t
+    let W (x : Real) := (x : Complex) ^ (-(c : Complex) - 1 + (t : Complex) * Complex.I)
+    have hh : And (Integrable (fun x => W x * f x) mu)
+        (integral mu (fun x => W x * f x) = 0) := h t
+    have hSwap : (fun x => W x * g x) = (fun x => -Complex.I * (W x * f x)) := by
+      funext x
+      unfold g
+      ac_rfl
+    change And (Integrable (fun x => W x * g x) mu)
+      (integral mu (fun x => W x * g x) = 0)
+    rw [hSwap]
+    refine And.intro (hh.1.const_mul _) ?_
+    rw [integral_const_mul, hh.2, mul_zero])
+  filter_upwards [hRe, hIm] with x hx hy
+  apply Complex.ext
+  exact hx
+  simpa [g, Complex.mul_re, Complex.neg_re, Complex.neg_im] using hy
 
 end Robin1984.GRH

@@ -176,29 +176,42 @@ private theorem logGrowth_mellinMoment {f : Real -> Complex} {a p : Real}
 
 open DedekindZeta DedekindZeta.MellinPrinciple DedekindZeta.ConeRadialReduction
 
-private theorem logGrowth_mellinTail {f g : Real -> Complex} {b C : Complex} {a p : Real}
-    (h : IsMellinPair f g b b C 1 a p) :
-    HasLogarithmicExponentialBound (mellinTail f g b b C 1) := by
+private theorem logGrowth_mellinTail_comp {f g : Real -> Complex} {b d C : Complex}
+    {k a p : Real} (h : IsMellinPair f g b d C k a p) (z : Complex -> Complex)
+    (hLeft : forall s, (z s).re - 1 <= norm s)
+    (hRight : forall s, ((k : Complex) - z s).re - 1 <= norm s) :
+    HasLogarithmicExponentialBound (fun s => mellinTail f g b d C k (z s)) := by
   have hp : 0 < p := by
     cases h with
     | mk _ _ _ _ hp _ _ _ _ => exact hp
   have hF := logGrowth_mellinMoment h.hc hp (h.hf_cont.sub continuousOn_const)
-    h.hf_decay (fun _ => mellinTail_integrable_left h) (fun s => s)
-    (fun s => (sub_le_self _ zero_le_one).trans (Complex.re_le_norm s))
+    h.hf_decay (fun _ => mellinTail_integrable_left h) z hLeft
   have hG := logGrowth_mellinMoment h.hc hp (h.hg_cont.sub continuousOn_const)
-    h.hg_decay (fun _ => mellinTail_integrable_left h.swap) (fun s => 1 - s) (fun s => by
-      have hs := Complex.re_le_norm (-s)
-      rw [Complex.neg_re, norm_neg] at hs
-      rw [Complex.sub_re, Complex.one_re]
-      linarith only [hs])
+    h.hg_decay (fun _ => mellinTail_integrable_left h.swap) (fun s => (k : Complex) - z s)
+    hRight
   have hSum := logGrowth_add hF (logGrowth_mul (logGrowth_const C) hG)
   choose A B hB using hSum
   refine Exists.intro A (Exists.intro B (And.intro hB.1 (And.intro hB.2.1 ?_)))
   intro s
-  unfold mellinTail
-  rw [integral_add (mellinTail_integrable_left h) (mellinTail_integrable_right h)]
-  simp only [Complex.ofReal_one, mul_assoc, integral_const_mul]
+  dsimp only [mellinTail]
+  rw [integral_add (mellinTail_integrable_left h (s := z s))
+    (mellinTail_integrable_right h (s := z s))]
+  simp only [mul_assoc, integral_const_mul]
   exact hB.2.2 s
+
+private theorem logGrowth_mellinTail {f g : Real -> Complex} {b C : Complex} {a p : Real}
+    (h : IsMellinPair f g b b C 1 a p) :
+    HasLogarithmicExponentialBound (mellinTail f g b b C 1) := by
+  apply logGrowth_mellinTail_comp h id
+  case hLeft =>
+    intro s
+    exact (sub_le_self _ zero_le_one).trans (Complex.re_le_norm s)
+  case hRight =>
+    intro s
+    have hs := Complex.re_le_norm (-s)
+    rw [Complex.neg_re, norm_neg] at hs
+    simp only [id_eq, Complex.ofReal_one, Complex.sub_re, Complex.one_re]
+    linarith only [hs]
 
 private theorem logGrowth_poleClearedMellin {f g : Real -> Complex}
     {b C : Complex} {a p : Real} (h : IsMellinPair f g b b C 1 a p) :
@@ -247,13 +260,13 @@ theorem completedDedekindPoleCleared_logarithmicGrowth (K : Type*) [Field K] [Nu
     Function.surjInv ClassGroup.mk0_surjective c
   exact mem_nonZeroDivisors_iff_ne_zero.mp I.property
 
-/-- The pole-cleared completed Dedekind zeta function is entire of order
-at most one, with the epsilon margins used in Hadamard factorization. -/
-theorem completedDedekindPoleCleared_entireOfOrderAtMost_one
-    (K : Type*) [Field K] [NumberField K] :
-    Complex.Hadamard.EntireOfOrderAtMost 1 (completedDedekindPoleCleared K) := by
-  refine And.intro (fun s => (analyticAt_completedDedekindPoleCleared K s).differentiableAt) ?_
-  choose A B hAB using completedDedekindPoleCleared_logarithmicGrowth K
+/-- Logarithmic exponential growth gives the order-one epsilon margins in
+Hadamard factorization. -/
+theorem entireOfOrderAtMost_one_of_logarithmicExponentialBound {F : Complex -> Complex}
+    (hF : Differentiable Complex F) (hGrowth : HasLogarithmicExponentialBound F) :
+    Complex.Hadamard.EntireOfOrderAtMost 1 F := by
+  refine And.intro hF ?_
+  choose A B hAB using hGrowth
   intro eps heps
   let c : Real := (2 : Real) ^ eps / eps
   let D := Real.log (A + 1) + B * c + 1
@@ -307,5 +320,27 @@ theorem completedDedekindPoleCleared_entireOfOrderAtMost_one
       rw [Real.exp_add, Real.exp_log hA1]
     _ <= _ := Real.exp_le_exp.mpr hExp
 
+
+/-- A split Mellin tail has order at most one when its two exponents
+are each bounded by the norm of the input. -/
+theorem entireOfOrderAtMost_one_mellinTail_comp {f g : Real -> Complex} {b d C : Complex}
+    {k a p : Real} (h : IsMellinPair f g b d C k a p) {z : Complex -> Complex}
+    (hZ : Differentiable Complex z)
+    (hLeft : forall s, (z s).re - 1 <= norm s)
+    (hRight : forall s, ((k : Complex) - z s).re - 1 <= norm s) :
+    Complex.Hadamard.EntireOfOrderAtMost 1 (fun s => mellinTail f g b d C k (z s)) := by
+  have hDiff : Differentiable Complex (mellinTail f g b d C k) := fun u =>
+    ((mellinTail_analyticOn h) u (mem_univ u)).differentiableAt
+  exact entireOfOrderAtMost_one_of_logarithmicExponentialBound (hDiff.comp hZ)
+    (logGrowth_mellinTail_comp h z hLeft hRight)
+
+/-- The pole-cleared completed Dedekind zeta function is entire of order
+at most one, with the epsilon margins used in Hadamard factorization. -/
+theorem completedDedekindPoleCleared_entireOfOrderAtMost_one
+    (K : Type*) [Field K] [NumberField K] :
+    Complex.Hadamard.EntireOfOrderAtMost 1 (completedDedekindPoleCleared K) :=
+  entireOfOrderAtMost_one_of_logarithmicExponentialBound
+    (fun s => (analyticAt_completedDedekindPoleCleared K s).differentiableAt)
+    (completedDedekindPoleCleared_logarithmicGrowth K)
 
 end Robin1984.GRH
