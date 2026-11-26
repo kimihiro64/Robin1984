@@ -258,10 +258,28 @@ Z_\infty(s)=\prod_{v\in W_\infty(K)}\prod_{i=0}^{n-1}
 $$
 Here $W_\infty(K)$ is the set of infinite places of $K$, and $K_v$ is
 the completion at $v$. The test is independent of $s$ and the integral
-is absolutely convergent on the common right half-plane. An application
-to actual cuspidal data still requires the global coefficient
-factorization, the weighted cusp estimates, and the tests at any
-non-spherical archimedean places.
+is absolutely convergent on the common right half-plane.
+
+With the coefficient omitted, the determinant-weighted Gaussian is
+integrable for $\sigma=\Re s>(n-1)/2$. For a finite adelic tensor with
+compact locally constant factors at a finite set $E$ and integral
+matrix indicators elsewhere, the coefficient-free test is integrable
+for $\sigma>(n+1)/2$. The product measure combines the two bounds for
+the joint test. Its full rational theta series converges absolutely
+pointwise by a finite expansion in adelic rectangles.
+
+On a fixed measurable fundamental domain inside a finite-measure
+reduction set, compact finite entry projections and weighted cusp
+bounds imply that the product-test theta Mellin transform is entire and
+satisfies reflection with the self-dual Fourier test. Inserting the
+entire transforms in the global zeta identity continues the completed
+Euler product realized by the supplied local integrals. An application
+to actual cuspidal data requires constructing the reduction set and
+weighted bounds, identifying the global coefficient, and matching
+the ordinary and Fourier-transformed local tests to the required factors.
+[Determinant-weighted tests](Robin1984/GRH/GodementJacquetDeterminantWeightedTests.lean)
+[Product-test Mellin identity](Robin1984/GRH/GodementJacquetProductTestMellinContinuation.lean)
+[Cuspidal continuation on a fixed domain](Robin1984/GRH/GodementJacquetCuspidalProductTestContinuation.lean)
 [Finite tensor integrals](Robin1984/GRH/GodementJacquetFiniteAdelicCanonicalTensors.lean)
 [Global zeta product](Robin1984/GRH/GodementJacquetGlobalZetaProduct.lean)
 [Entire continuation](Robin1984/GRH/GodementJacquetEulerMellinContinuation.lean)

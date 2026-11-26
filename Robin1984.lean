@@ -23,6 +23,7 @@ import Robin1984.GRH.GodementJacquetCartanResidueMeasure
 import Robin1984.GRH.GodementJacquetCartanTestPartition
 import Robin1984.GRH.GodementJacquetCartanVolume
 import Robin1984.GRH.GodementJacquetCoordinates
+import Robin1984.GRH.GodementJacquetCuspidalProductTestContinuation
 import Robin1984.GRH.GodementJacquetDeterminantWeightedTests
 import Robin1984.GRH.GodementJacquetEulerMellinContinuation
 import Robin1984.GRH.GodementJacquetFiniteAdelicCanonicalFactors

@@ -1749,6 +1749,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetCuspidalProductTestContinuation.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Godement and Jacquet, Zeta Functions of Simple Algebras, and theta cancellation for Schwartz-Bruhat test functions.",
+      "formalization_note": "Proves the entire theta Mellin continuation and reflection for the product test on a fixed fundamental domain, and applies it to the Euler product identity.",
+      "content_basis": "Choose common denominators on the reduction set. Restrict the resulting weighted integrals to the same fundamental domain, apply finite-rectangle continuation to the product test, and substitute the theta Mellin into the Euler expression.",
+      "dependency_status": "Uses the finite rectangle expansion, the weighted cuspidal cancellation and the product-test Euler-Mellin identity.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetDeterminantWeightedTests.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Absolute convergence of determinant-weighted Gaussian and finite compact tensor tests.",

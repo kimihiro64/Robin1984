@@ -3367,16 +3367,69 @@ from the local spherical data. The application to an actual global
 representation requires identifying its coefficient with this product
 and handling any non-spherical places.
 
+\paragraph{Absolute convergence of the product test.}
+Write \(\sigma=\Re s\) and \(\delta=(n-1)/2\), and use the
+determinant weight \(|\det g|^{s+\delta}\). The coefficient-free
+archimedean integral for the Gaussian corresponds to
+\(\lambda_i=i-\delta\) at every place. All inducing exponents are
+then zero, so absolute integrability holds for \(\sigma>\delta\).
+At the finite places in a finite exceptional set \(E\), compact
+local tests give finite absolute local integrals \(r_{\mathfrak p}\).
+Outside \(E\) the test is the integral matrix indicator. For
+\(\sigma>\delta+1\), in the normalization giving mass one to the
+integral matrix unit group at each finite place, its absolute local
+integral is
+\[
+ M_{\mathfrak p}(\sigma)=
+   \prod_{i=0}^{n-1}\bigl(1-(N\mathfrak p)^{\delta-i-\sigma}\bigr)^{-1}.
+\]
+For every finite set of finite places \(S\supseteq E\) the product
+of the absolute local integrals is bounded above by
+\[
+ \left(\prod_{\mathfrak p\in E}r_{\mathfrak p}\right)
+ \prod_{i=0}^{n-1}\zeta_K(\sigma-\delta+i).
+\]
+Each zeta argument exceeds one. This is the uniform bound used in
+\path{GodementJacquetDeterminantWeightedTests.lean} to pass to the
+restricted product and then combine the finite and archimedean
+absolute integrals on the adelic group.
+
+The global product test is a finite sum of adelic rectangles, hence
+continuous. For each rectangle and each fixed pair of group elements,
+clearing the finite denominators transports the theta sum to an
+integral lattice. The Schwartz bound at any integer exponent exceeding
+the real dimension of the Minkowski matrix space makes the sum of the
+absolute norms finite. In particular the invertible subseries is
+summable. These facts and the preceding product integrability supply
+the unfolding inputs in
+\path{GodementJacquetProductTestMellinContinuation.lean}.
+
+\paragraph{Continuation on a fixed fundamental domain.}
+Choose a measurable fundamental domain \(D\) inside a measurable
+finite-measure reduction set. Compactness of the finite projections
+of the matrices and their inverses gives a common denominator on
+the reduction set. The weighted cusp bounds for that denominator
+imply the integrability of both cusp weights on \(D\). With
+square integrability and the vanishing unipotent periods and means
+on \(D\), the finite rectangle expansion gives an entire theta Mellin
+transform for the product test and reflection at \(1-s\) with the
+self-dual Fourier transform. The same \(D\) occurs in the global
+matrix coefficient. Thus when the local integrals realize the
+archimedean factor and finite Euler product,
+\path{GodementJacquetCuspidalProductTestContinuation.lean} constructs
+an entire continuation of their product.
+
 On the closed strip $-2\le\Re s\le3$, the two exponential moments
 bound each Mellin transform uniformly in the imaginary direction.
 Together with its Euler identification and Gamma estimates on the
 right and norm reflection on the left, this gives order at most
 one for each pole-free completion in
-\path{GodementJacquetMellinGrowth.lean}. The higher-rank instantiation
-still needs the reduction covers and weighted bounds for actual
-cuspidal data, integrability of the determinant-weighted tests, and
-the remaining identifications of the local factors and global
-matrix coefficients.
+\path{GodementJacquetMellinGrowth.lean}. To instantiate these results
+for cuspidal representations one still needs to construct the
+reduction data and derive the weighted bounds for the chosen vectors.
+One also needs to identify the matrix coefficient and match the
+local zeta integrals for the original and Fourier-transformed tests
+to the representation's factors and functional equation.
 \cite{GodementJacquet1972}
 
 The three classical equivalence declarations have the
