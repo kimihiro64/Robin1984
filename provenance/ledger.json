@@ -1047,6 +1047,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/HeckePoleFreeMultiplicity.lean",
+      "classification": "Primarily project-original",
+      "mathematical_source": "Tate's completion of a unitary Hecke L-function and the Gaussian prime-power criterion for prescribed zero orders.",
+      "formalization_note": "Instantiates the individual standard multiplicity theorem for every pole-free unitary Hecke character over a number field.",
+      "content_basis": "Uses the actual Hecke prime-power coefficients and obtains order one for each completed L-function from its Euler product, strip bound, and functional equation.",
+      "dependency_status": "Uses the verified rank-one Tate continuation, the individual Euler logarithmic derivative, and the standard exceptional multiplicity criterion.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/HeckeTateAdelicEuler.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Tate's global zeta integral and its product of local zeta integrals.",

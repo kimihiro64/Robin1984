@@ -78,6 +78,7 @@ import Robin1984.GRH.GodementJacquetUnramifiedDiagonal
 import Robin1984.GRH.GodementJacquetUnramifiedMeasure
 import Robin1984.GRH.GodementJacquetUnramifiedSpherical
 import Robin1984.GRH.GodementJacquetVectorPoisson
+import Robin1984.GRH.HeckePoleFreeMultiplicity
 import Robin1984.GRH.HeckeTateAdelicEuler
 import Robin1984.GRH.HeckeTateClassPoisson
 import Robin1984.GRH.HeckeTateContinuation
