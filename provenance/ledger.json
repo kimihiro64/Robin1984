@@ -1731,6 +1731,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanSphericalLocal.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The spherical archimedean case of the Godement-Jacquet local zeta integral.",
+      "formalization_note": "Evaluates the normalized Gaussian integral for a spherical inducing section and its compact-group average.",
+      "content_basis": "Transfers the weighted Gaussian through logarithmic Iwasawa coordinates, checks the determinant and inducing exponents, and identifies the real and complex radial factors.",
+      "dependency_status": "Uses the proved Iwasawa Haar and spherical Gaussian formulas. The inducing section is given by its normalized spherical Iwasawa values.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetEulerMellinContinuation.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The Godement-Jacquet global zeta unfolding and Euler product realization by test vectors.",

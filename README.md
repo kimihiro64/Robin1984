@@ -233,12 +233,28 @@ $$
 \sum_j w_j Z_j(s)=r\,Z_\infty(s)\prod_{\mathfrak p}L_{\mathfrak p}(s).
 $$
 When the theta Mellin transforms for the $Z_j$ are entire, their weighted
-sum divided by $r$ continues this product. The higher-rank specialization
-still needs the weighted cusp estimates and the archimedean local factor
-identification for the chosen automorphic data.
+sum divided by $r$ continues this product.
+
+For a real or complex place $F$, let $d=[F:\mathbb R]$ and let
+$\lambda_0,\ldots,\lambda_{n-1}$ be the normalized spherical inducing
+parameters. The Gaussian test $\exp(-d\pi\operatorname{tr}(gg^*))$, with
+determinant weight $|\det g|_F^{s+(n-1)/2}$ and the spherical coefficient,
+has local zeta integral
+$$
+Z_{\infty,F}(s)=c_F\prod_{i=0}^{n-1} L_F(s+\lambda_i),
+\qquad \Re(s+\lambda_i)>0\quad(0\le i<n).
+$$
+The integral is absolutely convergent on this half-plane. The positive
+Haar normalization constant $c_F$ is independent of $s$, and
+$L_{\mathbb R}(w)=\pi^{-w/2}\Gamma(w/2)$ and
+$L_{\mathbb C}(w)=2(2\pi)^{-w}\Gamma(w)$.
+The global specialization still requires the weighted cusp bounds,
+factorization of the actual global coefficients, and local tests at
+the non-spherical archimedean places.
 [Finite tensor integrals](Robin1984/GRH/GodementJacquetFiniteAdelicCanonicalTensors.lean)
 [Global zeta product](Robin1984/GRH/GodementJacquetGlobalZetaProduct.lean)
 [Entire continuation](Robin1984/GRH/GodementJacquetEulerMellinContinuation.lean)
+[Spherical archimedean zeta integral](Robin1984/GRH/GodementJacquetArchimedeanSphericalLocal.lean)
 [Generalized criteria](docs/GRH.md)
 
 ## Critical-line zeros and multiplicity

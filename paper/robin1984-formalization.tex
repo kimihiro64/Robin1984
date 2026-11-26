@@ -3290,11 +3290,56 @@ hypotheses of \path{GodementJacquetGlobalZetaProduct.lean}.
 termwise theta Mellin identities and divides by \(r\). If the theta
 Mellin transforms are entire, this gives an entire continuation of
 the right-hand Euler expression with \(r\) removed. To identify it with
-the completed standard \(L\)-function one also needs a test with
+the completed standard \(L\)-function one needs a test with
 \(Z_\infty(s)=\prod_{v\mid\infty}L(s,\pi_v)\) in the chosen normalization.
-Humphries gives such archimedean test vectors in
-\cite[Theorem~4.23 and Proposition~5.9]{Humphries2024}. Their evaluation
-for the actual higher-rank representations is a separate input here.
+The following calculation supplies the local identity for spherical
+inducing data. Humphries gives more general archimedean test vectors in
+\cite[Theorem~4.23 and Proposition~5.9]{Humphries2024}.
+
+\paragraph{Spherical archimedean integral.}
+Let \(F=\mathbb R\) or \(\mathbb C\), \(d=[F:\mathbb R]\), and \(n\ge1\).
+Write \(g=a u k^{-1}\) with \(a=\operatorname{diag}(a_i)_{i=0}^{n-1}\),
+\(a_i>0\), \(u\) upper unitriangular, and \(k\) unitary. The logarithmic
+Iwasawa formula makes left Haar measure a positive multiple of
+\(\prod_i da_i/a_i\,\prod_{i<j}du_{ij}\,dk\), with \(dk\) of mass one.
+The normalized inducing section \(v\) has value
+\[
+ v(a u k^{-1})=
+ \prod_{i=0}^{n-1}a_i^{\,d\lambda_i+d(n-1-2i)/2}.
+\]
+Its spherical coefficient is the left average \(g\mapsto\int_K v(kg)\,dk\).
+The left unitary invariance of the Gaussian and the determinant norm
+makes the two weighted integrals equal. The proof passes absolute
+integrability from the section integral to the averaged integral
+through the measure-preserving left translations.
+
+For \(\Phi_b(g)=\exp(-b\operatorname{tr}(gg^*))\), \(b>0\), the determinant
+weight \(|\det g|_F^{s+(n-1)/2}\), with
+\(|\det g|_F=\|\det g\|^d\), gives row exponent
+\(d(s+\lambda_i)+d(n-i-1)\). The Gaussian splits into
+\(\exp(-b\sum_i a_i^2)\prod_{i<j}\exp(-b\|a_i u_{ij}\|^2)\).
+For each \(i<j\), integrating the upper entry contributes
+\(a_i^{-d}(\pi/b)^{d/2}\). The \(n-i-1\) entries in row \(i\) cancel
+the additional row exponent exactly. The remaining integral in that
+row is
+\[
+ \int_0^\infty e^{-b a^2}a^{\,d(s+\lambda_i)}\,\frac{da}{a}
+ =\tfrac12 b^{-d(s+\lambda_i)/2}
+     \Gamma\bigl(d(s+\lambda_i)/2\bigr).
+\]
+The joint integral is absolutely convergent on
+\(\Re(s+\lambda_i)>0\) for every \(0\le i<n\). At \(b=d\pi\) the
+product of the row integrals is proportional to
+\(\prod_{i=0}^{n-1}L_F(s+\lambda_i)\), where
+\(L_{\mathbb R}(w)=\pi^{-w/2}\Gamma(w/2)\) and
+\(L_{\mathbb C}(w)=2(2\pi)^{-w}\Gamma(w)\). All the proportionality
+constants are positive and independent of \(s\). The corresponding
+local normalization divides the test by their product.
+\path{GodementJacquetArchimedeanSphericalLocal.lean} verifies the
+section and averaged integrals and the real and complex radial
+normalizations. The global application still requires the specified
+spherical coefficient for the actual representation and the tests
+at any non-spherical places.
 
 On the closed strip $-2\le\Re s\le3$, the two exponential moments
 bound each Mellin transform uniformly in the imaginary direction.
