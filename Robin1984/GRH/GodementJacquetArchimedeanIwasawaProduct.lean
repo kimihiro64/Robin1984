@@ -258,7 +258,9 @@ local instance archUnipotentMeasurableSpace (n : Nat) : MeasurableSpace (N n) :=
 local instance archUnipotentBorelSpace (n : Nat) : BorelSpace (N n) := BorelSpace.mk rfl
 
 omit [NormedSpace Real F] [MeasurableSpace F] [BorelSpace F] in
-private theorem archUnipotent_secondCountable (n : Nat) :
+/-- The upper unitriangular group inherits a second-countable topology
+from a second-countable scalar field. -/
+theorem archUnipotent_secondCountable (n : Nat) :
     SecondCountableTopology (N n) := by
   let M := Matrix (Fin n) (Fin n) F
   let _ : SecondCountableTopology M :=
@@ -337,6 +339,63 @@ theorem integral_archUnipotentScaledKernel
     rw [hTail, hRow, Fin.prod_univ_succ, mul_comm]
     simp only [Fin.val_zero, zero_add, Nat.sub_zero, Fin.val_succ,
       Nat.succ_sub_succ_eq_sub]
+
+open MeasureTheory.Measure in
+omit [NormedSpace Real F] in
+/-- Product additive Haar measure on the strict upper entries is Haar
+on the upper unitriangular group. -/
+theorem isHaarMeasure_archUnipotentProduct
+    (mu : Measure F) [SigmaFinite mu] [mu.IsAddHaarMeasure] (n : Nat) :
+    (valuationUnitriangularProductMeasure F mu n).IsHaarMeasure := by
+  have hInv (m : Nat) : (valuationUnitriangularProductMeasure F mu m).IsMulLeftInvariant :=
+    isMulLeftInvariant_valuationUnitriangularProductMeasure F mu m
+  induction n with
+  | zero =>
+    change (Measure.dirac (1 : N 0)).IsHaarMeasure
+    refine
+      { toIsFiniteMeasureOnCompacts := inferInstance
+        toIsMulLeftInvariant := hInv 0
+        toIsOpenPosMeasure := ?_ }
+    constructor
+    intro S _ hS
+    choose u hu using hS
+    have hU : u = 1 := by
+      apply Subtype.ext
+      apply Subtype.ext
+      apply Units.ext
+      apply Matrix.ext
+      intro i _
+      exact Fin.elim0 i
+    rw [hU] at hu
+    rw [Measure.dirac_apply_of_mem hu]
+    exact one_ne_zero
+  | succ n ih =>
+    let _ : (valuationUnitriangularProductMeasure F mu n).IsHaarMeasure := ih
+    let _ : SecondCountableTopology (N n) := archUnipotent_secondCountable F n
+    let _ : SecondCountableTopology (N (n + 1)) := archUnipotent_secondCountable F (n + 1)
+    let _ := sigmaFinite_valuationUnitriangularProductMeasure F mu n
+    let E : Homeomorph (Prod (N n) (Fin n -> F)) (N (n + 1)) :=
+      (Homeomorph.prodComm (N n) (Fin n -> F)).trans
+        (valuationUnitriangularFirstRowHomeomorph F n).symm
+    let EM := E.toMeasurableEquiv
+    let m := (valuationUnitriangularProductMeasure F mu n).prod (Measure.pi (fun _ : Fin n => mu))
+    have hC : m.comap EM.symm = valuationUnitriangularProductMeasure F mu (n + 1) := by
+      have hE : MeasurePreserving E m (valuationUnitriangularProductMeasure F mu (n + 1)) :=
+        measurePreserving_archUnipotentRow F mu n
+      rw [<- hE.map_eq]
+      apply Measure.ext
+      intro s hs
+      change m.comap EM.symm s = Measure.map EM m s
+      rw [EM.symm.measurableEmbedding.comap_apply, Measure.map_apply EM.measurable hs]
+      exact congrArg (fun t => m t) (Equiv.image_eq_preimage_symm EM.symm.toEquiv s)
+    refine
+      { toIsMulLeftInvariant := hInv (n + 1)
+        toIsFiniteMeasureOnCompacts := ?_
+        toIsOpenPosMeasure := ?_ }
+    . rw [<- hC]
+      exact IsFiniteMeasureOnCompacts.comap' m E.symm.continuous EM.symm.measurableEmbedding
+    . rw [<- hC]
+      exact IsOpenPosMeasure.comap m E.symm.isOpenEmbedding
 
 /-- An integrable scalar test stays integrable in the strict upper entries
 when the row scales are positive. -/

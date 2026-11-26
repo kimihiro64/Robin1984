@@ -1686,6 +1686,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanExponentialHaar.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The exponential chart for positive real units and archimedean Iwasawa integration.",
+      "formalization_note": "Identifies positive diagonal Haar measure with Lebesgue measure in logarithmic coordinates.",
+      "content_basis": "Exponentiates each real coordinate, transfers additive Haar measure through the homeomorphism, and substitutes it into the triangular and unitary product chart.",
+      "dependency_status": "Uses the archimedean Iwasawa product measure formula and Mathlib Haar measure.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetArchimedeanIwasawa.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "Gram-Schmidt orthonormalization and archimedean Iwasawa factorization for general linear groups over the real or complex field.",
@@ -1710,6 +1719,15 @@
       "formalization_note": "Splits the triangular Haar measure into its diagonal and unitriangular measures, then evaluates the Gaussian over the upper entries.",
       "content_basis": "Restricts the existing triangular homeomorphism to the positive diagonal, proves product Haar invariance by a shear, and evaluates the scaled row integrals using the additive Haar scaling rule and the scalar Gaussian integral.",
       "dependency_status": "Uses the matrix Iwasawa Haar formula, the unitriangular coordinate measure, and Mathlib Gaussian and product integration.",
+      "reviewed": true
+    },
+    {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanSphericalGaussian.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Archimedean spherical Gaussian zeta integrals, exponential substitution, and the Gamma integral.",
+      "formalization_note": "Splits the original matrix Gaussian into diagonal and upper-entry factors and computes the weighted Gaussian integral in logarithmic coordinates.",
+      "content_basis": "Proves unitary invariance and the determinant formula, cancels the row scale factors, and uses one-dimensional Gamma integrals with absolute convergence on the specified half-plane.",
+      "dependency_status": "Uses the archimedean upper-entry Gaussian calculation, Mathlib Mellin transforms, the real exponential Jacobian, and product measure.",
       "reviewed": true
     },
     {
