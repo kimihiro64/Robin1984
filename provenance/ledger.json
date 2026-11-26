@@ -1749,6 +1749,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetDeterminantWeightedTests.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "Absolute convergence of determinant-weighted Gaussian and finite compact tensor tests.",
+      "formalization_note": "Proves the archimedean and finite integral bounds and combines them in the adelic Mellin coordinates.",
+      "content_basis": "The constant spherical section has zero inducing exponents. At finite places a zeta Euler product bounds the absolute integral outside the exceptional set, and compact tests are integrable within it.",
+      "dependency_status": "Uses the normalized spherical archimedean integral, the finite Euler majorant, and the adelic product Haar formula.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetEulerMellinContinuation.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The Godement-Jacquet global zeta unfolding and Euler product realization by test vectors.",

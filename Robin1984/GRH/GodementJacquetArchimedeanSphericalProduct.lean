@@ -339,22 +339,22 @@ private theorem exists_archSchwartz_exact_product
       (forall s : Complex, tau < s.re ->
         let f (g : Gv v) := archLocalGaussianZetaDensity K n v s g (a v g)
         And (Integrable f (nu v)) (integral (nu v) f = (c : Complex) * factor v s))) :
-    exists f : SchwartzMap Arch Complex,
-      forall s : Complex, tau < s.re ->
+    exists scale : Real, And (0 < scale)
+      (let f : SchwartzMap Arch Complex := HSMul.hSMul (scale : Complex) (archMinkowskiMatrixGaussian K n)
+       forall s : Complex, tau < s.re ->
         let Z (g : G) :=
           (f (WithLp.toLp 2 (fun i : Ix => DedekindZeta.Theta.toMinkowski K
             (InfiniteAdeleRing.ringEquiv_mixedSpace K (g.val.vec i)))) * coeff g) *
             (heckeInfiniteIdeleNorm (Matrix.GeneralLinearGroup.det g) : Complex) ^
               (s + ((n : Complex) - 1) / 2)
-        And (Integrable Z mu) (integral mu Z = Finset.univ.prod (fun v => factor v s)) := by
+        And (Integrable Z mu) (integral mu Z = Finset.univ.prod (fun v => factor v s))) := by
   choose c hc using hLocal
   choose r hr using exists_archGaussianZetaIntegral_of_integrable K n mu nu a coeff hCoeff
   let C : Real := (r : Real) * Finset.univ.prod c
   have hC : 0 < C := mul_pos (NNReal.coe_pos.mpr hr.1) (Finset.prod_pos (fun v _ => (hc v).1))
   let q : Complex := (Inv.inv C : Real)
-  let f : SchwartzMap Arch Complex := HSMul.hSMul q (archMinkowskiMatrixGaussian K n)
-  refine Exists.intro f ?_
-  intro s hs Z
+  refine Exists.intro (Inv.inv C) (And.intro (inv_pos.mpr hC) ?_)
+  intro f s hs Z
   let raw (g : G) :=
     ((archMinkowskiMatrixGaussian K n)
       (WithLp.toLp 2 (fun i : Ix => DedekindZeta.Theta.toMinkowski K
@@ -365,7 +365,7 @@ private theorem exists_archSchwartz_exact_product
   have hRawInt : Integrable raw mu := hRaw.1
   have hEq : Z = fun g : G => q * raw g := by
     funext g
-    simp only [Z, f, smul_apply, smul_eq_mul, raw]
+    simp only [Z, f, q, smul_apply, smul_eq_mul, raw]
     ring
   rw [hEq]
   refine And.intro (hRawInt.const_mul q) ?_
@@ -470,9 +470,41 @@ local notation "Ix" => Prod (Fin n) (Fin n)
 local notation "Arch" => PiLp 2 (fun _ : Ix => DedekindZeta.Theta.minkowskiSpace K)
 
 set_option maxHeartbeats 2000000 in
-/-- For a coefficient that factors into the supplied local spherical coefficients,
-one fixed Schwartz test gives the exact global archimedean Gamma product on the
-common convergence half-plane. -/
+/-- A positive real multiple of the Minkowski Gaussian realizes the exact
+archimedean product for the supplied local spherical data. -/
+theorem exists_archSphericalScaledGaussian_exact_gamma_product
+    [forall w : W, MeasurableSpace (Gv w)] [forall w : W, BorelSpace (Gv w)]
+    [BorelSpace (forall w : W, Gv w)]
+    [MeasurableSpace G] [BorelSpace G] [T2Space G]
+    [SecondCountableTopology G] [LocallyCompactSpace G]
+    (mu : Measure G) [SFinite mu] [mu.IsHaarMeasure]
+    (z : W -> Fin n -> Complex)
+    (D : forall w : W, ArchSphericalPlaceIntegral K n w (z w))
+    (tau : Real) (hSpec : forall (s : Complex), tau < s.re ->
+      forall (w : W) (i : Fin n), 0 < (s + z w i).re)
+    (coeff : G -> Complex)
+    (hCoeff : forall g : G, coeff g =
+      Finset.univ.prod (fun w : W => (D w).coefficient ((archGeneralLinearGroup_pi K n g) w))) :
+    exists scale : Real, And (0 < scale)
+      (let f : SchwartzMap Arch Complex := HSMul.hSMul (scale : Complex) (archMinkowskiMatrixGaussian K n)
+       forall s : Complex, tau < s.re ->
+        let Z (g : G) :=
+          (f (WithLp.toLp 2 (fun i : Ix => DedekindZeta.Theta.toMinkowski K
+            (InfiniteAdeleRing.ringEquiv_mixedSpace K (g.val.vec i)))) * coeff g) *
+            (heckeInfiniteIdeleNorm (Matrix.GeneralLinearGroup.det g) : Complex) ^
+              (s + ((n : Complex) - 1) / 2)
+        And (Integrable Z mu) (integral mu Z =
+          Finset.univ.prod (fun w : W => archSphericalGammaFactor K n w (z w) s))) := by
+  let nu (w : W) := (D w).haar
+  let _ : forall w : W, SigmaFinite (nu w) := fun w => (D w).sigmaFinite
+  let _ : forall w : W, (nu w).IsHaarMeasure := fun w => (D w).isHaar
+  exact exists_archSchwartz_exact_product K n mu nu (fun w => (D w).coefficient) coeff hCoeff
+    tau (fun w => archSphericalGammaFactor K n w (z w))
+    (fun w => Exists.intro (D w).scale
+      (And.intro (D w).scale_pos (fun s hs => (D w).evaluation s (hSpec s hs w))))
+
+/-- A Schwartz test realizes the exact archimedean product for the supplied
+local spherical data. -/
 theorem exists_archSphericalSchwartz_exact_gamma_product
     [forall w : W, MeasurableSpace (Gv w)] [forall w : W, BorelSpace (Gv w)]
     [BorelSpace (forall w : W, Gv w)]
@@ -495,13 +527,9 @@ theorem exists_archSphericalSchwartz_exact_gamma_product
               (s + ((n : Complex) - 1) / 2)
         And (Integrable Z mu) (integral mu Z =
           Finset.univ.prod (fun w : W => archSphericalGammaFactor K n w (z w) s)) := by
-  let nu (w : W) := (D w).haar
-  let _ : forall w : W, SigmaFinite (nu w) := fun w => (D w).sigmaFinite
-  let _ : forall w : W, (nu w).IsHaarMeasure := fun w => (D w).isHaar
-  exact exists_archSchwartz_exact_product K n mu nu (fun w => (D w).coefficient) coeff hCoeff
-    tau (fun w => archSphericalGammaFactor K n w (z w))
-    (fun w => Exists.intro (D w).scale
-      (And.intro (D w).scale_pos (fun s hs => (D w).evaluation s (hSpec s hs w))))
+  choose a ha using exists_archSphericalScaledGaussian_exact_gamma_product K n mu z D tau hSpec coeff hCoeff
+  refine Exists.intro (HSMul.hSMul (a : Complex) (archMinkowskiMatrixGaussian K n)) ?_
+  exact ha.2
 
 end SphericalProduct
 
