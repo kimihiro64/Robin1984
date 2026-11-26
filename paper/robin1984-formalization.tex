@@ -3337,9 +3337,35 @@ constants are positive and independent of \(s\). The corresponding
 local normalization divides the test by their product.
 \path{GodementJacquetArchimedeanSphericalLocal.lean} verifies the
 section and averaged integrals and the real and complex radial
-normalizations. The global application still requires the specified
-spherical coefficient for the actual representation and the tests
-at any non-spherical places.
+normalizations.
+
+Let \(W_\infty(K)\) be the infinite places of the number field \(K\),
+and write \(K_v\) for the completion at \(v\). For \(d_v=[K_v:\mathbb R]\),
+the squared norm in the global Minkowski matrix coordinates is
+\[
+ \|X\|^2=\sum_{v\in W_\infty(K)}d_v\operatorname{tr}(X_vX_v^*).
+\]
+Thus the global Gaussian \(\exp(-\pi\|X\|^2)\) is a Schwartz test
+whose place factors are the local Gaussians with \(b=d_v\pi\).
+The determinant weight also factors over \(W_\infty(K)\).
+If the archimedean coefficient is the product of the local spherical
+coefficients, the product Haar formula evaluates the unscaled integral
+as a fixed positive constant times the product of the local Gamma factors.
+The constant is the product of the local normalization constants and the
+scalar relating the chosen archimedean Haar measure to the product measure.
+Dividing the Schwartz test by that constant gives
+\[
+ Z_\infty(s)=\prod_{v\in W_\infty(K)}\prod_{i=0}^{n-1}
+    L_{K_v}(s+\lambda_{v,i}),
+ \qquad \Re(s+\lambda_{v,i})>0\quad(v\in W_\infty(K),\ 0\le i<n).
+\]
+The integral is absolutely convergent on the common right half-plane,
+and the same test works throughout that half-plane.
+\path{GodementJacquetArchimedeanSphericalProduct.lean} proves the
+transport to the completions and the normalized global formula
+from the local spherical data. The application to an actual global
+representation requires identifying its coefficient with this product
+and handling any non-spherical places.
 
 On the closed strip $-2\le\Re s\le3$, the two exponential moments
 bound each Mellin transform uniformly in the imaginary direction.

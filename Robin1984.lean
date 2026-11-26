@@ -12,6 +12,7 @@ import Robin1984.GRH.GodementJacquetArchimedeanIwasawaProduct
 import Robin1984.GRH.GodementJacquetArchimedeanSchwartz
 import Robin1984.GRH.GodementJacquetArchimedeanSphericalGaussian
 import Robin1984.GRH.GodementJacquetArchimedeanSphericalLocal
+import Robin1984.GRH.GodementJacquetArchimedeanSphericalProduct
 import Robin1984.GRH.GodementJacquetArchimedeanZetaProduct
 import Robin1984.GRH.GodementJacquetCanonicalPrimePower
 import Robin1984.GRH.GodementJacquetCartanDoubleCosets

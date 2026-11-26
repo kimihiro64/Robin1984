@@ -2865,6 +2865,15 @@
       "reviewed": true
     },
     {
+      "path": "Robin1984/GRH/GodementJacquetArchimedeanSphericalProduct.lean",
+      "classification": "Standard mathematical formalization",
+      "mathematical_source": "The spherical archimedean factors of the standard Godement-Jacquet zeta integral.",
+      "formalization_note": "Transports the local spherical evaluations and constructs a global Schwartz test giving the exact product of Gamma factors.",
+      "content_basis": "Uses the real and complex completion isometries, adjusts the local radial constants, and normalizes the global Gaussian by the product of local constants and the Haar scalar.",
+      "dependency_status": "Depends on the verified local Gaussian and archimedean product integrals. The global coefficient must factor into the supplied spherical coefficients.",
+      "reviewed": true
+    },
+    {
       "path": "Robin1984/GRH/GodementJacquetArchimedeanZetaProduct.lean",
       "classification": "Standard mathematical formalization",
       "mathematical_source": "The archimedean product of Godement-Jacquet zeta integrals.",

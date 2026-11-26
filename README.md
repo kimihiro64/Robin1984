@@ -248,13 +248,25 @@ The integral is absolutely convergent on this half-plane. The positive
 Haar normalization constant $c_F$ is independent of $s$, and
 $L_{\mathbb R}(w)=\pi^{-w/2}\Gamma(w/2)$ and
 $L_{\mathbb C}(w)=2(2\pi)^{-w}\Gamma(w)$.
-The global specialization still requires the weighted cusp bounds,
-factorization of the actual global coefficients, and local tests at
-the non-spherical archimedean places.
+For a coefficient that factors into these spherical coefficients at all
+infinite places, a single normalized Gaussian Schwartz test in the
+global Minkowski coordinates gives
+$$
+Z_\infty(s)=\prod_{v\in W_\infty(K)}\prod_{i=0}^{n-1}
+  L_{K_v}(s+\lambda_{v,i}),
+\qquad \Re(s+\lambda_{v,i})>0\quad(v\in W_\infty(K),\ 0\le i<n).
+$$
+Here $W_\infty(K)$ is the set of infinite places of $K$, and $K_v$ is
+the completion at $v$. The test is independent of $s$ and the integral
+is absolutely convergent on the common right half-plane. An application
+to actual cuspidal data still requires the global coefficient
+factorization, the weighted cusp estimates, and the tests at any
+non-spherical archimedean places.
 [Finite tensor integrals](Robin1984/GRH/GodementJacquetFiniteAdelicCanonicalTensors.lean)
 [Global zeta product](Robin1984/GRH/GodementJacquetGlobalZetaProduct.lean)
 [Entire continuation](Robin1984/GRH/GodementJacquetEulerMellinContinuation.lean)
 [Spherical archimedean zeta integral](Robin1984/GRH/GodementJacquetArchimedeanSphericalLocal.lean)
+[Normalized archimedean Gamma product](Robin1984/GRH/GodementJacquetArchimedeanSphericalProduct.lean)
 [Generalized criteria](docs/GRH.md)
 
 ## Critical-line zeros and multiplicity
