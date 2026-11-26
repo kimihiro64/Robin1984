@@ -84,11 +84,12 @@ theorem dedekindERH_iff_correctedIdealRobin :
 
 /-! ## Grand RH -/
 
-/-- **Grand RH and triangular prime powers.** For any family with the
-stated analytic data, all of its nontrivial zeros lie on the critical line
-exactly when each member's triangular prime-power remainder has an eventual
-square-root upper bound. The full Grand RH equivalence requires the data
-for every automorphic L-function. -/
+/-- **Grand RH for a standard family and triangular prime powers.**
+For a standard family with the stated analytic data, every nontrivial
+zero of every member lies on the critical line if and only if each
+member's triangular prime-power remainder has an eventual square-root
+upper bound. The project constructs the standard family in rank one
+over every number field. -/
 theorem grandRH_iff_triangularPrimePowerBound {index : Type u} {powers : index -> Type u}
     [forall pi, Countable (powers pi)]
     (family : StandardAutomorphicFamilyData index powers)
@@ -285,11 +286,12 @@ def GrandPrimePowerMultiplicityInequality (A : Real -> Complex)
       (order delta : Complex) * (Real.exp (-(delta ^ 2)) : Complex)) ^ 2) <=
     Filter.limsup (fun t => (removeMultiplicityFrequencies E H2 t).re) Filter.atTop
 
-/-- **Grand RH and prescribed zero orders.** For an automorphic family
-with the stated analytic data and all of its nontrivial zeros on the
-critical line, the zeros are simple outside the chosen finite sets and
-have the designated exact orders exactly when each member satisfies the
-global prime-power inequality with those exceptions. -/
+/-- **Grand RH for a standard family and prescribed zero orders.**
+Assume the stated analytic data and the critical-line hypothesis for
+the family. The zeros of each individual completion are simple outside
+its finite exceptional set and have the designated exact orders if
+and only if it satisfies its global prime-power inequality. The
+rank-one construction includes the Dedekind norm twists. -/
 theorem grandRH_iff_globalPrimePowerMultiplicityInequality
     {index : Type u} {powers : index -> Type v} [forall pi, Countable (powers pi)]
     (family : StandardMultiplicityFamilyData index powers)

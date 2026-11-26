@@ -2,44 +2,41 @@
 
 [![CI](https://github.com/kimihiro64/Robin1984/actions/workflows/ci.yml/badge.svg)](https://github.com/kimihiro64/Robin1984/actions/workflows/ci.yml)
 
-Robin1984 is a Lean 4 formalization of Guy Robin's 1984 criterion for the
-Riemann hypothesis. It proves that
+Robin1984 gives arithmetic criteria for the critical-line location of
+zeros and for their multiplicities. It includes the classical Robin and
+Lagarias equivalences, corrected ideal-divisor criteria for Dirichlet
+GRH and Dedekind ERH, and triangular prime-power criteria for standard
+automorphic $L$-functions. The concrete Lean automorphic construction
+covers every unitary Hecke character of every number field.
 
-```text
-RiemannHypothesis <->
-  forall n > 5040, sigma(n) < exp(gamma) * n * log(log n),
-```
+## Headline equivalences
 
-and proves the equivalent restriction to colossally abundant integers. The
-repository also reconstructs the Nicolas--Landau oscillation argument used in
-the converse implication and discharges the finite ranges with exact,
-kernel-checked certificates.
+Let $\sigma(n)=\sum_{d\mid n}d$, let $\gamma$ be the Euler–Mascheroni
+constant, and let $H_n=\sum_{k=1}^n k^{-1}$. RH means that every zero of
+$\zeta(s)$ in $0<\Re s<1$ has real part $1/2$.
 
-It also formalizes Lagarias's 2001 elementary criterion, proving that the
-Riemann hypothesis is equivalent to
-`sigma(n) <= H_n + exp(H_n) * log(H_n)` for every positive integer `n`.
+1. **Robin.** RH holds if and only if
+   $\sigma(n)<e^\gamma n\log\log n$ for every integer $n>5040$.
+2. **Colossally abundant Robin.** RH holds if and only if the same
+   strict inequality holds for every colossally abundant integer
+   $n>5040$. Here $n>1$ is colossally abundant if some $\varepsilon>0$
+   satisfies $\sigma(k)/k^{1+\varepsilon}\leq
+   \sigma(n)/n^{1+\varepsilon}$ for every integer $k>1$.
+3. **Lagarias.** RH holds if and only if
+   $\sigma(n)\leq H_n+e^{H_n}\log H_n$ for every integer $n\geq1$.
+4. **Dirichlet GRH.** The critical-line condition for all Dirichlet
+   $L$-functions is equivalent to the corrected ideal Robin bound in every
+   cyclotomic field.
+5. **Dedekind ERH.** The critical-line condition for all Dedekind zeta
+   functions is equivalent to the same bound in every number field.
+6. **Standard automorphic critical-line criterion.** The standard family
+   satisfies the critical-line condition if and only if each test in the
+   family satisfies the triangular square-root bound below. Lean supplies
+   the unconditional analytic construction for the standard rank-one family.
 
-This is a formalization of an equivalence criterion. It does **not** prove the
-Riemann hypothesis.
-
-## Advertised results
-
-[Challenge.lean](Challenge.lean) contains the Mathlib-only statements.
-[Solution.lean](Solution.lean) proves the classical, Dirichlet GRH and
-Dedekind ERH equivalences included in the Palomar Comparator configuration.
-
-- `Robin1984.robin_inequality_iff_riemannHypothesis` formalizes Robin's
-  equivalence between the Riemann hypothesis and the strict divisor-sum
-  inequality for every integer `n > 5040`.
-- `Robin1984.riemannHypothesis_iff_colossallyAbundant_robin` proves that it is
-  equivalent to verify the same inequality on colossally abundant integers
-  above `5040`.
-- `Robin1984.riemann_hypothesis_iff_lagarias_elementary_criterion` formalizes
-  Lagarias's elementary criterion in terms of harmonic numbers.
-
-The Challenge definitions use Mathlib's divisor sum, Euler--Mascheroni
-constant, harmonic numbers, real logarithm and real power, and
-`RiemannHypothesis` predicate.
+The [Mathlib-only Challenge](Challenge.lean) and the [Solution](Solution.lean)
+give the six location equivalences and the four multiplicity equivalences.
+The [Comparator manifest](comparator.json) specifies the exact declarations.
 
 ## Dirichlet GRH, Dedekind ERH, and Grand RH
 
@@ -138,154 +135,64 @@ bound and the corrected ideal Robin inequality are equivalent for that
 field. Taking all fields gives Dedekind ERH. Taking all cyclotomic fields
 gives Dirichlet GRH.
 
-### Proofs and verification
+### The verified standard rank-one family
 
-The [research paper](paper/robin1984-formalization.tex) proves all three
-equivalences in ordinary mathematics and gives the citations for the
-automorphic analytic inputs. The classical Robin, colossally abundant,
-and Lagarias arguments appear in its appendices.
+A unitary Hecke character of $K$ is a continuous character
+$\chi:\mathbb A_K^\times/K^\times\to S^1$. At an unramified prime
+$\mathfrak p$, its Euler parameter $\alpha_\chi(\mathfrak p)$ is the
+local character evaluated at a uniformizer. At a ramified prime set
+$\alpha_\chi(\mathfrak p)=0$. With $q=N\mathfrak p$, the paired
+coefficients are
 
-Lean verifies both corrected ideal equivalences and the triangular
-equivalence for a family supplied with `HasStandardAutomorphicAnalytics`.
-It constructs the standard completed rank-one family over every number
-field, including unitary norm twists. Its critical-line assertion is
-equivalent to the Dedekind triangular bound for the field together with
-the paired triangular bound for every unitary Hecke character nontrivial
-on norm-one idele classes.
+```math
+b_{\mathfrak p,j}(L_\chi L_{\chi^{-1}})
+   =2\log q\,\Re\bigl(\alpha_\chi(\mathfrak p)^j\bigr).
+```
 
-For higher ranks, Lean proves that the self-dual Fourier transform of a
-Schwartz rectangle is a finite sum of Schwartz rectangles. The invertible
-theta integrals for the original test and its Fourier transform both decay
-as $O(e^{-\beta t})$ for every $\beta>0$ as $t\to+\infty$, given a measurable
-fundamental domain, bi-invariant Haar measure, and square-integrable quotient
-functions. [Fourier closure and dual decay](Robin1984/GRH/GodementJacquetThetaDualDecay.lean)
+The characters that are trivial on the norm-one idele classes are the
+norm characters $\chi_t=|\cdot|_{\mathbb A_K}^{it}$. Their completed
+functions are the pole-cleared Dedekind completion evaluated at
+$s+it$. Thus the single test $Z=\zeta_K$ covers all norm characters of
+$K$. For all remaining characters use $Z=L_\chi L_{\chi^{-1}}$ and
+$m_Z=0$. Over each number field the joint critical-line condition is
+equivalent to the Dedekind bound and all these paired Hecke bounds.
+The Lean construction supplies the actual Euler products, completions,
+and analytic estimates for this family.
+[Rank-one equivalences](Robin1984/GRH/HeckeStandardRankOne.lean).
 
-The full rational theta series, including singular matrices, has the
-bound
-$$
-\sum_{P\in M_n(K)} |\Phi(A^{-1}z_tPB)|
-\le C_\Phi(t) H_L(A)^m H_R(B)^m,\qquad
-m>\dim_{\mathbb R} M_n(K_\infty).
-$$
-Here $H(U,V)=\max(1,\|X\mapsto U_\infty X V_\infty\|_{\rm op})$ on the
-archimedean matrix coordinates. The weights are
-$H_L(A)=H(\delta_A A,1)$ and $H_R(B)=H(1,B^{-1}\delta_B)$, where the
-nonzero integers $\delta_A,\delta_B$ clear the finite entries of $A$
-and $B^{-1}$. The factor $C_\Phi(t)$ depends on the test and $t$.
-The same two weights apply to the Fourier dual.
+### Higher-rank formalization cutoff
 
-Lean proves cancellation of the singular terms for both tests when
-$c,f$ have zero mean and vanishing unipotent periods and both weighted
-absolute values $|u|H_L^m,|u|H_R^m$ belong to $L^1(D,\mu)$ for
-$u=c,f$. A measurable orbit cover $S$ of finite measure, with compact
-bounds on the finite entries and uniformly bounded weighted cusp values,
-supplies a fundamental domain $D\subseteq S$ with the required weighted
-$L^1$ and unweighted $L^2$ bounds. Its positive finite covolume supplies
-right invariance of the inner-regular Haar measure. Therefore the primal
-and dual invertible theta integrals give entire Mellin transforms related
-by $s\mapsto 1-s$.
-[Reduction cover and continuation](Robin1984/GRH/GodementJacquetReductionContinuation.lean)
+The [paper](paper/robin1984-formalization.tex) proves the equivalence
+for the standard $L(s,\pi)$ in every rank using the cited analytic
+theorems. The concrete Lean construction for this release stops at
+$\mathrm{GL}_1$. The Lean theorem for a supplied family uses
+`HasStandardAutomorphicAnalytics` and the corresponding multiplicity
+theorem uses `HasStandardMultiplicityAnalytics`.
 
-For $f$ invariant under rational left translation with $f(z_tB)=f(B)$, let
-$Z_{\Phi,c,f}(s)$ be the Godement–Jacquet zeta integral for the matrix
-coefficient $\int_D f(Ag)c(A)\,d\mu(A)$. Then
-$$
-Z_{\Phi,c,f}(s)=\int_{\mathbb R} e^{t(s+(n-1)/2)}
-\int_{D\times D} c(A)f(B)
-  \sum_{P\in\mathrm{GL}_n(K)}\Phi(A^{-1}z_tPB)\,d\mu(A)d\mu(B)\,dt.
-$$
-Right translation on the norm-one quotient bounds the inner absolute
-integral by $\|c\|_{L^2(D)}^2+\|f\|_{L^2(D)}^2$, uniformly in $g$.
-Thus it suffices that the determinant-weighted matrix test be integrable
-over the adelic group. Tonelli then gives the absolute convergence used
-in the Mellin identity.
-[Absolute Mellin identity](Robin1984/GRH/GodementJacquetMellinAbsolute.lean)
-[Square-integrability proof](Robin1984/GRH/GodementJacquetMellinFromSquareIntegrability.lean)
+For the spherical higher-rank construction, Lean proves the finite
+and archimedean local Euler integrals and the product-test continuation
+and functional equation **given** a measurable finite-volume reduction
+set and the stated square-integrability and cuspidal cancellation.
+[Conditional product-test continuation](Robin1984/GRH/GodementJacquetCuspidalProductTestContinuation.lean).
 
-For the local unramified calculation, let $F$ be a nonarchimedean local
-field with ring of integers $\mathcal O$, and write $G=\mathrm{GL}_n(F)$,
-$K=\mathrm{GL}_n(\mathcal O)$, $A$ for the diagonal group and $U$ for the
-upper-unitriangular group. Lean proves the factorization $g=auk$ for every $g\in G$, with
-$a\in A$, $u\in U$, and $k\in K$. It constructs Haar measures on $G$
-and $AU$, normalized on $K$ and $AU\cap K$. For a measurable
-right-$K$-invariant $f$ integrable on $G$, it proves
-$$
-\int_G f(g)\,dg=\int_{A\times U} f(au)\,d^\times a\,du.
-$$
-Here $K$, $A\cap K$, and $U\cap K$ have mass one in their respective
-measures. With the spherical inducing characters $\chi_1,\ldots,\chi_n$,
-residue cardinality $q$, and a uniformizer $\varpi$, the normalized
-unramified zeta integral is
-$$
-\prod_{i=1}^{n}\bigl(1-\chi_i(\varpi)q^{-s}\bigr)^{-1}
-$$
-on a right half-plane under the spherical coefficient and absolute
-convergence hypotheses.
-[Product integral](Robin1984/GRH/ValuationIwasawaCoordinates.lean)
-[Spherical evaluation](Robin1984/GRH/GodementJacquetUnramifiedMeasure.lean)
-
-Given the inverse-denominator test combinations at the ramified places,
-the finite-place proofs assemble the local factors into a fixed finite
-weighted sum of tensor zeta integrals. If the global coefficients
-factor, the global integrals have one common archimedean integral
-$Z_\infty(s)$ and one positive Haar constant $r$.
-$$
-\sum_j w_j Z_j(s)=r\,Z_\infty(s)\prod_{\mathfrak p}L_{\mathfrak p}(s).
-$$
-When the theta Mellin transforms for the $Z_j$ are entire, their weighted
-sum divided by $r$ continues this product.
-
-For a real or complex place $F$, let $d=[F:\mathbb R]$ and let
-$\lambda_0,\ldots,\lambda_{n-1}$ be the normalized spherical inducing
-parameters. The Gaussian test $\exp(-d\pi\operatorname{tr}(gg^*))$, with
-determinant weight $|\det g|_F^{s+(n-1)/2}$ and the spherical coefficient,
-has local zeta integral
-$$
-Z_{\infty,F}(s)=c_F\prod_{i=0}^{n-1} L_F(s+\lambda_i),
-\qquad \Re(s+\lambda_i)>0\quad(0\le i<n).
-$$
-The integral is absolutely convergent on this half-plane. The positive
-Haar normalization constant $c_F$ is independent of $s$, and
-$L_{\mathbb R}(w)=\pi^{-w/2}\Gamma(w/2)$ and
-$L_{\mathbb C}(w)=2(2\pi)^{-w}\Gamma(w)$.
-For a coefficient that factors into these spherical coefficients at all
-infinite places, a single normalized Gaussian Schwartz test in the
-global Minkowski coordinates gives
-$$
-Z_\infty(s)=\prod_{v\in W_\infty(K)}\prod_{i=0}^{n-1}
-  L_{K_v}(s+\lambda_{v,i}),
-\qquad \Re(s+\lambda_{v,i})>0\quad(v\in W_\infty(K),\ 0\le i<n).
-$$
-Here $W_\infty(K)$ is the set of infinite places of $K$, and $K_v$ is
-the completion at $v$. The test is independent of $s$ and the integral
-is absolutely convergent on the common right half-plane.
-
-With the coefficient omitted, the determinant-weighted Gaussian is
-integrable for $\sigma=\Re s>(n-1)/2$. For a finite adelic tensor with
-compact locally constant factors at a finite set $E$ and integral
-matrix indicators elsewhere, the coefficient-free test is integrable
-for $\sigma>(n+1)/2$. The product measure combines the two bounds for
-the joint test. Its full rational theta series converges absolutely
-pointwise by a finite expansion in adelic rectangles.
-
-On a fixed measurable fundamental domain inside a finite-measure
-reduction set, compact finite entry projections and weighted cusp
-bounds imply that the product-test theta Mellin transform is entire and
-satisfies reflection with the self-dual Fourier test. Inserting the
-entire transforms in the global zeta identity continues the completed
-Euler product realized by the supplied local integrals. An application
-to actual cuspidal data requires constructing the reduction set and
-weighted bounds, identifying the global coefficient, and matching
-the ordinary and Fourier-transformed local tests to the required factors.
-[Determinant-weighted tests](Robin1984/GRH/GodementJacquetDeterminantWeightedTests.lean)
-[Product-test Mellin identity](Robin1984/GRH/GodementJacquetProductTestMellinContinuation.lean)
-[Cuspidal continuation on a fixed domain](Robin1984/GRH/GodementJacquetCuspidalProductTestContinuation.lean)
-[Finite tensor integrals](Robin1984/GRH/GodementJacquetFiniteAdelicCanonicalTensors.lean)
-[Global zeta product](Robin1984/GRH/GodementJacquetGlobalZetaProduct.lean)
-[Entire continuation](Robin1984/GRH/GodementJacquetEulerMellinContinuation.lean)
-[Spherical archimedean zeta integral](Robin1984/GRH/GodementJacquetArchimedeanSphericalLocal.lean)
-[Normalized archimedean Gamma product](Robin1984/GRH/GodementJacquetArchimedeanSphericalProduct.lean)
-[Generalized criteria](docs/GRH.md)
+- A compact finite-adelic projection meets every rational orbit in the
+  determinant-norm-one group. At infinity, a determinant-bounded
+  Iwasawa Siegel region with lower bounds on the successive diagonal
+  log gaps and bounded upper entries has finite Haar volume.
+  [Finite reduction](Robin1984/GRH/GodementJacquetFiniteAdelicReduction.lean),
+  [archimedean volume](Robin1984/GRH/GodementJacquetArchimedeanSiegelVolume.lean).
+- The short-row selection and integral matrix denominator bounds are
+  proved. The next step is to apply them to the embedded integral
+  number-field lattice and use integral row changes to put a
+  representative of every orbit into the same archimedean region,
+  with a compact finite-adelic projection.
+  [Short rows](Robin1984/GRH/GodementJacquetShortFieldLatticeRows.lean),
+  [integral matrix inverse](Robin1984/GRH/GodementJacquetIntegralMatrixInverse.lean).
+- The global construction still needs the cuspidal decay and quotient
+  integrability on that reduction set, followed by identification of
+  the normalized completed functions with the actual standard family.
+  General local data at ramified and nonspherical places belong to the
+  extension beyond the spherical construction.
 
 ## Critical-line zeros and multiplicity
 
@@ -334,27 +241,46 @@ factor correction when that factor has nonzero order at $w$.
 
 ### Global multiplicity test
 
-There is also a test that combines all ordinates in one inequality.
-Use $A(t)=e^{-t/2}R_Z(e^t)$ for $t\ge 0$ and $A(t)=0$ for $t<0$.
-For $a=1,2$ convolve $A$ with the integrable kernel
-$k_a=(\frac{d}{dt}+\frac12)(\frac{d}{dt}+\frac32)g_a$, where
-$g_a(t)=e^{-t^2/(4a)}/\sqrt{4\pi a}$. Write $H_a=k_a*A$ and let
-$\widetilde H_a$ remove the mean Fourier coefficients at any specified
-exceptional ordinates. Under the square-root bound, the test is
+Use the **individual** Euler coefficients for the multiplicity of an
+individual function. For $\zeta$ take $K=\mathbb Q$ and $b_{p,j}=\log p$.
+For $\zeta_K$ take $b_{\mathfrak p,j}=\log N\mathfrak p$. For a Dirichlet
+character $\chi$ modulo $m$ use $b_{p,j}=\chi(p^j)\log p$, with $\chi$
+extended by zero off the units modulo $m$. The pole order at $1$ is one
+for the zeta functions and for a principal Dirichlet character.
+For a pole-free Hecke function use
+$b_{\mathfrak p,j}=\alpha_\chi(\mathfrak p)^j\log N\mathfrak p$ and pole
+order zero. For an individual standard $L(s,\pi)$ use
+$b_{\mathfrak p,j}=\log N\mathfrak p\sum_k\alpha_{\mathfrak p,k}^{\,j}$,
+with the completion and pole clearing in the chosen normalization.
+
+For these coefficients form $R(x)$ by the same triangular formula and
+put $A(t)=e^{-t/2}R(e^t)$ for $t\geq0$, and $A(t)=0$ for $t<0$.
+For $a=1,2$ set
 
 ```math
-\lim_{T\to\infty}\frac1T\int_0^T|\widetilde H_1(t)|^2\,dt
-\ \le\ \limsup_{t\to\infty}\Re\widetilde H_2(t).
+g_a(t)=\frac{e^{-t^2/(4a)}}{\sqrt{4\pi a}},\qquad
+H_a=\bigl((\partial_t+\tfrac12)(\partial_t+\tfrac32)g_a\bigr)*A,\qquad
+c_a(u)=\lim_{T\to\infty}\frac1T\int_0^T H_a(t)e^{-iut}\,dt .
 ```
 
-The difference of the two sides is the sum of
-$m_\gamma(m_\gamma-1)e^{-2\gamma^2}$ over the retained ordinates, where
-$m_\gamma$ is the order in the function used by the Mellin formula.
-This detects any repeated zero. Use the individual factors and sum
-with their factorization weights for a criterion that allows repeated
-zeros forced by the product. The [paper](paper/robin1984-formalization.tex)
-proves the inequality criterion, including exact order constraints
-at exceptional ordinates.
+Here $*$ denotes convolution on $\mathbb R$. Let $E$ be the finite set
+of ordinates exempted from simplicity, $J$ the finite set of ordinates
+with specified orders, and $d:J\to\mathbb Z_{\geq0}$ the desired orders.
+Set $\widetilde H_a(t)=H_a(t)-\sum_{u\in E}c_a(u)e^{iut}$. The test is
+
+```math
+\underbrace{\limsup_{T\to\infty}\frac1T\int_0^T|\widetilde H_1(t)|^2\,dt}_{\mathcal E}
++\underbrace{\sum_{u\in J}|c_1(u)-d(u)e^{-u^2}|^2}_{\mathcal P}
+\ \le\
+\underbrace{\limsup_{t\to\infty}\Re\widetilde H_2(t)}_{\mathcal S}.
+```
+
+Under the critical-line hypothesis, the mean square has a limit, and
+$c_a(u)=m_u e^{-au^2}$ where $m_u$ is the zero order at $1/2+iu$.
+Consequently $\mathcal E-\mathcal S$ is the sum of
+$m_u(m_u-1)e^{-2u^2}$ over retained ordinates. Each summand is nonnegative.
+With $E=J=\varnothing$ the inequality detects simple zeros. With
+exceptions it also forces $m_u=d(u)$ at each $u\in J$.
 
 ### Four conditional headline equivalences
 
@@ -387,10 +313,14 @@ the factorwise criterion equates the forced orders
 $\operatorname{ord}_w\zeta_K=\sum_{j:L_{K,j}(w)=0}e_{K,j}$
 with $\sum_j e_{K,j}\mathcal E_j\le\sum_j e_{K,j}\mathcal S_j$.
 
-The Grand RH proof takes the individual standard Euler coefficients and
-Gamma completions through `HasStandardMultiplicityAnalytics`.
-The paper supplies the inputs for the standard family from the cited
-theorems. The Lean instantiation for higher ranks remains in progress.
+For the concrete standard $\mathrm{GL}_1$ family, the prescribed-order
+test is the conjunction of the Dedekind test and the individual
+pole-free Hecke tests. For the norm twist with parameter $t$, the
+Dedekind order at $1/2+iu$ is the twist order at $1/2+i(u-t)$.
+Translate the Dedekind exceptional and prescribed ordinates by the same
+amount. The normalized Dedekind completion and its norm twists
+therefore share one arithmetic test.
+[Standard rank-one multiplicity theorem](Robin1984/GRH/HeckeStandardRankOne.lean).
 
 ## Mathematical organization
 
@@ -486,12 +416,11 @@ proof, theorem-by-theorem correspondence, and original references.
 
 ## Trust and proof surface
 
-The kernel axiom audit of the five Comparator `Solution` declarations
-returned exactly Lean's standard principles `propext`, `Classical.choice`,
-and `Quot.sound`. Project proof sources contain no custom axiom declarations,
-`sorry`, `admit`, or `native_decide`. The deliberate `sorry`s in `Challenge.lean` mark statements and are excluded
-from proof-status counts. The Comparator manifest lists the declarations
-with audited proofs.
+The Comparator manifest lists ten Challenge/Solution pairs and
+permits the standard Lean axioms `propext`, `Classical.choice`,
+and `Quot.sound`. The deliberate `sorry` placeholders in
+`Challenge.lean` state the theorem targets. The implementation
+proofs live in `Solution.lean` and the project library.
 
 Finite certificates use ordinary `decide +kernel`, exact natural and rational
 arithmetic, and proved soundness theorems. Comparator statement checking and

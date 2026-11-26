@@ -84,6 +84,7 @@ Dedekind zeta functions, automorphic $L$-functions, Riesz means,
 generalized Riemann hypotheses, formal verification}
 
 \begin{document}
+\setlength{\emergencystretch}{2em}
 \raggedbottom
 \begin{abstract}
 For a number field \(K\), we prove that the Riemann hypothesis for
@@ -104,15 +105,13 @@ contragredient. The converse in both settings uses a Mellin
 transform, Landau's theorem, and the sign of the residue at a
 possible real zero.
 
-Lean verifies both corrected ideal equivalences and the Dedekind
-simplicity criterion under ERH, as well as the classical Robin,
-colossally abundant, and Lagarias statements.
-It verifies the triangular criterion for an indexed family with
-the stated standard analytic properties and constructs the
-standard rank-one family over every number field. The
-higher-rank analytic inputs in the paper come from the classical
-theorems on standard \(L\)-functions. Their instantiation in Lean
-remains open.
+The Mathlib-only Challenge and Lean Solution give six location
+equivalences and four multiplicity equivalences. For the automorphic
+criteria, Lean constructs the standard rank-one family over every
+number field and proves the critical-line and prescribed-order
+criteria for it, including the Dedekind norm twists. The ordinary
+mathematical argument in higher rank uses the analytic theorems on
+standard \(L\)-functions.
 \end{abstract}
 \maketitle
 
@@ -179,6 +178,98 @@ The main arguments are given in Sections~\ref{sec:positive-mellin}--%
 the exact classical Robin cutoff, the colossally abundant reduction,
 and the proof reconstruction. The Lagarias criterion and the
 verification artifacts have their own appendices.
+
+\section{How the equivalences fit together}\label{sec:proof-overview}
+
+The common starting point is the logarithmic derivative of an Euler
+product. Its coefficients count prime powers with their local weights.
+Giving the term of norm \(v\) the weight \(1-v/x\), for \(v\le x\),
+has a precise analytic effect. Its Mellin transform contributes the
+factor \(v^{-s}/(s(s+1))\). For the zeta functions the pole at \(1\)
+also contributes the main term \(x/2\). Subtracting the triangular sum
+from this term produces \(R_Z(x)\) in
+\eqref{eq:grand-rh-prime-power}. Formula
+\eqref{eq:grand-mellin-transform} relates its transform directly to
+\(Z'/Z\). The denominator \(s(s+1)\) makes the contributions of
+the nontrivial zeros absolutely summable after inversion.
+
+If the zeros lie on the critical line, the term from a zero \(\rho\)
+is proportional to \(x^\rho/(\rho(\rho+1))\). Its dependence on \(x\)
+has magnitude \(\sqrt{x}\). Summing with multiplicity gives the
+square-root estimate. Conversely, an eventual bound
+\(R_Z(x)\le C\sqrt{x}\) makes \(C\sqrt{x}-R_Z(x)\) nonnegative
+beyond a cutoff. A zero to the right of the line would create a pole of
+its transform. Landau's theorem would then force a singularity on the
+real axis at the abscissa of convergence. Every possible real pole
+there has negative residue for this nonnegative comparison function,
+because \(Z'/Z\) has positive residue at a real zero and \(R_Z\)
+is subtracted. The transform would approach \(-\infty\) along the real
+axis, contradicting nonnegativity. The completed functional equation
+excludes zeros to the left by reflection.
+
+\subsection{From the triangular bound to the ideal divisor bound}
+
+For \(Z=\zeta_K\), each local parameter of the trivial Hecke
+character is \(1\). The coefficient at \(\mathfrak p^j\) is therefore
+\(\log N\mathfrak p\), and the pole order is one. In this specialization,
+put \(E_K(u)=\psi_K(u)-u\), where \(\psi_K(u)\) sums \(\log N\mathfrak p\)
+over all prime ideals \(\mathfrak p\) and powers \(j\geq1\) with
+\((N\mathfrak p)^j\leq u\). For \(x\geq1\) the exact identity is
+\[
+ R_{\zeta_K}(x)
+   =\frac{x}{2}-\frac1x\int_1^x\psi_K(u)\,du
+   =\frac{1}{2x}-\frac1x\int_1^x E_K(u)\,du .
+\]
+Thus the triangular test bounds the primitive of the very same
+prime-ideal error that appears in the ideal Mertens formula.
+
+The divisor-sum criterion expresses that zero condition through a
+different arithmetic quantity. Write the normalized ideal divisor sum
+as a product of one geometric sum for each prime ideal dividing the
+ideal. Taking logarithms, the local inequalities bound this product
+using the single budget \(\log N\mathfrak a\). In the Mertens formula
+\eqref{eq:ideal-mertens}, the budget absorbs the boundary term
+\(E_K(x)/(x\log x)\). The remaining integral of \(E_K\), together
+with the norm-budget comparison, yields the correction in
+\eqref{eq:ideal-robin}. For the converse, take the integral ideal with
+one extra factor \(\mathfrak p\) for each prime power
+\((N\mathfrak p)^j\leq x\). Its logarithmic norm is \(\psi_K(x)\).
+The ideal bound on this particular family gives a one-sided bound on
+the weighted prime-ideal error, so the same Mellin and residue argument
+recovers Dedekind RH. The triangular bound and the ideal bound are
+therefore equivalent for each fixed field.
+
+Taking every number field gives Dedekind ERH. Restricting the fields
+to \(\mathbb Q(\zeta_m)\) gives Dirichlet GRH because the zeta function
+of each cyclotomic field factors into the primitive Dirichlet
+\(L\)-functions belonging to its characters. Over \(\mathbb Q\),
+the integral ideal \((n)\) has norm \(n\) and its ideal divisor sum
+is \(\sigma(n)\). Here the residue and the absolute discriminant
+are both \(1\), so the field criterion reads
+\[
+ \frac{\sigma(n)}{n}\leq e^\gamma
+   \left(\log\log n+\frac{12}{\sqrt{\log n}}\right)
+ \qquad\text{for all sufficiently large }n .
+\]
+This rational specialization is equivalent to RH. Robin's theorem
+\cite{Robin1984} identifies the same condition with the strict
+uncorrected inequality for every \(n>5040\).
+Appendix~\ref{app:classical-criteria} gives the argument for that
+exact cutoff and the reduction to colossally abundant integers.
+
+\subsection{From zero locations to zero orders}
+
+For a multiplicity test, take the individual logarithmic derivative.
+The log-scale remainder and the two Gaussian smoothings in
+Section~\ref{sec:multiplicity} extract a coefficient
+\(m_u e^{-a u^2}\) at the ordinate \(u\), where \(m_u\) is the
+zero order. The time-averaged squared modulus for \(a=1\) weights
+each \(m_u^2\) by \(e^{-2u^2}\). The upper envelope for \(a=2\)
+weights \(m_u\) by the same amount. Their difference is a sum of
+nonnegative terms \(m_u(m_u-1)e^{-2u^2}\), which vanishes precisely
+when the retained zeros are simple. Finite-frequency subtraction
+exempts selected ordinates, and the squared errors in the measured
+coefficients impose prescribed orders.
 
 \section{A one-sided Mellin criterion}\label{sec:positive-mellin}
 
@@ -1154,7 +1245,7 @@ multiplicities directly.
 Write \(\mathcal E(Z;E)\) for the mean-square limit on the left of
 \eqref{eq:global-multiplicity-energy}, including the completion
 correction where needed. Write \(\mathcal S(Z;E)\) for the limit superior
-on the right. For a finite subset \(J\subseteq E\) and prescribed
+on the right. For a finite set \(J\) and prescribed
 orders \(r(\gamma)\ge0\) on \(J\), put
 \[
  \mathcal P(Z;J,r)
@@ -1163,7 +1254,8 @@ orders \(r(\gamma)\ge0\) on \(J\), put
 \]
 Here \(h_1\) is computed before removing the ordinates in \(E\).
 Thus \(E\setminus J\) permits arbitrary orders, and \(J\) prescribes
-exact orders.
+exact orders. Orders prescribed outside \(E\) are also subject to the
+simplicity requirement.
 
 \begin{theorem}[RH and simplicity]\label{thm:rh-multiplicity}
 Assume the Riemann hypothesis. Every nontrivial zero of \(\zeta\)
@@ -1218,9 +1310,10 @@ irreducible multiplicities of the permutation representation.
 
 \begin{theorem}[Grand RH and multiplicity of standard \(L\)-functions]
 \label{thm:grand-multiplicity}
-Assume the critical-line condition for the standard family. For each individual unitary cuspidal standard
-\(L\)-function over a number field, fix \(J_\pi\subseteq E_\pi\)
-and \(r_\pi\) as above. All nontrivial zeros outside \(E_\pi\)
+Assume the critical-line condition for the standard family. For each
+individual unitary cuspidal standard \(L\)-function over a number
+field, fix finite sets \(E_\pi,J_\pi\) and orders \(r_\pi\) as above.
+All nontrivial zeros outside \(E_\pi\)
 are simple and all orders on \(J_\pi\) equal \(r_\pi\), for every
 \(\pi\), if and only if, for every \(\pi\),
 \[
@@ -1293,33 +1386,27 @@ and~\ref{thm:dedekind-erh} appear in the Mathlib-only
 \path{dedekindERH_iff_correctedIdealRobin}.
 \end{center}
 The source proves both implications for the ideal criterion and the
-cyclotomic factorization \eqref{eq:cyclotomic-product}. The release's Comparator
-check covers the two generalized statements and the three classical
-statements. Appendix~\ref{sec:formalization} describes statement
-comparison, axiom audits, and kernel replay.
+cyclotomic factorization \eqref{eq:cyclotomic-product}. The Comparator
+manifest lists ten headline statements, comprising the three classical
+location equivalences, the three generalized location equivalences,
+and the four conditional multiplicity equivalences.
+Appendix~\ref{sec:formalization} describes statement comparison,
+axiom inspection, and kernel replay.
 
-The four multiplicity statements of
-Theorems~\ref{thm:rh-multiplicity}--\ref{thm:grand-multiplicity}
-also have Mathlib-only Challenge statements and Solution proofs.
-The first two use the actual Riemann zeta and Dirichlet \(L\)-functions.
-The third uses the actual Dedekind zeta continuation and takes the
-positive factorization and its analytic inputs as data.
-The fourth is \path{grandRH_iff_globalPrimePowerMultiplicityInequality}.
-Its inputs are the individual Euler logarithms, order-one completed
-functions, and standard Gamma completions, made explicit by
-\path{HasStandardMultiplicityAnalytics}. Lean proves that these
-completions preserve the zero orders on the line, and that the
-Gaussian frequency mean measures the order at each specified ordinate.
+The first three multiplicity statements use the Riemann zeta,
+the individual Dirichlet \(L\)-functions, and the Dedekind zeta
+continuation over every number field, respectively. The simple-zero
+criterion for Dedekind zeta requires only the prime-ideal data for
+that field. The positive-factorization criterion is a separate
+result with the factorization and its analytic data as inputs.
 
-The location theorem \path{grandRH_iff_triangularPrimePowerBound}
-uses the paired Euler products, completions, growth, and functional
-equations in \path{HasStandardAutomorphicAnalytics}.
-Section~\ref{sec:grand-research} uses the cited classical theorems
-to supply the automorphic inputs in the mathematical argument.
-Instantiating the Lean results over the full family of standard
-automorphic \(L\)-functions remains part of the formalization work.
-The checked Dedekind specialization and rank-one construction are
-described in Appendix~\ref{app:hecke-formalization}.
+The standard-family location theorem takes the paired Euler
+products, completions, growth bounds, and functional equations as
+inputs. The multiplicity theorem takes the individual Euler logarithms
+and completions. Lean supplies the analytic estimates for the actual
+standard rank-one family over every number field.
+Appendix~\ref{app:hecke-formalization} explains the Hecke
+construction and the pole-cleared Dedekind norm twists.
 
 The source, theorem boundary, and verification instructions are
 available at \url{\repositoryurl}.
@@ -2894,6 +2981,21 @@ shifts and their radial Gaussian Mellin evaluations on $\Re s>0$
 are verified in \path{Robin1984/GRH/HeckeArchimedean.lean}.
 The resulting Hecke triangular criterion uses those local data.
 
+The prescribed-order criterion uses the growth of each individual
+completed function.
+The Euler product and archimedean factors bound it in the right
+half-plane. The completed functional equation transfers the dual
+bound to the left, and the Tate integral bounds the middle strip.
+These estimates give order at most one for each pole-free completion.
+After removing the conductor and Gamma factors, the logarithmic
+derivative has coefficients
+\(\alpha_\chi(\mathfrak p)^j\log N\mathfrak p\).
+Thus the Gaussian inequality measures the orders of the individual
+Hecke function. The norm characters use the Dedekind signal,
+with the order at ordinate \(u\) transported to \(u-t\) for
+\(\chi_t\). The combined Lean results are in
+\path{Robin1984/GRH/HeckeStandardRankOne.lean}.
+
 \paragraph{The adelic Poisson formula for a finite coset.}
 Lean verifies that the diagonal is discrete and that
 $\mathbb A_K/K$ is compact. It constructs the continuous additive
@@ -3076,7 +3178,24 @@ standard family satisfying the stated analytic hypotheses. It uses
 the Euler products and Gamma factors to supply the inputs of
 \path{grandRobinCompletedCriterion_of_entireOrder}. The rank-one
 criterion uses the completions constructed in
-Appendix~\ref{app:hecke-formalization}. In higher ranks,
+Appendix~\ref{app:hecke-formalization}.
+
+\paragraph{Higher-rank formalization boundary.}
+The next step for the spherical construction is a finite-volume
+reduction set for the determinant-norm-one adelic quotient, with
+representatives simultaneously inside a compact finite-adelic
+projection and an archimedean Siegel region of finite Haar volume. The code proves
+the finite projection cover, the Haar-volume estimate for the
+archimedean region, short-row selection for integral lattices, and a
+uniform denominator for the inverse of the integral row matrix.
+It still needs to combine these inputs with the actual number-field
+embedding and integral row reductions. The product-test continuation
+then requires cuspidal decay and quotient integrability on the
+resulting domain, followed by the identification of the completed
+functions with the standard spherical Euler products. The current
+concrete Lean equivalences concern degree one.
+
+For the analytic inputs to that continuation,
 \path{GodementJacquetThetaDualDecay.lean} proves that the self-dual Fourier
 transform of an adelic Schwartz rectangle is a finite sum of Schwartz
 rectangles. The trace pairing transposes the matrix frequency and applies
@@ -3317,7 +3436,10 @@ For \(\Phi_b(g)=\exp(-b\operatorname{tr}(gg^*))\), \(b>0\), the determinant
 weight \(|\det g|_F^{s+(n-1)/2}\), with
 \(|\det g|_F=\|\det g\|^d\), gives row exponent
 \(d(s+\lambda_i)+d(n-i-1)\). The Gaussian splits into
-\(\exp(-b\sum_i a_i^2)\prod_{i<j}\exp(-b\|a_i u_{ij}\|^2)\).
+\[
+ \exp\!\left(-b\sum_i a_i^2\right)
+ \prod_{i<j}\exp\!\left(-b\|a_i u_{ij}\|^2\right).
+\]
 For each \(i<j\), integrating the upper entry contributes
 \(a_i^{-d}(\pi/b)^{d/2}\). The \(n-i-1\) entries in row \(i\) cancel
 the additional row exponent exactly. The remaining integral in that
@@ -3389,10 +3511,10 @@ of the absolute local integrals is bounded above by
  \left(\prod_{\mathfrak p\in E}r_{\mathfrak p}\right)
  \prod_{i=0}^{n-1}\zeta_K(\sigma-\delta+i).
 \]
-Each zeta argument exceeds one. This is the uniform bound used in
-\path{GodementJacquetDeterminantWeightedTests.lean} to pass to the
-restricted product and then combine the finite and archimedean
-absolute integrals on the adelic group.
+Each zeta argument exceeds one. The uniform bound allows passage to
+the restricted product and combines with the archimedean absolute
+integral on the adelic group. The formal proof is in
+\path{GodementJacquetDeterminantWeightedTests.lean}.
 
 The global product test is a finite sum of adelic rectangles, hence
 continuous. For each rectangle and each fixed pair of group elements,
@@ -3961,13 +4083,11 @@ ordinary mathematical review address that separate question.
 
 \subsection{Axioms and dependency boundary}
 
-The repository contains no project-local axiom declarations.  Outside the
-two deliberate statement holes in the Palomar challenge, project proof
-sources contain no \leanname{sorry}, \leanname{admit}, or
-\leanname{native\_decide}.  Diagnostic commands such as
-\leanname{\#print axioms} occur neither in repository-owned Lean sources nor
-in the timed external import closure. A kernel axiom audit of the five
-advertised declarations returned the standard principles
+The repository contains no project-local axiom declarations.
+The deliberate \leanname{sorry} placeholders in
+\path{Challenge.lean} specify the statements. The implementation
+proofs are in \path{Solution.lean} and the imported library.
+The Comparator manifest permits the standard principles
 \[
   \leanname{propext},\qquad
   \leanname{Classical.choice},\qquad
@@ -4049,14 +4169,12 @@ Kontorovich, Terence Tao, and its contributors.  The complete
 
 Project-independent helper results are isolated under
 \codedir{Robin1984/Mathlib} and mapped to proposed upstream Mathlib paths in
-\codelink{MATHLIB_PORTING.md}{MATHLIB\_PORTING.md}.  The inventory records
-which files are ready but not yet submitted.  The intended maintenance path
-is to upstream those generic units separately and to propose the xi-divisor
-interface and compatibility repairs to \leanname{PrimeNumberTheoremAnd};
-until acceptance, the pinned public fork is the reproducible source of the
-checked dependency.  When both replacement conditions are met, the project
-can repin directly to upstream, but only after the full Lean build and
-Comparator/NanoDa pipeline pass against that revision.
+\codelink{MATHLIB_PORTING.md}{MATHLIB\_PORTING.md}.
+The inventory records which files are ready for submission. The
+xi-divisor interface and compatibility repairs belong upstream in
+\leanname{PrimeNumberTheoremAnd}. The public fork is pinned until an
+upstream revision supplies those requirements and passes the full
+Lean, Comparator, and NanoDa checks.
 
 \subsection{Reproducing and independently checking the result}
 
@@ -4125,17 +4243,13 @@ independent statement and replay pipeline is
 \begin{verbatim}
 ./scripts/verify-comparator.sh
 \end{verbatim}
-The checked-in
-\codelink{scripts/verify-comparator.sh}{verification script}
-checks out exact reviewed revisions of Comparator, lean4export, Landrun, and
-NanoDa; requires the project's Lean~4.33.1 toolchain; performs the sequential
-project build; and runs the five Comparator stages listed above.  The
-checked-in
-\codelink{.github/workflows/ci.yml}{CI workflow} is the complete executable
-recipe for the release. It validates licensing and metadata, builds the
-paper and Lean sources, and passes the required artifacts to downstream
-jobs. Publication requires successful statement matching and
-independent kernel replay.
+The \codelink{scripts/verify-comparator.sh}{verification script}
+pins Comparator, lean4export, Landrun, and NanoDa. It checks the
+Lean~4.33.1 toolchain, builds the proof modules in sequence, and
+runs the five verification stages described above.
+The \codelink{.github/workflows/ci.yml}{CI workflow} validates licensing
+and metadata and builds the paper and the Lean sources. Publication
+requires successful statement matching and independent kernel replay.
 
 \paragraph{Observed cost and hardware.}
 The hosted workflow uses GitHub's standard public
