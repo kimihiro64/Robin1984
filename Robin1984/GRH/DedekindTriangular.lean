@@ -1,7 +1,7 @@
 import Robin1984.GRH.AutomorphicCompletion
 import Robin1984.GRH.DedekindRobinReverse
 import Robin1984.GRH.DedekindRobinSpectralForward
-import Robin1984.GRH.MultiplicityArithmetic
+import Robin1984.GRH.MultiplicityExceptions
 
 /-!
 ## Provenance
@@ -532,6 +532,82 @@ theorem dedekindERH_iff_primeIdealMultiplicityInequality
       rw [hZero, Nat.cast_zero] at hCast
       exact ((hOrder.differentiable.analyticAt s).analyticOrderAt_eq_zero.mp hCast.symm) hzF
     exact hTransport.2.trans (le_antisymm hLe (Nat.one_le_iff_ne_zero.mpr hNe0))
+
+
+/-- For a field satisfying Dedekind RH, the prime-ideal inequality with
+finite exceptions measures the prescribed orders of the completed zeta. -/
+theorem dedekindERH_prescribedOrders_iff_globalPrimeIdealMultiplicity
+    (E J : Finset Real) (order : Real -> Nat) (hERH : DedekindRH K) :
+    HasPrescribedZeroOrders (completedDedekindPoleCleared K) E J order <->
+      ExceptionalPrimePowerMultiplicityInequality
+        (dedekindPrimeIdealMultiplicityLogInput K) E J order := by
+  let F := entirePoleFreeDedekindZeta K
+  let _ : Countable PP := countable_dedekindTriangularIndex K
+  let b (pn : PP) : Complex := (dedekindTriangularCoefficient K pn : Complex)
+  have hOrder := entirePoleFreeDedekindZeta_entireOfOrderAtMost_one K
+  have hAtOne : Not (F 1 = 0) :=
+    entirePoleFreeDedekindZeta_ne_zero_of_one_le_re K (by norm_num)
+  have hRight (s : Complex) (hz : F s = 0) : s.re <= 1 / 2 := by
+    by_contra! hHalf
+    have hs1 : s.re < 1 :=
+      lt_of_not_ge (fun hs => entirePoleFreeDedekindZeta_ne_zero_of_one_le_re K hs hz)
+    apply (dedekindRH_iff_noZero_rightHalfStrip K).mp hERH s hHalf hs1
+    change F s / (s - 1) = 0
+    rw [hz, zero_div]
+  have hSum (r : Real) (hr : 1 < r) :
+      Summable (fun pn => norm (b pn) * (dedekindTriangularNorm K pn) ^ (-r)) := by
+    simpa only [b, Complex.norm_real] using summable_dedekindTriangularCoefficient K r hr
+  let conductor : Real := (|NumberField.discr K| : Int)
+  have hc : 0 < conductor := by
+    dsimp [conductor]
+    exact_mod_cast abs_pos.mpr (NumberField.discr_ne_zero K)
+  let mu : Fin (nrRealPlaces K) -> Complex := fun _ => 0
+  let nu : Fin (nrComplexPlaces K) -> Complex := fun _ => 0
+  have hmu (i : Fin (nrRealPlaces K)) : -(1 : Real) / 2 < (mu i).re := by
+    simp [mu]
+    norm_num
+  have hnu (i : Fin (nrComplexPlaces K)) : -(1 : Real) / 2 < (nu i).re := by
+    simp [nu]
+    norm_num
+  have hGamma (s : Complex) (hs : (1 : Real) / 2 < s.re) :
+      completedDedekindPoleCleared K s = standardCompletionFactor conductor 1 mu nu s * F s := by
+    rw [completedDedekindPoleCleared_eq_archimedean K (by linarith only [hs])]
+    simp only [standardCompletionFactor, pow_one, mu, nu, add_zero,
+      Finset.prod_const, Finset.card_univ, Fintype.card_fin, conductor,
+      Complex.ofReal_intCast, ZInfty, F, mul_assoc]
+  have hOrders (delta : Real) :
+      analyticOrderNatAt F (multiplicityCriticalPoint delta) =
+        analyticOrderNatAt (completedDedekindPoleCleared K) (multiplicityCriticalPoint delta) :=
+    analyticOrderNatAt_eq_of_standardCompletion hc 1 mu nu hmu hnu hOrder.1
+      (completedDedekindPoleCleared_entireOfOrderAtMost_one K).1 hGamma (by
+        simp [multiplicityCriticalPoint])
+  have h := complexArithmeticMultiplicityWithExceptions (dedekindTriangularNorm K) b 1 F E J order
+    (one_le_dedekindTriangularNorm K) (finite_dedekindTriangularNorm_lt K) hSum hOrder
+    (Exists.intro 1 hAtOne) hRight (logDeriv_dedekindTriangular K)
+  unfold HasPrescribedZeroOrders at h
+  simp_rw [hOrders] at h
+  exact h
+
+/-- Vertical translation of the completed zeta preserves the analytic
+order at the corresponding point of the critical line. -/
+theorem completedDedekindNormTwist_order (t delta : Real) :
+    analyticOrderNatAt
+      (fun s : Complex => completedDedekindPoleCleared K (s + (t : Complex) * Complex.I))
+      (multiplicityCriticalPoint (delta - t)) =
+        analyticOrderNatAt (completedDedekindPoleCleared K) (multiplicityCriticalPoint delta) := by
+  let g (s : Complex) := s + (t : Complex) * Complex.I
+  let w := multiplicityCriticalPoint (delta - t)
+  have hG : AnalyticAt Complex g w := analyticAt_id.add analyticAt_const
+  have hD : Not (deriv g w = 0) := by
+    rw [show deriv g w = 1 from ((hasDerivAt_id w).add_const ((t : Complex) * Complex.I)).deriv]
+    exact one_ne_zero
+  have hw : g w = multiplicityCriticalPoint delta := by
+    apply Complex.ext
+    . simp [g, w, multiplicityCriticalPoint, Complex.add_re, Complex.mul_re]
+    . simp [g, w, multiplicityCriticalPoint, Complex.add_im, Complex.mul_im]
+  have h := analyticOrderAt_comp_of_deriv_ne_zero (f := completedDedekindPoleCleared K) hG hD
+  rw [hw] at h
+  exact congrArg ENat.toNat h
 
 end
 
