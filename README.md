@@ -43,7 +43,7 @@ The [Comparator manifest](comparator.json) specifies the exact declarations.
 ### The corrected ideal Robin inequality
 
 Let $K$ be a number field with ring of integers $\mathcal O_K$ and
-discriminant $D_K$. Write $\kappa_K=\operatorname{Res}_{s=1}\zeta_K(s)$
+discriminant $D_K$. Write $\kappa_K=\mathrm{Res}_{s=1}\zeta_K(s)$
 for the residue of its Dedekind zeta function, and let $\gamma$ be the
 Euler–Mascheroni constant. For a nonzero integral ideal $\mathfrak a$,
 the absolute norm and the ideal divisor sum are
@@ -150,7 +150,7 @@ b_{\mathfrak p,j}(L_\chi L_{\chi^{-1}})
 ```
 
 The characters that are trivial on the norm-one idele classes are the
-norm characters $\chi_t=|\cdot|_{\mathbb A_K}^{it}$. Their completed
+norm characters $`\chi_t=|\cdot|_{\mathbb A_K}^{it}`$. Their completed
 functions are the pole-cleared Dedekind completion evaluated at
 $s+it$. Thus the single test $Z=\zeta_K$ covers all norm characters of
 $K$. For all remaining characters use $Z=L_\chi L_{\chi^{-1}}$ and
@@ -201,7 +201,7 @@ $\{z : |z-w|<R,\ |F(z)|\le \eta\}$. The local test for a prescribed
 maximum order $B\ge 0$ is
 
 ```math
-\operatorname{ord}_w F\le B
+\mathrm{ord}_w F\le B
 \quad\Longleftrightarrow\quad
 \exists R>0,\quad A_F(w,R,\varepsilon^{B+1})=o(\varepsilon^2)
 \quad(\varepsilon\downarrow0).
@@ -310,7 +310,7 @@ The Dedekind test uses $A_K(t)=e^{-t/2}R_{\zeta_K}(e^t)$ for $t\ge0$
 and $A_K(t)=0$ for $t<0$, with the prime-ideal remainder defined above.
 For a positive holomorphic factorization $\zeta_K=U_K\prod_j L_{K,j}^{e_{K,j}}$,
 the factorwise criterion equates the forced orders
-$\operatorname{ord}_w\zeta_K=\sum_{j:L_{K,j}(w)=0}e_{K,j}$
+$`\mathrm{ord}_w\zeta_K=\sum_{j:L_{K,j}(w)=0}e_{K,j}`$
 with $\sum_j e_{K,j}\mathcal E_j\le\sum_j e_{K,j}\mathcal S_j$.
 
 For the concrete standard $\mathrm{GL}_1$ family, the prescribed-order
