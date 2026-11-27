@@ -99,6 +99,9 @@ ideal divisor sum. The main term is
 Here \(\kappa_K\) is the residue of \(\zeta_K\) at \(1\).
 Lean checks this equivalence and the cyclotomic factorization
 that yields a criterion for all Dirichlet \(L\)-functions.
+For a fixed field we determine the sharp eventual ideal
+coefficient as a completed logarithmic derivative minus
+\(2\sqrt2-2\).
 
 For standard \(L\)-functions of unitary cuspidal representations
 of \(\mathrm{GL}_n\), a one-sided square-root bound on a triangular
@@ -110,6 +113,9 @@ every number field, including Dedekind norm twists. For higher
 ranks the Lean equivalence takes the Euler, continuation, growth,
 and functional-equation conditions as hypotheses. The paper supplies
 them for actual standard functions using cited analytic theorems.
+We express the sharp eventual triangular coefficient by a
+critical-line zero sum. Both sharp constants are proved in the
+manuscript and lie outside the Lean verification.
 The same coefficients give conditional tests for
 simplicity and prescribed multiplicity. The published verification
 compares and replays six location and four multiplicity
@@ -222,7 +228,9 @@ for Dirichlet GRH and the fieldwise quantifier for Dedekind ERH.
 Section~\ref{app:classical-criteria} relates the rational case to
 the exact classical criteria, and Section~\ref{sec:multiplicity}
 uses the individual coefficients to test zero orders.
-Section~\ref{sec:formalization-summary} records the verification
+Sections~\ref{sec:triangular-sharp} and~\ref{sec:ideal-sharp}
+prove sharp asymptotic coefficients for the triangular and ideal
+Robin bounds. Section~\ref{sec:formalization-summary} records the verification
 evidence and exact reproduction inputs.
 
 \subsection{The formal proof contribution}\label{sec:lean-contribution}
@@ -1014,10 +1022,87 @@ factor, and \(m=m_Z\) comes from the test's pole at \(1\).
 These quantities depend on \(K\) through the test, and for a
 paired test they depend on \(\pi\) and its contragredient
 through their product. The formula gives a test-dependent
-witness using the full zero divisor. Optimality or uniformity
-in field, rank or conductor would require additional estimates. The headline Lean theorem asks for the two
-witnesses separately for every test. This proves
+witness using the full zero divisor. The headline Lean theorem
+asks for the two witnesses separately for every test. This proves
 \eqref{eq:grand-rh-prime-power} and completes the forward implication.
+
+\subsection{The sharp eventual coefficient}\label{sec:triangular-sharp}
+
+The bound just proved gives a constant valid from \(x=1\).
+An eventual bound permits a smaller coefficient because terms
+that are \(o(\sqrt{x})\) can be absorbed by moving the cutoff.
+We use the following recurrence fact here and in
+Section~\ref{sec:ideal-sharp}.
+
+\begin{lemma}[Recurrence of a summable zero sum]
+\label{lem:zero-sum-recurrence}
+Let \(c_j\) be complex numbers with \(\sum_j|c_j|<\infty\),
+and let \(t_j\in\mathbb R\). For
+\(P(v)=\Re\sum_j c_j e^{it_jv}\) one has
+\(\limsup_{v\to+\infty} P(v)=\sup_{v\in\mathbb R}P(v)\).
+\end{lemma}
+
+\begin{proof}
+Fix \(v_0\) and a tolerance \(\varepsilon>0\).
+Choose a finite set of indices such that the omitted absolute
+sum is less than \(\varepsilon/4\).
+For those indices, the sequence of vectors
+\((e^{it_j n})_j\), \(n\in\mathbb N\), lies in a compact torus.
+Choose a convergent subsequence with strictly increasing indices
+\(n_k\). Then \(n_{2k}-n_k\ge k\) and
+\(e^{it_j(n_{2k}-n_k)}\to1\) on the finite set.
+For large \(k\), the change in its contribution between \(v_0\)
+and \(v_0+n_{2k}-n_k\) is less than \(\varepsilon/2\).
+The two omitted tails contribute at most another
+\(\varepsilon/2\). Thus the limsup is at least \(P(v_0)\).
+Taking the supremum over \(v_0\) gives equality.
+\end{proof}
+
+\begin{theorem}[Sharp triangular coefficient]
+\label{thm:triangular-sharp}
+Let \(Z\in\mathcal T_K\) satisfy the analytic conditions of
+Theorem~\ref{thm:grand-triangular}. Suppose \(F_Z\) has no zeros with
+real part greater than \(1/2\), as follows from the
+critical-line condition on the corresponding completion.
+Then
+\begin{equation}\label{eq:triangular-sharp}
+ C_Z^\sharp:=\limsup_{x\to\infty}\frac{R_Z(x)}{\sqrt{x}}
+ =\sup_{v\in\mathbb R}\Re
+   \sum_{\substack{F_Z(\rho)=0\\\rho=1/2+i\tau}}
+       \frac{e^{i\tau v}}{\rho(\rho+1)},
+\end{equation}
+where zeros are repeated according to multiplicity.
+Every \(C>C_Z^\sharp\) gives an eventual bound
+\(R_Z(x)\le C\sqrt{x}\), and every \(C<C_Z^\sharp\) fails
+at arbitrarily large \(x\).
+\end{theorem}
+
+\begin{proof}
+Divide \eqref{eq:grand-zeros-inversion} by \(\sqrt{x}\).
+The elementary terms are \(O_Z((1+\log x)/\sqrt{x})\).
+The \(-x^{-1}\) parts of the zero terms contribute
+at most \(W_Z x^{-3/2}\). In the remaining sum, the terms with
+\(\Re\rho<1/2\) tend to zero individually and are dominated,
+for \(x\ge1\), by the summable weights \(1/|\rho(\rho+1)|\).
+Dominated convergence thus gives \(R_Z(x)/\sqrt{x}
+=P(\log x)+o_Z(1)\), with \(P\) the sum on the right of
+\eqref{eq:triangular-sharp}. Lemma~\ref{lem:zero-sum-recurrence}
+gives the equality, and the defining property of the limsup
+gives the assertions about \(C\).
+\end{proof}
+
+The supremum is bounded above by the sum of
+\(1/|\rho(\rho+1)|\) over the critical-line zeros of \(F_Z\).
+The weights in \eqref{eq:triangular-sharp} have phases, so
+the supremum retains the possible relations among the ordinates.
+The theorem identifies the infimum of admissible eventual
+coefficients. It makes no assertion at the equality endpoint.
+The coefficient \(m_Z/2\) of the linear term in \(R_Z\) is
+fixed by the pole cancellation in \eqref{eq:grand-mellin-transform}.
+Lean verifies existence of a cutoff and a coefficient in
+Theorem~\ref{thm:grand-triangular}, with the stated analytic inputs.
+The sharp value \eqref{eq:triangular-sharp} and its proof are
+manuscript results.
 
 \subsection{Specializations}
 
@@ -1146,8 +1231,9 @@ by the weighted tail \(H(x)\) in
 \eqref{eq:ideal-supporting-line}.
 Under Dedekind RH the zeros contribute \(O_K(\sqrt{x})\)
 to \(xH_0(x)\). The weight in \(H(x)\) contributes
-a further factor \(1/\log x\) to this tail. The zero expansion below shows that the resulting bound on \(H(x)\) has leading
-coefficient \(B_K+1\), with \(B_K\le9+3\log|D_K|\).
+a further factor \(1/\log x\) to this tail. The zero expansion below
+gives a convenient bound on \(H(x)\) with coefficient \(B_K+1\),
+where \(B_K\le9+3\log|D_K|\).
 After exponentiation,
 \(\log x\,e^{H(x)}=\log x+\log x\,H(x)+O(\log x\,H(x)^2)\).
 The \(\log x\) factor therefore converts the logarithmic error
@@ -1157,9 +1243,8 @@ The coefficient \(12+3\log|D_K|\) leaves room above
 \(B_K+1\) for the lower-order terms at a field-dependent
 cutoff. The proof estimates the zero contribution by absolute
 values and discards nonpositive terms in the norm budget.
-Determining an optimal coefficient would require controlling
-the phases of the zero contributions and the slack in that
-budget.
+Section~\ref{sec:ideal-sharp} keeps the exact budget difference
+and determines the sharp coefficient.
 
 \subsection{The boundary term in Mertens' formula}
 
@@ -1557,6 +1642,294 @@ transform has residue \(j/[\beta(1-\beta)]>0\).
 Lemma~\ref{lem:one-sided-mellin} excludes all the poles, both real
 and nonreal. Reflection under the functional equation gives Dedekind
 RH. This proves Theorem~\ref{thm:ideal-robin}.
+
+\subsection{The sharp fieldwise correction}\label{sec:ideal-sharp}
+
+The coefficient in \eqref{eq:ideal-robin} is the one used by
+the formal criterion. For a fixed field and a cutoff allowed
+to depend on the coefficient, the exact first-order threshold
+comes from retaining the local increments of the divisor ratio.
+Write \(h(\mathfrak a)=\log N\mathfrak a\), and for
+\(h(\mathfrak a)>1\) put
+\[
+ U_K(\mathfrak a)=\sqrt{h(\mathfrak a)}
+ \left(\frac{\sigma_K(\mathfrak a)}
+ {e^\gamma\kappa_K N\mathfrak a}-\log h(\mathfrak a)\right).
+\]
+
+\begin{theorem}[Sharp ideal Robin coefficient]\label{thm:ideal-sharp}
+Fix a number field \(K\). If \(\zeta_K\) satisfies Dedekind RH, then
+\begin{equation}\label{eq:ideal-sharp}
+ \limsup_{N\mathfrak a\to\infty}U_K(\mathfrak a)
+   = C_K^\sharp
+   :=2\frac{\Xi_K'(1)}{\Xi_K(1)}-(2\sqrt2-2)
+   = B_K-(2\sqrt2-2).
+\end{equation}
+If Dedekind RH fails for \(K\), the limsup is \(+\infty\).
+Consequently, for any fixed \(\varepsilon>0\), the eventual ideal
+inequality with coefficient \(C_K^\sharp+\varepsilon\) in
+place of \(12+3\log|D_K|\) is equivalent to Dedekind RH for
+\(K\). Under Dedekind RH, every coefficient below \(C_K^\sharp\)
+fails at arbitrarily large norms.
+\end{theorem}
+
+Here \(C_K^\sharp\) is defined without a zero-location assumption
+by the logarithmic derivative at \(1\). Its expression using
+\(B_K\) is for the critical-line case. The theorem determines
+the infimum of eventual coefficients. It leaves the inequality
+with coefficient exactly \(C_K^\sharp\) undecided by the
+limsup formula.
+
+\begin{proof}
+Assume Dedekind RH for \(K\). The real and absolutely convergent
+zero sum
+\[
+ \mathcal P_K(v)=\sum_{\rho=1/2+i\tau}
+               \frac{\cos(\tau v)}{1/4+\tau^2}
+\]
+has supremum \(B_K=\mathcal P_K(0)\), with zeros counted with
+multiplicity. By Lemma~\ref{lem:zero-sum-recurrence} this is also
+its limsup as \(v\to+\infty\). The zero expansion
+\eqref{eq:dedekind-h0-series} gives
+\[
+ H_0(x)=x^{-1/2}\mathcal P_K(\log x)+O_K((1+\log x)/x).
+\]
+The integration by parts used above bounds the integral with
+\(w'\) by \(O_K(x^{-1/2}\log^{-2}x)\).
+Since \(w(x)=1/\log x+1/\log^2 x\), it follows that
+\begin{equation}\label{eq:sharp-weighted-tail}
+ \sqrt{x}\log x\,H(x)=\mathcal P_K(\log x)+o_K(1).
+\end{equation}
+
+\emph{Exact optimization at a fixed budget price.}
+For \(x>1\), set \(\lambda=(x\log x)^{-1}\).
+The exact increase at the \(j\)-th power of a prime ideal of
+norm \(q\) is
+\[
+ g(q,j)=\log\frac{1-q^{-j-1}}{1-q^{-j}}
+       =\log\left(1+\frac{1-q^{-1}}{q^j-1}\right).
+\]
+It decreases strictly with \(j\).
+Define \(v(q,j)=1/(j q^j)\) and \([u]_+=\max(u,0)\).
+The sums
+\begin{align*}
+ S_g(x)&=\sum_{\mathfrak p,\,j\ge1}[g(q,j)-\lambda\log q]_+,\\
+ S_v(x)&=\sum_{\mathfrak p,\,j\ge1}[v(q,j)-\lambda\log q]_+
+       =A(x)-\lambda\psi_K(x)
+\end{align*}
+have finite support. Indeed \(g(q,j)\le q^{-j}\), by
+\(\log(1+t)\le t\) and \(q^{-j}\le q^{-1}\), and
+\(v(q,j)\le q^{-j}\) as well. A positive summand requires
+\(q^j\log q<x\log x\).
+Telescoping the exact increments gives, for every ideal
+\(\mathfrak a\),
+\begin{equation}\label{eq:sharp-price-bound}
+ \log\frac{\sigma_K(\mathfrak a)}{N\mathfrak a}
+      \le \lambda h(\mathfrak a)+S_g(x).
+\end{equation}
+For each prime ideal take exactly the powers for which
+\(g(q,j)>\lambda\log q\). These powers form an initial
+segment by monotonicity, and define an integral ideal
+\(\mathfrak b_x\), for which \eqref{eq:sharp-price-bound}
+is an equality. Powers at equality may be omitted.
+
+\emph{The difference between the two optimized sums.}
+Put \(Q=(3x)^{1/3}\). For sufficiently large \(x\) and
+\(q\le Q\) the exponent \(k=\lfloor\log x/\log q\rfloor\)
+is at least \(2\). The first exact increment is
+\(\log(1+q^{-1})\ge 1/(2q)\), so it exceeds the budget
+cost. For \(2\le j\le k\),
+\[
+ g(q,j)=\int_{q^{-j-1}}^{q^{-j}}\frac{dt}{1-t}
+       \ge (1-q^{-1})q^{-j}\ge v(q,j).
+\]
+The first \(k\) powers can therefore be included in both
+optimized sums, with any zero-price-difference power
+contributing zero. At these powers the difference is
+\(O(q^{-k-1})\) by the local logarithmic comparison preceding
+\eqref{eq:ideal-supporting-line}. Any extra exact increments
+have total at most \(\sum_{j>k}q^{-j}\le2q^{-k-1}\).
+Since \(q^{k+1}>x\), the difference at each such prime ideal
+is \(O(1/x)\). Each integer norm occurs for at most
+\([K:\mathbb Q]\) prime ideals, because it must be a rational
+prime power and there are at most that many primes above its
+rational prime. Thus the total for \(q\le Q\) is \(O_K(x^{-2/3})\).
+
+For \(q>Q\) there are no positive terms with \(j\ge3\)
+in either sum, since \(q^3\log q>x\log x\). Uniformly \(q\ge2\),
+\[
+ g(q,1)=q^{-1}-\tfrac12 q^{-2}+O(q^{-3}),\qquad
+ g(q,2)=q^{-2}+O(q^{-3}).
+\]
+Replacing \(g\) by these main terms in the positive parts
+costs \(O_K(\sum_{n>Q}n^{-3})=O_K(x^{-2/3})\), by the
+Lipschitz bound for \([\,\cdot\,]_+\).
+In the first-power terms this gives a difference
+\(-1/(2q^2)\) for \(Q<q\le x-3\) and zero for \(q>x\).
+To see the former, for \(q\le x/2\) we have
+\(q^{-1}-\lambda\log q\ge1/(2q)\). For \(x/2<q\le x-3\)
+the derivative of \(t^{-1}-\lambda\log t\) is at most
+\(-1/x^2\) on \([q,x]\), so the margin is at least
+\(3/x^2>1/(2q^2)\). The remaining interval \(x-3<q\le x\)
+accounts for \(O_K(x^{-2})\), since there are \(O_K(1)\)
+prime ideals with those norms.
+
+Let \(y=y(x)>1\) satisfy \(y^2\log y=x\log x\).
+The model second increment \(q^{-2}\) is included up to \(y\).
+The comparison second increment \(1/(2q^2)\) is included
+up to \(\sqrt{x}\). For \(Q<q\le\sqrt{x}\) their difference
+\(1/(2q^2)\) cancels the loss at the first power. Hence,
+for large \(x\) with \(Q<\sqrt{x}<y<x\),
+\begin{align}
+ S_g(x)-S_v(x)={}&
+ -\frac12\sum_{\substack{\mathfrak p\\ \sqrt{x}<q\le x}} q^{-2}
+ +\sum_{\substack{\mathfrak p\\ \sqrt{x}<q\le y}} q^{-2}
+ -\lambda\sum_{\substack{\mathfrak p\\ \sqrt{x}<q\le y}}\log q
+ +O_K(x^{-2/3}).
+ \label{eq:sharp-price-difference}
+\end{align}
+All three sums are over prime ideals, so equal norms
+are counted separately.
+
+For fixed \(K\), the prime ideal theorem gives
+\(\vartheta_K(t):=\sum_{q\le t}\log q\sim t\).
+Indeed the difference between \(\psi_K(t)\) and this
+sum is \(O_K(\sqrt t\log^2 t)\) by summing the higher
+powers over \(q\le\sqrt t\). Partial summation gives
+\(P_K(t):=\#\{\mathfrak p:q\le t\}\sim
+t/\log t\).
+Using this last asymptotic in the tail identity for
+\(\sum_{q>u}q^{-2}\) in Section~\ref{sec:grh} gives
+\(\sum_{q>u}q^{-2}\sim 1/(u\log u)\).
+For example, the boundary term is asymptotic to
+\(-1/(u\log u)\) and the integral is asymptotic to
+\(2/(u\log u)\), by integration by parts. Also
+\(y/\sqrt{x}\to\sqrt2\): for fixed \(c>0\) the ratio
+\((c\sqrt{x})^2\log(c\sqrt{x})/(x\log x)\) tends to
+\(c^2/2\), so the increasing function \(t^2\log t\)
+brackets \(y\) between \(c\sqrt{x}\) for any two \(c\)
+straddling \(\sqrt2\).
+Upon multiplying \eqref{eq:sharp-price-difference} by
+\(\sqrt{x}\log x\), the three terms tend respectively to
+\(-1\), \(2-\sqrt2\), and \(-(\sqrt2-1)\). Thus
+\begin{equation}\label{eq:sharp-price-asymptotic}
+ S_g(x)-S_v(x)=\frac{2-2\sqrt2+o_K(1)}{\sqrt{x}\log x}.
+\end{equation}
+
+\emph{Upper bound and a matching family of ideals.}
+The Mertens identity \eqref{eq:ideal-mertens} gives
+\[
+ S_v(x)+\lambda x=\gamma+\log\kappa_K+\log\log x+H(x).
+\]
+For any ideal with \(x=h(\mathfrak a)>1\), substitute
+this identity and \eqref{eq:sharp-price-asymptotic} into
+\eqref{eq:sharp-price-bound}. By \eqref{eq:sharp-weighted-tail},
+the resulting inequality is
+\[
+ \log\frac{\sigma_K(\mathfrak a)}{N\mathfrak a}
+ \le \gamma+\log\kappa_K+\log\log x+
+ \frac{\mathcal P_K(\log x)+2-2\sqrt2+o_K(1)}{\sqrt{x}\log x}.
+\]
+Since \(\mathcal P_K\) is bounded, exponentiating gives
+\(U_K(\mathfrak a)\le \mathcal P_K(\log x)+2-2\sqrt2+o_K(1)\),
+uniformly over the ideals as \(h(\mathfrak a)\to\infty\).
+
+For the equality ideal \(\mathfrak b_x\), put
+\(T_x=h(\mathfrak b_x)\).
+We have
+\begin{equation}\label{eq:sharp-height}
+ T_x=x+O_K(\sqrt{x}\log^2 x).
+\end{equation}
+To verify this, first compare with \(\psi_K(x)\).
+The condition for an exact first increment can differ from
+\(q\le x\) only in \(x-3<q\le x\). This follows from
+\(q^{-1}-1/(2q^2)\le\log(1+q^{-1})\le q^{-1}\)
+and the margin estimate above. The contribution of the
+difference there is \(O_K(\log x)\). For \(j\ge2\), every
+selected exact power satisfies \(q^j<X=x\log x/\log 2\).
+Using \(\vartheta_K(u)\ll_K u\), their total log norm
+is at most
+\[
+ \sum_{2\le j\le\log X/\log 2}\vartheta_K(X^{1/j})
+ \ll_K \sqrt X + X^{1/3}\log X\ll_K\sqrt X.
+\]
+The comparison powers with \(j\ge2\) have the same bound.
+Thus \(T_x-\psi_K(x)=O_K(\sqrt{x\log x})\).
+Now \(\psi_K(x)-x=O_K(\sqrt{x}\log^2 x)\) under
+Dedekind RH by~\cite[Corollary~1.2]{GrenieMolteniPIT}.
+This proves \eqref{eq:sharp-height}.
+
+The equality in \eqref{eq:sharp-price-bound} includes
+\(\lambda(T_x-x)\) in addition to the preceding expansion.
+Because \(\lambda\) is the derivative of \(\log\log x\),
+Taylor's theorem and \eqref{eq:sharp-height} give
+\[
+ \log\log T_x-\log\log x-\lambda(T_x-x)
+ = O_K\!\left(\frac{(T_x-x)^2}{x^2\log x}\right)
+ = o_K\!\left(\frac{1}{\sqrt{x}\log x}\right).
+\]
+Also \(\sqrt{T_x}\log T_x/(\sqrt{x}\log x)\to1\).
+Exponentiating the equality at the actual height gives
+\[
+ U_K(\mathfrak b_x)=\mathcal P_K(\log x)+2-2\sqrt2+o_K(1).
+\]
+Taking \(x\) along a sequence for which \(\mathcal P_K(\log x)\to B_K\)
+establishes the matching lower bound.
+
+Finally, by the functional equation
+\(\xi_K(1)-\xi_K(0)=2\xi_K(1)\), where
+\(\xi_K=\Xi_K'/\Xi_K\).
+The difference of the Hadamard expansions at \(1\) and \(0\)
+is the absolutely convergent sum of \(1/[\rho(1-\rho)]\).
+Under Dedekind RH it equals \(B_K\). This identifies the
+coefficient in \eqref{eq:ideal-sharp}.
+If Dedekind RH fails, the converse proof of Theorem~\ref{thm:ideal-robin}
+applies to any fixed positive coefficient: only the order
+\(O_K(1/(\sqrt{x}\log x))\) is used in the upper bound
+on \(H(x)\). If the limsup were finite or \(-\infty\),
+one such coefficient would work eventually, a contradiction.
+The equivalence with \(C_K^\sharp+\varepsilon\) follows.
+\end{proof}
+
+\paragraph{Evaluation and dependence on the field.}
+If \(\zeta_K(s)=\kappa_K/(s-1)+a_K+O_K(s-1)\), write
+\(\gamma_K=a_K/\kappa_K\) for the Euler--Kronecker constant.
+Logarithmically differentiating the completion at \(1\)
+and using \(\psi_\Gamma(1)=-\gamma\) and
+\(\psi_\Gamma(1/2)=-\gamma-2\log 2\) gives
+\begin{align}
+ C_K^\sharp={}&
+ \log|D_K|+2\gamma_K
+ -r_1(\gamma+\log(4\pi))
+ -2r_2(\gamma+\log(2\pi))
+ +4-2\sqrt2 .
+ \label{eq:sharp-euler-kronecker}
+\end{align}
+For \(K=\mathbb Q\), \(\gamma_K=\gamma\) and \(\kappa_K=1\).
+The normalized coefficient is \(4+\gamma-\log(4\pi)-2\sqrt2\),
+approximately \(-0.782236\). Multiplying by \(e^\gamma\)
+recovers Ramanujan's upper constant \(-1.393218\ldots\)
+for the unnormalized divisor ratio~\cite{RamanujanNicolasRobin1997}.
+
+For \(L=\log|D_K|\to\infty\), Ihara's upper bound
+\(\gamma_K\le ((L/2+1)/(L/2-1))(2\log(L/2)+1)\)
+under Dedekind RH for sufficiently large \(L\) gives
+\(C_K^\sharp\le L+4\log L+O(1)\) with an absolute
+implied constant. The signature terms in
+\eqref{eq:sharp-euler-kronecker} are nonpositive.
+Along quadratic fields, Ihara's fixed-degree lower bound
+also gives \(\gamma_K\gg-\log L\) under Dedekind RH,
+so \(C_K^\sharp=L+O(\log L)\) there. Consequently the
+leading factor \(1\) of \(L\) is sharp for a
+discriminant-only upper bound under ERH.
+\cite[Section~1.6, Theorem~1 and Corollary~1 to Theorem~3]{Ihara2006}
+
+The sharp coefficient applies to the Dirichlet specialization by
+using each cyclotomic field in Theorem~\ref{thm:dirichlet-cyclotomic}.
+Theorem~\ref{thm:ideal-sharp} and
+\eqref{eq:sharp-euler-kronecker} are manuscript results.
+The checked ideal and cyclotomic equivalences use
+the sufficient coefficient in \eqref{eq:ideal-robin}.
 
 \section{Dirichlet GRH and Dedekind ERH}\label{sec:dirichlet-erh}
 
@@ -2436,6 +2809,16 @@ Appendix~\ref{app:hecke-formalization}. For higher ranks the paper
 uses the cited analytic theorems to instantiate the reasoning.
 
 \subsection{What was checked}\label{sec:formalization}
+
+\paragraph{Scope for the correction constants.}
+Rows 4 and 5 verify the corrected ideal inequality with
+\(12+3\log|D_K|\), and row 6 verifies the existence of a
+triangular coefficient and cutoff for each test with the
+supplied analytic data. The sharp limsup formulas in
+Theorems~\ref{thm:triangular-sharp} and~\ref{thm:ideal-sharp},
+including the refined cyclotomic coefficient, are proved in
+the manuscript. Neither is among the ten exported theorem
+types or part of the reported kernel replays.
 
 The \href{\repositoryurl/actions/runs/45793028032/job/139816678988}
 {Lean build job} and the
@@ -4794,6 +5177,30 @@ L. Greni\'e and G. Molteni,
 \emph{Explicit smoothed prime ideals theorems under GRH},
 Math. Comp. \textbf{85} (2016), 1875--1899,
 \href{https://doi.org/10.1090/mcom3039}{doi:10.1090/mcom3039}.
+
+\bibitem{GrenieMolteniPIT}
+L. Greni\'e and G. Molteni,
+\emph{Explicit versions of the prime ideal theorem for Dedekind zeta
+functions under GRH},
+Math. Comp. \textbf{85} (2016), 889--906,
+\href{https://arxiv.org/abs/1312.4463v4}{arXiv:1312.4463v4}.
+
+\bibitem{Ihara2006}
+Y. Ihara,
+\emph{On the Euler--Kronecker constants of global fields and primes
+with small norms},
+in Algebraic Geometry and Number Theory, Progr. Math. \textbf{253},
+Birkh\"auser, 2006, 407--451,
+\href{https://doi.org/10.1007/978-0-8176-4532-8_5}
+{doi:10.1007/978-0-8176-4532-8\_5}.
+
+\bibitem{RamanujanNicolasRobin1997}
+S. Ramanujan,
+\emph{Highly composite numbers},
+annotated by J.-L. Nicolas and G. Robin,
+Ramanujan J. \textbf{1} (1997), 119--153,
+\href{https://doi.org/10.1023/A:1009764017495}
+{doi:10.1023/A:1009764017495}.
 
 \bibitem{SuzukiChebyshev}
 M. Suzuki,
