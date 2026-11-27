@@ -279,9 +279,39 @@ The argument uses number-field Mertens theorems
 \cite{GarciaLeeNumberFieldMertens} and Landau's theorem for
 nonnegative transforms~\cite{Landau1905}.
 
-\subsection{The common analytic argument}\label{sec:proof-overview}
+\subsection{The triangular sum in the zeta case}\label{sec:proof-overview}
 
-The common starting point is the logarithmic derivative of an Euler
+Start with \(K=\mathbb Q\) and \(Z=\zeta\). A prime power \(p^j\)
+enters the Chebyshev count \(\psi(t)\) as a step of height \(\log p\)
+at \(t=p^j\). Its contribution to the average of \(\psi\) up to \(x\)
+is \(\log p\,(x-p^j)/x\) when \(p^j\le x\). For instance, at \(x=6\)
+the prime powers are \(2,3,4,5\), so the average and the remaining
+error are
+\[
+ \frac1{6}\int_0^6\psi(t)\,dt
+ =\frac23\log 2+\frac12\log 3+\frac13\log 2+\frac16\log 5,
+ \qquad
+ R_\zeta(6)=3-\frac1{6}\int_0^6\psi(t)\,dt .
+\]
+The two copies of \(\log 2\) come from different powers and have
+different weights. The weight of an entering power starts at zero,
+so the smoothed sum is continuous even though \(\psi\) jumps.
+If \(\psi(t)\) were exactly \(t\), the average would be \(x/2\).
+Thus \(R_\zeta(x)\) measures the shortfall of cumulative prime-power
+weight relative to that model. Bounding that shortfall from above
+is the one-sided requirement.
+
+The completed zeta function supplies the reflection used in the proof.
+The factor \(\pi^{-s/2}\Gamma(s/2)\) adds the archimedean local factor.
+The product with \(\zeta(s)\) has simple poles at \(0\) and \(1\).
+Multiplying by \(s(s-1)\) removes those poles and gives the entire
+function \(\Xi_{\mathbb Q}(s)\) in Section~\ref{sec:grh}.
+Its zeros are the nontrivial zeta zeros, and
+\(\Xi_{\mathbb Q}(1-s)=\Xi_{\mathbb Q}(s)\).
+Once the Mellin argument excludes zeros to the right of \(1/2\),
+this identity excludes zeros to the left.
+
+The common starting point for a general test is the logarithmic derivative of an Euler
 product. Its coefficients count prime powers with their local weights.
 Giving the term of norm \(v\) the weight \(1-v/x\), for \(v\le x\),
 has a precise analytic effect. Its Mellin transform contributes the
@@ -355,6 +385,33 @@ This rational specialization is equivalent to RH. Robin's theorem
 \cite{Robin1984} identifies the same condition with the strict
 uncorrected inequality for every \(n>5040\).
 Section~\ref{app:classical-criteria} states the exact classical criteria and points to their proofs.
+
+\begin{center}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.32\textwidth}
+  >{\raggedright\arraybackslash}p{.59\textwidth}@{}}
+\toprule
+Proof transition & Mathematical step and its Lean counterpart\\
+\midrule
+Prime powers \(\longleftrightarrow\) zero location &
+Transform the triangular weights and apply the zero-pole test
+(Sections~\ref{sec:positive-mellin} and~\ref{sec:grand-research}).
+Lean proves the kernel and the converse from supplied analytic data.\\
+Dedekind zeros \(\longleftrightarrow\) ideal divisor sums &
+Use the Mertens boundary term, a norm budget and least common
+multiples of ideals (Section~\ref{sec:grh}). Lean proves the fixed-field
+equivalence.\\
+Cyclotomic and all-field tests &
+Use cyclotomic factorization or quantify the fixed-field equivalence
+over all number fields (Section~\ref{sec:dirichlet-erh}). Both transfers
+are formalized.\\
+Location assumed \(\longrightarrow\) order criterion &
+Change from pairs to individual factors and recover the zero orders
+by Fourier averaging (Section~\ref{sec:multiplicity}). Lean verifies
+the four order equivalences listed in Section~\ref{sec:formalization-summary}.\\
+\bottomrule
+\end{tabular}
+\end{center}
 
 \section{A one-sided Mellin criterion}\label{sec:positive-mellin}
 
@@ -431,15 +488,23 @@ Define the test family over \(K\) by
  \{L(\,\cdot\,,\pi)L(\,\cdot\,,\widetilde\pi):
                   n\geq1,\ \pi\in\mathcal U_n^*(K)\}.
 \]
-The superscript \(*\) changes only the tests. For example,
-the trivial character and \(\chi_t=|\cdot|_{\mathbb A_K}^{it}\)
-both belong to \(\mathcal U_1(K)\). Their completed zeros are
-vertical translates of the same zeros, so the single test
-\(\zeta_K\) covers both, for every \(t\).
-A character nontrivial on the norm-one idele class group gives
-a pole-free Hecke test and enters through the pair with its
-inverse. In rank \(n\geq2\) every representation enters through
-its contragredient pair.
+The superscript \(*\) changes only the tests. The global pole
+classification explains the exclusion. In rank one, a character
+trivial on the norm-one idele classes descends along the idelic
+norm to a continuous unitary character of \(\mathbb R_{>0}\).
+These characters are \(r\mapsto r^{it}\), \(t\in\mathbb R\).
+For them \(L(s,\chi_t)=\zeta_K(s+it)\), and clearing the
+translated poles gives the completion \(\Xi_K(s+it)\).
+Vertical translation preserves real parts, so the single test
+\(\zeta_K\) covers their entire zero-location assertion.
+Tate's theory gives an entire completion for a character
+nontrivial on norm-one classes~\cite{Tate1967}. This includes
+characters ramified at a finite prime as well as characters
+unramified at all finite primes that are nontrivial on norm-one
+classes. All these pole-free characters enter through the pair
+with their inverse. For \(n\ge2\), the unitary cuspidal
+standard completion is entire by Godement--Jacquet, so every
+representation enters through its contragredient pair.
 
 For each nonzero prime ideal \(\mathfrak p\) put \(q=N\mathfrak p\).
 Use the actual standard local factor
@@ -492,11 +557,31 @@ The proof below justifies the absolutely convergent identity
 \end{equation}
 The index is a pair \((\mathfrak p,j)\), so two pairs with equal
 norm both contribute.
-For example, in a pole-free rank-one test an unramified parameter
-\(e^{i\theta}\) contributes \(2(\log q)\cos(j\theta)\) to the pair,
-and a ramified Hecke character contributes zero. The two terms
-in the pair come from the two individual standard factors,
-including when the representation is self-dual.
+
+\paragraph{What happens at a ramified Hecke prime.}
+In degree one let \(\chi_{\mathfrak p}\) be the local Hecke
+character. If it is trivial on the local units, its value
+\(\alpha=\chi_{\mathfrak p}(\varpi)\) on a uniformizer is
+independent of the uniformizer and the Euler factor is
+\((1-\alpha q^{-s})^{-1}\). For a unitary character, writing
+\(\alpha=e^{i\theta}\) gives \(2(\log q)\cos(j\theta)\)
+for the paired coefficient. Local reciprocity identifies the
+local units with the image of inertia in the abelianized
+local Weil group. If the character is nontrivial on the units,
+its one-dimensional parameter has no nonzero inertia-fixed
+vector. The determinant defining the local polynomial is then
+on a zero-dimensional space.
+Thus \(P_{\chi,\mathfrak p}=1\), so the logarithmic derivative
+of this local factor is zero at every prime power. The inverse
+character is ramified there as well, giving
+\(b_{\mathfrak p,j}=0\) for the pair at all \(j\ge1\).
+The character remains part of the test family, and its
+ramification still enters the conductor in the completion.
+This is Tate's local factor~\cite{Tate1967}, implemented by the
+zero branch of
+\codelink{Robin1984/GRH/HeckeEulerProduct.lean\#L228-L242}{heckeLocalParameter}.
+The paired coefficient always counts both factors, including
+when a representation is self-dual.
 
 \begin{theorem}[Triangular criterion for standard automorphic \(L\)-functions]\label{thm:grand-triangular}
 Write \(\Lambda_\pi\) for the pole-cleared completed standard
@@ -649,54 +734,97 @@ factor, which suffices for the implication from a zero of
 \(\Lambda_i\) to a zero of the reflected dual.
 \end{enumerate}
 
-\noindent The following inputs discharge these conditions for actual
-unitary cuspidal standard functions of rank \(n\ge2\).
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{.12\textwidth}
-    >{\raggedright\arraybackslash}p{.80\textwidth}@{}}
+\paragraph{What Lean proves from these inputs.}
+The public \codelink{Solution.lean\#L93-L111}{location proof}
+takes A1--A6 and countable prime-power types as inputs.
+In the forward implication, Lean derives right-half-plane
+nonvanishing for the ordinary factors from the line assertion
+and A5. It proves the zero expansion from the growth input
+and bounds the sum of the zero terms, giving the triangular
+bound. In the converse, it derives the kernel and the
+logarithmic-derivative formula using A1--A3. It excludes
+right-hand zeros by the Mellin pole test, with A4 supplying
+continuation and A5 transferring the result to the completed
+functions. A6 then gives exclusion on the left. The proof
+checks both implications for arbitrary supplied data with these
+properties.
+
+\paragraph{How the inputs are supplied.}
+The following table identifies the rank-one Lean providers
+and the mathematical inputs used for \(n\ge2\). The paired
+Hecke proof passes the corresponding facts to the common
+criterion through its specialized interface. It constructs
+the pole-free data and treats norm twists using a separate
+Dedekind theorem. For actual higher-rank representations,
+the entries in the last column supply A1--A6 in the paper.
+The Lean statement takes these conditions as hypotheses.
+\begingroup\small
+\begin{longtable}{@{}l >{\raggedright\arraybackslash}p{.44\textwidth}
+  >{\raggedright\arraybackslash}p{.44\textwidth}@{}}
 \toprule
-Input & Source and use\\
+ & Rank one: supplied by Lean & Higher rank: supplied in the paper\\
 \midrule
 \endhead
-A1 & Integral ideal norms are locally finite. Every prime-power norm
-is at least \(2\), and each bound permits finitely many primes and
-finitely many powers of each.\\
-A2 & Jacquet--Shalika~\cite[Part I, Theorem 5.3]{JacquetShalika1981}
-and the local bound~\cite[(2.2)]{ThornerZhaoRankinSelberg}.
-The unramified Cauchy--Schwarz estimate and ramified geometric bounds
-above give summability of the differentiated coefficients.\\
-A3 & The actual standard local factors in
-\cite[\S\,2.1]{ThornerZhaoRankinSelberg}. The Taylor logarithms
-sum absolutely by the same estimates, and exponentiating
-recovers the product including the ramified factors.\\
-A4 & Godement--Jacquet~\cite[Theorem 13.8]{GodementJacquet1972},
-in the order-one form in \cite[\S\,2.1]{ThornerZhaoRankinSelberg}.
-Dividing by the conductor and Gamma factors gives the entire
-ordinary functions, and multiplying the two ordinary functions
-gives \(F_i\) for a pair.\\
-A5 & The conductor \(Q_\pi=|D_K|^nN_\pi>0\), local factors and
-Gamma shifts in \cite[\S\,2.1 and (2.2)]{ThornerZhaoRankinSelberg}.
-Use \(Q_\pi Q_{\widetilde\pi}\) and concatenate the two Gamma lists
-for the pair. Here \(m_i=0\).\\
-A6 & The normalized Godement--Jacquet functional equation
+A1 &
+\codelink{Robin1984/GRH/HeckeEulerProduct.lean\#L330-L368}
+{Prime-power norm lemmas} prove the lower bound, local finiteness
+and countability for the ideal-prime-power index. &
+The same elementary properties of ideal norms give A1 for each
+\(K\) and \(\pi\).\\
+A2 &
+\codelink{Robin1984/GRH/HeckeEulerProduct.lean\#L394}
+{summable\_heckePairedCoefficient} bounds the prime-power
+coefficients using the unitary local parameters. &
+Jacquet--Shalika~\cite[Part I, Theorem 5.3]{JacquetShalika1981}
+and \cite[(2.2)]{ThornerZhaoRankinSelberg}, via Cauchy--Schwarz
+away from ramification and the local geometric bounds above.\\
+A3 &
+\codelink{Robin1984/GRH/HeckeEulerProduct.lean\#L556}
+{heckePairedEulerProduct\_eq} identifies the exponential
+of the paired logarithm with the Euler product. &
+Taylor expansion of the standard local factors
+\cite[\S\,2.1]{ThornerZhaoRankinSelberg}, with absolute convergence
+from A2.\\
+A4 &
+The \codelink{Robin1984/GRH/HeckeTateFunctionalEquation.lean\#L540}
+{pole-free Tate construction} gives entire completions and strip
+bounds. The
+\codelink{Robin1984/GRH/HeckeArchimedean.lean\#L782}
+{strip-bound criterion} proves the paired order-one estimate,
+and removes the Gamma factors to construct the entire ordinary factor. &
+Godement--Jacquet~\cite[Theorem 13.8]{GodementJacquet1972}, with the
+order-one normalization of \cite[\S\,2.1]{ThornerZhaoRankinSelberg}.
+Divide by the conductor and Gamma factors to obtain the ordinary
+entire functions.\\
+A5 &
+\codelink{Robin1984/GRH/HeckeConductor.lean\#L467}{Conductor positivity},
+\codelink{Robin1984/GRH/HeckeArchimedean.lean\#L418-L428}{nonnegative real shifts},
+and the \codelink{Robin1984/GRH/HeckeTateFunctionalEquation.lean\#L479}
+{product of completions for inverse characters}. &
+The positive conductor \(Q_\pi=|D_K|^n N_\pi\) and the strict
+Gamma shift bound of \cite[\S\,2.1 and (2.2)]{ThornerZhaoRankinSelberg}.
+Use \(Q_\pi Q_{\widetilde\pi}\) and concatenate the two Gamma lists.\\
+A6 &
+\codelink{Robin1984/GRH/HeckeTateFunctionalEquation.lean\#L362}
+{Tate's functional equation in Lean} gives the reflection
+against the inverse character and a unit root number. &
+The normalized Godement--Jacquet equation
 \cite[Theorem 13.8]{GodementJacquet1972},
-\cite[\S\,2.1]{ThornerZhaoRankinSelberg}. Take \(i^\vee\) to be
-the contragredient index.\\
+\cite[\S\,2.1]{ThornerZhaoRankinSelberg}, with the contragredient as dual.\\
 \bottomrule
 \end{longtable}
+\endgroup
 
-For rank one, Tate's theorem supplies the corresponding completion
-and reflection~\cite{Tate1967}. The local coefficients for the
-pole-free Hecke characters have modulus at most \(\log q\) before
-pairing, which gives absolute summability from the Dedekind Euler
-product. Pure norm characters reduce to the single Dedekind test
-by translating \(s\). To put that test directly into the generic
-paired interface, use \(\Lambda_i=\Lambda_{i^\vee}=\Xi_K\)
-and the ordinary product \(Z_i=\zeta_K^2\). Then \(m_i=2\);
-the coefficients and the remainder are twice those of \(\zeta_K\).
-Dividing the bound by two recovers exactly the test as stated.
-The rank-one Lean library instead combines a separate Dedekind
-theorem with its pole-free Hecke pairs
-(Appendix~\ref{app:hecke-formalization}).
+The \codelink{Robin1984/GRH/HeckeStandardRankOne.lean\#L124}
+{rank-one location theorem} assembles the separate Dedekind test and
+the pole-free Hecke tests from these providers. To express the
+single Dedekind test in the generic paired interface, take
+\(\Lambda_i=\Lambda_{i^\vee}=\Xi_K\) and \(Z_i=\zeta_K^2\).
+Then \(m_i=2\), and the paired remainder is twice the remainder
+for \(\zeta_K\). Dividing the bound by two recovers the single
+test. All vertical norm translates have the same zero real parts.
+Appendix~\ref{app:hecke-formalization} gives the rank-one proof
+and the separate construction for the individual multiplicity data.
 
 The \codelink{Challenge.lean\#L457-L475}{individual analytic record}
 uses A1, A2 and A4 with individual coefficients \(c_{i,k}\in\mathbb C\).
@@ -733,16 +861,12 @@ over the standard family in Theorem~\ref{thm:grand-triangular}.
 
 \subsection{Mellin transform of the prime-power remainder}
 
-The formal Mellin calculation is in
-\codelink{Robin1984/GRH/TriangularMellin.lean\#L27}{the triangular-kernel identity}.
-The converse in
-\codelink{Robin1984/GRH/TriangularConverse.lean\#L43}{the zero-exclusion theorem}
-takes the nonnegative transform and its triangular logarithmic
-derivative identity, then excludes zeros to the right of the indicated real edge. The public standard-family
-proof builds that input from its stated analytic hypotheses.
-The \codelink{Robin1984/GRH/HeckeStandardRankOne.lean\#L124}{rank-one instantiation}
-supplies the concrete completed family and proves the criterion
-with its Dedekind and pole-free Hecke tests.
+Two small Lean declarations isolate the analytic steps below.
+The \codelink{Robin1984/GRH/TriangularMellin.lean\#L27}
+{kernel identity} computes the transform of one prime-power
+weight. The \codelink{Robin1984/GRH/TriangularConverse.lean\#L43}
+{zero-exclusion theorem} uses the signed Mellin identity to
+exclude zeros to the right of the tested edge.
 
 For \(v>1\) and \(\Re s>1\),
 \[
@@ -2067,42 +2191,60 @@ reproduces the exact types of all ten headline declarations. The
 the statements to be checked. It uses proof placeholders in those
 statements. The proofs are in \codefile{Solution.lean}.
 All ten entries in \codefile{comparator.json} are proved in Lean
-and replayed at their displayed types. The following table gives
-the extra hypotheses of each declaration, separate from its
-ambient types and the three standard Lean axioms used by the proofs.
-Rows 1--3 are in \path{Robin1984}; rows 4--10 are in
-\path{Robin1984.GRH}. The numbers match the exact types in
-Appendix~\ref{app:exact-lean}.
+and replayed at their displayed types. The table gives their
+mathematical content and the names checked by Comparator.
+Rows 1--6 concern location. Rows 7--10 test multiplicity assuming
+the indicated location condition. Rows 1--3 are in namespace
+\path{Robin1984} and rows 4--10 are in \path{Robin1984.GRH}.
+Each declaration links to its source and uses the same number
+as the exact type in Appendix~\ref{app:exact-lean}.
 
 \begin{longtable}{@{}r p{0.88\textwidth}@{}}
 \toprule
- & Lean declaration and explicit hypotheses \\
+ & Headline equivalence and Lean declaration \\
 \midrule
 \endfirsthead
 \toprule
- & Lean declaration and explicit hypotheses \\
+ & Headline equivalence and Lean declaration \\
 \midrule
 \endhead
-  1 & \path{robin_inequality_iff_riemannHypothesis}\newline
-  None beyond standard Lean foundations. \\[2pt]
-  2 & \path{riemannHypothesis_iff_colossallyAbundant_robin}\newline
-  None beyond standard Lean foundations. \\[2pt]
-  3 & \path{riemann_hypothesis_iff_lagarias_elementary_criterion}\newline
-  None beyond standard Lean foundations. \\[2pt]
-  4 & \path{dirichletGRH_iff_cyclotomicCorrectedIdealRobin}\newline
-  None beyond standard Lean foundations. The cyclotomic bridge is proved. \\[2pt]
-  5 & \path{dedekindERH_iff_correctedIdealRobin}\newline
-  None beyond standard Lean foundations. The cutoff is fieldwise. \\[2pt]
-  6 & \path{grandRH_iff_triangularPrimePowerBound}\newline
-  Supplied paired analytic data. Section~\ref{sec:lean-analytic-interface} lists the conditions. \\[2pt]
-  7 & \path{riemannRH_iff_globalPrimePowerMultiplicityInequality}\newline
-  Classical RH. \\[2pt]
-  8 & \path{dirichletGRH_iff_globalPrimePowerMultiplicityInequality}\newline
-  Dirichlet GRH. \\[2pt]
-  9 & \path{dedekindERH_iff_globalPrimePowerMultiplicityInequality}\newline
-  Dedekind RH for the given field \(K\). \\[2pt]
-  10 & \path{grandRH_iff_globalPrimePowerMultiplicityInequality}\newline
-  Supplied individual analytic data and the critical-line assertion for that family. \\[2pt]
+  1 & Classical RH \(\Longleftrightarrow\) Robin's strict inequality for every
+integer \(n>5040\) (Theorem~\ref{thm:main}).\newline
+  \href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L201-L203}{\path{robin_inequality_iff_riemannHypothesis}} \\[3pt]
+  2 & Classical RH \(\Longleftrightarrow\) Robin's inequality for every
+colossally abundant integer \(n>5040\) (Theorem~\ref{thm:ca-main}).\newline
+  \href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L209-L212}{\path{riemannHypothesis_iff_colossallyAbundant_robin}} \\[3pt]
+  3 & Classical RH \(\Longleftrightarrow\) Lagarias's harmonic-number
+inequality for every \(n\ge1\) (Theorem~\ref{thm:lagarias}).\newline
+  \href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L218-L219}{\path{riemann_hypothesis_iff_lagarias_elementary_criterion}} \\[3pt]
+  4 & Dirichlet GRH for all moduli and characters \(\Longleftrightarrow\)
+the corrected ideal inequality \eqref{eq:ideal-robin} in every
+cyclotomic field.\newline
+  \href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L233-L239}{\path{dirichletGRH_iff_cyclotomicCorrectedIdealRobin}} \\[3pt]
+  5 & Dedekind ERH \(\Longleftrightarrow\) the corrected ideal inequality
+\eqref{eq:ideal-robin} in every number field, with its own cutoff.\newline
+  \href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L246-L248}{\path{dedekindERH_iff_correctedIdealRobin}} \\[3pt]
+  6 & All supplied completed zeros lie on the line \(\Longleftrightarrow\)
+each paired test satisfies the eventual triangular upper bound
+\eqref{eq:grand-rh-prime-power}. Inputs are A1--A6.\newline
+  \href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L259-L264}{\path{grandRH_iff_triangularPrimePowerBound}} \\[3pt]
+  7 & Under RH, simplicity of the nontrivial zeta zeros
+\(\Longleftrightarrow\) the zeta mean-square inequality
+\eqref{eq:global-multiplicity-energy} with no exceptions.\newline
+  \href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L304-L307}{\path{riemannRH_iff_globalPrimePowerMultiplicityInequality}} \\[3pt]
+  8 & Under Dirichlet GRH, simplicity of the nontrivial zeros of
+every Dirichlet \(L\)-function \(\Longleftrightarrow\) the individual inequality
+\eqref{eq:global-multiplicity-energy} for every character.\newline
+  \href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L359-L364}{\path{dirichletGRH_iff_globalPrimePowerMultiplicityInequality}} \\[3pt]
+  9 & For a field \(K\) under Dedekind RH, simplicity of the nontrivial
+zeros of \(\zeta_K\) \(\Longleftrightarrow\) the prime-ideal
+mean-square inequality \eqref{eq:global-multiplicity-energy}.\newline
+  \href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L415-L417}{\path{dedekindERH_iff_globalPrimePowerMultiplicityInequality}} \\[3pt]
+  10 & With supplied individual data and the line condition, simplicity
+outside \(E\) and the prescribed orders on \(J\) for every member
+\(\Longleftrightarrow\) the mean-square inequality with the squared
+order errors of Theorem~\ref{thm:grand-multiplicity}.\newline
+  \href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L534-L542}{\path{grandRH_iff_globalPrimePowerMultiplicityInequality}} \\[3pt]
 \bottomrule
 \end{longtable}
 
@@ -2209,21 +2351,42 @@ replay from exports also used Lean's paranoid kernel. The
 \href{https://math.mit.edu/~drew/grh/robin1984-comparator-v4.33.0.log}
 {Comparator transcript} records the former check.
 
-In the same review, the classical and Dirichlet zero-location
-proofs were combined with three equivalences from Robin1984.
-The resulting Lean theorems assert Robin's inequality for every
-\(n>5040\), Lagarias's inequality for every \(n>0\), and the
-corrected ideal inequality for every cyclotomic field, with its
-fieldwise cutoff. The statement of Dirichlet GRH used in the
-composition is the one quantified directly over Dirichlet
-\(L\)-functions. The independent record links a
-\href{https://math.mit.edu/~drew/grh/arith-audit.log}{per-theorem axiom audit}
-and a
+The report publishes the three consequences as a separate
+\href{https://math.mit.edu/~drew/grh/ArithChallenge.lean}{Mathlib-only challenge}.
+The proofs in
+\href{https://math.mit.edu/~drew/grh/ArithSolution.lean}{\texttt{ArithSolution.lean}}
+import \path{Main} from the Alp\"oge--Claude submission and
+\path{Solution} from Robin1984. They apply three of the
+biconditionals in the headline table as follows.
+\begin{enumerate}[label=\textup{(\roman*)},itemsep=.3em]
+\item \path{robin_inequality} proves
+\(\sigma(n)<e^\gamma n\log\log n\) for every integer \(n>5040\).
+It applies the right-to-left implication of row 1 to
+\path{riemannHypothesis} from \path{Main}.
+\item \path{lagarias_inequality} proves
+\(\sigma(n)\le H_n+e^{H_n}\log H_n\) for every \(n\ge1\).
+It applies the left-to-right implication of row 3 to the same
+classical RH proof.
+\item \path{cyclotomic_corrected_ideal_robin} proves that for every
+\(m\ge1\) there is a cutoff \(A_m\in\mathbb N\) such that every
+nonzero integral ideal of \(\mathbb Q(\zeta_m)\) with norm at
+least \(A_m\) satisfies \eqref{eq:ideal-robin}. It applies the
+left-to-right implication of row 4 to \path{LFunction_eq_zero_re},
+the theorem of \path{Main} for zeros in the open strip of
+every Dirichlet \(L\)-function, with all characters allowed.
+\end{enumerate}
+In this composition the zero-location theorems are proof inputs,
+so the three arithmetic conclusions have no remaining RH or GRH
+assumption. The Mathlib-only challenge spells out the integer
+inequalities and gives the fixed ideal-divisor and cutoff
+definitions for the third result. The report records statement
+comparison by con-leche and con-ron against that challenge,
+a \href{https://math.mit.edu/~drew/grh/arith-audit.log}{per-theorem axiom audit},
+and an independent
 \href{https://math.mit.edu/~drew/grh/arith-nanoda.log}{NanoDa replay of the combined export}.
-This composition exercises the public interface on arithmetic
-consequences with no remaining zero-location hypotheses.
-The ten-theorem evidence for v1.3.0 is the separate hosted
-replay linked above.
+The scope of this composition is the three displayed consequences.
+The ten-theorem evidence for v1.3.0 comes from the separate hosted
+replay in Section~\ref{sec:formalization}.
 
 \appendix
 
@@ -2275,13 +2438,16 @@ family and its analytic hypotheses. Comparator compares the elaborated
 versions of these types and the fixed definitions on which they depend.
 
 {\footnotesize
+\noindent\begin{minipage}{\linewidth}
 \noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L201-L203}{Statement 1}.
 \begin{verbatim}
 theorem robin_inequality_iff_riemannHypothesis :
     (forall n : Nat, 5040 < n -> robinInequality n) <->
       RiemannHypothesis
 \end{verbatim}
+\end{minipage}\par\smallskip
 
+\noindent\begin{minipage}{\linewidth}
 \noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L209-L212}{Statement 2}.
 \begin{verbatim}
 theorem riemannHypothesis_iff_colossallyAbundant_robin :
@@ -2289,13 +2455,17 @@ theorem riemannHypothesis_iff_colossallyAbundant_robin :
       (forall n : Nat, forall eps : Real, 5040 < n ->
         IsColossallyAbundantWith n eps -> robinInequality n)
 \end{verbatim}
+\end{minipage}\par\smallskip
 
+\noindent\begin{minipage}{\linewidth}
 \noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L218-L219}{Statement 3}.
 \begin{verbatim}
 theorem riemann_hypothesis_iff_lagarias_elementary_criterion :
     RiemannHypothesis <-> LagariasElementaryCriterion
 \end{verbatim}
+\end{minipage}\par\smallskip
 
+\noindent\begin{minipage}{\linewidth}
 \noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L233-L239}{Statement 4}.
 \begin{verbatim}
 theorem dirichletGRH_iff_cyclotomicCorrectedIdealRobin :
@@ -2306,14 +2476,18 @@ theorem dirichletGRH_iff_cyclotomicCorrectedIdealRobin :
     (forall (modulus : Nat) [NeZero modulus],
       CorrectedIdealRobin (CyclotomicField modulus Rat))
 \end{verbatim}
+\end{minipage}\par\smallskip
 
+\noindent\begin{minipage}{\linewidth}
 \noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L246-L248}{Statement 5}.
 \begin{verbatim}
 theorem dedekindERH_iff_correctedIdealRobin :
     (forall (K : Type u) [Field K] [NumberField K], DedekindRH K) <->
       (forall (K : Type u) [Field K] [NumberField K], CorrectedIdealRobin K)
 \end{verbatim}
+\end{minipage}\par\smallskip
 
+\noindent\begin{minipage}{\linewidth}
 \noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L259-L264}{Statement 6}.
 \begin{verbatim}
 theorem grandRH_iff_triangularPrimePowerBound {index : Type u} {powers : index -> Type u}
@@ -2323,7 +2497,9 @@ theorem grandRH_iff_triangularPrimePowerBound {index : Type u} {powers : index -
     (forall (pi : index) (s : Complex), family.completedL pi s = 0 -> s.re = 1 / 2) <->
       (forall pi, StandardFamilyTriangularBound family pi)
 \end{verbatim}
+\end{minipage}\par\smallskip
 
+\noindent\begin{minipage}{\linewidth}
 \noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L304-L307}{Statement 7}.
 \begin{verbatim}
 theorem riemannRH_iff_globalPrimePowerMultiplicityInequality
@@ -2331,7 +2507,9 @@ theorem riemannRH_iff_globalPrimePowerMultiplicityInequality
     (forall z : Complex, 0 < z.re -> z.re < 1 -> riemannZeta z = 0 ->
       analyticOrderNatAt riemannZeta z = 1) <-> RiemannPrimePowerMultiplicityInequality
 \end{verbatim}
+\end{minipage}\par\smallskip
 
+\noindent\begin{minipage}{\linewidth}
 \noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L359-L364}{Statement 8}.
 \begin{verbatim}
 theorem dirichletGRH_iff_globalPrimePowerMultiplicityInequality (hGRH : DirichletGRH) :
@@ -2341,14 +2519,18 @@ theorem dirichletGRH_iff_globalPrimePowerMultiplicityInequality (hGRH : Dirichle
     (forall (N : Nat) [NeZero N] (chi : DirichletCharacter Complex N),
       DirichletPrimePowerMultiplicityInequality chi)
 \end{verbatim}
+\end{minipage}\par\smallskip
 
+\noindent\begin{minipage}{\linewidth}
 \noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L415-L417}{Statement 9}.
 \begin{verbatim}
 theorem dedekindERH_iff_globalPrimePowerMultiplicityInequality
     (K : Type u) [Field K] [NumberField K] (hERH : DedekindRH K) :
     DedekindPrimeIdealSimpleZeros K <-> DedekindPrimePowerMultiplicityInequality K
 \end{verbatim}
+\end{minipage}\par\smallskip
 
+\noindent\begin{minipage}{\linewidth}
 \noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L534-L542}{Statement 10}.
 \begin{verbatim}
 theorem grandRH_iff_globalPrimePowerMultiplicityInequality
@@ -2361,6 +2543,7 @@ theorem grandRH_iff_globalPrimePowerMultiplicityInequality
     (forall pi, GrandPrimePowerMultiplicityInequality (standardMultiplicityLogSignal family pi)
       (E pi) (J pi) (order pi))
 \end{verbatim}
+\end{minipage}\par\smallskip
 }
 
 \section{The exact classical criteria: proof roadmap}\label{sec:informal}
