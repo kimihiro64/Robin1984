@@ -1,0 +1,132 @@
+{
+  "source": "https://www.lmfdb.org/L/Completeness",
+  "accessed": "2026-11-27",
+  "lanes": [
+    {
+      "id": "dirichlet",
+      "name": "Primitive Dirichlet functions",
+      "published": 7655469,
+      "inventory": "Precomputed L-function labels and the primitive character origin.",
+      "next": "Verify conductor, parity, primitivity, and the exact character. Apply the rank-one provider only after identification."
+    },
+    {
+      "id": "newforms",
+      "name": "Embedded classical newforms",
+      "published": 14398359,
+      "inventory": "Precomputed embedded newform labels.",
+      "next": "Match the embedding and exact Hecke data to its unitary completion."
+    },
+    {
+      "id": "elliptic-q",
+      "name": "Elliptic curves over ℚ",
+      "published": 1741002,
+      "inventory": "Elliptic-curve isogeny classes and their L-function crosswalk.",
+      "next": "Match the isogeny class, all bad factors, and modularity provider."
+    },
+    {
+      "id": "maass2",
+      "name": "GL₂ Maass forms",
+      "published": 15659,
+      "inventory": "Maass origin search and dynamically computed L-functions.",
+      "next": "Identify the automorphic representation, reflection, spectral parameters, and exact Hecke data."
+    },
+    {
+      "id": "dedekind2",
+      "name": "Quadratic Dedekind zeta functions",
+      "published": 4296,
+      "inventory": "Quadratic field labels with available L-function pages.",
+      "next": "Match the field and all its prime-ideal data, then specialize CorrectedIdealRobin."
+    },
+    {
+      "id": "artin2",
+      "name": "Degree-two Artin functions",
+      "published": 55810,
+      "inventory": "Artin origins and the weight-one crosswalk where available.",
+      "next": "Distinguish proved holomorphy from signed-divisor continuation."
+    },
+    {
+      "id": "maass3",
+      "name": "GL₃ Maass forms",
+      "published": 1552,
+      "inventory": "Precomputed GL₃ Maass L-function labels.",
+      "next": "Verify the exact standard realization and contragredient."
+    },
+    {
+      "id": "dedekind3",
+      "name": "Cubic Dedekind zeta functions",
+      "published": 51,
+      "inventory": "Cubic field labels with available L-function pages.",
+      "next": "Match the field to the Dedekind provider and record any known factorizations."
+    },
+    {
+      "id": "artin3",
+      "name": "Degree-three Artin functions",
+      "published": 7925,
+      "inventory": "Artin origins with available L-function pages.",
+      "next": "Check the hypotheses behind any one-sided location claim."
+    },
+    {
+      "id": "newform-orbits-2",
+      "name": "Rational products of two newform embeddings",
+      "published": 41653,
+      "inventory": "Imprimitive rational newform L-function labels.",
+      "next": "Identify each factor and the combined pole order before a joint statement."
+    },
+    {
+      "id": "elliptic-qf",
+      "name": "Elliptic curves over quadratic fields",
+      "published": 253190,
+      "inventory": "Isogeny classes over quadratic fields and verified crosswalks.",
+      "next": "Work over the actual base field and establish the modular provider."
+    },
+    {
+      "id": "hilbert-1",
+      "name": "Dimension-one Hilbert modular forms",
+      "published": 66684,
+      "inventory": "Hilbert origins, often shared with elliptic-curve isogeny classes.",
+      "next": "Attach the origin to an existing canonical label when the crosswalk proves equality."
+    },
+    {
+      "id": "hilbert-higher",
+      "name": "Higher-dimensional Hilbert modular forms",
+      "published": 2913,
+      "inventory": "Hilbert origin search and dynamically computed L-functions.",
+      "next": "Identify embeddings and distinguish individual factors from products."
+    },
+    {
+      "id": "bianchi",
+      "name": "Dimension-one Bianchi newforms",
+      "published": 185541,
+      "inventory": "Bianchi origins and the elliptic-curve crosswalk.",
+      "next": "Verify the representation and which canonical function is shared."
+    },
+    {
+      "id": "genus2",
+      "name": "Genus-two Jacobian isogeny classes",
+      "published": 65534,
+      "inventory": "Genus-two isogeny classes and their L-function origins.",
+      "next": "Identify a proved spin or product provider before using the criterion."
+    },
+    {
+      "id": "artin4",
+      "name": "Degree-four Artin functions",
+      "published": 35,
+      "inventory": "Artin origins with available L-function pages.",
+      "next": "Record the exact analytic provider or signed-divisor obstruction."
+    },
+    {
+      "id": "newform-orbits-higher",
+      "name": "Rational products of three or more newform embeddings",
+      "published": 115645,
+      "inventory": "Imprimitive rational newform L-function labels.",
+      "next": "Verify the factorization and distinguish joint location from individual multiplicity."
+    },
+    {
+      "id": "unclassified",
+      "name": "Other precomputed or unresolved labels",
+      "published": null,
+      "inventory": "Precomputed search labels that need an exact family assignment.",
+      "next": "Resolve the origin from the LMFDB data page and record a family."
+    }
+  ]
+}

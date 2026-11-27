@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore arithmetic critical-line criteria and zero multiplicity by LMFDB identifier.">
+  <title>LMFDB Criterion Explorer</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./catalog-data.js" defer></script>
+  <script src="./backlog-data.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#catalog">Skip to the catalog</a>
+  <header class="hero">
+    <div class="wrap">
+      <div class="topbar">
+        <a class="wordmark" href="./"><span class="mark" aria-hidden="true">∑</span> Robin1984 <span class="slash">/</span> LMFDB research</a>
+        <nav aria-label="Sections"><a href="#corrected-ideal-robin">Corrected ideal criterion</a><a href="#catalog">Catalog</a><a href="#backlog">Backlog</a><a href="#experiment">Explore a sum</a><a href="#coverage">Coverage</a></nav>
+      </div>
+      <div class="hero-content">
+        <div>
+          <h1>LMFDB Criterion<br>Explorer<span>.</span></h1>
+          <p>Arithmetic tests for the critical line and zero multiplicity, indexed by the L-functions they describe.</p>
+          <a class="hero-link" href="#corrected-ideal-robin">Read the corrected ideal criterion</a>
+        </div>
+        <figure class="hero-formula">
+          <figcaption>Robin1984's corrected ideal criterion</figcaption>
+          <div>CorrectedIdealRobin(<span>K</span>)</div>
+          <p>The corrected ideal-divisor inequality is equivalent to RH for the Dedekind zeta function of K.</p>
+        </figure>
+      </div>
+    </div>
+  </header>
+  <main class="wrap">
+    <section class="section" id="corrected-ideal-robin" aria-labelledby="ideal-criterion-heading">
+      <div class="section-heading">
+        <div><h2 id="ideal-criterion-heading">Robin1984 corrected ideal criterion</h2><p><code>CorrectedIdealRobin(K)</code></p></div>
+        <a class="plain-link" href="../LMFDB.md">Research notes and proofs</a>
+      </div>
+      <div class="criterion-card">
+        <div class="criterion-statements">
+          <div class="criterion-side">
+            <h3>Dedekind RH for K</h3>
+            <p>For a fixed number field K, every zero of ζ_K in 0 &lt; Re s &lt; 1 has Re s = 1/2.</p>
+          </div>
+          <div class="criterion-iff"><span aria-hidden="true">⟺</span><span class="sr-only">if and only if</span></div>
+          <div class="criterion-side arithmetic">
+            <h3>The corrected ideal-divisor inequality</h3>
+            <p>There exists A_K ∈ ℕ such that every nonzero integral ideal 𝔞 of K with N𝔞 ≥ A_K satisfies</p>
+            <div class="criterion-formula" id="ideal-inequality">σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log |D_K|) / √(log N𝔞)].</div>
+          </div>
+        </div>
+        <p class="criterion-note">N is absolute ideal norm and σ_K(𝔞) sums N𝔟 over every integral ideal divisor 𝔟 of 𝔞. Here D_K is the field discriminant, κ_K is the residue of ζ_K at 1, and γ is Euler's constant.</p>
+        <p class="criterion-note"><strong>Dirichlet GRH</strong> is equivalent to this inequality in every cyclotomic field ℚ(ζ_m), m ≥ 1, with its own cutoff.</p>
+        <p class="criterion-note"><strong>Dedekind ERH</strong> is equivalent to this inequality in every number field K, with its own cutoff.</p>
+        <div class="actions"><a href="https://github.com/kimihiro64/Robin1984/blob/main/Robin1984/GRH.lean#L37">Lean definition</a><a href="https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318">Fieldwise equivalence in Lean</a></div>
+      </div>
+      <div class="ideal-fields table-scroll">
+        <table>
+          <caption>Corrected ideal criterion by field</caption>
+          <thead><tr><th scope="col">Field K</th><th scope="col">D_K</th><th scope="col">Equivalent zero statement</th><th scope="col">Catalogue entries</th></tr></thead>
+          <tbody id="ideal-field-records"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-label="Registry totals" class="statistics" id="statistics"></section>
+    <p class="coverage-note" id="proof-progress"></p>
+    <section class="section" id="catalog">
+      <div class="section-heading">
+        <div><h2>Research catalog</h2><p>Select an entry for its divisor, prime-count, or point-count inequality and the exact zero statement it tests.</p></div>
+        <a class="plain-link" href="./catalog.json">Download catalog JSON</a>
+      </div>
+      <div class="filters">
+        <label class="search">Search<input id="search" type="search" placeholder="Try 23.1.b.a or Dirichlet" autocomplete="off"></label>
+        <label>Status<select id="status"><option value="">All statuses</option><option value="done">Equivalence derived</option><option value="blocked">One-sided route blocked</option><option value="unreviewed">Awaiting review</option></select></label>
+        <label>Family<select id="family"><option value="">All families</option></select></label>
+        <label>Degree<select id="degree"><option value="">All degrees</option></select></label>
+        <button id="reset" class="subtle" type="button">Reset</button>
+      </div>
+      <div class="catalog-grid">
+        <div class="list-panel">
+          <p class="result-count" id="results" aria-live="polite">Loading catalog…</p>
+          <div class="table-scroll">
+            <table><thead><tr><th scope="col">L-function / origin</th><th scope="col">Degree</th><th scope="col">Location test</th></tr></thead><tbody id="records"></tbody></table>
+          </div>
+        </div>
+        <article id="detail" class="detail" aria-label="Selected entry and its equivalences" aria-live="polite"></article>
+      </div>
+    </section>
+    <section class="section" id="backlog" aria-labelledby="backlog-heading">
+      <div class="section-heading">
+        <div><h2 id="backlog-heading">Research backlog</h2><p id="backlog-caption"></p></div>
+        <a class="plain-link" href="../LMFDB_BACKLOG.md">Backlog workflow</a>
+      </div>
+      <dl class="backlog-totals" id="backlog-totals"></dl>
+      <div class="backlog-columns">
+        <section><h3>Next reviews</h3><ul class="backlog-list" id="backlog-next"></ul></section>
+        <section><h3>Current blockers</h3><p id="backlog-shared"></p><ul class="backlog-list" id="backlog-blocked"></ul></section>
+      </div>
+      <div class="ideal-fields table-scroll">
+        <table>
+          <caption>Progress by proof stage</caption>
+          <thead><tr><th scope="col">Stage</th><th scope="col">Done</th><th scope="col">Of those, alternate scope</th><th scope="col">Blocked</th><th scope="col">Inapplicable</th><th scope="col">Unreviewed</th></tr></thead>
+          <tbody id="backlog-stages"></tbody>
+        </table>
+      </div>
+      <details class="backlog-details">
+        <summary>Counts by research queue</summary>
+        <div class="ideal-fields table-scroll">
+          <table>
+            <caption>Primary queues and published LMFDB counts</caption>
+            <thead><tr><th scope="col">Family</th><th scope="col">Published</th><th scope="col">Review complete</th><th scope="col">In progress</th><th scope="col">Blocked</th><th scope="col">Unreviewed</th></tr></thead>
+            <tbody id="backlog-families"></tbody>
+          </table>
+        </div>
+        <p class="coverage-note">Each imported identifier has one primary queue. The <a href="https://www.lmfdb.org/L/Completeness">published source populations</a> overlap.</p>
+      </details>
+      <div class="backlog-details"><h3>Inventory checkpoints</h3><ul id="backlog-runs"></ul></div>
+    </section>
+    <section class="section" id="experiment">
+      <div class="section-heading"><div><h2>Explore a triangular sum</h2><p>See how the normalized remainder changes over a finite interval.</p></div></div>
+      <div class="lab">
+        <div class="lab-controls">
+          <label>L-function<select id="demo"></select></label>
+          <label for="cutoff">Maximum x <output id="cutoff-value" for="cutoff">600</output></label>
+          <input id="cutoff" type="range" min="50" max="2500" step="50" value="600">
+          <dl class="readout"><div><dt>R(x) / √x at endpoint</dt><dd id="endpoint">—</dd></div><div><dt>Prime-power slots through x</dt><dd id="slots">—</dd></div></dl>
+          <p id="demo-note">The theorem quantifies over all sufficiently large real x. This plot evaluates 121 points from x=2 through the selected endpoint.</p>
+        </div>
+        <figure class="plot"><canvas id="chart" height="270" role="img" aria-describedby="chart-text"></canvas><figcaption id="chart-text"></figcaption></figure>
+      </div>
+    </section>
+    <section class="section" id="coverage">
+      <div class="section-heading"><div><h2>Coverage by cohort</h2><p>Registry counts are compared with published LMFDB inventory totals.</p></div><a class="plain-link" id="snapshot-link" href="https://www.lmfdb.org/L/Completeness">LMFDB inventory</a></div>
+      <div id="cohorts" class="cohorts"></div>
+      <p class="coverage-note">The cohorts can overlap. Their totals are kept separate, and every count of reviewed records comes from the catalog above. The published LMFDB inventory and this research catalog have different update schedules.</p>
+    </section>
+  </main>
+  <footer><div class="wrap"><span>Robin1984 research</span><a href="../LMFDB.md">Method and proof notes</a><a href="https://www.lmfdb.org/L/">L-functions on LMFDB</a></div></footer>
+</body>
+</html>
