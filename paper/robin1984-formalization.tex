@@ -49,14 +49,15 @@
 \newcommand{\eps}{\varepsilon}
 \newcommand{\leanname}[1]{\texttt{#1}}
 \newcommand{\repositoryurl}{https://github.com/kimihiro64/Robin1984}
+\newcommand{\proofrevision}{b359826e62c50b6cef55db4b2fcab793232498cc}
 \newcommand{\codefile}[1]{%
-  \href{\repositoryurl/blob/main/#1}{\nolinkurl{#1}}}
+  \href{\repositoryurl/blob/\proofrevision/#1}{\nolinkurl{#1}}}
 \newcommand{\codedir}[1]{%
-  \href{\repositoryurl/tree/main/#1}{\nolinkurl{#1}}}
+  \href{\repositoryurl/tree/\proofrevision/#1}{\nolinkurl{#1}}}
 \newcommand{\codelink}[2]{%
-  \href{\repositoryurl/blob/main/#1}{\texttt{#2}}}
+  \href{\repositoryurl/blob/\proofrevision/#1}{\texttt{#2}}}
 \newcommand{\dirlink}[2]{%
-  \href{\repositoryurl/tree/main/#1}{\texttt{#2}}}
+  \href{\repositoryurl/tree/\proofrevision/#1}{\texttt{#2}}}
 \newcommand{\commitlink}[2]{%
   \href{\repositoryurl/commit/#1}{\texttt{#2}}}
 \newcommand{\runlink}[2]{%
@@ -77,7 +78,7 @@
 \author{Jonas Whidden}
 \thanks{This paper is available under \texttt{Apache-2.0} or
 \texttt{CC-BY-4.0}.}
-\date{November 2026}
+\date{November 2026, revised manuscript}
 \subjclass[2020]{11M06, 11M26, 11M36, 11N37, 03B35}
 \keywords{Robin's inequality, ideal divisor sums, Dirichlet $L$-functions,
 Dedekind zeta functions, automorphic $L$-functions, Riesz means,
@@ -105,13 +106,14 @@ contragredient. The converse in both settings uses a Mellin
 transform, Landau's theorem, and the sign of the residue at a
 possible real zero.
 
-The Mathlib-only Challenge and Lean Solution give six location
-equivalences and four multiplicity equivalences. For the automorphic
-criteria, Lean constructs the standard rank-one family over every
-number field and proves the critical-line and prescribed-order
-criteria for it, including the Dedekind norm twists. The ordinary
-mathematical argument in higher rank uses the analytic theorems on
-standard \(L\)-functions.
+The accompanying Lean release verifies six location equivalences
+and four multiplicity equivalences conditional on the corresponding
+location assertions. For the automorphic equivalences Lean proves
+the result for families supplied with the stated analytic data and
+constructs those data for the actual standard rank-one family over
+every number field, including Dedekind norm twists. The proof for the
+actual higher-rank standard family uses analytic theorems cited in
+the text. The paper gives the checked statements and source links.
 \end{abstract}
 \maketitle
 
@@ -145,33 +147,65 @@ The key real poles have a positive residue before subtraction from a
 nonnegative comparison function. This sign also rules out a real
 exceptional zero in the relevant half-plane.
 
-The argument draws on number-field Mertens theorems
-\cite{GarciaLeeNumberFieldMertens}, on smoothed explicit formulas for prime
-ideals~\cite{GrenieMolteniSmoothed}, and on Landau's theorem for
-nonnegative transforms~\cite{Landau1905}. The triangular sum for
-\(\zeta_K\) is the first Riesz mean used by Greni\'e and Molteni,
-divided by \(x\). Suzuki's sign criteria use logarithmically weighted
-von Mangoldt sums for \(\zeta\) and Dirichlet \(L\)-functions
-\cite[Theorems~1, 3 and~6]{SuzukiChebyshev}. Garg and Maji obtain
-criteria for a class of \(L\)-functions, including full-level
-holomorphic Hecke eigenforms, using exponential weights on
-Dirichlet inverse coefficients~\cite[Theorem~3.10 and
-Corollary~3.12]{GargMajiGrand}. Lagarias's criterion for standard
-\(L\)-functions uses Li coefficients~\cite{LagariasAutomorphicLi}.
-Our criteria concern the eventual ideal-divisor bound with its explicit
-correction and the one-sided \(O(\sqrt{x})\) bound for the triangular
-prime-power remainder of paired standard factors in every rank.
-The Alp\"oge--Claude development gives the classical and Dirichlet
-critical-line statements; its release and independent verification
-record specify those quantifiers~\cite{Alpoge2026,Sutherland2026}.
-Slijep\v{c}evi\'c's outline of that argument describes a related
-one-sided Riesz criterion for Dirichlet zeros. It uses a positive
-combination of twisted sums with coefficients \(\Lambda(n)/n\) and
-requires bounds on windows \([Y,Y^\lambda]\) for arbitrarily large
-\(Y\)~\cite[Eq.~(2.3) and Proposition~2.2]{SlijepcevicAlpogeOutline}.
-The triangular criterion in Section~\ref{sec:grand-research} uses
-the coefficients of \(-Z'/Z\) directly and requires the square-root
-bound at all sufficiently large \(x\).
+The argument uses number-field Mertens theorems
+\cite{GarciaLeeNumberFieldMertens} and Landau's theorem for
+nonnegative transforms~\cite{Landau1905}. We compare the arithmetic
+data, smoothing, and estimates in related criteria.
+
+\subsection{Comparison with other zero-location criteria}
+\label{sec:riesz-comparison}
+
+\emph{Smoothed prime ideals.} For \(Z=\zeta_K\), the sum subtracted in
+\eqref{eq:grand-rh-prime-power} is
+\(x^{-1}\int_1^x\psi_K(t)\,dt\), with \(\psi_K\) defined in
+Section~\ref{sec:grh}. This is the first Riesz mean of Greni\'e and
+Molteni divided by \(x\). They prove explicit two-sided bounds for
+the first and second means under GRH~\cite[Theorem~1.1]{GrenieMolteniSmoothed}.
+Here the eventual upper estimate on the signed remainder
+\(x/2-x^{-1}\int_1^x\psi_K(t)\,dt\) suffices for the converse.
+For the standard family, the constant and cutoff can depend on the
+test function. The ideal-divisor inequality \eqref{eq:ideal-robin}
+has an explicit correction coefficient and a field-dependent cutoff.
+
+\emph{Inverse Dirichlet series.} Dixit, Gupta, and Vatwani
+\cite[Theorem~1.4]{DixitGuptaVatwani2022} use coefficients \(c_K(n)\)
+of \(1/\zeta_K(s)\) and the Mellin--Barnes kernel \(Z_{r_1,r_2}\)
+associated with \(\Gamma(s/2)^{r_1}\Gamma(s)^{r_2}\).
+Their statistic is
+\[
+ P_K(y)=\sum_{n\geq1}\frac{c_K(n)}{n}
+            Z_{r_1,r_2}(\sqrt{y}/n).
+\]
+The estimate \(P_K(y)=O_{K,\delta}(y^{-1/4+\delta})\) for every
+\(\delta>0\) implies Dedekind RH. Their GRH asymptotic has a
+signature-dependent logarithmic term when \(r_1+r_2-1>0\).
+For unit rank zero the decay estimate gives an equivalence.
+Garg and Maji give criteria for a class of \(L\)-functions, including
+full-level holomorphic Hecke eigenforms, using exponential weights on
+inverse Dirichlet coefficients~\cite[Theorem~3.10 and
+Corollary~3.12]{GargMajiGrand}. Our triangular statistic is a finite
+sum at each \(x\). Its Mellin transform contains the logarithmic
+derivative \(Z'/Z\) with denominator \(s(s+1)\), so a zero of any order
+contributes a simple pole with residue proportional to its order.
+Section~\ref{sec:multiplicity} uses this fact to detect multiplicity.
+
+\emph{Sign and Li criteria.} Suzuki studies sign conditions on
+logarithmically weighted von Mangoldt sums for the zeta and Dirichlet
+cases~\cite[Theorems~1, 3 and~6]{SuzukiChebyshev}.
+Lagarias characterizes the critical-line condition for standard
+automorphic \(L\)-functions by nonnegativity of the real parts of
+Li coefficients~\cite[Theorem~2.2]{LagariasAutomorphicLi}.
+The Alp\"oge--Claude development proves the classical and Dirichlet
+critical-line statements with the quantifiers recorded in its release
+and independent verification~\cite{Alpoge2026,Sutherland2026}.
+Slijep\v{c}evi\'c's account uses a positive combination of twisted sums
+with coefficients \(\Lambda(n)/n\) and bounds on windows
+\([Y,Y^\lambda]\) for arbitrarily large \(Y\)
+\cite[Eq.~(2.3) and Proposition~2.2]{SlijepcevicAlpogeOutline}.
+Our triangular test uses the logarithmic coefficients of a standard
+factor and its contragredient and requires the upper estimate for all
+sufficiently large \(x\). Pairing makes the remainder real, and the
+residue sign handles the real-pole case in the one-sided converse.
 
 The main arguments are given in Sections~\ref{sec:positive-mellin}--%
 \ref{sec:grand-research}. Appendix~\ref{app:classical-criteria} records
@@ -434,20 +468,37 @@ functional equation gives the boundary at \(\Re s=0\). We use the standard compl
 and its Hadamard product as in~\cite[\S\,3]{GrenieMolteniSmoothed}.
 
 Set \(F_K(s)=(s-1)\zeta_K(s)\) and
-\(\Phi(s)=(F_K'(s)/F_K(s)+1)/s\). Integration of the Dirichlet
-series for \(-\zeta_K'/\zeta_K\) gives, for \(\Re s>1\),
+\(\Phi_K(s)=(F_K'(s)/F_K(s)+1)/s\).
+For \(\Re s>1\), integrate each step of \(\psi_K\) from \(q^j\)
+to infinity. The result is \((\log q)q^{-js}/s\), and absolute
+convergence of the logarithmic derivative justifies summation.
+Subtracting the integral of \(t\) gives
 \[
- F(s):=\int_1^\infty E(t)t^{-s-1}\,dt
-   =-\frac{\zeta_K'(s)}{s\zeta_K(s)}-\frac{1}{s-1}
-   =-\Phi(s).
+ \mathcal E_K(s):=\int_1^\infty E(t)t^{-s-1}\,dt
+  =-\frac{\zeta_K'(s)}{s\zeta_K(s)}-\frac{1}{s-1}
+  =-\Phi_K(s).
 \]
-The prime ideal estimate gives \(F(1)=\int_1^\infty E(t)t^{-2}\,dt\)
-and a removable value at \(s=1\). Fubini's theorem then gives
-\begin{equation}\label{eq:dedekind-h0-transform}
- \mathcal{M}(xH_0(x))(s)=\frac{F(s)-F(1)}{s-1}
-                         =\frac{\Phi(s)-\Phi(1)}{1-s}.
-\end{equation}
+The last equality follows from \(F_K'/F_K=1/(s-1)+\zeta_K'/\zeta_K\).
+The function \(\Phi_K\) is meromorphic and regular at \(1\), since
+\(F_K(1)=\kappa_K>0\). The prime ideal error is integrable against
+\(t^{-2}\), so dominated convergence gives
+\(\mathcal E_K(1)=-\Phi_K(1)\). The same majorant bounds
+\(\mathcal E_K(s)\) as \(s\) approaches any \(1+i\tau\) from the
+right. For \(\tau\ne0\), a zero there would give a pole of the
+logarithmic derivative, proving the boundary nonvanishing used above.
 
+In \(-\int_1^\infty x^{-s}\int_x^\infty E(t)t^{-2}\,dt\,dx\),
+the absolute integral after reversing order is bounded using
+\(\int_1^t x^{-\Re s}\,dx\leq1/(\Re s-1)\). Computing the inner
+integral \(\int_1^t x^{-s}\,dx=(1-t^{1-s})/(s-1)\) gives
+\begin{equation}\label{eq:dedekind-h0-transform}
+ \mathcal{M}(xH_0(x))(s)
+ =\frac{\mathcal E_K(s)-\mathcal E_K(1)}{s-1}
+ =\frac{\Phi_K(s)-\Phi_K(1)}{1-s}.
+\end{equation}
+The divided difference extends at \(1\) with value
+\(-\Phi_K'(1)\). At a zero \(\rho\ne0,1\) of order \(j\) its
+residue is \(j/[\rho(1-\rho)]\).
 Here is the explicit inversion used for the coefficient. Write
 \(\Xi_K'/\Xi_K(s)=b+\sum_{\rho}
 ((s-\rho)^{-1}+\rho^{-1})\). Let \(\psi_\Gamma=\Gamma'/\Gamma\).
@@ -455,7 +506,7 @@ The series
 \(\psi_\Gamma(z)=-\gamma-z^{-1}
  +\sum_{n\geq1}z/(n(n+z))\) gives
 \[
- \Phi(s)=\frac{B}{s}+\frac{r_1+r_2-1}{s^2}
+ \Phi_K(s)=\frac{B}{s}+\frac{r_1+r_2-1}{s^2}
   +\sum_\rho\frac{1}{\rho(s-\rho)}
   -r_1\sum_{n\geq1}\frac{1}{2n(s+2n)}
   -r_2\sum_{n\geq1}\frac{1}{n(s+n)}
@@ -488,20 +539,35 @@ absolute value by \(B_K\sqrt{x}\), where
 \[
  B_K=\sum_\rho \frac{1}{1/4+(\Im\rho)^2}.
 \]
-Subtract the values of \(\Xi_K'/\Xi_K\) at \(2\) and \(-1\).
-The functional equation makes the difference
-\(2\Xi_K'(2)/\Xi_K(2)\). A zero \(1/2+i\tau\) contributes
-\(3/(9/4+\tau^2)\). Since
-\((1/4+\tau^2)^{-1}\leq9/(9/4+\tau^2)\), we obtain
+Let \(\xi_K=\Xi_K'/\Xi_K\). In \(\xi_K(2)-\xi_K(-1)\)
+the Hadamard constant \(b\) and each subtraction constant
+\(\rho^{-1}\) cancel. The resulting terms are \(O(|\rho|^{-2})\),
+so the difference can be summed absolutely. By the functional
+equation \(\xi_K(-1)=-\xi_K(2)\). Under Dedekind RH every zero has
+the form \(\rho=1/2+i\tau\), counted with its order. Therefore
 \[
- B_K\leq6\Re\frac{\Xi_K'(2)}{\Xi_K(2)}
-       \leq9+3\log|D_K|.
+ 2\xi_K(2)=\sum_\rho
+     \left(\frac1{2-\rho}-\frac1{-1-\rho}\right)
+          =\sum_\rho\frac{3}{9/4+\tau^2}.
 \]
-For the second inequality, \(\zeta_K'(2)/\zeta_K(2)\leq0\)
-by the Euler product. The two archimedean log derivatives at \(2\)
-are \((-\log\pi-\gamma)/2\) and
-\(-\log(2\pi)+1-\gamma\), both negative. The terms left in the
-upper estimate are \(1/2+1+\tfrac12\log|D_K|\).
+The pointwise comparison
+\((1/4+\tau^2)^{-1}\leq9/(9/4+\tau^2)\) yields
+\(B_K\leq6\xi_K(2)\). Differentiation of the defining
+completion at \(2\) gives
+\begin{align*}
+ \xi_K(2)={}&\frac32+\frac12\log|D_K|
+   +\frac{r_1}{2}\bigl(\psi_\Gamma(1)-\log\pi\bigr)\\
+   &+r_2\bigl(\psi_\Gamma(2)-\log(2\pi)\bigr)
+   -\sum_{\mathfrak p,\ j\geq1}(\log q)q^{-2j}.
+\end{align*}
+The \(3/2\) is the contribution \(1/2+1\) from \(s(s-1)\).
+The Gamma recurrence gives \(\psi_\Gamma(1)=-\gamma\) and
+\(\psi_\Gamma(2)=1-\gamma\). Both archimedean parentheses are
+negative, and the Euler product gives the last nonpositive term.
+Thus
+\[
+ B_K\leq6\left(\frac32+\frac12\log|D_K|\right)=9+3\log|D_K|.
+\]
 
 In \eqref{eq:dedekind-h0-series} the nonzero-lattice Gamma series
 are bounded and the remaining elementary terms are \(O_K(1+\log x)\).
@@ -532,24 +598,49 @@ computed above, summed with the same cutoff at \(\sqrt{x}\), gives
  \log\frac{\sigma_K(\mathfrak L_x)}{N\mathfrak L_x}
         =A(x)+O_K\!\left(\frac{1}{\sqrt{x}\log x}\right).
 \]
-Since \(\psi_K(x)\sim x\), applying \eqref{eq:ideal-robin} and taking
-logs gives the upper bound
-\(\gamma+\log\kappa_K+\log\log\psi_K(x)
-   +O_K(1/(\sqrt{x}\log x))\).
-Concavity of \(\log\log t\) on \(t>1\) gives
-\(\log\log\psi_K(x)\leq\log\log x+E(x)/(x\log x)\).
-Comparison with \eqref{eq:ideal-mertens} then yields
-\(H(x)\leq C_K/(\sqrt{x}\log x)\) eventually for some \(C_K\).
+Write \(d(x)=\log(\sigma_K(\mathfrak L_x)/N\mathfrak L_x)-A(x)\).
+The local calculation gives \(d(x)\leq0\) and
+\(-d(x)\ll_K 1/(\sqrt{x}\log x)\). Apply the assumed ideal bound
+at \(\mathfrak L_x\), where \(\log N\mathfrak L_x=\psi_K(x)\).
+Taking logs and using \(\log(1+y)\leq y\) yields
+\begin{align*}
+ A(x)+d(x)\leq {}&\gamma+\log\kappa_K+\log\log\psi_K(x)\\
+ &+\frac{12+3\log|D_K|}{\sqrt{\psi_K(x)}\log\psi_K(x)}.
+\end{align*}
+By concavity of \(\log\log t\) on \(t>1\), the log-log term is
+at most \(\log\log x+E(x)/(x\log x)\). Substituting
+\eqref{eq:ideal-mertens}, the terms \(E(x)/(x\log x)\) cancel.
+The resulting upper bound on \(H(x)\) is the last displayed
+correction minus \(d(x)\). Since \(\psi_K(x)\sim x\), take \(C_K>0\)
+so that \(H(t)\leq C_K/(\sqrt t\log t)\) for every sufficiently
+large \(t\).
 
-Let \(u=1/w\). For \(t>1\), \(0\leq u'(t)\leq1/t\).
-Integrating \(H'(t)=w(t)E(t)/t^2\) by parts and using the prime ideal
-estimate at infinity gives
+Put \(u(t)=1/w(t)=(\log t)^2/(1+\log t)\), so \(u(t)\leq\log t\)
+and \(0\leq u'(t)=(1-(1+\log t)^{-2})/t\leq1/t\) for \(t>1\).
+On compact subintervals of \((1,\infty)\), \(H\) is absolutely
+continuous and \(u(t)H'(t)=E(t)/t^2\) almost everywhere.
+Consequently for \(T>x>1\),
 \[
- H_0(x)=u(x)H(x)+\int_x^\infty H(t)u'(t)\,dt
-       \leq C'_K x^{-1/2}
+ -\int_x^T E(t)t^{-2}\,dt
+ =u(x)H(x)-u(T)H(T)+\int_x^T u'(t)H(t)\,dt.
 \]
-for all sufficiently large \(x\). This uses the upper bound on \(H\)
-at every step, including the integral with its nonnegative weight.
+Using \(w(t)\leq2/\log t\) for \(t\geq e\), the prime ideal error
+bound gives
+\[
+ |H(T)|\ll_K
+ \int_{\sqrt{\log T}}^\infty \frac{e^{-c_K v}}{v}\,dv
+ \ll_K \frac{e^{-c_K\sqrt{\log T}}}{\sqrt{\log T}} .
+\]
+Thus \(u(T)H(T)\to0\) and the integral against \(u'\) is absolutely
+convergent. The nonnegative weights \(u(x)\) and \(u'(t)\) permit
+the upper bound on \(H\) to be used on each term. For large \(x\geq e\),
+\begin{align*}
+ H_0(x)
+ &=u(x)H(x)+\int_x^\infty u'(t)H(t)\,dt\\
+ &\leq\frac{C_K}{\sqrt{x}}
+      +\frac{C_K}{\log x}\int_x^\infty t^{-3/2}\,dt
+  =\frac{C_K}{\sqrt{x}}\left(1+\frac{2}{\log x}\right).
+\end{align*}
 
 By \eqref{eq:dedekind-h0-transform},
 \(\mathcal{M}(xH_0(x))\) is meromorphic on \(\Re s>1/2\).
@@ -669,15 +760,44 @@ write
    \sum_{\mathfrak p}\sum_{j\geq1}
       b_{\mathfrak p,j}(N\mathfrak p)^{-js}.
 \end{equation}
-Here the sum includes ramified local factors. If
-\(L_{\mathfrak p}(s,\pi)=\prod_{k=1}^n
- (1-\alpha_{\mathfrak p,k}(N\mathfrak p)^{-s})^{-1}\),
-allowing zero parameters at ramified primes, then
-\(b_{\mathfrak p,j}=2\log N\mathfrak p\,
- \Re\bigl(\sum_k\alpha_{\mathfrak p,k}^j\bigr)\) for a pair.
-For \(Z=\zeta_K\), \(b_{\mathfrak p,j}=\log N\mathfrak p\).
-The pair is a product of two standard factors, whose individual
-completed zeros are counted with their multiplicities.
+For each nonzero prime ideal \(\mathfrak p\) put \(q=N\mathfrak p\).
+Use the actual standard local factor
+\[
+ L_{\mathfrak p}(s,\pi)=P_{\pi,\mathfrak p}(q^{-s})^{-1},
+ \qquad P_{\pi,\mathfrak p}(X)=\prod_{k=1}^{d_{\pi,\mathfrak p}}
+                           (1-\alpha_{\pi,\mathfrak p,k}X).
+\]
+The polynomial has constant coefficient \(1\) and degree
+\(d_{\pi,\mathfrak p}\leq n\). Its parameters are the Satake
+parameters when \(\pi_{\mathfrak p}\) is unramified. At a ramified
+prime the polynomial is the standard local polynomial of
+\(\pi_{\mathfrak p}\). In the Weil--Deligne description it is the
+determinant of \(1-X\operatorname{Fr}_{\mathfrak p}\) on the
+inertia invariants in the kernel of monodromy, with Frobenius
+normalized to give the local Euler factor
+\cite[\S\,1]{BrumleyEffectiveMultiplicity}.
+Padding the list to length \(n\) by zeros preserves the polynomial.
+A ramified Hecke character has \(P_{\pi,\mathfrak p}=1\), but
+ramified representations in higher rank can contribute nonzero
+parameters.
+
+Define \(a_{\pi,\mathfrak p,j}=\sum_{k=1}^{d_{\pi,\mathfrak p}}
+\alpha_{\pi,\mathfrak p,k}^j\) for every \(j\geq1\), at ramified
+and unramified primes alike. The series for
+\(-\log P_{\pi,\mathfrak p}(X)\) at \(X=0\) has coefficient
+\(a_{\pi,\mathfrak p,j}/j\). With \(X=q^{-s}\), negative
+logarithmic differentiation of \(L_{\mathfrak p}\) gives the
+coefficient \((\log q)a_{\pi,\mathfrak p,j}\).
+Unitarity identifies the local contragredient with the complex
+conjugate representation. The two standard polynomials therefore
+have conjugate coefficients. For the paired test,
+\[
+ b_{\mathfrak p,j}=(\log q)(a_{\pi,\mathfrak p,j}
+              +a_{\widetilde\pi,\mathfrak p,j})
+              =2(\log q)\Re a_{\pi,\mathfrak p,j}.
+\]
+For \(Z=\zeta_K\) there is one parameter equal to \(1\) at every
+prime ideal, so \(b_{\mathfrak p,j}=\log q\).
 
 \begin{theorem}[Triangular criterion for standard automorphic \(L\)-functions]\label{thm:grand-triangular}
 Every nontrivial zero of every standard \(L\)-function in this
@@ -704,8 +824,8 @@ Jacquet--Shalika~\cite{JacquetShalika1981} and the summary over a
 number field in~\cite[\S\,2.1]{ThornerZhaoRankinSelberg}. We use the
 absolute convergence of the logarithmic series and of its derivative
 on \(\Re s>1\). On the set \(I\) of unramified prime-power
-indices \((\mathfrak p,j)\), write \(a_{\mathfrak p,j}\) for the
-standard power sum \(\sum_k\alpha_{\mathfrak p,k}^j\).
+indices \((\mathfrak p,j)\), abbreviate \(a_{\pi,\mathfrak p,j}\)
+as \(a_{\mathfrak p,j}\).
 The corresponding self Rankin--Selberg coefficients are
 \(|a_{\mathfrak p,j}|^2\), so at every real \(\sigma>1\),
 \[
@@ -716,12 +836,19 @@ The corresponding self Rankin--Selberg coefficients are
  \qquad q=N\mathfrak p.
 \]
 The two factors are finite by the respective log Euler products.
-The extra logarithmic factor from differentiation is absorbed by
-taking absolute convergence at a slightly smaller real part
-still above \(1\). There are finitely many ramified primes, and
-their local log series converge absolutely there by
-\cite[(2.2)]{ThornerZhaoRankinSelberg}. This also gives
-nonvanishing on \(\Re s>1\).
+For \(\Re s\geq\sigma>\sigma_0>1\), differentiation adds the
+bounded factor \(v e^{-(\sigma-\sigma_0)v}\) to the absolute
+log-series bound at \(\sigma_0\), with \(v=j\log q\).
+At a ramified prime put \(r_{\mathfrak p}=q^{-\sigma}
+\max_k|\alpha_{\pi,\mathfrak p,k}|\), with maximum zero for an
+empty list. The parameter estimate in
+\cite[(2.2)]{ThornerZhaoRankinSelberg} gives \(r_{\mathfrak p}<1\).
+The local absolute logarithm is bounded by
+\(n\sum_{j\geq1}r_{\mathfrak p}^j/j\), and its derivative series
+by \(n(\log q)r_{\mathfrak p}/(1-r_{\mathfrak p})\).
+There are only finitely many ramified primes. Thus the logarithm
+and logarithmic derivative converge absolutely, locally uniformly
+on \(\Re s>1\), and exponentiation gives nonvanishing there.
 
 In the same notation, the archimedean factors are products of
 \(\Gamma_{\mathbb R}(s+\mu)\) and \(\Gamma_{\mathbb C}(s+\mu)\),
@@ -1008,16 +1135,26 @@ For every integer \(B\geq 0\),
  \label{eq:order-area-threshold}
 \end{equation}
 The disk on the right is taken inside the domain of \(F\).
-Indeed, if \(m=\operatorname{ord}_w F>0\), write
-\(F(z)=(z-w)^m g(z)\) with \(g(w)\ne0\). On a sufficiently small disk,
-\(|g|\) lies between two positive constants. The small-value set lies
-between disks of radii proportional to \(\eta^{1/m}\) for small enough
-\(\eta\), so its area is bounded above and below by positive multiples of
-\(\eta^{2/m}\). The lower bound works in every disk about \(w\) by first
-restricting to a smaller disk. The exponent \(2(B+1)/m\) exceeds \(2\)
-exactly when \(m\le B\). For \(m=0\) the area vanishes for all sufficiently
-small thresholds in some disk. In particular, \(B=1\) is the original
-test \(A_F(w,R,\eta)=o(\eta)\).
+To prove \eqref{eq:order-area-threshold}, write
+\(F(z)=(z-w)^m g(z)\), with \(m=\operatorname{ord}_w F\) and
+\(g(w)\ne0\). Choose \(r>0\) so the closed disk of radius \(r\)
+lies in the domain and \(0<c\leq|g(z)|\leq C\) on it.
+For \(m=0\) the sublevel area in that disk is zero for \(\eta<c\).
+For \(m>0\) and \(0<\eta<cr^m\), the sublevel set contains
+the disk of radius \((\eta/C)^{1/m}\) and is contained in the
+closed disk of radius \((\eta/c)^{1/m}\). Hence
+\[
+ \pi(\eta/C)^{2/m}\leq A_F(w,r,\eta)\leq\pi(\eta/c)^{2/m}.
+\]
+Substituting \(\eta=\varepsilon^{B+1}\) makes the area divided by
+\(\varepsilon^2\) comparable to
+\(\varepsilon^{2(B+1)/m-2}\). Its exponent is positive exactly
+when \(m\leq B\). If \(m>B\), start with any proposed disk of
+radius \(R\) and use the lower bound in a smaller disk of radius
+at most \(r\) and \(R\). The area ratio in the proposed disk is
+then bounded below by a positive constant or diverges. This
+proves both directions. Taking \(B=1\) and putting
+\(\eta=\varepsilon^2\) gives \(A_F(w,R,\eta)=o(\eta)\).
 
 Suppose a chosen factorization on the strip has the form
 \[
@@ -1026,11 +1163,18 @@ Suppose a chosen factorization on the strip has the form
 where \(U\) is holomorphic and nowhere zero, the \(F_j\) are holomorphic
 with nonzero germs, and \(e_j\) are positive integers. Fix lower bounds
 \(b_j(w)\le\operatorname{ord}_w F_j\). The basic choice is \(b_j(w)=1\)
-at a zero of \(F_j\) and \(0\) elsewhere. A known order or a larger proved
-lower bound can be used at an exceptional point. Set
-\(B_F(w)=\sum_{j=1}^{r}e_j b_j(w)\). Additivity of zero order gives
-\(\operatorname{ord}_w F\ge B_F(w)\); equality means each factor attains
-its specified lower bound. At a common zero the contributions add.
+at a zero of \(F_j\) and \(0\) elsewhere. A known order or a larger
+proved lower bound can be used at an exceptional point. Set
+\(B_F(w)=\sum_{j=1}^{r}e_j b_j(w)\). Factoring each germ gives a
+product of units times a power of \(s-w\), whose exponent is the
+sum of the factor orders with their weights. In particular,
+\[
+ \operatorname{ord}_w F-B_F(w)
+  =\sum_{j=1}^r e_j\bigl(\operatorname{ord}_w F_j-b_j(w)\bigr).
+\]
+All terms are nonnegative and each \(e_j>0\). The area test with
+cap \(B_F(w)\) therefore holds exactly when every factor attains
+its lower bound. At a common zero the contributions add.
 If simplicity is required away from a factor's intrinsic center, its
 condition at that center can instead be omitted in the factorwise test.
 If an exact central order is prescribed, it can be tested by applying
@@ -1042,8 +1186,22 @@ Thus the combined location and multiplicity assertion is equivalent to
 with cap \(0\) off the line and cap \(B_F(w)\) on the line. Equivalently,
 one can use the corrected Robin inequality or the triangular inequality
 from the corresponding theorem for location, and test area only on the
-line. Multiplying by a holomorphic unit preserves the order and hence
-either area test. We may therefore use the following arithmetic
+line.
+
+For a completed function, apply the test to its holomorphic germ
+after clearing the poles of the completion. In particular the
+Dedekind norm twist uses \(\Xi_K(s+it)\), which clears the
+translated boundary poles. At a pole of an individual Gamma factor,
+use the completed germ so that cancellation is accounted for.
+For meromorphic germs the identity
+\(\operatorname{ord}_w(GF)=\operatorname{ord}_w G+
+\operatorname{ord}_w F\) counts poles with negative order.
+For a standard unitary completion on \(\Re w=1/2\), the Gamma
+shift bound in Section~\ref{sec:grand-research} makes the Gamma
+factors holomorphic units at \(w\). For Dedekind and primitive
+Dirichlet completions these factors are units throughout the open
+strip. Multiplication by a holomorphic unit preserves the order
+and either area test. We may therefore use the following arithmetic
 carriers, whose identities hold first in the half-plane of absolute
 convergence and then by continuation:
 \begin{align*}
@@ -1375,41 +1533,61 @@ all irreducible Artin factors requires their holomorphy.
 \section{Formal verification and source availability}
 \label{sec:formalization-summary}
 
-The Lean counterpart of Theorem~\ref{thm:ideal-robin} is
-\path{dedekindRH_iff_correctedIdealRobin}.
-The statements of Theorems~\ref{thm:dirichlet-cyclotomic}
-and~\ref{thm:dedekind-erh} appear in the Mathlib-only
-\path{Challenge.lean}. Their proofs in \path{Solution.lean} are
+The formalization used here is
+\href{\repositoryurl/releases/tag/v1.3.0}{release \texttt{v1.3.0}}
+at \commitlink{\proofrevision}{b359826}. Appendix~\ref{app:exact-lean}
+reproduces the exact types of all ten headline declarations. The
+\codefile{Challenge.lean} file supplies Mathlib-only definitions and
+the statements to be checked. It uses proof placeholders in those
+statements. The proofs are in \codefile{Solution.lean}.
+The checked declarations are the ten entries in
+\codefile{comparator.json}. In the following cross-reference, the
+numbers refer to the statement excerpts.
+
 \begin{center}
 \small
-\path{dirichletGRH_iff_cyclotomicCorrectedIdealRobin}\\
-\path{dedekindERH_iff_correctedIdealRobin}.
+\begin{tabular}{@{}r p{0.80\linewidth}@{}}
+\toprule
+ & Statement and scope \\
+\midrule
+1--3 & Robin's \(n>5040\) criterion, its colossally abundant
+restriction, and Lagarias's criterion
+(Appendices~\ref{app:classical-criteria} and~\ref{sec:lagarias}). \\
+4--5 & Dirichlet GRH and Dedekind ERH
+(Theorems~\ref{thm:dirichlet-cyclotomic} and~\ref{thm:dedekind-erh}). \\
+6 & Triangular critical-line criterion of
+Theorem~\ref{thm:grand-triangular} for a family supplied with the
+analytic data in the Lean statement. \\
+7--9 & The RH, Dirichlet GRH, and Dedekind ERH multiplicity criteria
+of Theorems~\ref{thm:rh-multiplicity}--\ref{thm:erh-multiplicity},
+each assuming the indicated location assertion. \\
+10 & Prescribed multiplicity for a supplied standard family under
+its critical-line assertion
+(Theorem~\ref{thm:grand-multiplicity}). \\
+\bottomrule
+\end{tabular}
 \end{center}
-The source proves both implications for the ideal criterion and the
-cyclotomic factorization \eqref{eq:cyclotomic-product}. The Comparator
-manifest lists ten headline statements, comprising the three classical
-location equivalences, the three generalized location equivalences,
-and the four conditional multiplicity equivalences.
-Appendix~\ref{sec:formalization} describes statement comparison,
-axiom inspection, and kernel replay.
 
-The first three multiplicity statements use the Riemann zeta,
-the individual Dirichlet \(L\)-functions, and the Dedekind zeta
-continuation over every number field, respectively. The simple-zero
-criterion for Dedekind zeta requires only the prime-ideal data for
-that field. The positive-factorization criterion is a separate
-result with the factorization and its analytic data as inputs.
+The fieldwise helper \path{dedekindRH_iff_correctedIdealRobin}
+underlies statements 4 and 5. Statement 9, for Dedekind simplicity,
+uses prime-ideal coefficients for each field. The separate result
+for a positive holomorphic factorization takes its factors and their
+analytic properties as inputs. In the standard family, statement 6
+uses paired Euler logarithms, and statement 10 uses the individual
+ones. The \codefile{Robin1984/GRH/HeckeStandardRankOne.lean} module
+constructs both sets of analytic inputs for the actual standard
+\(\mathrm{GL}_1\) family, as detailed in
+Appendix~\ref{app:hecke-formalization}. For higher ranks the paper
+uses the cited analytic theorems to instantiate the reasoning.
 
-The standard-family location theorem takes the paired Euler
-products, completions, growth bounds, and functional equations as
-inputs. The multiplicity theorem takes the individual Euler logarithms
-and completions. Lean supplies the analytic estimates for the actual
-standard rank-one family over every number field.
-Appendix~\ref{app:hecke-formalization} explains the Hecke
-construction and the pole-cleared Dedekind norm twists.
-
-The source, theorem boundary, and verification instructions are
-available at \url{\repositoryurl}.
+The \runlink{45793028032}{verification run for this commit} built
+the Lean project and passed the Comparator job. The checked statement
+types include their fixed definitions, and the Solution dependency
+audit permits the standard axioms \path{propext},
+\path{Classical.choice}, and \path{Quot.sound}. The job also runs
+Lean kernel and independent NanoDa verification.
+Appendix~\ref{sec:formalization} gives the procedure and artifact
+links. The paper revision uses this existing proof release.
 
 \appendix
 
@@ -4634,6 +4812,105 @@ corrigendum.  The formal reconstruction, certificate design, and exposition
 are the work of the Robin1984 project; credits for external Lean
 infrastructure are recorded above and in the repository metadata.
 
+\section{Exact headline Lean statements}\label{app:exact-lean}
+
+These are verbatim statement excerpts from \codefile{Challenge.lean}
+at the verified revision in Section~\ref{sec:formalization-summary},
+with the proof markers omitted. Statements 1--3 are in namespace
+\path{Robin1984}; statements 4--10 are in \path{Robin1984.GRH}.
+The links give the original line ranges and their definition context.
+The prefixes of statements 6 and 10 display the supplied standard
+family and its analytic hypotheses.
+
+{\footnotesize
+\noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L201-L203}{Statement 1}.
+\begin{verbatim}
+theorem robin_inequality_iff_riemannHypothesis :
+    (forall n : Nat, 5040 < n -> robinInequality n) <->
+      RiemannHypothesis
+\end{verbatim}
+
+\noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L209-L212}{Statement 2}.
+\begin{verbatim}
+theorem riemannHypothesis_iff_colossallyAbundant_robin :
+    RiemannHypothesis <->
+      (forall n : Nat, forall eps : Real, 5040 < n ->
+        IsColossallyAbundantWith n eps -> robinInequality n)
+\end{verbatim}
+
+\noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L218-L219}{Statement 3}.
+\begin{verbatim}
+theorem riemann_hypothesis_iff_lagarias_elementary_criterion :
+    RiemannHypothesis <-> LagariasElementaryCriterion
+\end{verbatim}
+
+\noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L233-L239}{Statement 4}.
+\begin{verbatim}
+theorem dirichletGRH_iff_cyclotomicCorrectedIdealRobin :
+    (forall (modulus : Nat) [NeZero modulus]
+      (chi : DirichletCharacter Complex modulus) (s : Complex),
+      0 < s.re -> s.re < 1 -> DirichletCharacter.LFunction chi s = 0 ->
+        s.re = 1 / 2) <->
+    (forall (modulus : Nat) [NeZero modulus],
+      CorrectedIdealRobin (CyclotomicField modulus Rat))
+\end{verbatim}
+
+\noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L246-L248}{Statement 5}.
+\begin{verbatim}
+theorem dedekindERH_iff_correctedIdealRobin :
+    (forall (K : Type u) [Field K] [NumberField K], DedekindRH K) <->
+      (forall (K : Type u) [Field K] [NumberField K], CorrectedIdealRobin K)
+\end{verbatim}
+
+\noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L259-L264}{Statement 6}.
+\begin{verbatim}
+theorem grandRH_iff_triangularPrimePowerBound {index : Type u} {powers : index -> Type u}
+    [forall pi, Countable (powers pi)]
+    (family : StandardAutomorphicFamilyData index powers)
+    (analytics : HasStandardAutomorphicAnalytics family) :
+    (forall (pi : index) (s : Complex), family.completedL pi s = 0 -> s.re = 1 / 2) <->
+      (forall pi, StandardFamilyTriangularBound family pi)
+\end{verbatim}
+
+\noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L304-L307}{Statement 7}.
+\begin{verbatim}
+theorem riemannRH_iff_globalPrimePowerMultiplicityInequality
+    (hRH : RiemannHypothesis) :
+    (forall z : Complex, 0 < z.re -> z.re < 1 -> riemannZeta z = 0 ->
+      analyticOrderNatAt riemannZeta z = 1) <-> RiemannPrimePowerMultiplicityInequality
+\end{verbatim}
+
+\noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L359-L364}{Statement 8}.
+\begin{verbatim}
+theorem dirichletGRH_iff_globalPrimePowerMultiplicityInequality (hGRH : DirichletGRH) :
+    (forall (N : Nat) [NeZero N] (chi : DirichletCharacter Complex N) (z : Complex),
+      0 < z.re -> z.re < 1 -> DirichletCharacter.LFunction chi z = 0 ->
+        analyticOrderNatAt (DirichletCharacter.LFunction chi) z = 1) <->
+    (forall (N : Nat) [NeZero N] (chi : DirichletCharacter Complex N),
+      DirichletPrimePowerMultiplicityInequality chi)
+\end{verbatim}
+
+\noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L415-L417}{Statement 9}.
+\begin{verbatim}
+theorem dedekindERH_iff_globalPrimePowerMultiplicityInequality
+    (K : Type u) [Field K] [NumberField K] (hERH : DedekindRH K) :
+    DedekindPrimeIdealSimpleZeros K <-> DedekindPrimePowerMultiplicityInequality K
+\end{verbatim}
+
+\noindent\href{\repositoryurl/blob/\proofrevision/Challenge.lean\#L534-L542}{Statement 10}.
+\begin{verbatim}
+theorem grandRH_iff_globalPrimePowerMultiplicityInequality
+    {index : Type u} {powers : index -> Type v} [forall pi, Countable (powers pi)]
+    (family : StandardMultiplicityFamilyData index powers)
+    (analytics : HasStandardMultiplicityAnalytics family)
+    (E J : index -> Finset Real) (order : index -> Real -> Nat)
+    (hRH : forall pi s, family.completedL pi s = 0 -> s.re = 1 / 2) :
+    (forall pi, HasPrescribedZeroOrders (family.completedL pi) (E pi) (J pi) (order pi)) <->
+    (forall pi, GrandPrimePowerMultiplicityInequality (standardMultiplicityLogSignal family pi)
+      (E pi) (J pi) (order pi))
+\end{verbatim}
+}
+
 \begin{thebibliography}{99}
 
 \bibitem{Alpoge2026}
@@ -4726,6 +5003,13 @@ M. Suzuki,
 Ramanujan J. \textbf{68} (2025), article 95,
 \href{https://doi.org/10.1007/s11139-025-01238-9}{doi:10.1007/s11139-025-01238-9}.
 
+\bibitem{DixitGuptaVatwani2022}
+A. Dixit, S. Gupta, and A. Vatwani,
+\emph{A modular relation involving non-trivial zeros of the Dedekind
+zeta function, and the generalized Riemann hypothesis},
+J. Math. Anal. Appl. (2022), article 126435.
+\href{https://doi.org/10.1016/j.jmaa.2022.126435}{doi:10.1016/j.jmaa.2022.126435}.
+
 \bibitem{GargMajiGrand}
 M. Garg and B. Maji,
 \emph{Equivalent criteria for the Riemann hypothesis for a general
@@ -4737,6 +5021,12 @@ preprint, 2024,
 J. C. Lagarias,
 \emph{Li coefficients for automorphic $L$-functions},
 Ann. Inst. Fourier \textbf{57} (2007), 1689--1740.
+
+\bibitem{BrumleyEffectiveMultiplicity}
+F. Brumley, \emph{Effective multiplicity one on
+\(\mathrm{GL}_N\) and narrow zero-free regions for Rankin--Selberg
+\(L\)-functions}, Amer. J. Math. \textbf{128} (2006), 1455--1474.
+\url{https://arxiv.org/abs/math/0306052}.
 
 \bibitem{ThornerZhaoRankinSelberg}
 J. Thorner and S. Zhao,
