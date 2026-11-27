@@ -2594,7 +2594,7 @@ its own prime ideals. The factorwise refinement uses a supplied
 holomorphic factorization. An application of that refinement with
 all irreducible Artin factors requires their holomorphy.
 
-\section{Related zero-location criteria}\label{sec:comparison-criteria}
+\section{Related zero-location and multiplicity criteria}\label{sec:comparison-criteria}
 \label{sec:riesz-comparison}
 
 \emph{The Riemann zeta function.} Write
@@ -2718,6 +2718,91 @@ minus sign, so Landau's argument also excludes real off-line zeros.
 The criterion combines this treatment of real zeros with the exact
 square-root exponent for one fixed weight across the whole standard
 family.
+
+\subsection{Comparison with earlier multiplicity criteria}
+\label{sec:multiplicity-comparison}
+
+The area and Mellin tests in Section~\ref{sec:multiplicity} use
+classical local facts. A zero of order \(m>0\) gives sublevel area
+of order \(\eta^{2/m}\), and \(F'/F\) has residue \(m\) at that zero.
+The arithmetic feature of \eqref{eq:triangular-order-test} is that
+it recovers the residue from the triangular remainder used in the
+location theorem.
+
+\emph{Mean square and the simplicity defect.}
+Akbary, Ng, and Shahabi compute mean squares of logarithmically
+normalized prime-counting errors by almost-periodic Parseval.
+Their automorphic formula under the critical-line hypothesis
+already has squared multiplicities
+\cite[Theorem~1.14 and Corollary~1.15(i)]{AkbaryNgShahabiMeanSquare}.
+Caceres goes further for \(\zeta\). He computes the log-scale
+mean square of a slope obtained from a logarithmically weighted
+prime-power sum. Under RH the energy is
+\(2\sum_{\gamma>0}m_\gamma^2/\gamma^2\), with the sum over distinct
+positive zero ordinates. He compares it with
+\((\log\xi)''(1/2)=2\sum_{\gamma>0}m_\gamma/\gamma^2\).
+His Theorem~4.6 gives the joint equivalence with RH and simplicity.
+If RH fails, the log-scale mean square has infinite limit superior
+\cite[Proposition~4.1 and Theorem~4.6]{CaceresRiemannMargin}.
+This is a precedent for a global arithmetic simplicity criterion
+based on the defect \(m_\gamma^2-m_\gamma\).
+
+\emph{The multiplicity spectrum from screw functions.}
+Suzuki's screw function in the extended Selberg class already
+contains the multiplicities. In the semi-extended Selberg class
+he computes it from logarithmic Dirichlet coefficients and
+completion data, without a list of zeros
+\cite[Eq.~(1.1) and Theorem~4.1]{SuzukiSelbergScrew}.
+Write \(\Psi_F=-g_F\) in Suzuki's notation and use the ordinate
+convention \(\rho_\gamma=1/2+i\gamma\) of this paper. Under the
+critical-line condition, \(\Psi_F\) is the sum of a linear term,
+\(m_0t^2/2\), and the series with terms
+\(m_\gamma(1-e^{i\gamma t})/\gamma^2\) for distinct nonzero
+ordinates. Its convolution with the second derivative of the
+Gaussian \(g_a\) from Section~\ref{sec:multiplicity} is
+\[
+ (g_a''*\Psi_F)(t)
+ = m_0+\sum_{\substack{\gamma\ne0\\m_\gamma>0}}
+           m_\gamma e^{-a\gamma^2}e^{i\gamma t}.
+\]
+Indeed, the convolution kills the affine terms, sends \(t^2/2\)
+to \(1\), and has Fourier multiplier \(-\gamma^2e^{-a\gamma^2}\)
+on the nonconstant modes. The series before convolution is
+absolutely summable and \(g_a''\) is integrable, so the convolution
+can be taken termwise. This gives the same limiting multiplicity
+spectrum as our Gaussian-smoothed triangular signal. Suzuki also
+uses the screw function in an eventual sign criterion for location
+under a real-axis nonvanishing hypothesis
+\cite[Theorem~1.1]{SuzukiSelbergScrew}.
+
+\emph{Contribution of the triangular test.}
+Equation~\eqref{eq:global-multiplicity-energy} gives both sides of
+the simplicity comparison from \(e^{-t/2}R_Z(e^t)\), using the fixed
+weight \(1-q^j/x\) and the completion correction where required.
+The log-scale mean square of the first smoothing and the limit
+superior of the real part of the second have matching weights.
+In the notation of Section~\ref{sec:multiplicity}, their difference is
+\[
+ \mathcal E(Z;E)-\mathcal S(Z;E)
+ =\sum_{\substack{\gamma\notin E\\m_\gamma>0}}
+     m_\gamma(m_\gamma-1)e^{-2\gamma^2},
+\]
+where the sum is over distinct retained ordinates. The basic
+simplicity test uses no zero ordinates as inputs.
+For prescribed orders, the only ordinates supplied are the finite
+exceptions and the points at which an order is prescribed.
+
+The location theorem uses paired coefficients where necessary
+to give a real remainder. The multiplicity comparison uses the
+same triangular construction for each individual factor, so a
+zero shared by two factors contributes separately to the two
+tests. Theorem~\ref{thm:grand-multiplicity} applies this formulation
+to the standard unitary cuspidal family in every rank over every
+number field and allows finite prescribed orders, including at
+the center. Theorem~\ref{thm:erh-multiplicity} uses the field's own
+prime ideals, and Theorem~\ref{thm:erh-factorwise-multiplicity}
+gives the corresponding weighted comparison when a positive
+holomorphic factorization is supplied.
 
 \subsection{Comparison with formal proofs and other Lean criteria}
 \label{sec:prior-lean}
@@ -5252,6 +5337,26 @@ annotated by J.-L. Nicolas and G. Robin,
 Ramanujan J. \textbf{1} (1997), 119--153,
 \href{https://doi.org/10.1023/A:1009764017495}
 {doi:10.1023/A:1009764017495}.
+
+\bibitem{CaceresRiemannMargin}
+P. Caceres,
+\emph{The Riemann hypothesis as a margin: a two-sided criterion
+verified to \(2\cdot10^{29}\), the fourth-moment anatomy of
+M\"obius cancellation, and one constant seen from every side},
+preprint, 2026, \url{https://hexagonmath.org/2610.00688v3}.
+
+\bibitem{AkbaryNgShahabiMeanSquare}
+A. Akbary, N. Ng, and M. Shahabi,
+\emph{Limiting distributions of the classical error terms of prime
+number theory}, Q. J. Math. \textbf{65} (2014), 743--780.
+\href{https://doi.org/10.1093/qmath/hat059}{doi:10.1093/qmath/hat059}.
+
+\bibitem{SuzukiSelbergScrew}
+M. Suzuki,
+\emph{Screw functions of Dirichlet series in the extended Selberg class},
+Int. J. Number Theory \textbf{21} (2025), 1815--1823.
+\href{https://doi.org/10.1142/S1793042125500885}{doi:10.1142/S1793042125500885}.
+\href{https://arxiv.org/abs/2209.12832v2}{arXiv:2209.12832v2}.
 
 \bibitem{SuzukiMonotonicity}
 M. Suzuki,
