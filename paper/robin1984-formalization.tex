@@ -19,7 +19,7 @@
   linkcolor=linkblue,
   citecolor=linkblue,
   urlcolor=linkblue,
-  pdftitle={Robin-type criteria for generalized Riemann hypotheses},
+  pdftitle={Robin-type criteria for generalized Riemann hypotheses with Lean proofs},
   pdfauthor={Jonas Whidden}
 }
 
@@ -72,9 +72,10 @@
 \newcommand{\releasesurl}{%
   https://github.com/kimihiro64/Robin1984/releases}
 
-\title[Robin-type criteria for generalized Riemann hypotheses]
-      {Robin-type criteria for Dirichlet, Dedekind, and automorphic
-       Riemann hypotheses}
+\title[Robin-type criteria with Lean proofs]
+      {Robin-type criteria for Dirichlet, Dedekind,\\
+       and automorphic Riemann hypotheses\\
+       with formal proofs in Lean}
 \author{Jonas Whidden}
 \thanks{This paper is available under \texttt{Apache-2.0} or
 \texttt{CC-BY-4.0}.}
@@ -88,32 +89,29 @@ generalized Riemann hypotheses, formal verification}
 \setlength{\emergencystretch}{2em}
 \raggedbottom
 \begin{abstract}
-For a number field \(K\), we prove that the Riemann hypothesis for
-\(\zeta_K\) is equivalent to an eventual bound for the normalized
-sum of the norms of the divisors of an integral ideal. The bound has
-main term \(e^\gamma\kappa_K\log\log N\mathfrak a\) and correction
-\(e^\gamma\kappa_K(12+3\log|D_K|)/\sqrt{\log N\mathfrak a}\),
-where \(\kappa_K\) is the zeta residue at \(1\).
-Cyclotomic factorization gives the equivalent bound for Dirichlet
-GRH, and the all-field quantifier gives Dedekind ERH.
-Grand RH asserts the critical-line condition for every automorphic
-\(L\)-function. For its restriction to the standard \(L\)-functions
-of unitary cuspidal representations of \(\mathrm{GL}_n\) over all
-number fields, the critical-line
-assertion is equivalent to a one-sided square-root bound for a
-triangular sum over the prime powers of a representation and its
-contragredient. The converse in both settings uses a Mellin
-transform, Landau's theorem, and the sign of the residue at a
-possible real zero.
+We prove Robin-type arithmetic equivalences for generalized
+Riemann hypotheses and verify their proofs in Lean at the
+specified analytic interfaces. For every number field \(K\),
+Dedekind RH is equivalent to an eventual bound on the normalized
+ideal divisor sum. The main term is
+\(e^\gamma\kappa_K\log\log N\mathfrak a\), with correction
+\(e^\gamma\kappa_K(12+3\log|D_K|)/\sqrt{\log N\mathfrak a}\).
+Here \(\kappa_K\) is the residue of \(\zeta_K\) at \(1\).
+Lean checks this equivalence and the cyclotomic factorization
+that yields a criterion for all Dirichlet \(L\)-functions.
 
-The accompanying Lean release verifies six location equivalences
-and four multiplicity equivalences conditional on the corresponding
-location assertions. For the automorphic equivalences Lean proves
-the result for families supplied with the stated analytic data and
-constructs those data for the actual standard rank-one family over
-every number field, including Dedekind norm twists. The proof for the
-actual higher-rank standard family uses analytic theorems cited in
-the text. The paper gives the checked statements and source links.
+For standard \(L\)-functions of unitary cuspidal representations
+of \(\mathrm{GL}_n\), a one-sided square-root bound on a triangular
+prime-power sum characterizes critical-line location. Its converse
+uses Landau's theorem and the sign of a possible real pole.
+The formal proof isolates the analytic data used by this argument.
+Lean constructs those data for the actual rank-one Hecke family over
+every number field, including Dedekind norm twists. The mathematics
+for the actual higher-rank standard family uses the cited analytic
+theorems. The same coefficients give conditional tests for
+simplicity and prescribed multiplicity. The published verification
+compares and replays six location and four multiplicity
+equivalences, whose exact types and scope are given here.
 \end{abstract}
 \maketitle
 
@@ -125,6 +123,15 @@ the \href{https://www.apache.org/licenses/LICENSE-2.0}{Apache License 2.0} or
 \end{center}
 
 \section{Introduction}
+
+This paper gives new arithmetic criteria for critical-line location
+and zero orders, together with a Lean proof development for the
+criteria. The formalization covers the full fieldwise ideal-divisor
+equivalence, its Dirichlet and Dedekind consequences, and the
+Mellin implication that connects the triangular prime-power bound
+to zero location. This makes it possible to see precisely which
+analytic inputs are needed in order to apply the same argument to
+another family of \(L\)-functions.
 
 Robin's criterion detects the Riemann hypothesis through the sizes of
 divisor sums~\cite{Robin1984}. We extend the divisor-sum problem to
@@ -147,10 +154,55 @@ The key real poles have a positive residue before subtraction from a
 nonnegative comparison function. This sign also rules out a real
 exceptional zero in the relevant half-plane.
 
+\subsection{The formal proof contribution}\label{sec:lean-contribution}
+
+The main formal results establish equivalences whose left sides
+quantify over the relevant zeros and whose right sides state the
+arithmetic inequalities. In the Dirichlet case the public theorem
+starts with every complex Dirichlet character of every positive
+modulus. The proof passes from those \(L\)-functions to the cyclotomic
+fields using an internal factorization theorem. The all-field result
+applies the Dedekind proof to each field, with its own cutoff. The
+classical Robin, colossally abundant Robin, and Lagarias equivalences
+give three further public location theorems.
+
+For the standard automorphic family the Lean interface separates the
+data of the Euler products and completions from the theorem about
+their zeros. The proof uses the local finiteness and summability of
+the prime-power data to obtain a Mellin transform. The growth bounds and functional equation control the zero
+expansion and reflection. The sign of the residue controls the
+real-pole case in the converse. The library instantiates this argument over every number
+field for unitary Hecke characters. The construction obtains the
+local coefficients from ideles, constructs the completed functions
+by Tate integrals and adelic Poisson summation, and treats the
+Dedekind norm twists by translation. For the actual higher-rank
+standard family, Section~\ref{sec:grand-research} supplies the
+mathematical argument using cited analytic results. The corresponding
+Lean equivalences take those analytic conditions as hypotheses.
+
+The four multiplicity theorems assume the appropriate location
+condition and then characterize simplicity or prescribed zero
+orders by prime-power inequalities. The proof treats individual
+functions for their orders and uses contragredient pairs for the
+real-valued location remainder. The latter pairing can add orders
+at a common zero, which is why the two coefficient constructions
+are kept separate in the formal proof.
+
+The \codefile{Challenge.lean} states the ten headline equivalences
+over definitions built from Mathlib with proof placeholders.
+The \codefile{Solution.lean} gives the proofs. The
+\runlink{45793028032}{published verification run} compares the
+statement types and their fixed definitions, checks dependencies
+for allowed axioms, and replays the proofs using Lean's kernel
+and the independent NanoDa checker. Section~\ref{sec:formalization-summary}
+maps the ten results to the exposition, and
+Appendix~\ref{app:exact-lean} prints the exact types. The sections
+that follow link the principal mathematical steps to the proofs
+that use them.
+
 The argument uses number-field Mertens theorems
 \cite{GarciaLeeNumberFieldMertens} and Landau's theorem for
-nonnegative transforms~\cite{Landau1905}. We compare the arithmetic
-data, smoothing, and estimates in related criteria.
+nonnegative transforms~\cite{Landau1905}.
 
 \subsection{Comparison with other zero-location criteria}
 \label{sec:riesz-comparison}
@@ -376,6 +428,17 @@ if and only if, for every \(\mathfrak a\) of sufficiently large norm,
            \frac{12+3\log|D_K|}{\sqrt{\log N\mathfrak a}}\right).
 \end{equation}
 \end{theorem}
+
+The fieldwise result is proved in
+\codelink{Solution.lean\#L318}{the Lean fieldwise declaration}.
+The separate Lean implications control the ideal sum in the
+forward direction and recover the one-sided analytic bound from
+the least-common-multiple ideals in the converse. The
+\codelink{Robin1984/GRH/DedekindTriangular.lean\#L396}{Dedekind triangular equivalences}
+identify both inequalities via the same zero-location predicate.
+Thus the specialization from the triangular criterion takes
+place in the checked development as well as in the mathematics
+of Section~\ref{sec:proof-overview}.
 
 \subsection{The boundary term in Mertens' formula}
 
@@ -701,6 +764,15 @@ Dirichlet GRH. Apply Theorem~\ref{thm:ideal-robin} in each cyclotomic
 field.
 \end{proof}
 
+In Lean, the bridge
+\codelink{Robin1984/GRH/CyclotomicFactorization.lean\#L201}{between Dirichlet and cyclotomic RH}
+has the same two quantifiers used in this proof. The argument is
+composed with the fieldwise ideal equivalence in
+\codelink{Solution.lean\#L56}{the advertised Dirichlet theorem}.
+In particular the cyclotomic statement enters as a proved
+intermediate result, while the theorem still speaks directly
+about Dirichlet \(L\)-functions.
+
 \begin{theorem}[Dedekind ERH]\label{thm:dedekind-erh}
 Every zero in \(0<\Re s<1\) of \(\zeta_K(s)\), for every number field
 \(K\), has real part \(1/2\) if and only if \eqref{eq:ideal-robin} holds
@@ -878,6 +950,17 @@ a zero of either factor
 gives a zero of their product, since both factors are entire.
 
 \subsection{Mellin transform of the prime-power remainder}
+
+The formal Mellin calculation is in
+\codelink{Robin1984/GRH/TriangularMellin.lean\#L27}{the triangular-kernel identity}.
+The converse in
+\codelink{Robin1984/GRH/TriangularConverse.lean\#L43}{the zero-exclusion theorem}
+takes the nonnegative transform and its triangular logarithmic
+derivative identity, then excludes zeros to the right of the indicated real edge. The public standard-family
+proof builds that input from its stated analytic hypotheses.
+The \codelink{Robin1984/GRH/HeckeStandardRankOne.lean\#L124}{rank-one instantiation}
+supplies the concrete completed family and proves the criterion
+with its Dedekind and pole-free Hecke tests.
 
 For \(v>1\) and \(\Re s>1\),
 \[
@@ -1400,6 +1483,17 @@ multiplicities directly.
 
 \subsection{Four conditional multiplicity equivalences}
 
+The area calculation above detects a local order bound on a
+holomorphic germ. The advertised Lean theorems instead test the
+same zero-order assertions by the arithmetic mean-square criterion.
+The \codelink{Robin1984/GRH/StandardAutomorphicMultiplicity.lean\#L90}{standard-family multiplicity proof}
+uses the individual completed functions and their logarithmic
+data. The \codelink{Robin1984/GRH/DedekindTriangular.lean\#L539}{Dedekind prescribed-order proof}
+uses the prime ideals of the field directly. The
+\codelink{Robin1984/GRH/HeckeStandardRankOne.lean\#L80}{rank-one prescribed-order theorem}
+combines this Dedekind test with the individual pole-free Hecke
+tests and shifts the norm-character ordinates.
+
 Write \(\mathcal E(Z;E)\) for the mean-square limit on the left of
 \eqref{eq:global-multiplicity-energy}, including the completion
 correction where needed. Write \(\mathcal S(Z;E)\) for the limit superior
@@ -1587,7 +1681,11 @@ audit permits the standard axioms \path{propext},
 \path{Classical.choice}, and \path{Quot.sound}. The job also runs
 Lean kernel and independent NanoDa verification.
 Appendix~\ref{sec:formalization} gives the procedure and artifact
-links. The paper revision uses this existing proof release.
+links. The \href{\repositoryurl/releases/tag/v1.3.0}{compiled archive}
+contains the advertised proof targets and their dependencies.
+The separate rank-one instantiation is available in the Lean
+source linked above. It is a library result beyond the ten types
+exported for the published Comparator replay.
 
 \appendix
 
