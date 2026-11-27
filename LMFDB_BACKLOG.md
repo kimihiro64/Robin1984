@@ -124,6 +124,19 @@ is attributed to LMFDB under its CC BY-SA data license.
 [Published coverage](https://www.lmfdb.org/L/Completeness) ·
 [Data license](https://www.lmfdb.org/api/options)
 
+## GitHub Pages releases
+
+Run both catalogue and backlog checks on the staged source, then commit
+it in Robin1984. The Pages source is the root of the separate
+`gh-pages` branch in the same repository. Resolve the current remote
+branch SHA and pass it as `--parent` to
+`docs/lmfdb-explorer/prepare-pages.mjs`, together with
+`--git` and the verified absolute Git executable. The script constructs
+a fast-forward candidate from the committed static files and prints its
+SHA without switching checkouts. Push that candidate with a lease on the
+observed remote SHA. Verify that GitHub Pages built the pushed commit and
+that the hosted catalogue and backlog match the committed assets.
+
 ## First review batch
 
 The pilot includes the existing catalogue cases. The first precomputed

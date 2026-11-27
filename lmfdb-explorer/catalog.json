@@ -187,7 +187,7 @@
             "hypothesis": "Assuming ordinary RH for ζ(s)",
             "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(√−3) with N𝔞 ≥ A_K.",
             "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 3) / √(log N𝔞)].",
-            "note": "ζ_K = ζ·L(s,χ_−3) and κ_K = π/(3√3). The inequality alone is equivalent to ordinary RH and this character’s critical-line hypothesis jointly.",
+            "note": "ζ_K = ζ·L(s,χ_−3) and κ_K = π/(3√3).",
             "links": [
               [
                 "Robin1984 corrected ideal theorem",
@@ -259,7 +259,7 @@
             "hypothesis": "Assuming ordinary RH for ζ(s)",
             "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(√5) with N𝔞 ≥ A_K.",
             "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 5) / √(log N𝔞)].",
-            "note": "ζ_K = ζ·L(s,χ_5) and κ_K = 2 log((1+√5)/2)/√5. The inequality alone is equivalent to ordinary RH and this character’s critical-line hypothesis jointly.",
+            "note": "ζ_K = ζ·L(s,χ_5) and κ_K = 2 log((1+√5)/2)/√5.",
             "links": [
               [
                 "Robin1984 corrected ideal theorem",
@@ -331,7 +331,7 @@
             "hypothesis": "Assuming ordinary RH for ζ(s)",
             "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(√−7) with N𝔞 ≥ A_K.",
             "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 7) / √(log N𝔞)].",
-            "note": "ζ_K = ζ·L(s,χ_−7) and κ_K = π/√7. The inequality alone is equivalent to ordinary RH and this character’s critical-line hypothesis jointly.",
+            "note": "ζ_K = ζ·L(s,χ_−7) and κ_K = π/√7.",
             "links": [
               [
                 "Robin1984 corrected ideal theorem",
@@ -392,6 +392,298 @@
       "basis": "Primitive real Dirichlet character. The Lean family results supply the triangular and Gaussian criteria. The prime-count transfer and quadratic factorization are documented prose specializations.",
       "orders": "Use the individual coefficients for the global Gaussian or boundary multiplicity criterion, conditional on this character’s critical-line hypothesis. The positive residues 1, 2, 4 pair with the larger negative residues 3, 5, 6 in each block. Summing these positive blocks proves L(1/2,χ_−7) > 0.",
       "obligation": "Off-center simplicity is equivalent to the multiplicity test once location holds. The exact central order is zero."
+    },
+    {
+      "id": "1-7-7.2-r0-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₇)⁺",
+            "zeros": "Every zero of the completion Λ(s, χ₇.2) lies on Re s = 1/2.",
+            "hypothesis": "Assuming ordinary RH for ζ(s)",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₇)⁺ with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 49) / √(log N𝔞)].",
+            "note": "ζ_K = ζ·L(s,χ₇.₂)·L(s,χ₇.₄). Here κ_K = Resₛ₌₁ ζ_K(s). The two characters in this pair have equivalent location hypotheses by conjugation.",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Number field on LMFDB",
+                "https://www.lmfdb.org/NumberField/3.3.49.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 7.2",
+            "zeros": "Every zero of the completion Λ(s, χ₇.2) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|(π₁ + π₆) + ω(π₃ + π₄) + ω²(π₂ + π₅)| ≤ C√x log x.",
+            "note": "πₐ = π(x;7,a) counts primes p ≤ x in the residue class a. ω = exp(2πi/3). The prime 7 contributes zero. The conjugate character has the same absolute value.",
+            "links": [
+              [
+                "Exact character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/7/2"
+              ],
+              [
+                "Local factors and proof",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#complex-primitive-characters-modulo-7"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₇.2)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₇.2(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired triangular remainder tests both characters jointly. Their individual location assertions are equivalent by conjugation."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₇.2(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "realCyclotomic7"
+      },
+      "url": "https://www.lmfdb.org/L/1-7-7.2-r0-0-0",
+      "name": "Order-three character 7.2",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 proved",
+      "cohort": "dirichlet",
+      "origins": [
+        "7.2"
+      ],
+      "dual": "1-7-7.4-r0-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₇.2(p)ʲ. For residues 1, 2, 3, 4, 5, 6, the exponents of ξ = exp(πi/3) are 0, 4, 2, 2, 4, 0. At 7 the coefficient is zero.",
+      "completion": "7^(s/2) Γℝ(s) L(s,χ₇.2); ε = τ(χ₇.2)/(√7), with τ the character Gauss sum",
+      "basis": "Exact Conrey coefficients give the location and multiplicity inputs to the Dirichlet family results. The prime-count and corrected-ideal specializations are proved in the research notes.",
+      "orders": "Use the individual complex coefficients. For f(u) = u⁻¹ᐟ², strict convexity gives f(7k+2)+f(7k+5) > f(7k+3)+f(7k+4) for every k ≥ 0. The imaginary parts of the blocks of L(1/2) are all strictly of one sign. Conjugation reverses this sign and proves nonvanishing for both characters.",
+      "obligation": "Once location holds, the individual multiplicity test is equivalent to simplicity of the noncentral zeros."
+    },
+    {
+      "id": "1-7-7.3-r1-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₇)",
+            "zeros": "Every zero of the completion Λ(s, χ₇.3) lies on Re s = 1/2.",
+            "hypothesis": "Assuming Dedekind RH for ℚ(ζ₇)⁺ and the critical-line hypothesis for character 7.6",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₇) with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 16807) / √(log N𝔞)].",
+            "note": "ζ_K = ζ_{ℚ(ζ₇)⁺}·L(s,χ₇.₆)·L(s,χ₇.₃)·L(s,χ₇.₅). Here κ_K = Resₛ₌₁ ζ_K(s). The two characters in this pair have equivalent location hypotheses by conjugation.",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Number field on LMFDB",
+                "https://www.lmfdb.org/NumberField/6.0.16807.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 7.3",
+            "zeros": "Every zero of the completion Λ(s, χ₇.3) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|(π₁ − π₆) + ξ(π₃ − π₄) + ξ²(π₂ − π₅)| ≤ C√x log x.",
+            "note": "πₐ = π(x;7,a) counts primes p ≤ x in the residue class a. ξ = exp(πi/3). The prime 7 contributes zero. The conjugate character has the same absolute value.",
+            "links": [
+              [
+                "Exact character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/7/3"
+              ],
+              [
+                "Local factors and proof",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#complex-primitive-characters-modulo-7"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₇.3)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₇.3(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired triangular remainder tests both characters jointly. Their individual location assertions are equivalent by conjugation."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₇.3(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "cyclotomic7"
+      },
+      "url": "https://www.lmfdb.org/L/1-7-7.3-r1-0-0",
+      "name": "Order-six character 7.3",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 proved",
+      "cohort": "dirichlet",
+      "origins": [
+        "7.3"
+      ],
+      "dual": "1-7-7.5-r1-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₇.3(p)ʲ. For residues 1, 2, 3, 4, 5, 6, the exponents of ξ = exp(πi/3) are 0, 2, 1, 4, 5, 3. At 7 the coefficient is zero.",
+      "completion": "7^(s/2) Γℝ(s+1) L(s,χ₇.3); ε = τ(χ₇.3)/(i√7), with τ the character Gauss sum",
+      "basis": "Exact Conrey coefficients give the location and multiplicity inputs to the Dirichlet family results. The prime-count and corrected-ideal specializations are proved in the research notes.",
+      "orders": "Use the individual complex coefficients. Each difference f(7k+2)−f(7k+5) and f(7k+3)−f(7k+4) is positive for f(u) = u⁻¹ᐟ² and every k ≥ 0. The imaginary parts of the blocks of L(1/2) are all strictly of one sign. Conjugation reverses this sign and proves nonvanishing for both characters.",
+      "obligation": "Once location holds, the individual multiplicity test is equivalent to simplicity of the noncentral zeros."
+    },
+    {
+      "id": "1-7-7.4-r0-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₇)⁺",
+            "zeros": "Every zero of the completion Λ(s, χ₇.4) lies on Re s = 1/2.",
+            "hypothesis": "Assuming ordinary RH for ζ(s)",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₇)⁺ with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 49) / √(log N𝔞)].",
+            "note": "ζ_K = ζ·L(s,χ₇.₂)·L(s,χ₇.₄). Here κ_K = Resₛ₌₁ ζ_K(s). The two characters in this pair have equivalent location hypotheses by conjugation.",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Number field on LMFDB",
+                "https://www.lmfdb.org/NumberField/3.3.49.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 7.4",
+            "zeros": "Every zero of the completion Λ(s, χ₇.4) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|(π₁ + π₆) + ω²(π₃ + π₄) + ω(π₂ + π₅)| ≤ C√x log x.",
+            "note": "πₐ = π(x;7,a) counts primes p ≤ x in the residue class a. ω = exp(2πi/3). The prime 7 contributes zero. The conjugate character has the same absolute value.",
+            "links": [
+              [
+                "Exact character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/7/4"
+              ],
+              [
+                "Local factors and proof",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#complex-primitive-characters-modulo-7"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₇.4)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₇.4(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired triangular remainder tests both characters jointly. Their individual location assertions are equivalent by conjugation."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₇.4(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "realCyclotomic7"
+      },
+      "url": "https://www.lmfdb.org/L/1-7-7.4-r0-0-0",
+      "name": "Order-three character 7.4",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 proved",
+      "cohort": "dirichlet",
+      "origins": [
+        "7.4"
+      ],
+      "dual": "1-7-7.2-r0-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₇.4(p)ʲ. For residues 1, 2, 3, 4, 5, 6, the exponents of ξ = exp(πi/3) are 0, 2, 4, 4, 2, 0. At 7 the coefficient is zero.",
+      "completion": "7^(s/2) Γℝ(s) L(s,χ₇.4); ε = τ(χ₇.4)/(√7), with τ the character Gauss sum",
+      "basis": "Exact Conrey coefficients give the location and multiplicity inputs to the Dirichlet family results. The prime-count and corrected-ideal specializations are proved in the research notes.",
+      "orders": "Use the individual complex coefficients. For f(u) = u⁻¹ᐟ², strict convexity gives f(7k+2)+f(7k+5) > f(7k+3)+f(7k+4) for every k ≥ 0. The imaginary parts of the blocks of L(1/2) are all strictly of one sign. Conjugation reverses this sign and proves nonvanishing for both characters.",
+      "obligation": "Once location holds, the individual multiplicity test is equivalent to simplicity of the noncentral zeros."
+    },
+    {
+      "id": "1-7-7.5-r1-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₇)",
+            "zeros": "Every zero of the completion Λ(s, χ₇.5) lies on Re s = 1/2.",
+            "hypothesis": "Assuming Dedekind RH for ℚ(ζ₇)⁺ and the critical-line hypothesis for character 7.6",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₇) with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 16807) / √(log N𝔞)].",
+            "note": "ζ_K = ζ_{ℚ(ζ₇)⁺}·L(s,χ₇.₆)·L(s,χ₇.₃)·L(s,χ₇.₅). Here κ_K = Resₛ₌₁ ζ_K(s). The two characters in this pair have equivalent location hypotheses by conjugation.",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Number field on LMFDB",
+                "https://www.lmfdb.org/NumberField/6.0.16807.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 7.5",
+            "zeros": "Every zero of the completion Λ(s, χ₇.5) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|(π₁ − π₆) + ξ⁵(π₃ − π₄) + ξ⁴(π₂ − π₅)| ≤ C√x log x.",
+            "note": "πₐ = π(x;7,a) counts primes p ≤ x in the residue class a. ξ = exp(πi/3). The prime 7 contributes zero. The conjugate character has the same absolute value.",
+            "links": [
+              [
+                "Exact character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/7/5"
+              ],
+              [
+                "Local factors and proof",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#complex-primitive-characters-modulo-7"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₇.5)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₇.5(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired triangular remainder tests both characters jointly. Their individual location assertions are equivalent by conjugation."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₇.5(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "cyclotomic7"
+      },
+      "url": "https://www.lmfdb.org/L/1-7-7.5-r1-0-0",
+      "name": "Order-six character 7.5",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 proved",
+      "cohort": "dirichlet",
+      "origins": [
+        "7.5"
+      ],
+      "dual": "1-7-7.3-r1-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₇.5(p)ʲ. For residues 1, 2, 3, 4, 5, 6, the exponents of ξ = exp(πi/3) are 0, 4, 5, 2, 1, 3. At 7 the coefficient is zero.",
+      "completion": "7^(s/2) Γℝ(s+1) L(s,χ₇.5); ε = τ(χ₇.5)/(i√7), with τ the character Gauss sum",
+      "basis": "Exact Conrey coefficients give the location and multiplicity inputs to the Dirichlet family results. The prime-count and corrected-ideal specializations are proved in the research notes.",
+      "orders": "Use the individual complex coefficients. Each difference f(7k+2)−f(7k+5) and f(7k+3)−f(7k+4) is positive for f(u) = u⁻¹ᐟ² and every k ≥ 0. The imaginary parts of the blocks of L(1/2) are all strictly of one sign. Conjugation reverses this sign and proves nonvanishing for both characters.",
+      "obligation": "Once location holds, the individual multiplicity test is equivalent to simplicity of the noncentral zeros."
     },
     {
       "id": "1-5-5.2-r1-0-0",
@@ -706,6 +998,7 @@
       "completion": "Γℂ(s+11/2) Lᵤ(s,Δ); root number +1",
       "basis": "The level-one normalized cusp form supplies all local factors and its Mellin completion. No finite primes are ramified.",
       "orders": "Use the individual trace recurrence above. The positive Mellin integral of η(it)²⁴ at arithmetic s=6 proves central order zero.",
+      "idealAssessment": "At p = 2 the unitary trace is −24/2^(11/2), with square 9/32. This trace cannot be an algebraic integer, so an identification as a factor of a Dedekind zeta function at every prime is impossible. An indirect transfer remains open.",
       "obligation": "Formalize the level-one form’s analytic completion and its Euler identification with the concrete coefficients.",
       "sources": [
         [
@@ -752,6 +1045,7 @@
       "completion": "37ˢᐟ² Γℂ(s+1/2) Lᵤ(s,E); root number −1",
       "basis": "Modularity identifies the Hasse–Weil function with the weight-two form. At good primes aₚ=p+1−#E(Fₚ). The rank-one Euler factor at 37 is retained.",
       "orders": "The Fricke sign forces a central zero. A q-expansion tail bound gives a positive Mellin derivative, proving exact order one. Use J={0}, d(0)=1 in the individual signal.",
+      "idealAssessment": "At p = 5 the unitary trace is −2/√5, with square 4/5. This trace cannot be an algebraic integer, so an identification as a factor of a Dedekind zeta function at every prime is impossible. An indirect transfer remains open.",
       "obligation": "The arithmetic criterion for exact order 1 is separate from the location bound.",
       "sources": [
         [
@@ -797,6 +1091,7 @@
       "completion": "277ˢᐟ² Γℂ(s+1/2)² Lᵤ(s); root number +1",
       "basis": "Brumer–Pacetti–Poor–Tornaría–Voight–Yuen prove all local factors match the paramodular spin form with a cuspidal degree-four transfer.",
       "orders": "An explicit Bessel kernel bound from the Euler coefficients proves central nonvanishing. Use the individual coefficients and J={0}, d(0)=0 to test the prescribed central order and off-center simplicity.",
+      "idealAssessment": "At p = 3 the unitary trace is −1/√3, with square 1/3. This trace cannot be an algebraic integer, so an identification as a factor of a Dedekind zeta function at every prime is impossible. An indirect transfer remains open.",
       "obligation": "The public Lean interfaces still need the concrete spin completion and exact local-factor identification.",
       "sources": [
         [
@@ -917,6 +1212,16 @@
         "field": "ℚ(ζ₅)",
         "discriminant": 125,
         "zeros": "Dedekind RH for ℚ(√5) and the critical-line hypotheses for both quartic characters modulo 5, jointly."
+      },
+      "realCyclotomic7": {
+        "field": "ℚ(ζ₇)⁺",
+        "discriminant": 49,
+        "zeros": "Ordinary RH and the critical-line hypotheses for the two order-three characters 7.2 and 7.4, jointly."
+      },
+      "cyclotomic7": {
+        "field": "ℚ(ζ₇)",
+        "discriminant": -16807,
+        "zeros": "Ordinary RH and the critical-line hypotheses for all five primitive characters modulo 7, jointly."
       },
       "cubic23": {
         "field": "ℚ[T]/(T³ − T − 1)",

@@ -289,6 +289,7 @@ function chooseRecord(row, updateUrl) {
     ["Unitary completion", row.completion],
     ["Evidence for the criterion", row.basis],
     ["Central order", row.center],
+    ["Corrected ideal transfer", row.idealAssessment],
     [row.status === "blocked" ? "Blocking input" : "Remaining work", row.obligation],
   ];
   for (const [label, value] of fields) {

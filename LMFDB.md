@@ -44,6 +44,8 @@ proofs to these LMFDB records.
 | \(\mathbb Q(\sqrt5)\), \(D_K=5\) | `1-5-5.4-r0-0-0` | Ordinary RH and RH for character `5.4` jointly. The residue is \(2\log((1+\sqrt5)/2)/\sqrt5\). |
 | \(\mathbb Q(\sqrt{-7})\), \(D_K=-7\) | `1-7-7.6-r1-0-0` | Ordinary RH and RH for character `7.6` jointly. The residue is \(\pi/\sqrt7\). |
 | \(\mathbb Q(\zeta_5)\), \(D_K=125\) | `1-5-5.2-r1-0-0` and `1-5-5.3-r1-0-0` | Dedekind RH for \(\mathbb Q(\sqrt5)\) and RH for the two quartic characters jointly, by \(\zeta_K=\zeta_{\mathbb Q(\sqrt5)}L(s,\chi_{5.2})L(s,\chi_{5.3})\). Over the quadratic field hypothesis either quartic RH is equivalent to the criterion, since the quartic characters are conjugate. |
+| \(K^+=\mathbb Q(\zeta_7)^+\), \(D_{K^+}=49\) | `1-7-7.2-r0-0-0` and `1-7-7.4-r0-0-0` | Ordinary RH and RH for the order-three pair jointly. Under ordinary RH, either member's RH is equivalent to the criterion for \(K^+\). |
+| \(K=\mathbb Q(\zeta_7)\), \(D_K=-16807\) | `1-7-7.3-r1-0-0` and `1-7-7.5-r1-0-0` | Ordinary RH and RH for all five primitive characters modulo \(7\) jointly. Assuming Dedekind RH for \(K^+\) and RH for character `7.6`, either order-six member's RH is equivalent to the criterion for \(K\). |
 | \(\mathbb Q[T]/(T^3-T-1)\), \(D_K=-23\) | `3.1.23.1` and `2-23-23.22-c0-0-0` | Ordinary RH and RH for the level-23 weight-one form jointly, by \(\zeta_K=\zeta L(s,f_{23})\). Under ordinary RH the criterion is equivalent to RH for \(f_{23}\) alone. |
 
 Every factor in these product identities is holomorphic in the open
@@ -253,6 +255,83 @@ location hypothesis. The Gaussian criterion uses the individual sequence
 [\(D=5\)](https://www.lmfdb.org/NumberField/2.2.5.1), and
 [\(D=-7\)](https://www.lmfdb.org/NumberField/2.0.7.1)
 
+### Complex primitive characters modulo 7
+
+Let \(\chi_m=\chi_7(m,\cdot)\) in Conrey's notation and
+\(\xi=e^{\pi i/3}\), \(\omega=\xi^2\). The least primitive root \(3\)
+has powers \(1,3,2,6,4,5\) in order. For \(1\le a\le6\) the
+exponent of \(\xi\) in \(\chi_m(a)\) is the product modulo \(6\) of
+the discrete logarithms of \(m\) and \(a\) to base \(3\).
+This gives exact local data at every prime.
+
+| LMFDB L-function | Character order and parity | Exponents of \(\xi\) at residues \(1,2,3,4,5,6\) |
+| --- | --- | --- |
+| `1-7-7.2-r0-0-0` | 3, even | \(0,4,2,2,4,0\) |
+| `1-7-7.3-r1-0-0` | 6, odd | \(0,2,1,4,5,3\) |
+| `1-7-7.4-r0-0-0` | 3, even | \(0,2,4,4,2,0\) |
+| `1-7-7.5-r1-0-0` | 6, odd | \(0,4,5,2,1,3\) |
+
+For parity \(a=0,1\), the completion is
+\(7^{s/2}\Gamma_{\mathbb R}(s+a)L(s,\chi_m)\). Its functional
+equation pairs it with \(\overline{\chi_m}\) and has exact root number
+\(\tau(\chi_m)/(i^a\sqrt7)\), where
+\(\tau(\chi_m)=\sum_{r=1}^{6}\chi_m(r)\xi_7^r\) and
+\(\xi_7=e^{2\pi i/7}\). The product of the two completions is an
+entire, self-dual location test of order at most one. Its pole order is zero.
+The paired triangular remainder is
+\[
+-\sum_{\substack{p\ {\rm prime},\, j\ge1\\p^j\le x}}
+  2\Re(\chi_m(p)^j)\log p\,(1-p^j/x).
+\]
+Each individual location hypothesis is equivalent to that for its
+conjugate, since \(L(s,\overline{\chi_m})=\overline{L(\bar s,\chi_m)}\).
+
+Write \(P_j=\pi(x;7,j)\). For the two pairs, the full arithmetic location
+conditions for all real \(x\ge2\) are respectively
+\[
+\begin{aligned}
+|P_1+P_6+\omega(P_3+P_4)+\omega^2(P_2+P_5)|
+  &\le C\sqrt{x}\log x,\\
+|P_1-P_6+\xi(P_3-P_4)+\xi^2(P_2-P_5)|
+  &\le C\sqrt{x}\log x .
+\end{aligned}
+\]
+The constant can depend on the pair. These are the absolute values
+of the individual prime sums for \(\chi_2,\chi_3\). The other
+members conjugate the expression. The prime \(7\) contributes zero.
+
+The fields satisfy
+\[
+\zeta_{K^+}=\zeta L(s,\chi_2)L(s,\chi_4),
+\qquad
+\zeta_K=\zeta_{K^+}L(s,\chi_6)L(s,\chi_3)L(s,\chi_5),
+\quad K^+=\mathbb Q(\zeta_7)^+,\quad K=\mathbb Q(\zeta_7).
+\]
+The even characters are precisely the characters of the real quotient.
+At \(7\) both fields are totally ramified, so each has just the factor
+\((1-7^{-s})^{-1}\) from \(\zeta\). The factors have no poles in
+\(0<\Re s<1\), so the auxiliary RH hypotheses shown in the field table
+isolate exactly the intended pair. The fieldwise theorem gives the
+corrections \(12+3\log49\) and \(12+3\log16807\), respectively.
+
+For the multiplicity criterion the individual coefficients are
+\(\chi_m(p)^j\log p\), including all \(j\ge1\). To prove that the
+central order is zero, put \(f(u)=u^{-1/2}\) and group the convergent
+series into blocks of length \(7\). With \(A_r=f(7k+r)\), the block
+imaginary parts for \(\chi_2,\chi_3\), divided by \(\sqrt3/2\), are
+\[
+ A_3+A_4-A_2-A_5<0,\qquad (A_2-A_5)+(A_3-A_4)>0 .
+\]
+The first strict inequality follows from strict convexity and the second
+from strict decrease. Conjugation reverses the sign for the other member
+of each pair. The completed functions therefore have exact central order
+zero. Under individual location, the boundary or Gaussian criterion
+is equivalent to simplicity of the remaining zeros.
+
+[Conrey convention](https://www.lmfdb.org/knowledge/show/character.dirichlet.conrey) ·
+[Real cubic field](https://www.lmfdb.org/NumberField/3.3.49.1) ·
+[Full cyclotomic field](https://www.lmfdb.org/NumberField/6.0.16807.1)
+
 ## Location and arithmetic data
 
 Use unitary normalization throughout, with critical line \(\Re s=1/2\).
@@ -410,6 +489,44 @@ and the central order is zero.
 [Paramodularity, Theorem 7.1.3](https://msp.org/ant/2019/13-5/ant-v13-n5-p05-p.pdf) ·
 [Bessel integral representation](https://dlmf.nist.gov/10.32.E8) ·
 [Bessel Mellin transform](https://dlmf.nist.gov/10.43.E19)
+
+## Obstruction to a direct corrected ideal transfer for Δ, 37.a1, and 277.a
+
+For any number field \(K\), the reciprocal Euler polynomial of \(\zeta_K\)
+at a rational prime \(p\) is \(\prod_{\mathfrak p\mid p}(1-T^{f_{\mathfrak p}})\),
+with \(f_{\mathfrak p}\) the residue degrees. This also holds at ramified
+primes. Its roots are roots of unity. Thus any individual factor matched
+as an exact Euler-polynomial divisor at every prime must have a sum of
+local eigenvalues that is an algebraic integer at every prime. An algebraic
+integer with rational square has an integer square.
+
+| Entry | Exact witness prime | Unitary trace | Trace squared |
+| --- | ---: | --- | --- |
+| Ramanujan's \(\Delta\) | \(2\) | \(-24/2^{11/2}\) | \(9/32\) |
+| Elliptic \(37.a1\) | \(5\) | \(-2/\sqrt5\) | \(4/5\) |
+| Genus two \(277.a\) | \(3\) | \(-1/\sqrt3\) | \(1/3\) |
+
+For \(\Delta\), the coefficient of \(q^2\) in
+\(q\prod_{n\ge1}(1-q^n)^{24}\) is \(-24\).
+For \(37.a1\), the numbers of affine solutions over \(\mathbb F_5\)
+to \(y^2+y=x^3-x\) are \(2,2,1,0,2\), in order of \(x=0,\dots,4\).
+The point at infinity gives \(8\) points, hence trace \(-2\).
+For \(277.a.277.1\), the affine model is
+\(y^2+(x^3+x^2+x+1)y=-x^2-x\).
+Over \(\mathbb F_3\) it has \(2,0,1\) affine solutions at \(x=0,1,2\).
+At infinity the chart \(v=y/x^3\) gives \(v^2+v=0\), with two distinct
+solutions, so the smooth curve has \(5\) points and trace \(-1\).
+
+These witnesses close the direct all-prime Dedekind-factor route for
+the stated unitary \(L\)-functions. A transfer that permits other
+factors at the witness prime, or that connects location to a Dedekind
+inequality indirectly, requires a separate argument. The catalogue
+keeps the proven coefficient and point-count location equivalences and
+the individual multiplicity criteria for all three.
+
+[Level-one newform](https://www.lmfdb.org/ModularForm/GL2/Q/holomorphic/1/12/a/a/) ·
+[Curve 37.a1](https://www.lmfdb.org/EllipticCurve/Q/37/a/1) ·
+[Curve 277.a.277.1](https://www.lmfdb.org/Genus2Curve/Q/277/a/277/1)
 
 ## Artin functions when holomorphy is missing
 
