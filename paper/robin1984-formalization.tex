@@ -488,6 +488,13 @@ Define the test family over \(K\) by
  \{L(\,\cdot\,,\pi)L(\,\cdot\,,\widetilde\pi):
                   n\geq1,\ \pi\in\mathcal U_n^*(K)\}.
 \]
+The family \(\mathcal T_K\) consists of the Euler products
+to which we apply a real inequality. The contragredient
+conjugates the local parameters, so the product adds the
+conjugate logarithmic coefficients and gives a real sum.
+A zero of either entire completed factor is a zero of the
+pair. Thus the pairing makes the arithmetic test real while
+retaining the zeros that the test is meant to detect.
 The superscript \(*\) changes only the tests. The global pole
 classification explains the exclusion. In rank one, a character
 trivial on the norm-one idele classes descends along the idelic
@@ -582,6 +589,28 @@ zero branch of
 \codelink{Robin1984/GRH/HeckeEulerProduct.lean\#L228-L242}{heckeLocalParameter}.
 The paired coefficient always counts both factors, including
 when a representation is self-dual.
+
+\paragraph{A signed test over \(\mathbb Q\).}
+The nontrivial character \(\chi_4\) modulo \(4\) is the quadratic
+Hecke character with \(\chi_4(3)=-1\), \(\chi_4(5)=1\), and
+ramification at \(2\). It equals its inverse, so its test is
+\(Z=L(\cdot,\chi_4)^2\). The logarithmic derivative of the
+square doubles the individual coefficients. At \(x=6\)
+only the primes \(3\) and \(5\) contribute. The powers of \(2\)
+have zero coefficient, and \(m_Z=0\) because the factor is
+pole-free. Thus the signed remainder at this point is
+\[
+ R_Z(6)=-\left(-2\log 3\left(1-\frac{3}{6}\right)
+                   +2\log 5\left(1-\frac{5}{6}\right)\right)
+        =\log 3-\frac13\log 5 .
+\]
+This example uses both signs in the same test. The conductor
+\(4\) and the odd archimedean character enter the individual
+completion through \(4^{s/2}\pi^{-(s+1)/2}\Gamma((s+1)/2)\).
+The completion is entire and gives the reflection of the zeros.
+Squaring preserves their locations and doubles their orders,
+which is why the location test can use the pair while the
+multiplicity test uses individual factors.
 
 \begin{theorem}[Triangular criterion for standard automorphic \(L\)-functions]\label{thm:grand-triangular}
 Write \(\Lambda_\pi\) for the pole-cleared completed standard
@@ -840,24 +869,56 @@ It has no dual index or functional-equation field. Its theorem
 assumes the location condition separately. Again, norm twists
 are handled through translation of the Dedekind result.
 
-\paragraph{Scope and failure of the hypotheses.}
-A1 and A2 justify the prime-power sum and the exchanges in its
-Mellin transform. A3 identifies the resulting transform with a
-function whose poles can be read from analytic continuation.
-A4 supplies that continuation and, in the forward implication,
-the summable zero weights. A5 prevents a Gamma pole from
-cancelling a zero of the ordinary factor on the tested side.
-A6 covers the other half of the plane. If A6 is unavailable,
-the converse with A1--A5 still gives the right-half-plane
-exclusion. If the ordinary factor has poles on the tested side,
-its logarithmic derivative can have \emph{negative} residues and
-the argument at a real pole can fail. For example,
-\(U(x)=-x^\beta\) with \(\beta>1/2\) satisfies the upper bound
-\(U(x)\le0\) but has Mellin transform \(-1/(s-\beta)\).
-For an \(L(s,\pi,r)\) beyond the standard family, applying
-the method requires its own inputs or a factorization into
-functions to which the proof applies. The theorem quantifies
-over the standard family in Theorem~\ref{thm:grand-triangular}.
+\paragraph{What a concrete higher-rank Lean proof requires.}
+For all actual \(\mathrm{GL}_2\) or \(\mathrm{GL}_3\) members of
+the standard family, an instantiation would need to construct
+the record for each representation and its contragredient.
+There are three inputs to this task.
+\begin{enumerate}[label=\textup{(\roman*)},itemsep=.15em]
+\item \emph{A1, arithmetic indexing.} Reuse the countability
+and finite norm cutoffs for prime ideals and their powers.
+These depend on \(K\) and are independent of the representation.
+\item \emph{A2--A3, finite local factors and convergence.}
+Identify the actual standard Euler factor at every finite
+place, including ramified places. Establish absolute
+summability of its logarithmic coefficients throughout
+\(\Re s>1\) and identify the exponential of the summed
+logarithm with the ordinary product in that region.
+\item \emph{A4--A6, completion of the same function.}
+Construct the actual continuation and its entire order-one
+completion. Prove the conductor and Gamma identity with the
+same ordinary factor, the shift bound, and the functional
+equation against the actual contragredient. This includes the
+global analytic estimates and the local-to-global normalization.
+\end{enumerate}
+Once these inputs are supplied, the existing Lean implication
+gives the equivalence for those representations. A specialized
+construction for a particular family can suffice. For example, an
+Euler product with all normalized local parameters of modulus at
+most \(1\) makes A2 a comparison with the Dedekind logarithmic
+derivative. This observation reduces only the convergence
+obligation. The identity and completion of the same \(L\)-function
+are separate obligations.
+
+For the full family, a local estimate
+\(|\alpha_{\pi,\mathfrak p,k}|\le q^\theta\) with
+\(0<\theta<1/2\) leads by itself to
+\[
+ \sum_{\mathfrak p,j\ge1}
+  \frac{|a_{\pi,\mathfrak p,j}|\log q}{q^{j\sigma}}
+ \ \leq\ n\sum_{\mathfrak p,j\ge1}
+            \frac{\log q}{q^{j(\sigma-\theta)}} .
+\]
+The right side is finite for \(\sigma>1+\theta\). A2 needs
+finiteness for every \(\sigma>1\), including
+\(1<\sigma\le1+\theta\). The self Rankin--Selberg estimate
+in Section~\ref{sec:grand-research} supplies the missing
+summability in the paper. The cited global continuation
+and the local Gamma factors supply the other inputs there.
+The checked release verifies the generic analytic theorem.
+An application in Lean to actual \(\mathrm{GL}_2\) or
+\(\mathrm{GL}_3\) functions still needs these constructions
+and identifications.
 
 \subsection{Mellin transform of the prime-power remainder}
 
@@ -930,10 +991,33 @@ convergent and dominated by a constant times \(\sqrt{x}+x^{-1}\).
 These bounds justify termwise transformation at \(\Re s=2\) and
 give pointwise equality by uniqueness and continuity. The prime
 side is continuous even at a prime-power threshold, since the
-weight there is zero. The elementary terms in
-\eqref{eq:grand-zeros-inversion} are \(O_Z(1+\log x)\).
-It follows that \(|R_Z(x)|=O_Z(\sqrt{x})\), proving
-\eqref{eq:grand-rh-prime-power} and the theorem.
+weight there is zero. To make the dependence on the test
+explicit, define
+\[
+ W_Z=\sum_{\rho\notin\{0,-1\}}\frac{1}{|\rho(\rho+1)|},
+\]
+with the sum over zeros of \(F_Z\), counted with multiplicity.
+For \(x\ge1\), \(|x^\rho-x^{-1}|\le2\sqrt{x}\) under
+the zero-location assumption in this direction. In the
+elementary terms of \eqref{eq:grand-zeros-inversion},
+\(1-x^{-1}\), \(1-\tfrac12x^{-1}\), and
+\(1-x^{-1}(1+\log x)\) lie between zero and one.
+Also \(0\le\log x-1+x^{-1}\le\log x\), and
+\(\log x\le(2/e)\sqrt{x}\). It follows that one admissible
+choice is
+\[
+ X_{K,Z}=1,\qquad
+ C_{K,Z}=|b|+m+\frac{2}{e}m_0+m_{-1}+2W_Z .
+\]
+Here \(b,m_0,m_{-1}\) come from the ordinary pole-cleared
+factor, and \(m=m_Z\) comes from the test's pole at \(1\).
+These quantities depend on \(K\) through the test, and for a
+paired test they depend on \(\pi\) and its contragredient
+through their product. The formula gives a test-dependent
+witness using the full zero divisor. Optimality or uniformity
+in field, rank or conductor would require additional estimates. The headline Lean theorem asks for the two
+witnesses separately for every test. This proves
+\eqref{eq:grand-rh-prime-power} and completes the forward implication.
 
 \subsection{Specializations}
 
@@ -966,6 +1050,44 @@ nontrivial on norm-one idele classes. This specialization is
 verified in Appendix~\ref{app:hecke-formalization}.
 Products of unitary cuspidal standard factors inherit the
 completed zero condition from their factors.
+
+\subsection{Range of the criterion}\label{sec:triangular-scope}
+
+\paragraph{Euler data and a real comparison.}
+The finite sum at a given cutoff needs just local
+logarithmic-derivative coefficients. Its Mellin identity
+requires local finiteness and global absolute summability
+in a right half-plane. The converse needs a \emph{real}
+remainder, since it uses the nonnegative comparison
+\(C\sqrt{x}-R_Z(x)\) beyond the cutoff. For the unitary
+standard family the contragredient product provides this
+reality even when the individual Euler coefficients are
+complex. The paired coefficients themselves may have either sign.
+
+\paragraph{Poles, growth, and reflection.}
+If an ordinary factor has a pole at a real point to the right
+of \(1/2\), its logarithmic derivative has a negative residue
+there. The sign needed by Lemma~\ref{lem:one-sided-mellin}
+can then fail. The function \(U(x)=-x^\beta\), \(\beta>1/2\),
+satisfies \(U(x)\le0\) but has Mellin transform
+\(-1/(s-\beta)\), illustrating the sign obstruction.
+A pole in a proposed completion factor can also cancel
+a zero of the ordinary function. A5 prevents that problem
+on the tested half-plane. The order-one control gives the
+summable zero weights used in the forward bound. If the
+functional equation is missing, the converse still excludes
+right-half-plane zeros when its other hypotheses hold.
+The reflection step is needed for the full line assertion.
+
+\paragraph{Other \(L\)-functions.}
+A non-standard \(L(s,\pi,r)\) can use the same argument
+when its Euler data, pole correction, continuation, growth
+and reflection satisfy the corresponding conditions. A
+factorization into functions with verified inputs is another
+route, provided it controls zero and pole cancellations.
+The theorem here supplies the result for standard cuspidal
+functions and their indicated tests. Section~\ref{sec:comparison-criteria}
+compares the resulting condition to other arithmetic criteria.
 
 \section{The corrected ideal Robin criterion}\label{sec:grh}
 
@@ -1012,6 +1134,32 @@ identify both inequalities via the same zero-location predicate.
 Thus the specialization from the triangular criterion takes
 place in the checked development as well as in the mathematics
 of Section~\ref{sec:proof-overview}.
+
+\paragraph{Why the correction has this scale.}
+Write \(x=\log N\mathfrak a\). The Mertens formula for the
+truncated prime-power logarithm has a boundary term
+\(E_K(x)/(x\log x)\), where \(E_K=\psi_K-\mathrm{id}\).
+Charging the prime powers of the ideal against their total
+logarithmic norm subtracts that term exactly. The remaining
+error in the logarithm of the divisor ratio is bounded above
+by the weighted tail \(H(x)\) in
+\eqref{eq:ideal-supporting-line}.
+Under Dedekind RH the zeros contribute \(O_K(\sqrt{x})\)
+to \(xH_0(x)\). The weight in \(H(x)\) contributes
+a further factor \(1/\log x\) to this tail. The zero expansion below shows that the resulting bound on \(H(x)\) has leading
+coefficient \(B_K+1\), with \(B_K\le9+3\log|D_K|\).
+After exponentiation,
+\(\log x\,e^{H(x)}=\log x+\log x\,H(x)+O(\log x\,H(x)^2)\).
+The \(\log x\) factor therefore converts the logarithmic error
+into an additive correction of order \(1/\sqrt{x}\) with the
+overall multiplier \(e^\gamma\kappa_K\).
+The coefficient \(12+3\log|D_K|\) leaves room above
+\(B_K+1\) for the lower-order terms at a field-dependent
+cutoff. The proof estimates the zero contribution by absolute
+values and discards nonpositive terms in the norm budget.
+Determining an optimal coefficient would require controlling
+the phases of the zero contributions and the slack in that
+budget.
 
 \subsection{The boundary term in Mertens' formula}
 
@@ -2121,12 +2269,29 @@ derivative \(Z'/Z\) with denominator \(s(s+1)\), so a zero of any order
 contributes a simple pole with residue proportional to its order.
 Section~\ref{sec:multiplicity} uses this fact to detect multiplicity.
 
-\emph{Sign and Li criteria.} Suzuki studies sign conditions on
-logarithmically weighted von Mangoldt sums for the zeta and Dirichlet
-cases~\cite[Theorems~1, 3 and~6]{SuzukiChebyshev}.
-Lagarias characterizes the critical-line condition for standard
-automorphic \(L\)-functions by nonnegativity of the real parts of
-Li coefficients~\cite[Theorem~2.2]{LagariasAutomorphicLi}.
+\emph{Li coefficients and the choice of test.}
+For the unitary cuspidal standard family over \(\mathbb Q\)
+in Lagarias's formulation, nonnegativity of the real parts
+of all the Li coefficients is equivalent to the critical-line
+condition~\cite[Theorem~2.4]{LagariasAutomorphicLi}.
+For a common standard test, both criteria therefore have
+the same logical strength. The Li test uses one inequality
+at each positive integer index of the sequence attached
+to the completed function. The triangular test uses the
+finite sum of local logarithmic coefficients at each
+real cutoff \(x\). Its forward proof is an explicit formula
+with absolutely summable zero weights
+\(1/|\rho(\rho+1)|\), and the converse uses only an eventual
+upper bound on that sum's signed remainder. This is useful
+when an arithmetic estimate naturally gives a lower bound
+on the smoothed prime-power total. The same logarithmic
+derivative also records zero orders through simple residues,
+which Section~\ref{sec:multiplicity} uses for a separate test.
+
+\emph{Other prime-power sign criteria.}
+Suzuki studies sign conditions on logarithmically weighted
+von Mangoldt sums for the zeta and Dirichlet cases
+\cite[Theorems~1, 3 and~6]{SuzukiChebyshev}.
 Slijep\v{c}evi\'c's account of the Alp\"oge--Claude proof uses a
 positive combination of twisted sums with coefficients
 \(\Lambda(n)/n\) and bounds on windows \([Y,Y^\lambda]\) for
@@ -2285,12 +2450,33 @@ Solution proof dependencies and permits only \path{propext},
 \path{Classical.choice}, and \path{Quot.sound}. This rejects,
 in particular, any transitive use of \path{sorryAx} in a solution.
 
-The replay then sends the Solution export to Lean's default kernel
-and to NanoDa, an independently implemented checker of Lean proof
-terms. This second implementation checks the exported derivations
-against the rules of Lean's type theory. Comparator supplies the
-statement and axiom checks that identify what those derivations prove.
-The last three acceptance lines in the hosted job transcript of
+\paragraph{Analytic hypotheses and the verification boundary.}
+A1--A6 are fields of the proposition
+\path{HasStandardAutomorphicAnalytics family}. The location
+theorem takes a proof of that proposition as an explicit
+argument. These fields assert properties of the data supplied
+to the theorem. In a concrete instantiation, Lean must receive
+proofs of these properties before the equivalence can be applied
+to that family. The axiom audit checks the dependencies of the
+proof of the implication with its stated arguments.
+
+\paragraph{Trusted components of the replay.}
+The reference point is the pinned Mathlib-only statement
+environment and its fixed definitions. The proof export,
+Comparator's statement and axiom checks, and the isolated
+build environment must preserve that reference point.
+The replay submits the resulting Solution export to Lean's
+default kernel and to NanoDa, an independently implemented
+checker of the same type theory. This gives two checks of the
+proof terms against their types. The
+\href{https://raw.githubusercontent.com/leanprover/comparator/68a064109f01c08f47c8edc9f51d6a2bbffaa188/README.md}
+{pinned Comparator documentation} spells out the assumptions
+on the statement environment and isolation. Sutherland's
+separate replay in Section~\ref{sec:external-review}
+checks concrete compositions with zero-location proofs,
+using a different challenge consisting of the three
+arithmetic consequences. The last three acceptance lines
+in the hosted Robin1984 job transcript of
 26 November 2026 are:
 \begin{verbatim}
 Nanoda kernel accepts the solution
