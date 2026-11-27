@@ -46,6 +46,11 @@ proofs to these LMFDB records.
 | \(\mathbb Q(\zeta_5)\), \(D_K=125\) | `1-5-5.2-r1-0-0` and `1-5-5.3-r1-0-0` | Dedekind RH for \(\mathbb Q(\sqrt5)\) and RH for the two quartic characters jointly, by \(\zeta_K=\zeta_{\mathbb Q(\sqrt5)}L(s,\chi_{5.2})L(s,\chi_{5.3})\). Over the quadratic field hypothesis either quartic RH is equivalent to the criterion, since the quartic characters are conjugate. |
 | \(K^+=\mathbb Q(\zeta_7)^+\), \(D_{K^+}=49\) | `1-7-7.2-r0-0-0` and `1-7-7.4-r0-0-0` | Ordinary RH and RH for the order-three pair jointly. Under ordinary RH, either member's RH is equivalent to the criterion for \(K^+\). |
 | \(K=\mathbb Q(\zeta_7)\), \(D_K=-16807\) | `1-7-7.3-r1-0-0` and `1-7-7.5-r1-0-0` | Ordinary RH and RH for all five primitive characters modulo \(7\) jointly. Assuming Dedekind RH for \(K^+\) and RH for character `7.6`, either order-six member's RH is equivalent to the criterion for \(K\). |
+| \(\mathbb Q(\sqrt{-2})\), \(D_K=-8\) | `1-2e3-8.3-r1-0-0` | Ordinary RH and RH for character `8.3` jointly. The residue is \(\pi/\sqrt8\). |
+| \(\mathbb Q(\sqrt2)\), \(D_K=8\) | `1-2e3-8.5-r0-0-0` | Ordinary RH and RH for character `8.5` jointly. The residue is \(2\log(1+\sqrt2)/\sqrt8\). |
+| \(\mathbb Q(\sqrt{-11})\), \(D_K=-11\) | `1-11-11.10-r1-0-0` | Ordinary RH and RH for character `11.10` jointly. The residue is \(\pi/\sqrt{11}\). |
+| \(K^+=\mathbb Q(\zeta_9)^+\), \(D_{K^+}=81\) | `1-3e2-9.4-r0-0-0` and `1-3e2-9.7-r0-0-0` | Ordinary RH and RH for both order-three characters jointly. |
+| \(K=\mathbb Q(\zeta_9)\), \(D_K=-19683\) | `1-3e2-9.2-r1-0-0` and `1-3e2-9.5-r1-0-0` | Dedekind RH for \(K^+\), RH for `3.2`, and RH for both order-six characters jointly. |
 | \(\mathbb Q[T]/(T^3-T-1)\), \(D_K=-23\) | `3.1.23.1` and `2-23-23.22-c0-0-0` | Ordinary RH and RH for the level-23 weight-one form jointly, by \(\zeta_K=\zeta L(s,f_{23})\). Under ordinary RH the criterion is equivalent to RH for \(f_{23}\) alone. |
 
 Every factor in these product identities is holomorphic in the open
@@ -332,6 +337,95 @@ is equivalent to simplicity of the remaining zeros.
 [Real cubic field](https://www.lmfdb.org/NumberField/3.3.49.1) ·
 [Full cyclotomic field](https://www.lmfdb.org/NumberField/6.0.16807.1)
 
+### Dirichlet characters of conductors 8, 9, and 11
+
+The primitive quadratic characters below have discriminants \(-8,8,-11\).
+For \(\chi_D=(D/\cdot)\), write \(q=|D|\), and denote by \(S_+\), \(S_-\)
+the residue classes where \(\chi_D\) is \(+1\), \(-1\), respectively.
+
+| LMFDB character | \(S_+\) | \(S_-\) |
+| --- | --- | --- |
+| `8.3` | \(1,3\) | \(5,7\) |
+| `8.5` | \(1,7\) | \(3,5\) |
+| `11.10` | \(1,3,4,5,9\) | \(2,6,7,8,10\) |
+
+Their coefficients are \(\chi_D(p)^j\), zero at the ramified prime.
+The completion and triangular remainder have the same formulas as for
+the earlier primitive quadratic characters. The arithmetic equivalence is
+\[
+\left|\sum_{a\in S_+}\pi(x;q,a)-\sum_{a\in S_-}\pi(x;q,a)\right|
+ \le C\sqrt{x}\log x\quad(x\ge2),
+\]
+for some \(C>0\), testing the zero location of the individual character
+without additional hypotheses. The factorization
+\(\zeta_{\mathbb Q(\sqrt{D})}=\zeta L(s,\chi_D)\) gives the separate
+corrected ideal equivalence under ordinary RH. These fields have class
+number one. For the real field the fundamental unit is \(1+\sqrt2\),
+and the two imaginary fields have two roots of unity. The analytic class
+number formula therefore gives the residues listed in the field table.
+For central nonvanishing, compare the positive and negative residues
+in the two odd cases term by term in each block in the displayed order.
+Every positive residue is smaller than its partner. In the even case
+use strict convexity of \(t^{-1/2}\) on the equally spaced
+arguments \(8k+1,8k+3,8k+5,8k+7\). All block sums are positive.
+
+For modulus \(9\), \(2\) is the least primitive root and its powers in
+order are \(1,2,4,8,7,5\). With \(\xi=e^{\pi i/3}\), the exact
+Conrey exponents of \(\xi\), in residue order \(1,2,4,5,7,8\), are
+
+| LMFDB L-function | Character order and parity | Exponents of \(\xi\) |
+| --- | --- | --- |
+| `1-3e2-9.2-r1-0-0` | 6, odd | \(0,1,2,5,4,3\) |
+| `1-3e2-9.4-r0-0-0` | 3, even | \(0,2,4,4,2,0\) |
+| `1-3e2-9.5-r1-0-0` | 6, odd | \(0,5,4,1,2,3\) |
+| `1-3e2-9.7-r0-0-0` | 3, even | \(0,4,2,2,4,0\) |
+
+Nonunits have character value zero. The primitive completion is
+\(9^{s/2}\Gamma_{\mathbb R}(s+a)L(s,\chi)\), with parity \(a\) and
+root number \(\tau(\chi)/(i^a\sqrt9)\). As for modulus \(7\), its
+paired triangular remainder uses \(2\Re(\chi(p)^j)\), and the
+unpaired multiplicity test uses \(\chi(p)^j\). With \(P_j=\pi(x;9,j)\)
+and \(\omega=\xi^2\), the arithmetic location tests are
+\[
+\begin{aligned}
+ |P_1-P_8+\xi(P_2-P_7)+\xi^2(P_4-P_5)| &\le C\sqrt{x}\log x,\\
+ |P_1+P_8+\omega(P_2+P_7)+\omega^2(P_4+P_5)| &\le C\sqrt{x}\log x
+ \qquad(x\ge2).
+\end{aligned}
+\]
+The first tests either order-six character and the second tests either
+order-three character. The other member in each pair conjugates the sum.
+The \(L\)-functions for the conjugate pair have equivalent location
+hypotheses, with the ordinates reflected.
+
+Using \(\chi_m=\chi_9(m,\cdot)\) and \(K^+=\mathbb Q(\zeta_9)^+\),
+\(K=\mathbb Q(\zeta_9)\), the zeta factorizations are
+\[
+\zeta_{K^+}=\zeta L(s,\chi_4)L(s,\chi_7),\qquad
+\zeta_K=\zeta_{K^+}L(s,\chi_{-3})L(s,\chi_2)L(s,\chi_5).
+\]
+The odd quadratic factor has primitive conductor \(3\) and LMFDB
+character label `3.2`. At \(3\) both fields have the single factor
+\((1-3^{-s})^{-1}\) from \(\zeta\). No factor has a pole in the open
+critical strip. The fieldwise theorem gives discriminant corrections
+\(12+3\log81\) and \(12+3\log19683\).
+Ordinary RH isolates the order-three pair in \(K^+\). Dedekind RH for
+\(K^+\) together with RH for `3.2` isolates the order-six pair in \(K\).
+
+Write \(A_r=(9k+r)^{-1/2}\) for \(k\ge0\). In the central series,
+divide the block imaginary parts by \(\sqrt3/2\). These become
+\((A_2-A_7)+(A_4-A_5)>0\) for `9.2` and
+\(A_2+A_7-A_4-A_5>0\) for `9.4`. The first uses strict
+decrease. For the second, the two pairs have the same sum of arguments
+and the outer pair is more separated, so strict convexity applies.
+Their conjugates reverse the signs. All seven central orders are zero,
+and under the respective location hypothesis the individual
+multiplicity criterion tests the simplicity of the noncentral zeros.
+
+[Real cubic field](https://www.lmfdb.org/NumberField/3.3.81.1) ·
+[Full cyclotomic field](https://www.lmfdb.org/NumberField/6.0.19683.1) ·
+[Conrey convention](https://www.lmfdb.org/knowledge/show/character.dirichlet.conrey)
+
 ## Location and arithmetic data
 
 Use unitary normalization throughout, with critical line \(\Re s=1/2\).
@@ -489,6 +583,93 @@ and the central order is zero.
 [Paramodularity, Theorem 7.1.3](https://msp.org/ant/2019/13-5/ant-v13-n5-p05-p.pdf) ·
 [Bessel integral representation](https://dlmf.nist.gov/10.32.E8) ·
 [Bessel Mellin transform](https://dlmf.nist.gov/10.43.E19)
+
+## Exact central order for elliptic 389.a1
+
+For \(E:y^2+y=x^3+x^2-2x\), modularity gives the weight-two form
+of conductor \(389\). At a good prime write \(a_p=p+1-\#E(\mathbb F_p)\).
+The normalized local parameters are the roots of
+\(T^2-(a_p/\sqrt p)T+1\). At \(389\) the reduction is split
+multiplicative, so the single normalized parameter is \(1/\sqrt{389}\).
+The global root number is \(+1\). These inputs give the individual
+triangular location test, and removal of the triangular weight gives
+the full equivalent statement
+\[
+ \left|\sum_{\substack{p\le x\\p\ {\rm prime},\ p\ne389}}
+      (\#E(\mathbb F_p)-p-1)\right|\le C x\log x
+ \qquad(x\ge2)
+\]
+for some \(C>0\). The bound concerns all real \(x\ge2\) and the primes
+of good reduction.
+
+The rational points \(P=(0,0)\) and \(Q=(1,0)\) give a lower bound
+on central order. Over \(\mathbb F_5\) the curve has nine points, so
+the rational group has no \(2\)-torsion by injectivity of reduction
+on prime-to-\(5\) torsion. Over \(\mathbb F_{11}\) the subgroup
+\(2E(\mathbb F_{11})\) consists of
+\(\mathcal O,(3,5),(6,4),(6,6)\).
+The images of \(P,Q,P+Q=(9,10)\) lie outside this subgroup. An integral
+relation would have both coefficients even; since there is no
+\(2\)-torsion one can divide them by \(2\), ruling out every nonzero
+relation. The rank is at least two. The Gross–Zagier and Kolyvagin
+theorem for analytic rank zero or one now gives
+\(\operatorname{ord}_{s=1}L(E,s)\ge2\).
+
+For the upper bound put \(B=2\pi/\sqrt{389}\) and
+\(F(t)=\sum_{n\ge1} a_n e^{-Bnt}\), using the arithmetic coefficients.
+Take exactly
+\(\Lambda(s)=(\sqrt{389}/(2\pi))^s\Gamma(s)L(E,s)\).
+Since the sign is \(+1\), Mellin integration gives
+\[
+\Lambda''(1)=2\int_1^\infty F(t)(\log t)^2\,dt.
+\]
+The coefficient bound \(|a_n|\le d(n)\sqrt n\le2n\) follows from the
+local root bounds, including the bad Euler factor, and justifies the
+differentiation. The exact interval verifier gives
+\[
+ \int_1^{64}\left(\sum_{n=1}^{64}a_n e^{-Bnt}\right)
+          (\log t)^2\,dt \ \ge\ \frac{2341}{1000}.
+\]
+The code computes the first \(64\) coefficients by point counting and
+the exact prime-power recurrence. On the grid of step \(1/128\), the
+positive terms use lower exponential bounds at the right endpoint
+and the negative terms use upper exponential bounds at the left
+endpoint. For the square of the logarithm, use the lower left bound
+when the lower sum is positive and the upper right bound when it
+is negative. The initial exponentials and the step factors come from
+alternating Taylor partial sums with \(318/1000<B<319/1000\).
+For logarithms use range reduction by powers of \(2\) and the first
+16 terms of \(2\sum_{k\ge0}z^{2k+1}/(2k+1)\), \(z=(u-1)/(u+1)\),
+\(1\le u\le2\). The remaining terms are bounded by \(3/3^{33}\).
+All rounded bounds use integer scale \(10^{20}\) with outward rounding.
+
+For the coefficient tail use
+\((\log t)^2\le(t-1)^2\) and integrate each \(n>64\) term against
+the exponential. Since \(B>3/10\) and \(e^{-B}<3/4\), its total
+absolute integral on \([1,\infty)\) is bounded by
+\[
+ \frac{16000}{27\cdot65^2}(3/4)^{65}<1/200.
+\]
+For the integration tail, \(|F(t)|\le 32e^{-Bt}\) for \(t\ge1\),
+by summing \(2n e^{-Bnt}\). Using \((\log t)^2\le t^2\) shows the
+absolute integral over \(t\ge64\) is bounded by
+\[
+32(3/4)^{64}
+ \left(\frac{40960}{3}+\frac{12800}{9}+\frac{2000}{27}\right)<1/200.
+\]
+Thus \(\Lambda''(1)>4.662\) in the stated normalization. The analytic
+central order is exactly two. Under the critical-line hypothesis the
+individual multiplicity criterion tests simplicity at every noncentral
+zero, with prescribed central order two. This certificate independently
+reproduces the central order for this particular curve.
+
+At \(p=3\) there are six points, so \(a_3=-2\), and the unitary trace
+has square \(4/3\). The same proof as in the following section rules
+out the direct all-prime Dedekind-factor route for this curve.
+
+[Curve and local data](https://www.lmfdb.org/EllipticCurve/Q/389/a/1) ·
+[Gross on the analytic-rank theorem](https://users.dm.unipi.it/lombardo/Kolyvagin/Gross.pdf) ·
+[Exact interval verifier](lmfdb-explorer/verify-389-center.mjs)
 
 ## Obstruction to a direct corrected ideal transfer for Δ, 37.a1, and 277.a
 

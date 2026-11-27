@@ -126,8 +126,10 @@ is attributed to LMFDB under its CC BY-SA data license.
 
 ## GitHub Pages releases
 
-Run both catalogue and backlog checks on the staged source, then commit
-it in Robin1984. The Pages source is the root of the separate
+Run the catalogue and backlog checks on the staged source, together with
+`docs/lmfdb-explorer/verify-389-center.mjs` for releases that change the
+389.a1 proof or certificate. Then commit in Robin1984.
+The Pages source is the root of the separate
 `gh-pages` branch in the same repository. Resolve the current remote
 branch SHA and pass it as `--parent` to
 `docs/lmfdb-explorer/prepare-pages.mjs`, together with

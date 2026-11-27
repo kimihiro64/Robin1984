@@ -816,6 +816,508 @@
       "obligation": "The paired location sum contains no information distinguishing the two individual orders."
     },
     {
+      "id": "1-2e3-8.3-r1-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(√−2)",
+            "zeros": "Every zero of the completion Λ(s, χ₈.3) lies on Re s = 1/2.",
+            "hypothesis": "Assuming ordinary RH for ζ(s)",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(√−2) with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 8) / √(log N𝔞)].",
+            "note": "ζ_K = ζ L(s,χ₈.3) and κ_K = π/√8.",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Field on LMFDB",
+                "https://www.lmfdb.org/NumberField/2.0.8.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Prime-count imbalance for character 8.3",
+            "zeros": "Every zero of the completion Λ(s, χ₈.3) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|(π₁ + π₃) − (π₅ + π₇)| ≤ C√x log x.",
+            "note": "πₐ = π(x;8,a) counts primes p ≤ x in residue class a. The difference counts split primes minus inert primes. The ramified prime 2 contributes zero.",
+            "links": [
+              [
+                "Exact character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/8/3"
+              ],
+              [
+                "Proof and local factors",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#dirichlet-characters-of-conductors-8-9-and-11"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₈.3)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} χ₈.3(p)ʲ log p (1 − pʲ/x)"
+        },
+        "centralOrder": 0,
+        "idealField": "quadraticMinus8"
+      },
+      "url": "https://www.lmfdb.org/L/1-2e3-8.3-r1-0-0",
+      "name": "Quadratic character 8.3",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 proved",
+      "cohort": "dirichlet",
+      "origins": [
+        "8.3"
+      ],
+      "pole": 0,
+      "coef": "a(p,j) = χ₈.3(p)ʲ. The character is +1 on 1, 3, −1 on 5, 7, and zero on nonunits modulo 8.",
+      "completion": "8^(s/2) Γℝ(s+1) L(s,χ₈.3); root number +1",
+      "basis": "The primitive Dirichlet family supplies the analytic criteria. The local coefficients, prime-count transfer, and corrected ideal specialization are given in the research notes.",
+      "orders": "Use the individual prime-power coefficients. Pair the positive residues 1, 3 with the larger negative residues 5, 7 in each block.",
+      "obligation": "Under critical-line location, the multiplicity criterion is equivalent to simplicity of the noncentral zeros."
+    },
+    {
+      "id": "1-2e3-8.5-r0-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(√2)",
+            "zeros": "Every zero of the completion Λ(s, χ₈.5) lies on Re s = 1/2.",
+            "hypothesis": "Assuming ordinary RH for ζ(s)",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(√2) with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 8) / √(log N𝔞)].",
+            "note": "ζ_K = ζ L(s,χ₈.5) and κ_K = 2 log(1+√2)/√8.",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Field on LMFDB",
+                "https://www.lmfdb.org/NumberField/2.2.8.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Prime-count imbalance for character 8.5",
+            "zeros": "Every zero of the completion Λ(s, χ₈.5) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|(π₁ + π₇) − (π₃ + π₅)| ≤ C√x log x.",
+            "note": "πₐ = π(x;8,a) counts primes p ≤ x in residue class a. The difference counts split primes minus inert primes. The ramified prime 2 contributes zero.",
+            "links": [
+              [
+                "Exact character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/8/5"
+              ],
+              [
+                "Proof and local factors",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#dirichlet-characters-of-conductors-8-9-and-11"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₈.5)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} χ₈.5(p)ʲ log p (1 − pʲ/x)"
+        },
+        "centralOrder": 0,
+        "idealField": "quadraticPlus8"
+      },
+      "url": "https://www.lmfdb.org/L/1-2e3-8.5-r0-0-0",
+      "name": "Quadratic character 8.5",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 proved",
+      "cohort": "dirichlet",
+      "origins": [
+        "8.5"
+      ],
+      "pole": 0,
+      "coef": "a(p,j) = χ₈.5(p)ʲ. The character is +1 on 1, 7, −1 on 3, 5, and zero on nonunits modulo 8.",
+      "completion": "8^(s/2) Γℝ(s) L(s,χ₈.5); root number +1",
+      "basis": "The primitive Dirichlet family supplies the analytic criteria. The local coefficients, prime-count transfer, and corrected ideal specialization are given in the research notes.",
+      "orders": "Use the individual prime-power coefficients. For f(u)=u⁻¹ᐟ², strict convexity gives f(8k+1)+f(8k+7) > f(8k+3)+f(8k+5).",
+      "obligation": "Under critical-line location, the multiplicity criterion is equivalent to simplicity of the noncentral zeros."
+    },
+    {
+      "id": "1-11-11.10-r1-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(√−11)",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.10) lies on Re s = 1/2.",
+            "hypothesis": "Assuming ordinary RH for ζ(s)",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(√−11) with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 11) / √(log N𝔞)].",
+            "note": "ζ_K = ζ L(s,χ₁₁.10) and κ_K = π/√11.",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Field on LMFDB",
+                "https://www.lmfdb.org/NumberField/2.0.11.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Prime-count imbalance for character 11.10",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.10) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|(π₁ + π₃ + π₄ + π₅ + π₉) − (π₂ + π₆ + π₇ + π₈ + π₁₀)| ≤ C√x log x.",
+            "note": "πₐ = π(x;11,a) counts primes p ≤ x in residue class a. The difference counts split primes minus inert primes. The ramified prime 11 contributes zero.",
+            "links": [
+              [
+                "Exact character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/11/10"
+              ],
+              [
+                "Proof and local factors",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#dirichlet-characters-of-conductors-8-9-and-11"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₁₁.10)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} χ₁₁.10(p)ʲ log p (1 − pʲ/x)"
+        },
+        "centralOrder": 0,
+        "idealField": "quadraticMinus11"
+      },
+      "url": "https://www.lmfdb.org/L/1-11-11.10-r1-0-0",
+      "name": "Quadratic character 11.10",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 proved",
+      "cohort": "dirichlet",
+      "origins": [
+        "11.10"
+      ],
+      "pole": 0,
+      "coef": "a(p,j) = χ₁₁.10(p)ʲ. The character is +1 on 1, 3, 4, 5, 9, −1 on 2, 6, 7, 8, 10, and zero on nonunits modulo 11.",
+      "completion": "11^(s/2) Γℝ(s+1) L(s,χ₁₁.10); root number +1",
+      "basis": "The primitive Dirichlet family supplies the analytic criteria. The local coefficients, prime-count transfer, and corrected ideal specialization are given in the research notes.",
+      "orders": "Use the individual prime-power coefficients. Pair the positive residues 1, 3, 4, 5, 9 with 2, 6, 7, 8, 10 in that order. Each positive residue is smaller.",
+      "obligation": "Under critical-line location, the multiplicity criterion is equivalent to simplicity of the noncentral zeros."
+    },
+    {
+      "id": "1-3e2-9.2-r1-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₉)",
+            "zeros": "Every zero of the completion Λ(s, χ₉.2) lies on Re s = 1/2.",
+            "hypothesis": "Assuming Dedekind RH for ℚ(ζ₉)⁺ and the critical-line hypothesis for character 3.2",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₉) with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 19683) / √(log N𝔞)].",
+            "note": "ζ_K = ζ_{ℚ(ζ₉)⁺} L(s,χ₃.₂) L(s,χ₉.₂) L(s,χ₉.₅).",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Field on LMFDB",
+                "https://www.lmfdb.org/NumberField/6.0.19683.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 9.2",
+            "zeros": "Every zero of the completion Λ(s, χ₉.2) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|π₁ − π₈ + ξ(π₂ − π₇) + ξ²(π₄ − π₅)| ≤ C√x log x.",
+            "note": "πₐ = π(x;9,a) counts primes p ≤ x in residue class a. ξ = exp(πi/3). The prime 3 contributes zero.",
+            "links": [
+              [
+                "Exact character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/9/2"
+              ],
+              [
+                "Proof and local factors",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#dirichlet-characters-of-conductors-8-9-and-11"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₉.2)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₉.2(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired remainder tests both conjugates. Their location hypotheses are equivalent by conjugation."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₉.2(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "cyclotomic9"
+      },
+      "url": "https://www.lmfdb.org/L/1-3e2-9.2-r1-0-0",
+      "name": "Order-six character 9.2",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 proved",
+      "cohort": "dirichlet",
+      "origins": [
+        "9.2"
+      ],
+      "dual": "1-3e2-9.5-r1-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₉.2(p)ʲ. The exponents of ξ = exp(πi/3) at residues 1, 2, 4, 5, 7, 8 are 0, 1, 2, 5, 4, 3. The value is zero at multiples of 3.",
+      "completion": "9^(s/2) Γℝ(s+1) L(s,χ₉.2); ε = τ(χ₉.2)/(i√9)",
+      "basis": "The primitive Dirichlet family supplies the analytic criteria. The local coefficients, prime-count transfer, and corrected ideal specialization are given in the research notes.",
+      "orders": "Use the individual prime-power coefficients. In each length-nine block the imaginary part for 9.2 has strictly positive sign by comparing residues 2 with 7 and 4 with 5. Conjugation reverses that sign for 9.5.",
+      "obligation": "Under critical-line location, the multiplicity criterion is equivalent to simplicity of the noncentral zeros."
+    },
+    {
+      "id": "1-3e2-9.4-r0-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₉)⁺",
+            "zeros": "Every zero of the completion Λ(s, χ₉.4) lies on Re s = 1/2.",
+            "hypothesis": "Assuming ordinary RH for ζ(s)",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₉)⁺ with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 81) / √(log N𝔞)].",
+            "note": "ζ_K = ζ L(s,χ₉.₄) L(s,χ₉.₇).",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Field on LMFDB",
+                "https://www.lmfdb.org/NumberField/3.3.81.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 9.4",
+            "zeros": "Every zero of the completion Λ(s, χ₉.4) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|π₁ + π₈ + ω(π₂ + π₇) + ω²(π₄ + π₅)| ≤ C√x log x.",
+            "note": "πₐ = π(x;9,a) counts primes p ≤ x in residue class a. ω = exp(2πi/3). The prime 3 contributes zero.",
+            "links": [
+              [
+                "Exact character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/9/4"
+              ],
+              [
+                "Proof and local factors",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#dirichlet-characters-of-conductors-8-9-and-11"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₉.4)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₉.4(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired remainder tests both conjugates. Their location hypotheses are equivalent by conjugation."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₉.4(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "realCyclotomic9"
+      },
+      "url": "https://www.lmfdb.org/L/1-3e2-9.4-r0-0-0",
+      "name": "Order-three character 9.4",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 proved",
+      "cohort": "dirichlet",
+      "origins": [
+        "9.4"
+      ],
+      "dual": "1-3e2-9.7-r0-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₉.4(p)ʲ. The exponents of ξ = exp(πi/3) at residues 1, 2, 4, 5, 7, 8 are 0, 2, 4, 4, 2, 0. The value is zero at multiples of 3.",
+      "completion": "9^(s/2) Γℝ(s) L(s,χ₉.4); ε = τ(χ₉.4)/(√9)",
+      "basis": "The primitive Dirichlet family supplies the analytic criteria. The local coefficients, prime-count transfer, and corrected ideal specialization are given in the research notes.",
+      "orders": "Use the individual prime-power coefficients. In each length-nine block strict convexity of u⁻¹ᐟ² gives f(9k+2)+f(9k+7) > f(9k+4)+f(9k+5), which controls the imaginary part for 9.4 and gives nonvanishing for its conjugate 9.7.",
+      "obligation": "Under critical-line location, the multiplicity criterion is equivalent to simplicity of the noncentral zeros."
+    },
+    {
+      "id": "1-3e2-9.5-r1-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₉)",
+            "zeros": "Every zero of the completion Λ(s, χ₉.5) lies on Re s = 1/2.",
+            "hypothesis": "Assuming Dedekind RH for ℚ(ζ₉)⁺ and the critical-line hypothesis for character 3.2",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₉) with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 19683) / √(log N𝔞)].",
+            "note": "ζ_K = ζ_{ℚ(ζ₉)⁺} L(s,χ₃.₂) L(s,χ₉.₂) L(s,χ₉.₅).",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Field on LMFDB",
+                "https://www.lmfdb.org/NumberField/6.0.19683.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 9.5",
+            "zeros": "Every zero of the completion Λ(s, χ₉.5) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|π₁ − π₈ + ξ⁵(π₂ − π₇) + ξ⁴(π₄ − π₅)| ≤ C√x log x.",
+            "note": "πₐ = π(x;9,a) counts primes p ≤ x in residue class a. ξ = exp(πi/3). The prime 3 contributes zero.",
+            "links": [
+              [
+                "Exact character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/9/5"
+              ],
+              [
+                "Proof and local factors",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#dirichlet-characters-of-conductors-8-9-and-11"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₉.5)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₉.5(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired remainder tests both conjugates. Their location hypotheses are equivalent by conjugation."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₉.5(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "cyclotomic9"
+      },
+      "url": "https://www.lmfdb.org/L/1-3e2-9.5-r1-0-0",
+      "name": "Order-six character 9.5",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 proved",
+      "cohort": "dirichlet",
+      "origins": [
+        "9.5"
+      ],
+      "dual": "1-3e2-9.2-r1-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₉.5(p)ʲ. The exponents of ξ = exp(πi/3) at residues 1, 2, 4, 5, 7, 8 are 0, 5, 4, 1, 2, 3. The value is zero at multiples of 3.",
+      "completion": "9^(s/2) Γℝ(s+1) L(s,χ₉.5); ε = τ(χ₉.5)/(i√9)",
+      "basis": "The primitive Dirichlet family supplies the analytic criteria. The local coefficients, prime-count transfer, and corrected ideal specialization are given in the research notes.",
+      "orders": "Use the individual prime-power coefficients. In each length-nine block the imaginary part for 9.2 has strictly positive sign by comparing residues 2 with 7 and 4 with 5. Conjugation reverses that sign for 9.5.",
+      "obligation": "Under critical-line location, the multiplicity criterion is equivalent to simplicity of the noncentral zeros."
+    },
+    {
+      "id": "1-3e2-9.7-r0-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₉)⁺",
+            "zeros": "Every zero of the completion Λ(s, χ₉.7) lies on Re s = 1/2.",
+            "hypothesis": "Assuming ordinary RH for ζ(s)",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₉)⁺ with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 81) / √(log N𝔞)].",
+            "note": "ζ_K = ζ L(s,χ₉.₄) L(s,χ₉.₇).",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Field on LMFDB",
+                "https://www.lmfdb.org/NumberField/3.3.81.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 9.7",
+            "zeros": "Every zero of the completion Λ(s, χ₉.7) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|π₁ + π₈ + ω²(π₂ + π₇) + ω(π₄ + π₅)| ≤ C√x log x.",
+            "note": "πₐ = π(x;9,a) counts primes p ≤ x in residue class a. ω = exp(2πi/3). The prime 3 contributes zero.",
+            "links": [
+              [
+                "Exact character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/9/7"
+              ],
+              [
+                "Proof and local factors",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#dirichlet-characters-of-conductors-8-9-and-11"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₉.7)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₉.7(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired remainder tests both conjugates. Their location hypotheses are equivalent by conjugation."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₉.7(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "realCyclotomic9"
+      },
+      "url": "https://www.lmfdb.org/L/1-3e2-9.7-r0-0-0",
+      "name": "Order-three character 9.7",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 proved",
+      "cohort": "dirichlet",
+      "origins": [
+        "9.7"
+      ],
+      "dual": "1-3e2-9.4-r0-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₉.7(p)ʲ. The exponents of ξ = exp(πi/3) at residues 1, 2, 4, 5, 7, 8 are 0, 4, 2, 2, 4, 0. The value is zero at multiples of 3.",
+      "completion": "9^(s/2) Γℝ(s) L(s,χ₉.7); ε = τ(χ₉.7)/(√9)",
+      "basis": "The primitive Dirichlet family supplies the analytic criteria. The local coefficients, prime-count transfer, and corrected ideal specialization are given in the research notes.",
+      "orders": "Use the individual prime-power coefficients. In each length-nine block strict convexity of u⁻¹ᐟ² gives f(9k+2)+f(9k+7) > f(9k+4)+f(9k+5), which controls the imaginary part for 9.4 and gives nonvanishing for its conjugate 9.7.",
+      "obligation": "Under critical-line location, the multiplicity criterion is equivalent to simplicity of the noncentral zeros."
+    },
+    {
       "id": "2-23-23.22-c0-0-0",
       "equivalences": {
         "arithmeticEndpoints": [
@@ -1146,20 +1648,63 @@
     },
     {
       "id": "2-389-1.1-c1-0-29",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Total point-count error for 389.a1",
+            "zeros": "Every zero of the unitary Hasse–Weil completion of 389.a1 lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|∑_{p ≤ x, p ≠ 389} (#E(𝔽ₚ) − p − 1)| ≤ C x log x.",
+            "note": "E is the projective completion of y² + y = x³ + x² − 2x. Include the point at infinity.",
+            "links": [
+              [
+                "Curve and modular form on LMFDB",
+                "https://www.lmfdb.org/EllipticCurve/Q/389/a/1"
+              ],
+              [
+                "Exact central-order proof",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#exact-central-order-for-elliptic-389a1"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the unitary Hasse–Weil completion of 389.a1",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} a₃₈₉(p,j) log p (1 − pʲ/x)",
+          "note": "The unitary line Re s = 1/2 corresponds to Re s = 1 in arithmetic normalization."
+        },
+        "centralOrder": 2
+      },
       "url": "https://www.lmfdb.org/L/2/389/1.1/c1/0/29",
       "name": "Elliptic curve 389.a1",
       "family": "Elliptic curves",
       "degree": 2,
-      "status": "unreviewed",
-      "proof": "Queued",
-      "multiplicity": "unreviewed",
-      "center": "Order 2 reported",
+      "status": "done",
+      "proof": "Prose specialization",
+      "multiplicity": "applied",
+      "center": "Order 2 proved",
       "cohort": "newforms",
       "origins": [
         "389.a1",
         "389.2.a.a"
       ],
-      "obligation": "Next use the weight-two provider and review the exact central-order evidence for the rank-two regression."
+      "pole": 0,
+      "coef": "At good p, aₚ = p+1−#E(𝔽ₚ); take the jth power sum of the roots of T² − (aₚ/√p)T + 1. At 389 the split multiplicative factor gives a(389,j) = (1/√389)ʲ.",
+      "completion": "389ˢᐟ² Γℂ(s+1/2) Lᵤ(s,E); root number +1",
+      "basis": "Modularity supplies the weight-two completion, and the curve gives the exact local factors.",
+      "orders": "Good reduction at 5 and 11 proves two rational points independent. Gross–Zagier–Kolyvagin gives order at least two. A rational interval computation proves Λ″(1)>0 in arithmetic normalization.",
+      "idealAssessment": "At p = 3 the trace is −2/√3, with square 4/3. It is not an algebraic integer. This excludes the all-prime Dedekind-factor transfer. An indirect transfer is open.",
+      "obligation": "The individual multiplicity criterion tests noncentral simplicity under the central-line hypothesis. The central zero has order two.",
+      "sources": [
+        [
+          "Exact interval verifier",
+          "https://kimihiro64.github.io/Robin1984/lmfdb-explorer/verify-389-center.mjs"
+        ],
+        [
+          "Modularity of elliptic curves",
+          "https://math.stanford.edu/~conrad/papers/tswfinal.pdf"
+        ]
+      ]
     },
     {
       "id": "3-1-1.1-r0e3-m0.31m20.04p20.36-0",
@@ -1222,6 +1767,31 @@
         "field": "ℚ(ζ₇)",
         "discriminant": -16807,
         "zeros": "Ordinary RH and the critical-line hypotheses for all five primitive characters modulo 7, jointly."
+      },
+      "quadraticMinus8": {
+        "field": "ℚ(√−2)",
+        "discriminant": -8,
+        "zeros": "Ordinary RH and the critical-line hypothesis for quadratic character 8.3, jointly."
+      },
+      "quadraticPlus8": {
+        "field": "ℚ(√2)",
+        "discriminant": 8,
+        "zeros": "Ordinary RH and the critical-line hypothesis for quadratic character 8.5, jointly."
+      },
+      "quadraticMinus11": {
+        "field": "ℚ(√−11)",
+        "discriminant": -11,
+        "zeros": "Ordinary RH and the critical-line hypothesis for quadratic character 11.10, jointly."
+      },
+      "realCyclotomic9": {
+        "field": "ℚ(ζ₉)⁺",
+        "discriminant": 81,
+        "zeros": "Ordinary RH and the critical-line hypotheses for characters 9.4 and 9.7, jointly."
+      },
+      "cyclotomic9": {
+        "field": "ℚ(ζ₉)",
+        "discriminant": -19683,
+        "zeros": "Ordinary RH, the critical-line hypothesis for character 3.2, and the critical-line hypotheses for all four primitive characters of conductor 9, jointly."
       },
       "cubic23": {
         "field": "ℚ[T]/(T³ − T − 1)",
