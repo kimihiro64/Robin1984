@@ -164,6 +164,9 @@ argument applies to its remainder and to the divisor-sum error.
 The key real poles have a positive residue before subtraction from a
 nonnegative comparison function. This sign also rules out a real
 exceptional zero in the relevant half-plane.
+Section~\ref{sec:comparison-criteria} compares the fixed-weight
+equivalence with earlier smoothed prime-counting bounds and
+zero-location criteria.
 
 \subsection{Notation and proof roadmap}\label{app:notation}
 
@@ -2594,25 +2597,36 @@ all irreducible Artin factors requires their holomorphy.
 \section{Related zero-location criteria}\label{sec:comparison-criteria}
 \label{sec:riesz-comparison}
 
+\emph{The Riemann zeta function.} Write
+\(\psi(t)=\sum_{n\leq t}\Lambda(n)\). For \(x\geq2\) the
+triangular remainder for \(\zeta_{\mathbb Q}\) satisfies
+\[
+ R_{\zeta_{\mathbb Q}}(x)=\frac{2}{x}
+       -\frac{1}{x}\int_2^x(\psi(t)-t)\,dt .
+\]
+Johnston~\cite[Lemmas~2.6 and~2.8 in the arXiv version]{JohnstonAveragePrimeCount}
+proves an absolute \(O(x^{3/2})\) bound on the integral under RH.
+If RH fails, his negative oscillation result with \(c=0\) gives
+values of the integral below \(-c_1 x^{3/2+\eta}\) at arbitrarily
+large \(x\), for some \(c_1,\eta>0\). Thus the exact eventual
+one-sided \(O(\sqrt{x})\) criterion in the zeta case already follows
+from Johnston's results.
+
 \emph{Smoothed prime ideals.} For \(Z=\zeta_K\), the sum subtracted in
 \eqref{eq:grand-rh-prime-power} is
 \(x^{-1}\int_1^x\psi_K(t)\,dt\), with \(\psi_K\) defined in
 Section~\ref{sec:grh}. This is the first Riesz mean of Greni\'e and
-Molteni divided by \(x\). They prove explicit two-sided bounds for
-the first and second means under GRH~\cite[Theorem~1.1]{GrenieMolteniSmoothed}.
-Their first-mean estimate implies the eventual one-sided bound
-for \(x/2-x^{-1}\int_1^x\psi_K(t)\,dt\) in its stated range.
-Conversely, the one-sided bound implies Dedekind RH by
-Theorem~\ref{thm:grand-triangular} applied to the Dedekind test.
-It therefore implies the explicit Greni\'e--Molteni estimates
-in their stated domain through that theorem. The two criteria
-have the same logical force for the fixed field. The explicit,
-two-sided conclusion is quantitatively stronger than the
-existence of a one-sided constant as an estimate. The present
-proof needs only the one-sided form and also applies to signed
-standard-family coefficients. The ideal-divisor inequality
-\eqref{eq:ideal-robin} supplies an explicit correction coefficient
-with a field-dependent cutoff.
+Molteni divided by \(x\). Their explicit two-sided estimate under
+Dedekind RH implies the one-sided bound used here
+\cite[Theorem~1.1]{GrenieMolteniSmoothed}. The converse can be obtained
+from the same first-mean Mellin formula by Landau's argument, as in
+the proof of Theorem~\ref{thm:grand-triangular}. Consequently the
+fieldwise one-sided condition and their explicit estimates are
+equivalent through Dedekind RH in the stated range. The explicit
+two-sided estimate also supplies quantitative information. The
+ideal-divisor inequality \eqref{eq:ideal-robin} gives a separate
+norm-budget form with an explicit correction coefficient and a
+field-dependent cutoff.
 
 \emph{Inverse Dirichlet series.} Dixit, Gupta, and Vatwani
 \cite[Theorem~1.4]{DixitGuptaVatwani2022} use coefficients \(c_K(n)\)
@@ -2661,19 +2675,49 @@ on the smoothed prime-power total. The same logarithmic
 derivative also records zero orders through simple residues,
 which Section~\ref{sec:multiplicity} uses for a separate test.
 
-\emph{Other prime-power sign criteria.}
-Suzuki studies sign conditions on logarithmically weighted
-von Mangoldt sums for the zeta and Dirichlet cases
-\cite[Theorems~1, 3 and~6]{SuzukiChebyshev}.
-Slijep\v{c}evi\'c's account of the Alp\"oge--Claude proof uses a
-positive combination of twisted sums with coefficients
-\(\Lambda(n)/n\) and bounds on windows \([Y,Y^\lambda]\) for
-arbitrarily large \(Y\)~\cite[Eq.~(2.3) and Proposition~2.2]{SlijepcevicAlpogeOutline}.
-The triangular test here uses the logarithmic coefficients of a
-standard factor and its contragredient and requires the upper estimate
-for all sufficiently large \(x\). Pairing makes the remainder real,
-and the residue sign handles the real-pole case in the one-sided
-converse.
+\emph{Other one-sided prime-power criteria.}
+Suzuki's criterion for self-dual \(L\)-functions uses eventual
+constancy of sign for sums associated to a quotient of the
+completions shifted by \(-\omega\) and \(+\omega\), for every
+\(0<\omega<1/2\). The converse assumes real-axis nonvanishing to the
+right of the tested threshold
+\cite[Theorem~2.3 and Eq.~(4.3)]{SuzukiMonotonicity}.
+In a separate result for Dirichlet characters, Suzuki studies the
+weight \(n^{-1/2}\log(x/n)\), deriving a zero-location implication
+from an eventual sign and equivalences from limiting conditions
+under their stated hypotheses
+\cite[Theorems~6 and~8]{SuzukiChebyshev}.
+
+In the Alp\"oge--Claude argument, the one-sided estimates concern
+positive combinations of centered twisted prime-power sums on
+arbitrarily large power windows \([Y,Y^\lambda]\).
+The raw sum has weight \(x/n-1\) and Mellin denominator \(s(s-1)\)
+\cite[Eq.~(2.3) and Proposition~2.2]{SlijepcevicAlpogeOutline}
+\cite[Proposition~2.1 and Eq.~(2.1)]{ZhangAlpogeNote}.
+For a raw sum \(S(x)=\sum_{n\le x}a(n)(x/n-1)\), the triangular
+sum with the same coefficients is
+\[
+ \sum_{n\le x}a(n)(1-n/x)=S(x)-\frac{2}{x}\int_1^x S(t)\,dt .
+\]
+The negative coefficient on the integral means that a one-sided
+upper bound for \(S\) alone does not directly bound this difference.
+
+\emph{Contribution for the standard automorphic family.}
+Theorem~\ref{thm:grand-triangular} gives an equivalence with a single
+eventual upper bound \(R_Z(x)\leq C_{K,Z}\sqrt{x}\) for each
+prescribed test \(Z\), using the fixed prime-power weight
+\(1-q^j/x\). Both the constant and the cutoff may depend on the
+field and the test. The family covers standard \(L\)-functions of
+unitary cuspidal representations of \(\mathrm{GL}_n\) over every
+number field and in every rank. Pairing a factor with its
+contragredient gives real coefficients that may have either sign.
+At a real zero \(\beta>1/2\) of order \(r\), the triangular
+remainder has Mellin residue \(r/[\beta(\beta+1)]>0\).
+It enters the Mellin transform of the nonnegative comparison with a
+minus sign, so Landau's argument also excludes real off-line zeros.
+The criterion combines this treatment of real zeros with the exact
+square-root exponent for one fixed weight across the whole standard
+family.
 
 \subsection{Comparison with formal proofs and other Lean criteria}
 \label{sec:prior-lean}
@@ -5178,6 +5222,13 @@ L. Greni\'e and G. Molteni,
 Math. Comp. \textbf{85} (2016), 1875--1899,
 \href{https://doi.org/10.1090/mcom3039}{doi:10.1090/mcom3039}.
 
+\bibitem{JohnstonAveragePrimeCount}
+D. R. Johnston,
+\emph{On the average value of \(\pi(t)-\operatorname{li}(t)\)},
+Canad. Math. Bull. \textbf{66} (2023), 185--195.
+\href{https://doi.org/10.4153/S0008439522000212}{doi:10.4153/S0008439522000212}.
+\href{https://arxiv.org/abs/2201.06184v2}{arXiv:2201.06184v2}.
+
 \bibitem{GrenieMolteniPIT}
 L. Greni\'e and G. Molteni,
 \emph{Explicit versions of the prime ideal theorem for Dedekind zeta
@@ -5201,6 +5252,19 @@ annotated by J.-L. Nicolas and G. Robin,
 Ramanujan J. \textbf{1} (1997), 119--153,
 \href{https://doi.org/10.1023/A:1009764017495}
 {doi:10.1023/A:1009764017495}.
+
+\bibitem{SuzukiMonotonicity}
+M. Suzuki,
+\emph{On monotonicity of certain weighted summatory functions
+associated with \(L\)-functions},
+Comment. Math. Univ. St. Pauli \textbf{60} (2011), 211--225.
+\href{https://arxiv.org/abs/1204.1823v1}{arXiv:1204.1823v1}.
+
+\bibitem{ZhangAlpogeNote}
+R. Zhang,
+\emph{A preliminary note on Alp\"oge's proposed proof of the
+generalized Riemann hypothesis}, 2026.
+\url{https://hexagonmath.org/2611.00809v1}.
 
 \bibitem{SuzukiChebyshev}
 M. Suzuki,
