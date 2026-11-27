@@ -13,7 +13,9 @@ canonical evidence and large inventory retained in Robin1984.
 Using Node 24, let `backlog` below stand for invoking the resolved Node
 executable with `docs/lmfdb-explorer/backlog.mjs`.
 
-1. Run `backlog next` to get one candidate per active queue before
+1. Run `backlog plan` to see the next action for each registered family,
+   gaps in the precomputed API traversal, and the next bounded scan.
+   Run `backlog next` to get one candidate per active queue before
    additional candidates from the same queue. For a single family use
    `backlog next --family dirichlet`.
 2. Read `backlog show L:<label>`. Verify the identity including its actual
@@ -89,6 +91,30 @@ LMFDB search downloads or its read-only mirror. The LMFDB can change
 live IDs and contents. A completed run records traversal of its requested
 bound. A reproducible census needs a pinned source export.
 
+Use `backlog plan` at the start of each batch. Its precomputed ranges
+merge overlapping checkpoints, including committed pages of unfinished runs.
+The first gap starts immediately after the last contiguous ID; the next
+scan resumes a compatible run or proposes a new bounded range. Translate
+`nextScan` to `backlog scan --run <run> --through <through> --pages <pages>`,
+adding `--after <after>` when `after` is positive.
+
+Each family's action points to its first review, a blocker, missing intake,
+or a coverage reconciliation. Work one ready case per family before
+returning to any large family batch. For a whole family, keep a bounded
+source manifest and group cases by exact provider and local-data rules.
+Apply the common proof only after checking its hypotheses for each
+identifier. Record the actual arithmetic predicate and central order
+evidence for each instance, and keep exceptions in the blocker queue.
+Close a source cohort only when every manifest identifier resolves to a
+reviewed or explicitly blocked row. Published population counts overlap and
+can change. Treat a count taken from a source manifest as the denominator
+for that cohort.
+
+When changing the planner, check that each family preview matches the
+first result from that family's queue. A global queue may return several
+jobs from one family. Preserve the first hit when grouping and run
+`backlog check` before publishing.
+
 [LMFDB API](https://www.lmfdb.org/api/) ·
 [LMFDB access options and SQL mirror](https://www.lmfdb.org/api/options)
 
@@ -123,6 +149,14 @@ is attributed to LMFDB under its CC BY-SA data license.
 
 [Published coverage](https://www.lmfdb.org/L/Completeness) ·
 [Data license](https://www.lmfdb.org/api/options)
+
+The tracked [cubic-field inventory](lmfdb-explorer/cubic-fields-d368.jsonl)
+contains the 51 LMFDB field identifiers of degree 3 with
+`disc_abs <= 368`, obtained from the exact query in its header. This is
+the published dynamically computed cubic Dedekind cohort. Replay it using
+`backlog import --file docs/lmfdb-explorer/cubic-fields-d368.jsonl`. Its
+inventory includes the existing discriminant −23 review, which still
+counts once.
 
 ## GitHub Pages releases
 

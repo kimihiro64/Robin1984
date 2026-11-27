@@ -215,7 +215,9 @@ function renderBacklog() {
   const stages = new Map(backlog.stages.map((stage) => [stage.id, stage.name]));
   const families = new Map(backlog.families.map((family) => [family.id, family.name]));
   const statuses = [["complete", "Review complete"], ["in-progress", "In progress"], ["blocked", "Blocked"], ["unreviewed", "Unreviewed"]];
-  byId("backlog-caption").textContent = format(backlog.total) + " inventoried identifiers.";
+  const through = backlog.precomputed?.contiguousThrough ?? 0;
+  const precomputed = through ? " · Precomputed API IDs 1–" + format(through) + " traversed." : "";
+  byId("backlog-caption").textContent = format(backlog.total) + " inventoried identifiers." + precomputed;
   byId("backlog-totals").replaceChildren(...statuses.map(([state, label]) => {
     const item = element("div");
     item.append(element("dt", label), element("dd", format(backlog.state[state])));
@@ -249,7 +251,9 @@ function renderBacklog() {
     const cursor = run.mode === "api"
       ? " · IDs " + format(run.start_id + 1) + "–" + format(run.through_id) + " · reached " + format(run.cursor)
       : "";
-    return element("li", run.id + " · " + format(run.unique_labels) + " identifiers" + cursor);
+    const item = element("li");
+    item.append(link(run.id, run.source), " · " + format(run.unique_labels) + " identifiers" + cursor);
+    return item;
   }));
 }
 
