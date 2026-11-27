@@ -137,6 +137,15 @@ SHA without switching checkouts. Push that candidate with a lease on the
 observed remote SHA. Verify that GitHub Pages built the pushed commit and
 that the hosted catalogue and backlog match the committed assets.
 
+When publishing a catalogue update, check the generated HTML references and
+exercise the new release in a browser that has already loaded the previous
+release. The preparation script versions the browser asset URLs by Git blob
+ID. A successful download of an unversioned asset does not verify what a
+warm browser rendered. Confirm the visible case and queue counts after
+loading the new HTML. The host can retain previous HTML for its cache
+lifetime, so a revision query on the page URL can be used to obtain the
+current document during release verification.
+
 ## First review batch
 
 The pilot includes the existing catalogue cases. The first precomputed
