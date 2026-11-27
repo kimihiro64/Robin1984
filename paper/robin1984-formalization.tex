@@ -106,9 +106,11 @@ prime-power sum characterizes critical-line location. Its converse
 uses Landau's theorem and the sign of a possible real pole.
 The formal proof isolates the analytic data used by this argument.
 Lean constructs those data for the actual rank-one Hecke family over
-every number field, including Dedekind norm twists. The mathematics
-for the actual higher-rank standard family uses the cited analytic
-theorems. The same coefficients give conditional tests for
+every number field, including Dedekind norm twists. For higher
+ranks the Lean equivalence takes the Euler, continuation, growth,
+and functional-equation conditions as hypotheses. The paper supplies
+them for actual standard functions using cited analytic theorems.
+The same coefficients give conditional tests for
 simplicity and prescribed multiplicity. The published verification
 compares and replays six location and four multiplicity
 equivalences, whose exact types and scope are given here.
@@ -204,6 +206,32 @@ The argument uses number-field Mertens theorems
 \cite{GarciaLeeNumberFieldMertens} and Landau's theorem for
 nonnegative transforms~\cite{Landau1905}.
 
+\subsection{Roadmap and notation}
+
+The following dependencies guide the proof.
+\begin{enumerate}[label=\textup{\arabic*.}]
+\item Section~\ref{sec:positive-mellin} gives the analytic converse:
+a triangular bound produces a nonnegative comparison function, and
+its Mellin transform detects zeros to the right of the line.
+\item In Section~\ref{sec:grh}, \(N\mathfrak a\) is the absolute
+ideal norm and \(\sigma_K(\mathfrak a)\) sums the norms of the
+integral divisors. The functions \(H_0\) and \(H\) are unweighted and
+logarithmically weighted tails of the same prime-ideal error.
+Equation~\eqref{eq:ideal-supporting-line} transfers \(H\) to the
+divisor bound. Least-common-multiple ideals give the reverse
+transfer. Section~\ref{sec:dirichlet-erh} changes the field quantifier
+or uses the cyclotomic factorization.
+\item In Section~\ref{sec:grand-research}, \(Z\) is a test function,
+\(m_Z\) is its pole order at \(1\), \(b_{\mathfrak p,j}(Z)\) is its
+prime-power logarithmic coefficient, and \(R_Z\) is the triangular
+remainder. The explicit formula and the analytic converse use the
+same Mellin identity. Section~\ref{sec:multiplicity} adds order tests
+for individual functions under the corresponding location assertion.
+\item Section~\ref{sec:formalization-summary} gives a declaration-by-
+declaration account of the verification scope. The record of analytic
+hypotheses is in Section~\ref{sec:lean-analytic-interface}.
+\end{enumerate}
+
 \subsection{Comparison with other zero-location criteria}
 \label{sec:riesz-comparison}
 
@@ -247,17 +275,58 @@ cases~\cite[Theorems~1, 3 and~6]{SuzukiChebyshev}.
 Lagarias characterizes the critical-line condition for standard
 automorphic \(L\)-functions by nonnegativity of the real parts of
 Li coefficients~\cite[Theorem~2.2]{LagariasAutomorphicLi}.
+Slijep\v{c}evi\'c's account of the Alp\"oge--Claude proof uses a
+positive combination of twisted sums with coefficients
+\(\Lambda(n)/n\) and bounds on windows \([Y,Y^\lambda]\) for
+arbitrarily large \(Y\)~\cite[Eq.~(2.3) and Proposition~2.2]{SlijepcevicAlpogeOutline}.
+The triangular test here uses the logarithmic coefficients of a
+standard factor and its contragredient and requires the upper estimate
+for all sufficiently large \(x\). Pairing makes the remainder real,
+and the residue sign handles the real-pole case in the one-sided
+converse.
+
+\subsection{Comparison with formal proofs and other Lean criteria}
+\label{sec:prior-lean}
+
 The Alp\"oge--Claude development proves the classical and Dirichlet
-critical-line statements with the quantifiers recorded in its release
-and independent verification~\cite{Alpoge2026,Sutherland2026}.
-Slijep\v{c}evi\'c's account uses a positive combination of twisted sums
-with coefficients \(\Lambda(n)/n\) and bounds on windows
-\([Y,Y^\lambda]\) for arbitrarily large \(Y\)
-\cite[Eq.~(2.3) and Proposition~2.2]{SlijepcevicAlpogeOutline}.
-Our triangular test uses the logarithmic coefficients of a standard
-factor and its contragredient and requires the upper estimate for all
-sufficiently large \(x\). Pairing makes the remainder real, and the
-residue sign handles the real-pole case in the one-sided converse.
+zero-location assertions themselves. The five theorem statements in
+Sutherland's verification record range over the Riemann zeta
+function and Dirichlet \(L\)-functions, including the statement for
+all characters over all positive moduli
+\cite{Alpoge2026,Sutherland2026}. Alp\"oge describes a
+Stepanov-inspired argument that uses chains of theta lifts to
+control von Mangoldt sums~\cite{Alpoge2026}. The scope of the
+present formalization is arithmetic equivalence. Its proof relates
+the zero assertions to divisor and prime-power bounds through
+Mellin transforms, and its Dedekind theorem quantifies over every
+number field. For an actual higher-rank standard family, the
+generic Lean equivalence uses the analytic inputs listed in
+Section~\ref{sec:lean-analytic-interface}.
+
+The two developments can be composed at the level of theorem types.
+Sutherland's verification record combines Alp\"oge's proofs with an
+earlier Robin1984 revision to obtain the classical Robin and
+Lagarias inequalities and the corrected ideal inequality for
+every cyclotomic field~\cite{Sutherland2026}. The all-field and
+standard automorphic zero assertions are outside the scope of that
+composition. The reusable part of the infrastructure here is the
+proof that a bound on a real prime-power remainder controls poles
+of a Mellin transform under explicit analytic hypotheses. The
+individual version of the arithmetic data also supports the
+prime-power multiplicity tests.
+
+The Jensen--P\'olya criterion concerns real-rootedness of
+polynomials formed from the central Taylor coefficients of a
+completed zeta function~\cite{OnoJensenPolya2026}.
+The related \emph{RiemannJensen} Lean project states and proves
+root-count bounds for the unshifted Jensen polynomials
+\cite{AxiomRiemannJensen}. Its Dedekind theorem gives at least
+\(d-C_K\sqrt{d\log d}\) distinct negative real roots in degree
+\(d\) for sufficiently large \(d\), with constants depending on
+\(K\). This is a quantitative approximation to real-rootedness.
+The equivalence here uses the prime ideals of \(K\) and uses
+the logarithmic derivative instead of Taylor coefficients.
+It gives an exact criterion for the zero assertion over \(K\).
 
 The main arguments are given in Sections~\ref{sec:positive-mellin}--%
 \ref{sec:grand-research}. Appendix~\ref{app:classical-criteria} records
@@ -420,7 +489,9 @@ large \(N\mathfrak a\) allows a threshold depending on \(K\).
 \begin{theorem}[Fieldwise corrected ideal Robin criterion]
 \label{thm:ideal-robin}
 All zeros of \(\zeta_K(s)\) in \(0<\Re s<1\) have real part \(1/2\)
-if and only if, for every \(\mathfrak a\) of sufficiently large norm,
+if and only if there exists \(A_K\in\mathbb N\) such that every
+nonzero integral ideal \(\mathfrak a\) with \(N\mathfrak a\geq A_K\)
+satisfies
 \begin{equation}\label{eq:ideal-robin}
  \frac{\sigma_K(\mathfrak a)}{N\mathfrak a}
  \leq e^\gamma\kappa_K
@@ -429,8 +500,15 @@ if and only if, for every \(\mathfrak a\) of sufficiently large norm,
 \end{equation}
 \end{theorem}
 
-The fieldwise result is proved in
-\codelink{Solution.lean\#L318}{the Lean fieldwise declaration}.
+The quantifier for \(A_K\) is inside the choice of \(K\). There
+is one threshold for all ideals of that field, and the theorem
+asserts no uniform threshold across fields. In
+\codelink{Challenge.lean\#L81}{the Lean predicate}
+\path{CorrectedIdealRobin K}, the
+existential \path{cutoff : Nat} precedes the universal quantifier
+over nonzero ideals. The
+\codelink{Solution.lean\#L318}{Lean fieldwise declaration} proves
+the equivalence with this predicate.
 The separate Lean implications control the ideal sum in the
 forward direction and recover the one-sided analytic bound from
 the least-common-multiple ideals in the converse. The
@@ -606,16 +684,24 @@ Let \(\xi_K=\Xi_K'/\Xi_K\). In \(\xi_K(2)-\xi_K(-1)\)
 the Hadamard constant \(b\) and each subtraction constant
 \(\rho^{-1}\) cancel. The resulting terms are \(O(|\rho|^{-2})\),
 so the difference can be summed absolutely. By the functional
-equation \(\xi_K(-1)=-\xi_K(2)\). Under Dedekind RH every zero has
-the form \(\rho=1/2+i\tau\), counted with its order. Therefore
+equation \(\xi_K(-1)=-\xi_K(2)\). Under Dedekind RH write each
+zero as \(\rho=1/2+i\tau\), counted with its order. The
+contribution of this zero is
 \[
- 2\xi_K(2)=\sum_\rho
-     \left(\frac1{2-\rho}-\frac1{-1-\rho}\right)
-          =\sum_\rho\frac{3}{9/4+\tau^2}.
+ \frac{1}{2-\rho}-\frac{1}{-1-\rho}
+ =\frac{1}{3/2-i\tau}+\frac{1}{3/2+i\tau}
+ =\frac{3}{9/4+\tau^2}.
 \]
-The pointwise comparison
-\((1/4+\tau^2)^{-1}\leq9/(9/4+\tau^2)\) yields
-\(B_K\leq6\xi_K(2)\). Differentiation of the defining
+In particular all summands in \(2\xi_K(2)\) are nonnegative.
+Since \(9(1/4+\tau^2)-(9/4+\tau^2)=8\tau^2\geq0\), summing the
+pointwise comparisons gives
+\[
+ B_K=\sum_\rho\frac{1}{1/4+\tau^2}
+ \leq\sum_\rho\frac{9}{9/4+\tau^2}
+ =3\sum_\rho\left(\frac1{2-\rho}-\frac1{-1-\rho}\right)
+ =6\xi_K(2).
+\]
+Differentiation of the defining
 completion at \(2\) gives
 \begin{align*}
  \xi_K(2)={}&\frac32+\frac12\log|D_K|
@@ -632,22 +718,51 @@ Thus
  B_K\leq6\left(\frac32+\frac12\log|D_K|\right)=9+3\log|D_K|.
 \]
 
-In \eqref{eq:dedekind-h0-series} the nonzero-lattice Gamma series
-are bounded and the remaining elementary terms are \(O_K(1+\log x)\).
-Thus \(|H_0(x)|\leq (B_K+1)/\sqrt{x}\) for all sufficiently large
-\(x\). Since \(H_0'(t)=E(t)/t^2\) almost everywhere, integration by
-parts gives \(H(x)=w(x)H_0(x)+\int_x^\infty w'(t)H_0(t)\,dt\).
-For \(t\geq e\), \(|w'(t)|\leq 3/(t\log^2 t)\). Therefore
+For \(x\geq1\), each nontrivial-zero term in
+\eqref{eq:dedekind-h0-series} has absolute value
+\(\sqrt{x}/(1/4+\tau^2)\), because \(1-\rho=\overline\rho\).
+The absolute sum of the two negative-lattice Gamma series is at
+most \((r_1/4+r_2)\sum_{n\geq1}n^{-2}\). Thus for the finite
+constant
 \[
- H(x)\leq\frac{B_K+1}{\sqrt{x}\log x}
+ M_K=|B|+|r_1+r_2-1|+(r_1/4+r_2)\sum_{n\geq1}n^{-2},
+\]
+the triangle inequality gives
+\[
+ |xH_0(x)|\leq B_K\sqrt{x}+M_K(1+\log x).
+\]
+Because \((1+\log x)/\sqrt{x}\to0\), enlarge the field-dependent
+cutoff until \(M_K(1+\log x)\leq\sqrt{x}\). Division by \(x\) gives
+\(|H_0(x)|\leq (B_K+1)/\sqrt{x}\) above that cutoff.
+
+To estimate \(H\), use \(H_0'(t)=E(t)/t^2\) almost everywhere.
+On \([x,T]\) integration by parts gives
+\[
+ -\int_x^T w(t)H_0'(t)\,dt
+   =w(x)H_0(x)-w(T)H_0(T)+\int_x^T w'(t)H_0(t)\,dt.
+\]
+The bound on \(H_0\) makes \(w(T)H_0(T)\to0\).
+The derivative of \(w(t)=(\log t)^{-1}+(\log t)^{-2}\)
+has absolute value at most \(3/(t\log^2 t)\) for \(t\geq e\).
+For sufficiently large \(x\geq e\),
+\[
+ \int_x^\infty |w'(t)H_0(t)|\,dt
+ \leq\frac{3(B_K+1)}{\log^2 x}\int_x^\infty t^{-3/2}\,dt
+ =\frac{6(B_K+1)}{\sqrt{x}\log^2 x}.
+\]
+The term \(w(x)H_0(x)\) gives the leading bound
+\((B_K+1)/(\sqrt{x}\log x)\) and one more copy of
+\((B_K+1)/(\sqrt{x}\log^2 x)\). Hence
+\[
+ |H(x)|\leq\frac{B_K+1}{\sqrt{x}\log x}
           +\frac{7(B_K+1)}{\sqrt{x}\log^2 x}
 \]
 eventually. In \eqref{eq:ideal-supporting-line}, exponentiation
-multiplies \(\log x\) by \(e^{H(x)}\). The upper estimate on \(H\)
-and \(e^u=1+u+O(u^2)\) for \(u\to0\) bound this by
+multiplies \(\log x\) by \(e^{H(x)}\). The last estimate and
+\(e^u=1+u+O(u^2)\) for \(u\to0\) bound the result above by
 \(\log x+(B_K+1+o_K(1))/\sqrt{x}\).
-The strict inequality \(B_K+1\leq 10+3\log|D_K|<
-12+3\log|D_K|\) yields \eqref{eq:ideal-robin}.
+Since \(B_K+1\leq10+3\log|D_K|<12+3\log|D_K|\),
+this proves \eqref{eq:ideal-robin} in the forward direction.
 
 \subsection{The converse from least common multiples of ideals}
 
@@ -821,12 +936,32 @@ A pure imaginary norm character \(|\cdot|_{\mathbb A_K}^{it}\) of
 \(\mathrm{GL}_1\) has \(L(s,\pi)=\zeta_K(s+it)\); its zero condition is
 the same as that of \(\zeta_K\) by vertical translation.
 
-For each \(\pi\) other than those pure norm characters, take
-\(Z(s)=L(s,\pi)L(s,\widetilde{\pi})\). Include the test \(Z=\zeta_K\)
-for each \(K\) to cover all the pure norm characters over \(K\).
-Let \(m\) be the pole order of \(Z\) at \(1\), so \(m=0\) for a
-paired cuspidal product and \(m=1\) for \(\zeta_K\). For \(\Re s>1\),
-write
+For a fixed number field \(K\), let \(\mathcal U_n(K)\) be the
+set of unitary cuspidal representations of
+\(\mathrm{GL}_n(\mathbb A_K)\), up to isomorphism. Put
+\(\mathcal U_n^*(K)=\mathcal U_n(K)\) for \(n\geq2\) and
+\[
+ \mathcal U_1^*(K)=\mathcal U_1(K)\setminus
+ \{|\cdot|_{\mathbb A_K}^{it}:t\in\mathbb R\}.
+\]
+Define the test family over \(K\) by
+\[
+ \mathcal T_K=\{\zeta_K\}\;\cup\;
+ \{L(\,\cdot\,,\pi)L(\,\cdot\,,\widetilde\pi):
+                  n\geq1,\ \pi\in\mathcal U_n^*(K)\}.
+\]
+The single test \(\zeta_K\) covers all pure norm characters
+over that field by the translation above. Thus \(\pi\) ranges over
+the entire \(\mathcal U_n(K)\) in the zero assertion and over
+\(\mathcal U_n^*(K)\) in the paired tests.
+
+Fix \(Z\in\mathcal T_K\). Its pole order \(m=m_Z\) at \(1\) is
+\(0\) for a paired test and \(1\) for the single Dedekind test.
+Let \(b_{\mathfrak p,j}=b_{\mathfrak p,j}(Z)\) be the logarithmic
+coefficient of this test at the prime-power pair
+\((\mathfrak p,j)\), with \(\mathfrak p\) a nonzero prime ideal of
+\(\mathcal O_K\) and \(j\geq1\). If two pairs have equal norm,
+both coefficients are included. For \(\Re s>1\), write
 \begin{equation}\label{eq:standard-log-derivative}
  -\frac{Z'}{Z}(s)=
    \sum_{\mathfrak p}\sum_{j\geq1}
@@ -870,21 +1005,39 @@ have conjugate coefficients. For the paired test,
 \]
 For \(Z=\zeta_K\) there is one parameter equal to \(1\) at every
 prime ideal, so \(b_{\mathfrak p,j}=\log q\).
+For example, in a pole-free rank-one test an unramified parameter
+\(e^{i\theta}\) contributes \(2(\log q)\cos(j\theta)\) to the pair,
+and a ramified Hecke character contributes zero. The two terms
+in the pair come from the two individual standard factors,
+including when the representation is self-dual.
 
 \begin{theorem}[Triangular criterion for standard automorphic \(L\)-functions]\label{thm:grand-triangular}
-Every nontrivial zero of every standard \(L\)-function in this
-unitary cuspidal family has real part \(1/2\) if and only if,
-for every test \(Z\) defined above, there is a real \(C_Z\) such that
+Write \(\Lambda_\pi\) for the pole-cleared completed standard
+function. With \(K\) ranging over number fields, the following
+conditions are equivalent.
+\begin{enumerate}[label=\textup{(\roman*)}]
+\item For every \(K\), every \(n\geq1\), every
+\(\pi\in\mathcal U_n(K)\), and every \(s\in\mathbb C\),
+\(\Lambda_\pi(s)=0\) implies \(\Re s=1/2\).
+\item For every \(K\) and every \(Z\in\mathcal T_K\), there exist
+\(X_{K,Z}\in[1,\infty)\) and \(C_{K,Z}\in\mathbb R\) such that
+for every real \(x\geq X_{K,Z}\),
 \begin{equation}\label{eq:grand-rh-prime-power}
- R_Z(x):=\frac{mx}{2}
+ R_Z(x):=\frac{m_Zx}{2}
   -\sum_{\substack{\mathfrak p,\ j\geq1\\(N\mathfrak p)^j\leq x}}
-    b_{\mathfrak p,j}\left(1-\frac{(N\mathfrak p)^j}{x}\right)
-   \leq C_Z\sqrt{x}
+    b_{\mathfrak p,j}(Z)\left(1-\frac{(N\mathfrak p)^j}{x}\right)
+   \leq C_{K,Z}\sqrt{x}.
 \end{equation}
-for all sufficiently large \(x\). A term with \((N\mathfrak p)^j=x\)
-has weight zero, so replacing \(\leq x\) by \(<x\) in the index set
-gives the same sum. The constant and the cutoff may depend on \(Z\).
+\end{enumerate}
 \end{theorem}
+
+A term at equality \((N\mathfrak p)^j=x\) vanishes. The strict
+cutoff in the Lean sum consequently gives the same value. The
+formal predicate \codelink{Challenge.lean\#L134}{\textup{for a single test}}
+quantifies over a real cutoff at least \(1\), a real constant,
+and all \(x\) above the cutoff. Both witnesses are inside the
+quantifier over the family index, allowing dependence on \(K\)
+and on the tested representation or on the Dedekind test.
 
 \subsection{Analytic input for the standard family}
 
@@ -948,6 +1101,84 @@ the standard-family critical-line condition is equivalent to
 nonvanishing of each \(F_Z\) on \(\Re s>1/2\). In the paired case,
 a zero of either factor
 gives a zero of their product, since both factors are entire.
+
+\subsection{Analytic hypotheses of the Lean theorem}
+\label{sec:lean-analytic-interface}
+
+The quantified number-field and representation assertion of
+Theorem~\ref{thm:grand-triangular} uses the actual standard
+functions. The independently replayed Lean declaration
+\codelink{Challenge.lean\#L259-L264}{for a supplied family}
+has a different input interface. Fix any index type, with
+countably many prime-power slots for each index \(i\). An index
+can carry the field and a representation. Supply completed
+functions \(\Lambda_i\), dual indices \(i^\vee\), and data
+\(N_{i,k}\), \(b_{i,k}\), \(m_i\), and \(F_i\), where the last
+function plays the role of the pole-removed ordinary factor
+\((s-1)^{m_i}Z_i(s)\). The record
+\codelink{Challenge.lean\#L162-L183}{\textup{for the paired analytic inputs}}
+requires the following properties.
+\begin{enumerate}[label=\textup{(\alph*)}]
+\item \(N_{i,k}\geq2\), with only finitely many slots satisfying
+\(N_{i,k}<T\) for each real \(T\). The series
+\(\sum_k|b_{i,k}|N_{i,k}^{-\sigma}\) is finite for every
+\(\sigma>1\). For number fields these are local finiteness of ideal
+norms and absolute logarithmic-derivative convergence, as
+verified above using Jacquet--Shalika and the local estimates.
+\item The ordinary \(F_i\) is entire. The completed \(\Lambda_i\)
+is entire and has order at most one in the precise form
+\[
+ \forall\epsilon>0\ \exists C>0\ \forall z\in\mathbb C,\qquad
+ |\Lambda_i(z)|\leq \exp\!\bigl(C(1+|z|)^{1+\epsilon}\bigr).
+\]
+For a pole-free standard function, the cited Godement--Jacquet
+continuation and growth theorem supplies these inputs, with Tate's
+theory in rank one. The Dedekind input uses the pole-cleared
+functions of Section~\ref{sec:grh}.
+\item On \(\Re s>1\) the Euler-product identification is
+\[
+ F_i(s)=(s-1)^{m_i}
+    \exp\!\left(\sum_k \frac{b_{i,k}}{\log N_{i,k}}N_{i,k}^{-s}\right).
+\]
+The denominator \(\log N_{i,k}=j\log q\) at a prime power
+converts the logarithmic-derivative coefficient back to the
+logarithm of the Euler product.
+\item The conductor \(Q_i\) is positive and each real or complex
+Gamma shift satisfies \(\Re\mu>-1/2\). Denote the product of the shifted
+Gamma factors by \(G_i(s)\). For \(\Re s>1/2\) the record requires
+\[
+ \Lambda_i(s)\Lambda_{i^\vee}(s)=s^{m_i}Q_i^{s/2}G_i(s)F_i(s).
+\]
+Finally the supplied functional equation is
+\(\Lambda_{i^\vee}(1-s)=\eta_i(s)\Lambda_i(s)\) for all \(s\),
+with \(\eta_i\) the equation factor. The local bound and
+normalized completion in~\cite[\S\,2.1]{ThornerZhaoRankinSelberg}
+give these conditions for the standard family considered above.
+\end{enumerate}
+
+Lean proves the equivalence from these hypotheses. The proof
+derives the Mellin kernel, the pole test and its one-sided
+converse, the zero expansion from the stated growth, and the
+reflection argument. The theorem in the paper additionally uses
+the cited higher-rank analytic results to supply the data for
+actual representations. The rank-one library construction supplies
+the corresponding data from Hecke theory inside Lean. It handles
+pure norm characters by the separate Dedekind test and vertical
+translation, matching the single Dedekind test in \(\mathcal T_K\).
+
+The multiplicity interface uses the same norm, summability, growth,
+and shift hypotheses with individual coefficients \(c_{i,k}\in
+\mathbb C\). Its \codelink{Challenge.lean\#L457-L475}{individual analytic record}
+uses \(\Lambda_i=s^{m_i}Q_i^{s/2}G_iF_i\) on \(\Re s>1/2\)
+and assumes the logarithmic-derivative identification
+\[
+ \frac{F_i'}{F_i}(s)
+ =\frac{m_i}{s-1}-\sum_k c_{i,k}N_{i,k}^{-s},
+ \qquad \Re s>1.
+\]
+The location condition for \(\Lambda_i\) is a separate hypothesis
+of the multiplicity equivalence. The individual interface has
+no dual index or functional-equation field.
 
 \subsection{Mellin transform of the prime-power remainder}
 
@@ -1634,33 +1865,55 @@ reproduces the exact types of all ten headline declarations. The
 \codefile{Challenge.lean} file supplies Mathlib-only definitions and
 the statements to be checked. It uses proof placeholders in those
 statements. The proofs are in \codefile{Solution.lean}.
-The checked declarations are the ten entries in
-\codefile{comparator.json}. In the following cross-reference, the
-numbers refer to the statement excerpts.
+All ten entries in \codefile{comparator.json} are proved in Lean
+and replayed at their displayed types. The following table gives
+the extra hypotheses of each declaration, separate from its
+ambient types and the three standard Lean axioms used by the proofs.
+Rows 1--3 are in \path{Robin1984}; rows 4--10 are in
+\path{Robin1984.GRH}. The numbers match the exact types in
+Appendix~\ref{app:exact-lean}.
 
-\begin{center}
-\small
-\begin{tabular}{@{}r p{0.80\linewidth}@{}}
+\begin{longtable}{@{}r p{0.88\textwidth}@{}}
 \toprule
- & Statement and scope \\
+ & Lean declaration and explicit hypotheses \\
 \midrule
-1--3 & Robin's \(n>5040\) criterion, its colossally abundant
-restriction, and Lagarias's criterion
-(Appendices~\ref{app:classical-criteria} and~\ref{sec:lagarias}). \\
-4--5 & Dirichlet GRH and Dedekind ERH
-(Theorems~\ref{thm:dirichlet-cyclotomic} and~\ref{thm:dedekind-erh}). \\
-6 & Triangular critical-line criterion of
-Theorem~\ref{thm:grand-triangular} for a family supplied with the
-analytic data in the Lean statement. \\
-7--9 & The RH, Dirichlet GRH, and Dedekind ERH multiplicity criteria
-of Theorems~\ref{thm:rh-multiplicity}--\ref{thm:erh-multiplicity},
-each assuming the indicated location assertion. \\
-10 & Prescribed multiplicity for a supplied standard family under
-its critical-line assertion
-(Theorem~\ref{thm:grand-multiplicity}). \\
+\endfirsthead
+\toprule
+ & Lean declaration and explicit hypotheses \\
+\midrule
+\endhead
+  1 & \path{robin_inequality_iff_riemannHypothesis}\newline
+  None beyond standard Lean foundations. \\[2pt]
+  2 & \path{riemannHypothesis_iff_colossallyAbundant_robin}\newline
+  None beyond standard Lean foundations. \\[2pt]
+  3 & \path{riemann_hypothesis_iff_lagarias_elementary_criterion}\newline
+  None beyond standard Lean foundations. \\[2pt]
+  4 & \path{dirichletGRH_iff_cyclotomicCorrectedIdealRobin}\newline
+  None beyond standard Lean foundations. The cyclotomic bridge is proved. \\[2pt]
+  5 & \path{dedekindERH_iff_correctedIdealRobin}\newline
+  None beyond standard Lean foundations. The cutoff is fieldwise. \\[2pt]
+  6 & \path{grandRH_iff_triangularPrimePowerBound}\newline
+  Supplied paired analytic data. Section~\ref{sec:lean-analytic-interface} lists the conditions. \\[2pt]
+  7 & \path{riemannRH_iff_globalPrimePowerMultiplicityInequality}\newline
+  Classical RH. \\[2pt]
+  8 & \path{dirichletGRH_iff_globalPrimePowerMultiplicityInequality}\newline
+  Dirichlet GRH. \\[2pt]
+  9 & \path{dedekindERH_iff_globalPrimePowerMultiplicityInequality}\newline
+  Dedekind RH for the given field \(K\). \\[2pt]
+  10 & \path{grandRH_iff_globalPrimePowerMultiplicityInequality}\newline
+  Supplied individual analytic data and the critical-line assertion for that family. \\[2pt]
 \bottomrule
-\end{tabular}
-\end{center}
+\end{longtable}
+
+Rows 1--5 prove unconditional equivalences between the stated
+propositions. In particular the location assertion in an
+equivalence is itself one side of the theorem. Rows 7--10 take
+the location assertion as an input to a separate multiplicity
+equivalence. Only rows 6 and 10 take a standard-family analytic
+record as an input. The properties of this record for actual
+higher-rank representations come from the cited analytic
+theorems in Sections~\ref{sec:grand-research}
+and~\ref{sec:lean-analytic-interface}.
 
 The fieldwise helper \path{dedekindRH_iff_correctedIdealRobin}
 underlies statements 4 and 5. Statement 9, for Dedekind simplicity,
@@ -2070,8 +2323,10 @@ interface, not a new oscillation phenomenon.
 
 \subsection{Relation to prior formal work}
 
-The adjacent formal literature concerns the analytic objects around the
-criterion rather than Robin's divisor-sum biconditional itself.
+Section~\ref{sec:prior-lean} compares the current results with
+direct formal proofs and Jensen-polynomial criteria. The following
+earlier developments provide zeta-function infrastructure and
+definitions used in formal work on classical RH.
 Gomes and Kontorovich~\cite{GomesKontorovich2020} formalized an equivalent
 zero-locus formulation of the Riemann hypothesis through the Dirichlet eta
 function and supplied a Mathlib implementation of its analytic prerequisites;
@@ -5019,6 +5274,15 @@ L. Alp\"oge, \emph{A remark}, 20 November 2026,
 A. V. Sutherland, \emph{Verification files for the Lean proof of the
 Riemann Hypothesis}, 23 November 2026 record,
 \url{https://math.mit.edu/~drew/grh/}.
+
+\bibitem{OnoJensenPolya2026}
+K. Ono, \emph{An asymptotic Jensen--P\'olya criterion for GRH},
+preprint, 2026, \url{https://arxiv.org/abs/2610.38870}.
+
+\bibitem{AxiomRiemannJensen}
+Axiom Math, \emph{Riemann and Dedekind Jensen Polynomials},
+Lean formalization accompanying \cite{OnoJensenPolya2026},
+\url{https://github.com/AxiomMath/RiemannJensen}.
 
 \bibitem{SlijepcevicAlpogeOutline}
 S.~Slijep\v{c}evi\'c,
