@@ -51,6 +51,8 @@ proofs to these LMFDB records.
 | \(\mathbb Q(\sqrt{-11})\), \(D_K=-11\) | `1-11-11.10-r1-0-0` | Ordinary RH and RH for character `11.10` jointly. The residue is \(\pi/\sqrt{11}\). |
 | \(K^+=\mathbb Q(\zeta_9)^+\), \(D_{K^+}=81\) | `1-3e2-9.4-r0-0-0` and `1-3e2-9.7-r0-0-0` | Ordinary RH and RH for both order-three characters jointly. |
 | \(K=\mathbb Q(\zeta_9)\), \(D_K=-19683\) | `1-3e2-9.2-r1-0-0` and `1-3e2-9.5-r1-0-0` | Dedekind RH for \(K^+\), RH for `3.2`, and RH for both order-six characters jointly. |
+| \(K^+=\mathbb Q(\zeta_{11})^+\), \(D_{K^+}=14641\) | Characters `11.3`, `11.4`, `11.5`, and `11.9` | Ordinary RH and the critical-line hypotheses for both even conjugate pairs jointly. Ordinary RH and either pair's hypothesis isolate the other. |
+| \(K=\mathbb Q(\zeta_{11})\), \(D_K=-2357947691\) | Characters `11.2`, `11.6`, `11.7`, and `11.8` | Ordinary RH and the critical-line hypotheses for all ten primitive characters of conductor \(11\), jointly. Dedekind RH for \(K^+\), quadratic RH for `11.10`, and either odd order-ten pair's hypothesis isolate the other pair. |
 | \(\mathbb Q[T]/(T^3-T-1)\), \(D_K=-23\) | `3.1.23.1` and `2-23-23.22-c0-0-0` | Ordinary RH and RH for the level-23 weight-one form jointly, by \(\zeta_K=\zeta L(s,f_{23})\). Under ordinary RH the criterion is equivalent to RH for \(f_{23}\) alone. |
 
 Every factor in these product identities is holomorphic in the open
@@ -426,6 +428,84 @@ multiplicity criterion tests the simplicity of the noncentral zeros.
 [Full cyclotomic field](https://www.lmfdb.org/NumberField/6.0.19683.1) ·
 [Conrey convention](https://www.lmfdb.org/knowledge/show/character.dirichlet.conrey)
 
+### Complex primitive characters of conductor 11
+
+The Conrey generator \(2\) gives the residue sequence
+\[
+(1,2,4,8,5,10,9,7,3,6)
+\]
+for its powers \(0,\ldots,9\). Put \(\xi=e^{\pi i/5}\).
+For character \(\chi_m=\chi_{11}(m,\cdot)\), write \(m=2^k\bmod 11\)
+and let \(\ell(a)\) be the index of \(a\) in the sequence, starting at
+zero. Then \(\chi_m(a)=\xi^{k\ell(a)}\); the character vanishes on
+multiples of \(11\). Parity is \(k\bmod2\).
+The exact conjugate pairs and certified central real intervals are
+
+| Conrey label | \(k\) | Conjugate | Interval for \(\Re L(1/2,\chi_m)\) |
+| --- | ---: | --- | ---: |
+| `11.2` | 1 | `11.6` | [1.437, 1.542] |
+| `11.3` | 8 | `11.4` | [0.406, 0.511] |
+| `11.4` | 2 | `11.3` | [0.406, 0.511] |
+| `11.5` | 4 | `11.9` | [0.304, 0.409] |
+| `11.6` | 9 | `11.2` | [1.437, 1.542] |
+| `11.7` | 7 | `11.8` | [0.268, 0.373] |
+| `11.8` | 3 | `11.7` | [0.268, 0.373] |
+| `11.9` | 6 | `11.5` | [0.304, 0.409] |
+
+The completion is \(11^{s/2}\Gamma_{\mathbb R}(s+(k\bmod2))L(s,\chi_m)\)
+with root number \(\tau(\chi_m)/(i^{k\bmod2}\sqrt{11})\).
+The paired triangular remainder uses coefficients
+\(2\Re(\chi_m(p)^j)\log p\). The individual multiplicity criterion
+uses \(\chi_m(p)^j\log p\), including all prime powers.
+Write \(P_a=\pi(x;11,a)\). The individual arithmetic location test is
+\[
+\left|\sum_{a=1}^5 \xi^{k\ell(a)}
+      (P_a+(-1)^kP_{11-a})\right|\le C\sqrt{x}\log x
+      \qquad(x\ge2)
+\]
+for some \(C>0\). The catalogue expands this expression for each
+identifier. The paired and individual location hypotheses are equivalent
+by conjugation.
+
+The real field has the ordinary zeta factor and the four even characters.
+The full field has these factors, the odd quadratic character
+`11.10`, and the four order-ten characters. The product identities
+follow from the character groups of the corresponding cyclic quotients.
+At the totally ramified prime \(11\), both fields have just the single
+ordinary zeta factor. All factors are holomorphic in \(0<\Re s<1\).
+In the real field, the two even pairs are \((3,4)\) and \((5,9)\).
+In the full field, the two order-ten pairs are \((2,6)\) and \((7,8)\).
+Each individual ideal equivalence therefore includes the other pair's
+location hypothesis in the same parity group, as well as the lower
+factors listed in the field table. The exact corrections are
+\(12+3\log14641\) in the real field and \(12+3\log2357947691\)
+in the full field.
+
+For central order, the interval verifier sums \(N=11264\) terms of
+\(L(1/2,\chi_m)\), ending at a complete period. If \(B(t)\) sums the
+remaining character values up to \(t\), then
+\(|B(t)|\le\lfloor 11/2\rfloor\le 11/2\). Indeed a partial block of
+length \(r\) has magnitude at most both \(r\) and \(11-r\), since the
+complete block sums to zero. Summation by parts bounds the magnitude
+of the entire complex tail by \(11/(2\sqrt N)\). The program encloses
+each \(n^{-1/2}\) with scaled integer square roots. It encloses the
+roots of unity via Machin's formula for \(\pi\), alternating Taylor
+bounds for sine and cosine, and the Lipschitz bounds for the remaining
+argument error. All divisions round outward. The table gives the
+result after adding the entire tail. Each real interval is strictly
+positive, so all eight central orders are zero. Under individual
+location the multiplicity test is equivalent to simplicity at the
+noncentral zeros.
+
+The same verifier accepts other odd prime-power moduli and enumerates
+their primitive Conrey characters. An interval that intersects zero
+in both components leaves the central order unresolved.
+
+[Central-value interval verifier](lmfdb-explorer/verify-dirichlet-center.mjs) ·
+[Conrey convention](https://www.lmfdb.org/knowledge/show/character.dirichlet.conrey) ·
+[Real field](https://www.lmfdb.org/NumberField/5.5.14641.1) ·
+[Full field](https://www.lmfdb.org/NumberField/10.0.2357947691.1)
+
 ## Location and arithmetic data
 
 Use unitary normalization throughout, with critical line \(\Re s=1/2\).
@@ -708,6 +788,65 @@ the individual multiplicity criteria for all three.
 [Level-one newform](https://www.lmfdb.org/ModularForm/GL2/Q/holomorphic/1/12/a/a/) ·
 [Curve 37.a1](https://www.lmfdb.org/EllipticCurve/Q/37/a/1) ·
 [Curve 277.a.277.1](https://www.lmfdb.org/Genus2Curve/Q/277/a/277/1)
+
+## Level-one GL₃ Maass candidate
+
+LMFDB search row \(9396503\) identifies
+`3-1-1.1-r0e3-m0.31m20.04p20.36-0` as a primitive degree-three
+record with instance type `MaassGL3`. The degree-three landscape
+provides numerical approximations. The missing input is a proved
+level-one cuspidal representation \(\pi\) whose exact archimedean
+parameters and local Euler polynomials match that record, or an
+equivalent exact analytic certificate. A numerical fit does not give
+this input.
+
+For an exact unitary cuspidal match with trivial central character,
+the Euler polynomial at every rational prime is
+\[
+\det(1-A_pT)=1-a_pT+\overline{a_p}T^2-T^3,\qquad
+a_p=\operatorname{tr} A_p .
+\]
+The quadratic coefficient is the trace of the contragredient because
+\(\det A_p=1\), and unitarity identifies the contragredient trace with
+\(\overline{a_p}\). The logarithmic derivative coefficient at \(p^j\)
+is \(\operatorname{tr}(A_p^j)\log p\). The completed standard function
+is entire, has the contragredient functional equation, and has no pole
+main term. The paired triangular remainder is
+\[
+-\sum_{p^j\le x} 2\Re(\operatorname{tr} A_p^j)\log p(1-p^j/x).
+\]
+Keeping the original complex coefficients, the corresponding unsmoothed
+arithmetic equivalence for the exact representation is
+\[
+\operatorname{RH}(\pi)
+\quad\Longleftrightarrow\quad
+\exists C_\pi>0\ \forall x\ge2:\qquad
+\left|\sum_{\substack{p\ {\rm prime},\ j\ge1\\p^j\le x}}
+        \operatorname{tr}(A_p^j)\log p\right|
+ \le C_\pi\sqrt x\log^2(2x).
+\]
+Indeed the finite-place bound \(|\alpha_{p,r}|\le p^{5/14}\) on Satake
+parameters makes the single boundary interval \(x<n\le x+1\) in the
+unit difference argument contribute \(O_\pi(x^{5/14}\log(2x))\).
+The zero and gamma terms have the bounds in the removing-the-weight
+argument above, so the unit difference gives the claimed forward
+bound. Conversely the Mellin transform of the unsmoothed bound
+continues \(-L'/L\) to \(\Re s>1/2\) without poles; the functional
+equation with the contragredient excludes the opposite half-plane.
+The archimedean parameters obey the same bound \(5/14\) on real parts,
+so the gamma factors have no poles on the relevant right half-plane.
+
+A prime-only reduction would require the higher powers
+\(\sum_{j\ge2,\ p^j\le x}\operatorname{tr}(A_p^j)\log p\) to be
+controlled on the \(\sqrt x\log^2(2x)\) scale for this argument.
+The pointwise estimate above gives \(O_\pi(x^{6/7})\) after summing
+their absolute values, so the conditional catalogue statement retains
+all prime powers. The data record has no certified central order.
+
+[Exact LMFDB search row](https://www.lmfdb.org/api/lfunc_search/?_format=json&_fields=label,instance_types,degree,primitive&label=3-1-1.1-r0e3-m0.31m20.04p20.36-0) ·
+[Farmer, Koutsoliotas, Lemurell and Roberts](https://doi.org/10.1090/conm/796/16007) ·
+[Miller and Schmid](https://annals.math.princeton.edu/2006/164-2/p02) ·
+[Blomer and Brumley](https://annals.math.princeton.edu/wp-content/uploads/annals-v174-n1-p18-p.pdf)
 
 ## Artin functions when holomorphy is missing
 

@@ -1319,6 +1319,638 @@ globalThis.LMFDB_CATALOG = {
       "obligation": "Under critical-line location, the multiplicity criterion is equivalent to simplicity of the noncentral zeros."
     },
     {
+      "id": "1-11-11.2-r1-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₁₁)",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.2) lies on Re s = 1/2.",
+            "hypothesis": "Assuming Dedekind RH for ℚ(ζ₁₁)⁺ and the critical-line hypotheses for characters 11.10 and 11.7",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₁₁) with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 2357947691) / √(log N𝔞)].",
+            "note": "The full field contains all the even factors, the quadratic factor, and both odd conjugate pairs. The assumptions account for the factors outside the pair 11.2 and 11.6.",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Number field on LMFDB",
+                "https://www.lmfdb.org/NumberField/10.0.2357947691.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 11.2",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.2) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|(P₁ − P₁₀) + ξ(P₂ − P₉) + ξ⁸(P₃ − P₈) + ξ²(P₄ − P₇) + ξ⁴(P₅ − P₆)| ≤ C√x log x.",
+            "note": "Pₐ = π(x;11,a) counts primes p ≤ x in residue class a. Here ξ = exp(πi/5). The prime 11 contributes zero.",
+            "links": [
+              [
+                "Character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/11/2"
+              ],
+              [
+                "Coefficients and proof",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#complex-primitive-characters-of-conductor-11"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₁₁.2)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₁₁.2(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired triangular remainder tests both conjugates. Their critical-line hypotheses are equivalent by reflection of ordinates."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₁₁.2(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "cyclotomic11"
+      },
+      "url": "https://www.lmfdb.org/L/1-11-11.2-r1-0-0",
+      "name": "Order-ten character 11.2",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 certified",
+      "cohort": "dirichlet",
+      "origins": [
+        "11.2"
+      ],
+      "dual": "1-11-11.6-r1-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₁₁.2(p)ʲ. At residues 1 through 10 the exponents of ξ = exp(πi/5) are 0, 1, 8, 2, 4, 9, 7, 3, 6, 5. The value at 11 is zero.",
+      "completion": "11^(s/2) Γℝ(s+1) L(s,χ₁₁.2); root number τ(χ₁₁.2)/(i√11)",
+      "basis": "Exact Conrey coefficients supply the Dirichlet family inputs. The two field factorizations isolate the primitive pairs under the stated auxiliary hypotheses.",
+      "orders": "Use the individual prime-power coefficients. An outward-rounded certificate, including the infinite tail, places Re L(1/2) in [1.437, 1.542].",
+      "obligation": "Under critical-line location, the individual multiplicity criterion tests noncentral simplicity.",
+      "sources": [
+        [
+          "Exact central-value certificate",
+          "https://kimihiro64.github.io/Robin1984/lmfdb-explorer/verify-dirichlet-center.mjs"
+        ]
+      ]
+    },
+    {
+      "id": "1-11-11.3-r0-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₁₁)⁺",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.3) lies on Re s = 1/2.",
+            "hypothesis": "Assuming ordinary RH for ζ(s) and the critical-line hypothesis for character 11.5",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₁₁)⁺ with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 14641) / √(log N𝔞)].",
+            "note": "The real field contains ζ and both even conjugate pairs. The assumptions account for the factors outside the pair 11.3 and 11.4.",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Number field on LMFDB",
+                "https://www.lmfdb.org/NumberField/5.5.14641.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 11.3",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.3) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|(P₁ + P₁₀) + ξ⁸(P₂ + P₉) + ξ⁴(P₃ + P₈) + ξ⁶(P₄ + P₇) + ξ²(P₅ + P₆)| ≤ C√x log x.",
+            "note": "Pₐ = π(x;11,a) counts primes p ≤ x in residue class a. Here ξ = exp(πi/5). The prime 11 contributes zero.",
+            "links": [
+              [
+                "Character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/11/3"
+              ],
+              [
+                "Coefficients and proof",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#complex-primitive-characters-of-conductor-11"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₁₁.3)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₁₁.3(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired triangular remainder tests both conjugates. Their critical-line hypotheses are equivalent by reflection of ordinates."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₁₁.3(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "realCyclotomic11"
+      },
+      "url": "https://www.lmfdb.org/L/1-11-11.3-r0-0-0",
+      "name": "Order-five character 11.3",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 certified",
+      "cohort": "dirichlet",
+      "origins": [
+        "11.3"
+      ],
+      "dual": "1-11-11.4-r0-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₁₁.3(p)ʲ. At residues 1 through 10 the exponents of ξ = exp(πi/5) are 0, 8, 4, 6, 2, 2, 6, 4, 8, 0. The value at 11 is zero.",
+      "completion": "11^(s/2) Γℝ(s) L(s,χ₁₁.3); root number τ(χ₁₁.3)/(√11)",
+      "basis": "Exact Conrey coefficients supply the Dirichlet family inputs. The two field factorizations isolate the primitive pairs under the stated auxiliary hypotheses.",
+      "orders": "Use the individual prime-power coefficients. An outward-rounded certificate, including the infinite tail, places Re L(1/2) in [0.406, 0.511].",
+      "obligation": "Under critical-line location, the individual multiplicity criterion tests noncentral simplicity.",
+      "sources": [
+        [
+          "Exact central-value certificate",
+          "https://kimihiro64.github.io/Robin1984/lmfdb-explorer/verify-dirichlet-center.mjs"
+        ]
+      ]
+    },
+    {
+      "id": "1-11-11.4-r0-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₁₁)⁺",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.4) lies on Re s = 1/2.",
+            "hypothesis": "Assuming ordinary RH for ζ(s) and the critical-line hypothesis for character 11.5",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₁₁)⁺ with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 14641) / √(log N𝔞)].",
+            "note": "The real field contains ζ and both even conjugate pairs. The assumptions account for the factors outside the pair 11.4 and 11.3.",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Number field on LMFDB",
+                "https://www.lmfdb.org/NumberField/5.5.14641.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 11.4",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.4) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|(P₁ + P₁₀) + ξ²(P₂ + P₉) + ξ⁶(P₃ + P₈) + ξ⁴(P₄ + P₇) + ξ⁸(P₅ + P₆)| ≤ C√x log x.",
+            "note": "Pₐ = π(x;11,a) counts primes p ≤ x in residue class a. Here ξ = exp(πi/5). The prime 11 contributes zero.",
+            "links": [
+              [
+                "Character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/11/4"
+              ],
+              [
+                "Coefficients and proof",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#complex-primitive-characters-of-conductor-11"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₁₁.4)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₁₁.4(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired triangular remainder tests both conjugates. Their critical-line hypotheses are equivalent by reflection of ordinates."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₁₁.4(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "realCyclotomic11"
+      },
+      "url": "https://www.lmfdb.org/L/1-11-11.4-r0-0-0",
+      "name": "Order-five character 11.4",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 certified",
+      "cohort": "dirichlet",
+      "origins": [
+        "11.4"
+      ],
+      "dual": "1-11-11.3-r0-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₁₁.4(p)ʲ. At residues 1 through 10 the exponents of ξ = exp(πi/5) are 0, 2, 6, 4, 8, 8, 4, 6, 2, 0. The value at 11 is zero.",
+      "completion": "11^(s/2) Γℝ(s) L(s,χ₁₁.4); root number τ(χ₁₁.4)/(√11)",
+      "basis": "Exact Conrey coefficients supply the Dirichlet family inputs. The two field factorizations isolate the primitive pairs under the stated auxiliary hypotheses.",
+      "orders": "Use the individual prime-power coefficients. An outward-rounded certificate, including the infinite tail, places Re L(1/2) in [0.406, 0.511].",
+      "obligation": "Under critical-line location, the individual multiplicity criterion tests noncentral simplicity.",
+      "sources": [
+        [
+          "Exact central-value certificate",
+          "https://kimihiro64.github.io/Robin1984/lmfdb-explorer/verify-dirichlet-center.mjs"
+        ]
+      ]
+    },
+    {
+      "id": "1-11-11.5-r0-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₁₁)⁺",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.5) lies on Re s = 1/2.",
+            "hypothesis": "Assuming ordinary RH for ζ(s) and the critical-line hypothesis for character 11.3",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₁₁)⁺ with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 14641) / √(log N𝔞)].",
+            "note": "The real field contains ζ and both even conjugate pairs. The assumptions account for the factors outside the pair 11.5 and 11.9.",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Number field on LMFDB",
+                "https://www.lmfdb.org/NumberField/5.5.14641.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 11.5",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.5) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|(P₁ + P₁₀) + ξ⁴(P₂ + P₉) + ξ²(P₃ + P₈) + ξ⁸(P₄ + P₇) + ξ⁶(P₅ + P₆)| ≤ C√x log x.",
+            "note": "Pₐ = π(x;11,a) counts primes p ≤ x in residue class a. Here ξ = exp(πi/5). The prime 11 contributes zero.",
+            "links": [
+              [
+                "Character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/11/5"
+              ],
+              [
+                "Coefficients and proof",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#complex-primitive-characters-of-conductor-11"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₁₁.5)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₁₁.5(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired triangular remainder tests both conjugates. Their critical-line hypotheses are equivalent by reflection of ordinates."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₁₁.5(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "realCyclotomic11"
+      },
+      "url": "https://www.lmfdb.org/L/1-11-11.5-r0-0-0",
+      "name": "Order-five character 11.5",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 certified",
+      "cohort": "dirichlet",
+      "origins": [
+        "11.5"
+      ],
+      "dual": "1-11-11.9-r0-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₁₁.5(p)ʲ. At residues 1 through 10 the exponents of ξ = exp(πi/5) are 0, 4, 2, 8, 6, 6, 8, 2, 4, 0. The value at 11 is zero.",
+      "completion": "11^(s/2) Γℝ(s) L(s,χ₁₁.5); root number τ(χ₁₁.5)/(√11)",
+      "basis": "Exact Conrey coefficients supply the Dirichlet family inputs. The two field factorizations isolate the primitive pairs under the stated auxiliary hypotheses.",
+      "orders": "Use the individual prime-power coefficients. An outward-rounded certificate, including the infinite tail, places Re L(1/2) in [0.304, 0.409].",
+      "obligation": "Under critical-line location, the individual multiplicity criterion tests noncentral simplicity.",
+      "sources": [
+        [
+          "Exact central-value certificate",
+          "https://kimihiro64.github.io/Robin1984/lmfdb-explorer/verify-dirichlet-center.mjs"
+        ]
+      ]
+    },
+    {
+      "id": "1-11-11.6-r1-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₁₁)",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.6) lies on Re s = 1/2.",
+            "hypothesis": "Assuming Dedekind RH for ℚ(ζ₁₁)⁺ and the critical-line hypotheses for characters 11.10 and 11.7",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₁₁) with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 2357947691) / √(log N𝔞)].",
+            "note": "The full field contains all the even factors, the quadratic factor, and both odd conjugate pairs. The assumptions account for the factors outside the pair 11.6 and 11.2.",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Number field on LMFDB",
+                "https://www.lmfdb.org/NumberField/10.0.2357947691.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 11.6",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.6) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|(P₁ − P₁₀) + ξ⁹(P₂ − P₉) + ξ²(P₃ − P₈) + ξ⁸(P₄ − P₇) + ξ⁶(P₅ − P₆)| ≤ C√x log x.",
+            "note": "Pₐ = π(x;11,a) counts primes p ≤ x in residue class a. Here ξ = exp(πi/5). The prime 11 contributes zero.",
+            "links": [
+              [
+                "Character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/11/6"
+              ],
+              [
+                "Coefficients and proof",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#complex-primitive-characters-of-conductor-11"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₁₁.6)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₁₁.6(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired triangular remainder tests both conjugates. Their critical-line hypotheses are equivalent by reflection of ordinates."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₁₁.6(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "cyclotomic11"
+      },
+      "url": "https://www.lmfdb.org/L/1-11-11.6-r1-0-0",
+      "name": "Order-ten character 11.6",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 certified",
+      "cohort": "dirichlet",
+      "origins": [
+        "11.6"
+      ],
+      "dual": "1-11-11.2-r1-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₁₁.6(p)ʲ. At residues 1 through 10 the exponents of ξ = exp(πi/5) are 0, 9, 2, 8, 6, 1, 3, 7, 4, 5. The value at 11 is zero.",
+      "completion": "11^(s/2) Γℝ(s+1) L(s,χ₁₁.6); root number τ(χ₁₁.6)/(i√11)",
+      "basis": "Exact Conrey coefficients supply the Dirichlet family inputs. The two field factorizations isolate the primitive pairs under the stated auxiliary hypotheses.",
+      "orders": "Use the individual prime-power coefficients. An outward-rounded certificate, including the infinite tail, places Re L(1/2) in [1.437, 1.542].",
+      "obligation": "Under critical-line location, the individual multiplicity criterion tests noncentral simplicity.",
+      "sources": [
+        [
+          "Exact central-value certificate",
+          "https://kimihiro64.github.io/Robin1984/lmfdb-explorer/verify-dirichlet-center.mjs"
+        ]
+      ]
+    },
+    {
+      "id": "1-11-11.7-r1-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₁₁)",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.7) lies on Re s = 1/2.",
+            "hypothesis": "Assuming Dedekind RH for ℚ(ζ₁₁)⁺ and the critical-line hypotheses for characters 11.10 and 11.2",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₁₁) with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 2357947691) / √(log N𝔞)].",
+            "note": "The full field contains all the even factors, the quadratic factor, and both odd conjugate pairs. The assumptions account for the factors outside the pair 11.7 and 11.8.",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Number field on LMFDB",
+                "https://www.lmfdb.org/NumberField/10.0.2357947691.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 11.7",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.7) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|(P₁ − P₁₀) + ξ⁷(P₂ − P₉) + ξ⁶(P₃ − P₈) + ξ⁴(P₄ − P₇) + ξ⁸(P₅ − P₆)| ≤ C√x log x.",
+            "note": "Pₐ = π(x;11,a) counts primes p ≤ x in residue class a. Here ξ = exp(πi/5). The prime 11 contributes zero.",
+            "links": [
+              [
+                "Character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/11/7"
+              ],
+              [
+                "Coefficients and proof",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#complex-primitive-characters-of-conductor-11"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₁₁.7)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₁₁.7(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired triangular remainder tests both conjugates. Their critical-line hypotheses are equivalent by reflection of ordinates."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₁₁.7(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "cyclotomic11"
+      },
+      "url": "https://www.lmfdb.org/L/1-11-11.7-r1-0-0",
+      "name": "Order-ten character 11.7",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 certified",
+      "cohort": "dirichlet",
+      "origins": [
+        "11.7"
+      ],
+      "dual": "1-11-11.8-r1-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₁₁.7(p)ʲ. At residues 1 through 10 the exponents of ξ = exp(πi/5) are 0, 7, 6, 4, 8, 3, 9, 1, 2, 5. The value at 11 is zero.",
+      "completion": "11^(s/2) Γℝ(s+1) L(s,χ₁₁.7); root number τ(χ₁₁.7)/(i√11)",
+      "basis": "Exact Conrey coefficients supply the Dirichlet family inputs. The two field factorizations isolate the primitive pairs under the stated auxiliary hypotheses.",
+      "orders": "Use the individual prime-power coefficients. An outward-rounded certificate, including the infinite tail, places Re L(1/2) in [0.268, 0.373].",
+      "obligation": "Under critical-line location, the individual multiplicity criterion tests noncentral simplicity.",
+      "sources": [
+        [
+          "Exact central-value certificate",
+          "https://kimihiro64.github.io/Robin1984/lmfdb-explorer/verify-dirichlet-center.mjs"
+        ]
+      ]
+    },
+    {
+      "id": "1-11-11.8-r1-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₁₁)",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.8) lies on Re s = 1/2.",
+            "hypothesis": "Assuming Dedekind RH for ℚ(ζ₁₁)⁺ and the critical-line hypotheses for characters 11.10 and 11.2",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₁₁) with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 2357947691) / √(log N𝔞)].",
+            "note": "The full field contains all the even factors, the quadratic factor, and both odd conjugate pairs. The assumptions account for the factors outside the pair 11.8 and 11.7.",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Number field on LMFDB",
+                "https://www.lmfdb.org/NumberField/10.0.2357947691.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 11.8",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.8) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|(P₁ − P₁₀) + ξ³(P₂ − P₉) + ξ⁴(P₃ − P₈) + ξ⁶(P₄ − P₇) + ξ²(P₅ − P₆)| ≤ C√x log x.",
+            "note": "Pₐ = π(x;11,a) counts primes p ≤ x in residue class a. Here ξ = exp(πi/5). The prime 11 contributes zero.",
+            "links": [
+              [
+                "Character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/11/8"
+              ],
+              [
+                "Coefficients and proof",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#complex-primitive-characters-of-conductor-11"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₁₁.8)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₁₁.8(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired triangular remainder tests both conjugates. Their critical-line hypotheses are equivalent by reflection of ordinates."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₁₁.8(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "cyclotomic11"
+      },
+      "url": "https://www.lmfdb.org/L/1-11-11.8-r1-0-0",
+      "name": "Order-ten character 11.8",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 certified",
+      "cohort": "dirichlet",
+      "origins": [
+        "11.8"
+      ],
+      "dual": "1-11-11.7-r1-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₁₁.8(p)ʲ. At residues 1 through 10 the exponents of ξ = exp(πi/5) are 0, 3, 4, 6, 2, 7, 1, 9, 8, 5. The value at 11 is zero.",
+      "completion": "11^(s/2) Γℝ(s+1) L(s,χ₁₁.8); root number τ(χ₁₁.8)/(i√11)",
+      "basis": "Exact Conrey coefficients supply the Dirichlet family inputs. The two field factorizations isolate the primitive pairs under the stated auxiliary hypotheses.",
+      "orders": "Use the individual prime-power coefficients. An outward-rounded certificate, including the infinite tail, places Re L(1/2) in [0.268, 0.373].",
+      "obligation": "Under critical-line location, the individual multiplicity criterion tests noncentral simplicity.",
+      "sources": [
+        [
+          "Exact central-value certificate",
+          "https://kimihiro64.github.io/Robin1984/lmfdb-explorer/verify-dirichlet-center.mjs"
+        ]
+      ]
+    },
+    {
+      "id": "1-11-11.9-r0-0-0",
+      "equivalences": {
+        "arithmeticEndpoints": [
+          {
+            "title": "Robin1984 corrected ideal criterion for ℚ(ζ₁₁)⁺",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.9) lies on Re s = 1/2.",
+            "hypothesis": "Assuming ordinary RH for ζ(s) and the critical-line hypothesis for character 11.3",
+            "arithmetic": "There exists A_K ∈ ℕ such that the following holds for every nonzero integral ideal 𝔞 of K = ℚ(ζ₁₁)⁺ with N𝔞 ≥ A_K.",
+            "formula": "σ_K(𝔞) / N𝔞 ≤ eᵞ κ_K [log log N𝔞 + (12 + 3 log 14641) / √(log N𝔞)].",
+            "note": "The real field contains ζ and both even conjugate pairs. The assumptions account for the factors outside the pair 11.9 and 11.5.",
+            "links": [
+              [
+                "Robin1984 corrected ideal theorem",
+                "#corrected-ideal-robin"
+              ],
+              [
+                "Number field on LMFDB",
+                "https://www.lmfdb.org/NumberField/5.5.14641.1"
+              ],
+              [
+                "Fieldwise theorem in Lean",
+                "https://github.com/kimihiro64/Robin1984/blob/main/Solution.lean#L318"
+              ]
+            ]
+          },
+          {
+            "title": "Weighted prime counts for character 11.9",
+            "zeros": "Every zero of the completion Λ(s, χ₁₁.9) lies on Re s = 1/2.",
+            "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+            "formula": "|(P₁ + P₁₀) + ξ⁶(P₂ + P₉) + ξ⁸(P₃ + P₈) + ξ²(P₄ + P₇) + ξ⁴(P₅ + P₆)| ≤ C√x log x.",
+            "note": "Pₐ = π(x;11,a) counts primes p ≤ x in residue class a. Here ξ = exp(πi/5). The prime 11 contributes zero.",
+            "links": [
+              [
+                "Character on LMFDB",
+                "https://www.lmfdb.org/Character/Dirichlet/11/9"
+              ],
+              [
+                "Coefficients and proof",
+                "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#complex-primitive-characters-of-conductor-11"
+              ]
+            ]
+          }
+        ],
+        "location": {
+          "subject": "the completion Λ(s, χ₁₁.9)",
+          "remainder": "R(x) = −∑_{pʲ ≤ x} 2 Re(χ₁₁.9(p)ʲ) log p (1 − pʲ/x)",
+          "note": "The paired triangular remainder tests both conjugates. Their critical-line hypotheses are equivalent by reflection of ordinates."
+        },
+        "individual": "R(x) = −∑_{pʲ ≤ x} χ₁₁.9(p)ʲ log p (1 − pʲ/x)",
+        "centralOrder": 0,
+        "idealField": "realCyclotomic11"
+      },
+      "url": "https://www.lmfdb.org/L/1-11-11.9-r0-0-0",
+      "name": "Order-five character 11.9",
+      "family": "Zeta & Dirichlet",
+      "degree": 1,
+      "status": "done",
+      "proof": "Lean provider",
+      "multiplicity": "applied",
+      "center": "Order 0 certified",
+      "cohort": "dirichlet",
+      "origins": [
+        "11.9"
+      ],
+      "dual": "1-11-11.5-r0-0-0",
+      "pole": 0,
+      "coef": "a(p,j) = χ₁₁.9(p)ʲ. At residues 1 through 10 the exponents of ξ = exp(πi/5) are 0, 6, 8, 2, 4, 4, 2, 8, 6, 0. The value at 11 is zero.",
+      "completion": "11^(s/2) Γℝ(s) L(s,χ₁₁.9); root number τ(χ₁₁.9)/(√11)",
+      "basis": "Exact Conrey coefficients supply the Dirichlet family inputs. The two field factorizations isolate the primitive pairs under the stated auxiliary hypotheses.",
+      "orders": "Use the individual prime-power coefficients. An outward-rounded certificate, including the infinite tail, places Re L(1/2) in [0.304, 0.409].",
+      "obligation": "Under critical-line location, the individual multiplicity criterion tests noncentral simplicity.",
+      "sources": [
+        [
+          "Exact central-value certificate",
+          "https://kimihiro64.github.io/Robin1984/lmfdb-explorer/verify-dirichlet-center.mjs"
+        ]
+      ]
+    },
+    {
       "id": "2-23-23.22-c0-0-0",
       "equivalences": {
         "arithmeticEndpoints": [
@@ -1713,16 +2345,41 @@ globalThis.LMFDB_CATALOG = {
       "name": "Level-one GL₃ Maass entry",
       "family": "Maass forms",
       "degree": 3,
-      "status": "unreviewed",
-      "proof": "Queued",
+      "status": "blocked",
+      "proof": "Numerical record located",
       "multiplicity": "unreviewed",
-      "center": "Awaiting review",
+      "center": "Uncertified",
       "cohort": "maass3",
       "origins": [
         "GL₃",
         "non-self-dual"
       ],
-      "obligation": "Establish the exact automorphic realization and contragredient, and distinguish numerical eigenvalue data from the inputs needed for a proof."
+      "obligation": "Supply a proved cuspidal realization matched to these exact archimedean factors and local Euler polynomials, or an equivalent exact analytic certificate. The displayed weighted sum applies after that identification.",
+      "basis": "LMFDB search row 9396503 identifies a degree-three primitive MaassGL3 record. The published degree-three landscape uses numerical L-function approximations.",
+      "conditionalEndpoint": {
+        "title": "Unsmoothed prime-power equivalence for a verified GL₃ realization",
+        "hypothesis": "Conditional on an exact level-one cuspidal automorphic identification",
+        "zeros": "Every zero of the completed standard L-function for the matched representation lies on Re s = 1/2.",
+        "arithmetic": "There is a constant C > 0 such that the following holds for every real x ≥ 2.",
+        "formula": "|∑_{pʲ ≤ x} tr(Aₚʲ) log p| ≤ C√x log²(2x).",
+        "note": "Aₚ is the exact unitary-normalized Satake conjugacy class. Sum over every prime p and every integer j ≥ 1.",
+        "links": [
+          [
+            "Derivation and missing input",
+            "https://github.com/kimihiro64/Robin1984/blob/gh-pages/LMFDB.md#level-one-gl₃-maass-candidate"
+          ],
+          [
+            "Standard GL₃ theory",
+            "https://annals.math.princeton.edu/2006/164-2/p02"
+          ]
+        ]
+      },
+      "sources": [
+        [
+          "Degree-three computations",
+          "https://doi.org/10.1090/conm/796/16007"
+        ]
+      ]
     }
   ],
   "correctedIdealRobin": {
@@ -1793,6 +2450,16 @@ globalThis.LMFDB_CATALOG = {
         "field": "ℚ(ζ₉)",
         "discriminant": -19683,
         "zeros": "Ordinary RH, the critical-line hypothesis for character 3.2, and the critical-line hypotheses for all four primitive characters of conductor 9, jointly."
+      },
+      "realCyclotomic11": {
+        "field": "ℚ(ζ₁₁)⁺",
+        "discriminant": 14641,
+        "zeros": "Ordinary RH and the critical-line hypotheses for the four even primitive characters of conductor 11, jointly."
+      },
+      "cyclotomic11": {
+        "field": "ℚ(ζ₁₁)",
+        "discriminant": -2357947691,
+        "zeros": "Ordinary RH and the critical-line hypotheses for all ten primitive characters of conductor 11, jointly."
       },
       "cubic23": {
         "field": "ℚ[T]/(T³ − T − 1)",

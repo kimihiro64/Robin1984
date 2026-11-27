@@ -128,7 +128,9 @@ is attributed to LMFDB under its CC BY-SA data license.
 
 Run the catalogue and backlog checks on the staged source, together with
 `docs/lmfdb-explorer/verify-389-center.mjs` for releases that change the
-389.a1 proof or certificate. Then commit in Robin1984.
+389.a1 proof or certificate. Run `verify-dirichlet-center.mjs 11` when
+changing the conductor-11 results or their shared interval verifier.
+Then commit in Robin1984.
 The Pages source is the root of the separate
 `gh-pages` branch in the same repository. Resolve the current remote
 branch SHA and pass it as `--parent` to
@@ -138,6 +140,10 @@ a fast-forward candidate from the committed static files and prints its
 SHA without switching checkouts. Push that candidate with a lease on the
 observed remote SHA. Verify that GitHub Pages built the pushed commit and
 that the hosted catalogue and backlog match the committed assets.
+
+Check API checkpoints by numeric start and end ID. Run names are labels.
+Confirm that the newly completed range appears in order and that its stated
+cursor equals the database checkpoint before reporting the covered range.
 
 When publishing a catalogue update, check the generated HTML references and
 exercise the new release in a browser that has already loaded the previous

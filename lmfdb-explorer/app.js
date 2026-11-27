@@ -2,7 +2,7 @@
 
 const statusNames = {
   done: "Equivalence derived",
-  blocked: "One-sided blocked",
+  blocked: "Blocked",
   unreviewed: "Awaiting review",
 };
 const formatNumber = new Intl.NumberFormat("en");
@@ -36,7 +36,7 @@ function stats() {
   const totals = [
     ["", "Tracked records", "Pilot inventory", catalog.entries.length],
     ["done", "Equivalences derived", catalog.entries.filter((row) => row.proof === "Lean provider").length + " backed by Lean family providers", 0],
-    ["blocked", "One-sided blocked", "Exact obligation recorded", 0],
+    ["blocked", "Blocked", "Exact obligation recorded", 0],
     ["unreviewed", "Awaiting review", "In the pilot queue", 0],
   ];
   byId("statistics").replaceChildren(...totals.map(([key, label, note, count]) => {
@@ -119,7 +119,10 @@ function renderEquivalences(row) {
   const section = element("div", undefined, "equivalences");
   const eq = row.equivalences;
   if (!eq) {
-    section.append(element("p", "No individual equivalence has been reviewed for this label.", "criterion-pending"));
+    const conditional = row.conditionalEndpoint;
+    const content = conditional ? criterionCard({ ...conditional, notes: [conditional.note] })
+      : element("p", "No individual equivalence has been reviewed for this label.", "criterion-pending");
+    section.append(content);
     return section;
   }
   for (const endpoint of eq.arithmeticEndpoints) {
